@@ -43,17 +43,17 @@
   <!-- ==================== MAUI : TARGET PLATFORM VERSION ==================== -->
   <PropertyGroup Condition=" '$(UseMaui)' == 'true' ">
     <!-- android -->
-    <TargetPlatformVersion Condition=" '$(IsForAndroid)' == 'true' ">35.0</TargetPlatformVersion>
+    <TargetPlatformVersion Condition=" '$(IsForAndroid)' == 'true' ">36.1</TargetPlatformVersion>
     <TargetPlatformMinVersion Condition=" '$(IsForAndroid)' == 'true' ">21.0</TargetPlatformMinVersion>
     <SupportedOSPlatformVersion Condition=" '$(IsForAndroid)' == 'true' ">21.0</SupportedOSPlatformVersion>
 
     <!-- ios -->
-    <TargetPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">18.0</TargetPlatformVersion>
+    <TargetPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">26.0</TargetPlatformVersion>
     <TargetPlatformMinVersion Condition=" '$(IsForIOS)' == 'true' ">12.2</TargetPlatformMinVersion>
     <SupportedOSPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">12.2</SupportedOSPlatformVersion>
 
     <!-- mac-catalyst -->
-    <TargetPlatformVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">18.0</TargetPlatformVersion>
+    <TargetPlatformVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">26.0</TargetPlatformVersion>
     <TargetPlatformMinVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">15.0</TargetPlatformMinVersion>
     <SupportedOSPlatformVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">15.0</SupportedOSPlatformVersion>
 

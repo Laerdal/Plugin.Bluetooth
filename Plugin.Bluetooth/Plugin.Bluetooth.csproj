@@ -10,7 +10,7 @@
 
     <!-- ==================== TARGET FRAMEWORKS ==================== -->
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
 
     <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->

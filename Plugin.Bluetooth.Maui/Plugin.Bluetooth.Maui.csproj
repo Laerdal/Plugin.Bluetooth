@@ -1,44 +1,44 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<!-- ==================== CORE VARIABLES ==================== -->
-	<PropertyGroup>
-		<Project_Name>Plugin.Bluetooth.Maui</Project_Name>
-		<Project_Tags>Plugin;Bluetooth;Maui;Android;iOS;Windows;Tools;Toolkit</Project_Tags>
-		<Project_Copyright>Francois Raminosona</Project_Copyright>
-		<Project_Description>Plugin.Bluetooth for .NET Maui</Project_Description>
-	</PropertyGroup>
+    <!-- ==================== CORE VARIABLES ==================== -->
+    <PropertyGroup>
+        <Project_Name>Plugin.Bluetooth.Maui</Project_Name>
+        <Project_Tags>Plugin;Bluetooth;Maui;Android;iOS;Windows;Tools;Toolkit</Project_Tags>
+        <Project_Copyright>Francois Raminosona</Project_Copyright>
+        <Project_Description>Plugin.Bluetooth for .NET Maui</Project_Description>
+    </PropertyGroup>
 
-	<!-- ==================== TARGET FRAMEWORKS ==================== -->
-	<PropertyGroup>
-		<TargetFrameworks>net9.0</TargetFrameworks>
-		<TargetFrameworks>$(TargetFrameworks);net9.0-android</TargetFrameworks>
-		<TargetFrameworks>$(TargetFrameworks);net9.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks>$(TargetFrameworks);net9.0-ios</TargetFrameworks>
-		<TargetFrameworks>$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
-	</PropertyGroup>
+    <!-- ==================== TARGET FRAMEWORKS ==================== -->
+    <PropertyGroup>
+        <TargetFrameworks>net10.0</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-android</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-maccatalyst</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-ios</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+    </PropertyGroup>
 
-	<!-- ==================== MAUI ==================== -->
-	<PropertyGroup>
-		<UseMaui>true</UseMaui>
-		<SingleProject>true</SingleProject>
-	</PropertyGroup>
+    <!-- ==================== MAUI ==================== -->
+    <PropertyGroup>
+        <UseMaui>true</UseMaui>
+        <SingleProject>true</SingleProject>
+    </PropertyGroup>
 
-	<!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
-	<ItemGroup>
-		<ProjectReference Include="../Plugin.Bluetooth/Plugin.Bluetooth.csproj" />
-	</ItemGroup>
+    <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <ProjectReference Include="../Plugin.Bluetooth/Plugin.Bluetooth.csproj"/>
+    </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Plugin.ByteArrays" />
-		<PackageReference Include="Plugin.BaseTypeExtensions" />
-		<PackageReference Include="Plugin.ExceptionListeners" />
-		<PackageReference Include="Plugin.ExceptionListeners.Maui" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Plugin.ByteArrays"/>
+        <PackageReference Include="Plugin.BaseTypeExtensions"/>
+        <PackageReference Include="Plugin.ExceptionListeners"/>
+        <PackageReference Include="Plugin.ExceptionListeners.Maui"/>
+    </ItemGroup>
 
 
-	<!-- ==================== NESTED FILES ======================= -->
-	<ItemGroup>
-		<!-- Files dependent on eachother -->
+    <!-- ==================== NESTED FILES ======================= -->
+    <ItemGroup>
+        <!-- Files dependent on eachother -->
         <Compile Update="**\BaseBluetoothCharacteristic.*.cs">
             <DependentUpon>BaseBluetoothCharacteristic.cs</DependentUpon>
         </Compile>
@@ -69,6 +69,6 @@
         <Compile Update="**\BluetoothService.*.cs">
             <DependentUpon>BluetoothService.cs</DependentUpon>
         </Compile>
-	</ItemGroup>
+    </ItemGroup>
 
 </Project>
