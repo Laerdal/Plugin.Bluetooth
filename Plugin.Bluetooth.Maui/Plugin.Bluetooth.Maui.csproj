@@ -11,9 +11,9 @@
     <!-- ==================== TARGET FRAMEWORKS ==================== -->
     <PropertyGroup>
         <TargetFrameworks>net10.0</TargetFrameworks>
-        <TargetFrameworks>$(TargetFrameworks);net10.0-android</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-android36.1</TargetFrameworks>
         <TargetFrameworks>$(TargetFrameworks);net10.0-maccatalyst</TargetFrameworks>
-        <TargetFrameworks>$(TargetFrameworks);net10.0-ios</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-ios</TargetFrameworks> 
         <TargetFrameworks>$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
     </PropertyGroup>
 
