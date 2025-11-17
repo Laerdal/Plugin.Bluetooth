@@ -1,7 +1,7 @@
 
 namespace Plugin.Bluetooth.BaseClasses;
 
-public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoothDevice
+public abstract partial class BaseBluetoothDevice
 {
     /// <summary>
     /// Waits for the device's advertised name to change.

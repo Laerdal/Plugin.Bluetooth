@@ -21,8 +21,13 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner associated with this device.</param>
     /// <param name="advertisement">The advertisement information used to initialize the device.</param>
-    protected BaseBluetoothDevice(IBluetoothScanner scanner, [NotNull] IBluetoothAdvertisement advertisement) : this(scanner, advertisement.BluetoothAddress, advertisement.Manufacturer)
+    protected BaseBluetoothDevice(IBluetoothScanner scanner, IBluetoothAdvertisement advertisement)
     {
+        ArgumentNullException.ThrowIfNull(advertisement);
+
+        Scanner = scanner;
+        Id = advertisement.BluetoothAddress;
+        Manufacturer = advertisement.Manufacturer;
     }
 
     /// <inheritdoc/>

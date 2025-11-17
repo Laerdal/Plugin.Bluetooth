@@ -29,7 +29,7 @@ public abstract partial class BaseBluetoothScanner
     /// <param name="advertisement">The advertisement to process.</param>
     protected void OnAdvertisementReceived(IBluetoothAdvertisement advertisement)
     {
-        ArgumentNullException.ThrowIfNull(advertisement, nameof(advertisement));
+        ArgumentNullException.ThrowIfNull(advertisement);
 
         // Filter
         if (!AdvertisementFilter.Invoke(advertisement))

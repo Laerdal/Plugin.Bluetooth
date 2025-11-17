@@ -53,22 +53,20 @@ public interface IBluetoothActivity : INotifyPropertyChanged
     /// <summary>
     /// Asynchronously starts the Bluetooth activity with an optional timeout.
     /// </summary>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous start operation.</returns>
     /// <remarks>Ensures that the Bluetooth activity is initialized and ready for use.</remarks>
-    Task StartAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task StartAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously starts the Bluetooth activity if it is not already running, with an optional timeout.
     /// </summary>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous start operation.</returns>
     /// <remarks>Checks if the Bluetooth activity is already running before attempting to start it.</remarks>
-    ValueTask StartIfNeededAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask StartIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -92,22 +90,20 @@ public interface IBluetoothActivity : INotifyPropertyChanged
     /// <summary>
     /// Asynchronously stops the Bluetooth manager with an optional timeout.
     /// </summary>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous stop operation.</returns>
     /// <remarks>Ensures that the Bluetooth manager and its resources are safely released.</remarks>
-    Task StopAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task StopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously stops the Bluetooth manager if it is running, with an optional timeout.
     /// </summary>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous stop operation.</returns>
     /// <remarks>Checks if the Bluetooth manager is running before attempting to stop it.</remarks>
-    ValueTask StopIfNeededAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask StopIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 }

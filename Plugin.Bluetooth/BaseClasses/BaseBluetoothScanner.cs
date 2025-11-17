@@ -4,10 +4,10 @@ namespace Plugin.Bluetooth.BaseClasses;
 public abstract partial class BaseBluetoothScanner : BaseBluetoothActivity, IBluetoothScanner
 {
     /// <inheritdoc />
-    protected async override ValueTask InitializeAsync(Dictionary<string, object>? nativeOptions = null)
+    protected async override ValueTask InitializeAsync()
     {
         await KnownServicesAndCharacteristicsRepository.AddAllServiceDefinitionsInCurrentAssemblyAsync().ConfigureAwait(false);
-        await NativeInitializeAsync(nativeOptions).ConfigureAwait(false);
+        await NativeInitializeAsync().ConfigureAwait(false);
     }
 
     /// <inheritdoc />

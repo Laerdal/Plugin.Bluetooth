@@ -1,7 +1,7 @@
 
 namespace Plugin.Bluetooth.BaseClasses;
 
-public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoothDevice
+public abstract partial class BaseBluetoothDevice
 {
     private readonly static Func<IBluetoothService, bool> _defaultAcceptAllFilter = _ => true;
 
@@ -48,28 +48,28 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
     }
 
     /// <inheritdoc/>
-    public async ValueTask<IBluetoothService?> GetServiceOrDefaultAsync(Func<IBluetoothService, bool> filter, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask<IBluetoothService?> GetServiceOrDefaultAsync(Func<IBluetoothService, bool> filter, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        await ExploreServicesAsync(false, false, nativeOptions, timeout, cancellationToken).ConfigureAwait(false);
+        await ExploreServicesAsync(false, false, timeout, cancellationToken).ConfigureAwait(false);
         return GetServiceOrDefault(filter);
     }
 
     /// <inheritdoc/>
-    public ValueTask<IBluetoothService?> GetServiceOrDefaultAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask<IBluetoothService?> GetServiceOrDefaultAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return GetServiceOrDefaultAsync(service => service.Id == id, nativeOptions, timeout, cancellationToken);
+        return GetServiceOrDefaultAsync(service => service.Id == id, timeout, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async ValueTask<IEnumerable<IBluetoothService>> GetServicesAsync(Func<IBluetoothService, bool>? filter = null, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask<IEnumerable<IBluetoothService>> GetServicesAsync(Func<IBluetoothService, bool>? filter = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        await ExploreServicesAsync(false, false, nativeOptions, timeout, cancellationToken).ConfigureAwait(false);
+        await ExploreServicesAsync(false, false, timeout, cancellationToken).ConfigureAwait(false);
         return GetServices(filter);
     }
 
     /// <inheritdoc/>
-    public ValueTask<IEnumerable<IBluetoothService>> GetServicesAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask<IEnumerable<IBluetoothService>> GetServicesAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return GetServicesAsync(service => service.Id == id, nativeOptions, timeout, cancellationToken);
+        return GetServicesAsync(service => service.Id == id, timeout, cancellationToken);
     }
 }

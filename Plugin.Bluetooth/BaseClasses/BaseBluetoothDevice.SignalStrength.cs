@@ -1,6 +1,6 @@
 namespace Plugin.Bluetooth.BaseClasses;
 
-public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoothDevice
+public abstract partial class BaseBluetoothDevice
 {
     // Max and Min are dynamic, meaning if a value higher or lower is detected it will push those bounds
     private static double _closeRssiValue = -50;

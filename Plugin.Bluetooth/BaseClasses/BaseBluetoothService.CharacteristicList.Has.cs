@@ -15,19 +15,19 @@ public abstract partial class BaseBluetoothService : BaseBindableObject, IBlueto
     }
 
     /// <inheritdoc/>
-    public ValueTask<bool> HasCharacteristicAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask<bool> HasCharacteristicAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return HasCharacteristicAsync(characteristic => characteristic.Id == id, nativeOptions, timeout, cancellationToken);
+        return HasCharacteristicAsync(characteristic => characteristic.Id == id, timeout, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async ValueTask<bool> HasCharacteristicAsync(Func<IBluetoothCharacteristic, bool> filter, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask<bool> HasCharacteristicAsync(Func<IBluetoothCharacteristic, bool> filter, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         if (HasCharacteristic(filter))
         {
             return true;
         }
-        await ExploreCharacteristicsAsync(false, nativeOptions, timeout, cancellationToken).ConfigureAwait(false);
+        await ExploreCharacteristicsAsync(false, timeout, cancellationToken).ConfigureAwait(false);
         return HasCharacteristic(filter);
     }
 }

@@ -1,7 +1,7 @@
 namespace Plugin.Bluetooth.BaseClasses;
 
 /// <inheritdoc cref="IBluetoothAdvertisement" />
-public abstract partial class BaseBluetoothAdvertisement : BaseBindableObject, IBluetoothAdvertisement
+public abstract class BaseBluetoothAdvertisement : BaseBindableObject, IBluetoothAdvertisement
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseBluetoothAdvertisement"/> class.

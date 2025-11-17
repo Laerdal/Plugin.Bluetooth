@@ -101,11 +101,10 @@ public interface IBluetoothCharacteristicAccessService<TIn, TOut> : IBluetoothCh
     /// </summary>
     /// <param name="device">The Bluetooth device.</param>
     /// <param name="useLastValueIfPreviouslyRead">If true, uses the last value if it was previously read.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous read operation. The task result contains the value read.</returns>
-    Task<TIn> ReadAsync(IBluetoothDevice device, bool useLastValueIfPreviouslyRead = false, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task<TIn> ReadAsync(IBluetoothDevice device, bool useLastValueIfPreviouslyRead = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -124,11 +123,10 @@ public interface IBluetoothCharacteristicAccessService<TIn, TOut> : IBluetoothCh
     /// <param name="device">The Bluetooth device.</param>
     /// <param name="value">The value to write.</param>
     /// <param name="skipIfOldValueMatchesNewValue">If true, skips writing if the old value matches the new value.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous write operation.</returns>
-    Task WriteAsync(IBluetoothDevice device, TOut value, bool skipIfOldValueMatchesNewValue = false, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task WriteAsync(IBluetoothDevice device, TOut value, bool skipIfOldValueMatchesNewValue = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 

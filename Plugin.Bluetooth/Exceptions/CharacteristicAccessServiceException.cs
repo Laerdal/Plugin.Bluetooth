@@ -183,7 +183,7 @@ public class CharacteristicFoundInWrongServiceException : CharacteristicAccessSe
         IBluetoothCharacteristic characteristic,
         Guid serviceId,
         Exception? innerException = null)
-        : base(characteristicAccessService, FormatCharacteristicMessage(characteristic, serviceId, characteristicAccessService?.ServiceId ?? Guid.Empty), innerException)
+        : base(characteristicAccessService, FormatCharacteristicMessage(characteristic, serviceId, characteristicAccessService), innerException)
     {
         ArgumentNullException.ThrowIfNull(characteristicAccessService);
         ArgumentNullException.ThrowIfNull(characteristic);
@@ -202,11 +202,11 @@ public class CharacteristicFoundInWrongServiceException : CharacteristicAccessSe
     /// </summary>
     public Guid ServiceId { get; }
 
-    private static string FormatCharacteristicMessage(IBluetoothCharacteristic characteristic, Guid actualServiceId, Guid expectedServiceId)
+    private static string FormatCharacteristicMessage(IBluetoothCharacteristic characteristic, Guid actualServiceId, IBluetoothCharacteristicAccessService characteristicAccessService)
     {
         ArgumentNullException.ThrowIfNull(characteristic);
 
-        return $"{characteristic.Id} : found in {actualServiceId} instead of {expectedServiceId}";
+        return $"{characteristic.Id} : found in {actualServiceId} instead of {characteristicAccessService.ServiceId}";
     }
 }
 

@@ -1,7 +1,7 @@
 
 namespace Plugin.Bluetooth.BaseClasses;
 
-public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoothDevice
+public abstract partial class BaseBluetoothDevice
 {
     /// <inheritdoc/>
     public bool HasService(Guid id)
@@ -16,19 +16,19 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
     }
 
     /// <inheritdoc/>
-    public ValueTask<bool> HasServiceAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask<bool> HasServiceAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return HasServiceAsync(service => service.Id == id, nativeOptions, timeout, cancellationToken);
+        return HasServiceAsync(service => service.Id == id, timeout, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async ValueTask<bool> HasServiceAsync(Func<IBluetoothService, bool> filter, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask<bool> HasServiceAsync(Func<IBluetoothService, bool> filter, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         if (HasService(filter))
         {
             return true;
         }
-        await ExploreServicesAsync(false, true, nativeOptions, timeout, cancellationToken).ConfigureAwait(false);
+        await ExploreServicesAsync(false, true, timeout, cancellationToken).ConfigureAwait(false);
 
         return HasService(filter);
     }

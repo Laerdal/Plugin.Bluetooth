@@ -122,7 +122,7 @@ public class CharacteristicAccessServicesRepository : BaseBindableObject, IBluet
     /// <inheritdoc />
     public void AddKnownCharacteristicAccessService(IBluetoothCharacteristicAccessService characteristicAccessService)
     {
-        ArgumentNullException.ThrowIfNull(characteristicAccessService, nameof(characteristicAccessService));
+        ArgumentNullException.ThrowIfNull(characteristicAccessService);
 
         if (characteristicAccessService.CharacteristicId == Guid.Empty)
         {
@@ -216,7 +216,7 @@ public class CharacteristicAccessServicesRepository : BaseBindableObject, IBluet
     /// <exception cref="InvalidOperationException"></exception>
     protected static Assembly GetAssemblyFromName(string assemblyName)
     {
-        ArgumentNullException.ThrowIfNull(assemblyName, nameof(assemblyName));
+        ArgumentNullException.ThrowIfNull(assemblyName);
 
         return AppDomain.CurrentDomain.GetAssemblies()
             .FirstOrDefault(a => a.GetName().Name == assemblyName)

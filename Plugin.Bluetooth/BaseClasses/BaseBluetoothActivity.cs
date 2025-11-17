@@ -35,20 +35,21 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
             StopPeriodicTimer();
         }
     }
+
     /// <summary>
     /// Initializes the activity.
     /// </summary>
-    protected async virtual ValueTask InitializeAsync(Dictionary<string, object>? nativeOptions = null)
+    protected async virtual ValueTask InitializeAsync()
     {
-        await NativeInitializeAsync(nativeOptions).ConfigureAwait(false);
+        await NativeInitializeAsync().ConfigureAwait(false);
+        NativeRefreshIsBluetoothOn();
     }
 
     /// <summary>
     /// Performs platform-specific initialization for the Bluetooth activity.
     /// </summary>
-    /// <param name="nativeOptions">Platform-specific options for initialization.</param>
     /// <returns>A <see cref="ValueTask"/> representing the asynchronous operation.</returns>
-    protected abstract ValueTask NativeInitializeAsync(Dictionary<string, object>? nativeOptions = null);
+    protected abstract ValueTask NativeInitializeAsync();
 
     /// <summary>
     /// Disposes the Bluetooth manager and releases resources.
@@ -105,7 +106,7 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
     public bool IsRunning
     {
         get => GetValue(false);
-        set
+        protected set
         {
             if (SetValue(value))
             {
@@ -237,13 +238,13 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
 
 
     /// <inheritdoc/>
-    public virtual ValueTask StartIfNeededAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public virtual ValueTask StartIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return IsRunning ? new ValueTask(StartAsync(nativeOptions, timeout, cancellationToken)) : ValueTask.CompletedTask;
+        return IsRunning ? new ValueTask(StartAsync(timeout, cancellationToken)) : ValueTask.CompletedTask;
     }
 
     /// <inheritdoc/>
-    public async Task StartAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async Task StartAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure we are not already started
         ActivityIsAlreadyStartedException.ThrowIfIsStarted(this);
@@ -267,7 +268,7 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
             }
             BluetoothIsOffException.ThrowIfBluetoothIsOff(this);
 
-            NativeStart(nativeOptions); // actual start native call
+            NativeStart(); // actual start native call
         }
         catch (Exception e)
         {
@@ -298,8 +299,7 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
     /// Starts the native Bluetooth activity with the specified options.
     /// This method is called by <see cref="StartAsync"/> to perform platform-specific start operations.
     /// </summary>
-    /// <param name="nativeOptions">Platform-specific options for starting the activity.</param>
-    protected abstract void NativeStart(Dictionary<string, object>? nativeOptions = null);
+    protected abstract void NativeStart();
 
     #endregion
 
@@ -367,18 +367,18 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
     }
 
     /// <inheritdoc/>
-    public virtual ValueTask StopIfNeededAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public virtual ValueTask StopIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         if (!IsRunning)
         {
             return ValueTask.CompletedTask;
         }
 
-        return new ValueTask(StopAsync(nativeOptions, timeout, cancellationToken));
+        return new ValueTask(StopAsync(timeout, cancellationToken));
     }
 
     /// <inheritdoc/>
-    public async virtual Task StopAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async virtual Task StopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure we are not already stopped
         ActivityIsAlreadyStoppedException.ThrowIfIsStopped(this);

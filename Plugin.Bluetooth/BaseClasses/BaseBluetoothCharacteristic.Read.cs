@@ -29,7 +29,7 @@ public abstract partial class BaseBluetoothCharacteristic
     /// <exception cref="CharacteristicCantReadException">Thrown when the characteristic does not support read operations.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
-    public async ValueTask<ReadOnlyMemory<byte>> ReadValueAsync(bool skipIfPreviouslyRead = false, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask<ReadOnlyMemory<byte>> ReadValueAsync(bool skipIfPreviouslyRead = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
         DeviceNotConnectedException.ThrowIfNotConnected(Service.Device);
@@ -54,7 +54,7 @@ public abstract partial class BaseBluetoothCharacteristic
 
         try // try-catch to dispatch exceptions rising from start reading
         {
-            await NativeReadValueAsync(nativeOptions).ConfigureAwait(false); // Actual start reading native call
+            await NativeReadValueAsync().ConfigureAwait(false); // Actual start reading native call
         }
         catch (Exception e)
         {
@@ -82,13 +82,12 @@ public abstract partial class BaseBluetoothCharacteristic
     /// Platform-specific implementation to read the characteristic's value.
     /// This method should initiate the platform-specific operation to read the characteristic value.
     /// </summary>
-    /// <param name="nativeOptions">Platform-specific options for the read operation.</param>
     /// <returns>A task that completes when the native read operation is initiated.</returns>
     /// <remarks>
     /// Implementations should call <see cref="OnReadValueSucceeded"/> when the operation succeeds
     /// or <see cref="OnReadValueFailed"/> when it fails.
     /// </remarks>
-    protected abstract ValueTask NativeReadValueAsync(Dictionary<string, object>? nativeOptions = null);
+    protected abstract ValueTask NativeReadValueAsync();
 
     /// <summary>
     /// Called when reading the characteristic's value succeeds. Updates the Value property and completes the task.

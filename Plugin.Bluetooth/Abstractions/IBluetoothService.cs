@@ -4,7 +4,7 @@ namespace Plugin.Bluetooth.Abstractions;
 /// <summary>
 /// Interface representing a Bluetooth service, providing properties and methods for interacting with it.
 /// </summary>
-public partial interface IBluetoothService : INotifyPropertyChanged, IAsyncDisposable
+public interface IBluetoothService : INotifyPropertyChanged, IAsyncDisposable
 {
     /// <summary>
     /// Gets the Bluetooth device associated with this service.
@@ -47,11 +47,10 @@ public partial interface IBluetoothService : INotifyPropertyChanged, IAsyncDispo
     /// Explores the characteristics of the service asynchronously.
     /// </summary>
     /// <param name="clearBeforeExploring">True to clear the characteristics before exploring.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task ExploreCharacteristicsAsync(bool clearBeforeExploring = false, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task ExploreCharacteristicsAsync(bool clearBeforeExploring = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -85,22 +84,20 @@ public partial interface IBluetoothService : INotifyPropertyChanged, IAsyncDispo
     /// Explore then bool
     /// </summary>
     /// <param name="id">The ID of the characteristic to check for.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating whether the service has the characteristic.</returns>
-    ValueTask<bool> HasCharacteristicAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<bool> HasCharacteristicAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if the service has a characteristic with the specified ID asynchronously.
     /// Explore then bool
     /// </summary>
     /// <param name="filter">The filter to apply to the characteristics.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating whether the service has the characteristic.</returns>
-    ValueTask<bool> HasCharacteristicAsync(Func<IBluetoothCharacteristic, bool> filter, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<bool> HasCharacteristicAsync(Func<IBluetoothCharacteristic, bool> filter, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -145,46 +142,42 @@ public partial interface IBluetoothService : INotifyPropertyChanged, IAsyncDispo
     /// Explore then 0-1
     /// </summary>
     /// <param name="filter">The filter to apply to the characteristics.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the characteristic that matches the filter, or null if no such characteristic exists.</returns>
     /// <exception cref="MultipleCharacteristicsFoundException">If more than 1 result exists.</exception>
-    ValueTask<IBluetoothCharacteristic?> GetCharacteristicOrDefaultAsync(Func<IBluetoothCharacteristic, bool> filter, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<IBluetoothCharacteristic?> GetCharacteristicOrDefaultAsync(Func<IBluetoothCharacteristic, bool> filter, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the characteristic with the specified ID asynchronously.
     /// Explore then 0-1
     /// </summary>
     /// <param name="id">The ID of the characteristic to get.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the characteristic with the specified ID, or null if no such characteristic exists.</returns>
     /// <exception cref="MultipleCharacteristicsFoundException">If more than 1 result exists.</exception>
-    ValueTask<IBluetoothCharacteristic?> GetCharacteristicOrDefaultAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<IBluetoothCharacteristic?> GetCharacteristicOrDefaultAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the characteristics that match the specified filter asynchronously.
     /// Explore then 0-N
     /// </summary>
     /// <param name="filter">The filter to apply to the characteristics.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the characteristics that match the filter, or all characteristics if the filter is null.</returns>
-    ValueTask<IEnumerable<IBluetoothCharacteristic>> GetCharacteristicsAsync(Func<IBluetoothCharacteristic, bool>? filter = null, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<IEnumerable<IBluetoothCharacteristic>> GetCharacteristicsAsync(Func<IBluetoothCharacteristic, bool>? filter = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the characteristics with the specified ID asynchronously.
     /// Explore then 0-N
     /// </summary>
     /// <param name="id">The ID of the characteristics to get.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the characteristics with the specified ID.</returns>
-    ValueTask<IEnumerable<IBluetoothCharacteristic>> GetCharacteristicsAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<IEnumerable<IBluetoothCharacteristic>> GetCharacteristicsAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 }

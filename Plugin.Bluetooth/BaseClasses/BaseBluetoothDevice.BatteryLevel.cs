@@ -2,7 +2,7 @@ using Plugin.Bluetooth.BluetoothSigSpecific.ServiceDefinitions;
 
 namespace Plugin.Bluetooth.BaseClasses;
 
-public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoothDevice
+public abstract partial class BaseBluetoothDevice
 {
     /// <inheritdoc/>
     public double? BatteryLevelPercent

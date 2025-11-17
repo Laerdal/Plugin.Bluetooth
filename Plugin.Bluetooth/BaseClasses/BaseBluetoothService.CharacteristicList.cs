@@ -14,7 +14,9 @@ public abstract partial class BaseBluetoothService
 
     private ObservableCollection<IBluetoothCharacteristic>? _characteristics;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the collection of characteristics associated with this Bluetooth service.
+    /// </summary>
     protected ObservableCollection<IBluetoothCharacteristic> Characteristics
     {
         get

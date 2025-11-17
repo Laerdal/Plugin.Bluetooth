@@ -45,28 +45,28 @@ public abstract partial class BaseBluetoothService
     }
 
     /// <inheritdoc/>
-    public async ValueTask<IBluetoothCharacteristic?> GetCharacteristicOrDefaultAsync(Func<IBluetoothCharacteristic, bool> filter, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask<IBluetoothCharacteristic?> GetCharacteristicOrDefaultAsync(Func<IBluetoothCharacteristic, bool> filter, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        await ExploreCharacteristicsAsync(false, nativeOptions, timeout, cancellationToken).ConfigureAwait(false);
+        await ExploreCharacteristicsAsync(false, timeout, cancellationToken).ConfigureAwait(false);
         return GetCharacteristicOrDefault(filter);
     }
 
     /// <inheritdoc/>
-    public ValueTask<IBluetoothCharacteristic?> GetCharacteristicOrDefaultAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask<IBluetoothCharacteristic?> GetCharacteristicOrDefaultAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return GetCharacteristicOrDefaultAsync(characteristic => characteristic.Id == id, nativeOptions, timeout, cancellationToken);
+        return GetCharacteristicOrDefaultAsync(characteristic => characteristic.Id == id, timeout, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async ValueTask<IEnumerable<IBluetoothCharacteristic>> GetCharacteristicsAsync(Func<IBluetoothCharacteristic, bool>? filter = null, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask<IEnumerable<IBluetoothCharacteristic>> GetCharacteristicsAsync(Func<IBluetoothCharacteristic, bool>? filter = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        await ExploreCharacteristicsAsync(false, nativeOptions, timeout, cancellationToken).ConfigureAwait(false);
+        await ExploreCharacteristicsAsync(false, timeout, cancellationToken).ConfigureAwait(false);
         return GetCharacteristics(filter);
     }
 
     /// <inheritdoc/>
-    public ValueTask<IEnumerable<IBluetoothCharacteristic>> GetCharacteristicsAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask<IEnumerable<IBluetoothCharacteristic>> GetCharacteristicsAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return GetCharacteristicsAsync(characteristic => characteristic.Id == id, nativeOptions, timeout, cancellationToken);
+        return GetCharacteristicsAsync(characteristic => characteristic.Id == id, timeout, cancellationToken);
     }
 }

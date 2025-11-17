@@ -1,7 +1,7 @@
 
 namespace Plugin.Bluetooth.BaseClasses;
 
-public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoothDevice
+public abstract partial class BaseBluetoothDevice
 {
     /// <inheritdoc/>
     public event EventHandler<ServicesAddedEventArgs>? ServicesAdded;
@@ -14,7 +14,9 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
 
     private ObservableCollection<IBluetoothService>? _services;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// The services collection.
+    /// </summary>
     protected ObservableCollection<IBluetoothService> Services
     {
         get

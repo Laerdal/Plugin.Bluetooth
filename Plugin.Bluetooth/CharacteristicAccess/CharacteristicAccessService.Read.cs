@@ -24,10 +24,10 @@ public abstract partial class CharacteristicAccessService<TRead, TWrite>
     }
 
     /// <inheritdoc />
-    public async Task<TRead> ReadAsync(IBluetoothDevice device, bool useLastValueIfPreviouslyRead = false, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async Task<TRead> ReadAsync(IBluetoothDevice device, bool useLastValueIfPreviouslyRead = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         var characteristic = await GetCharacteristicAsync(device).ConfigureAwait(false);
-        var rawByteArray = await characteristic.ReadValueAsync(useLastValueIfPreviouslyRead, nativeOptions, timeout, cancellationToken).ConfigureAwait(false);
+        var rawByteArray = await characteristic.ReadValueAsync(useLastValueIfPreviouslyRead, timeout, cancellationToken).ConfigureAwait(false);
         return FromBytes(rawByteArray);
     }
 }

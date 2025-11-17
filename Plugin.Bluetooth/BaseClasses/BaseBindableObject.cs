@@ -99,7 +99,7 @@ public abstract class BaseBindableObject : INotifyPropertyChanged
             return false; // No change
         }
 
-        _values.AddOrUpdate(propertyName, value, (key, oldValue) => value);
+        _values.AddOrUpdate(propertyName, value, (_, _) => value);
         OnPropertyChanged(propertyName);
         return true;
     }
@@ -126,7 +126,7 @@ public abstract class BaseBindableObject : INotifyPropertyChanged
             return false; // No change
         }
 
-        _values.AddOrUpdate(propertyName, value, (key, oldValue) => value);
+        _values.AddOrUpdate(propertyName, value, (_, _) => value);
         OnPropertyChanged(propertyName);
         return true;
     }
@@ -255,16 +255,16 @@ public abstract class BaseBindableObject : INotifyPropertyChanged
 
         static PropertyInfo GetPropertyInfo(object obj, string propertyName)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(propertyName, nameof(propertyName));
-            ArgumentNullException.ThrowIfNull(obj, nameof(obj));
+            ArgumentException.ThrowIfNullOrWhiteSpace(propertyName);
+            ArgumentNullException.ThrowIfNull(obj);
 
             var propertyInfo = obj.GetType().GetProperty(propertyName);
             return propertyInfo == null ? throw new ArgumentException($"Property '{propertyName}' not found on type '{obj.GetType().FullName}'") : propertyInfo;
         }
 
-        static TP? GetPropertyValue<TP>(object obj, PropertyInfo propertyInfo)
+        static Tp? GetPropertyValue<Tp>(object obj, PropertyInfo propertyInfo)
         {
-            return (TP?)propertyInfo.GetValue(obj, null);
+            return (Tp?)propertyInfo.GetValue(obj, null);
         }
     }
 
@@ -316,16 +316,16 @@ public abstract class BaseBindableObject : INotifyPropertyChanged
 
         static PropertyInfo GetPropertyInfo(object obj, string propertyName)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(propertyName, nameof(propertyName));
-            ArgumentNullException.ThrowIfNull(obj, nameof(obj));
+            ArgumentException.ThrowIfNullOrWhiteSpace(propertyName);
+            ArgumentNullException.ThrowIfNull(obj);
 
             var propertyInfo = obj.GetType().GetProperty(propertyName);
             return propertyInfo == null ? throw new ArgumentException($"Property '{propertyName}' not found on type '{obj.GetType().FullName}'") : propertyInfo;
         }
 
-        static TP? GetPropertyValue<TP>(object obj, PropertyInfo propertyInfo)
+        static Tp? GetPropertyValue<Tp>(object obj, PropertyInfo propertyInfo)
         {
-            return (TP?)propertyInfo.GetValue(obj, null);
+            return (Tp?)propertyInfo.GetValue(obj, null);
         }
     }
 
@@ -380,16 +380,16 @@ public abstract class BaseBindableObject : INotifyPropertyChanged
 
         static PropertyInfo GetPropertyInfo(object obj, string propertyName)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(propertyName, nameof(propertyName));
-            ArgumentNullException.ThrowIfNull(obj, nameof(obj));
+            ArgumentException.ThrowIfNullOrWhiteSpace(propertyName);
+            ArgumentNullException.ThrowIfNull(obj);
 
             var propertyInfo = obj.GetType().GetProperty(propertyName);
             return propertyInfo == null ? throw new ArgumentException($"Property '{propertyName}' not found on type '{obj.GetType().FullName}'") : propertyInfo;
         }
 
-        static TP? GetPropertyValue<TP>(object obj, PropertyInfo propertyInfo)
+        static Tp? GetPropertyValue<Tp>(object obj, PropertyInfo propertyInfo)
         {
-            return (TP?)propertyInfo.GetValue(obj, null);
+            return (Tp?)propertyInfo.GetValue(obj, null);
         }
     }
 

@@ -1,7 +1,7 @@
 
 namespace Plugin.Bluetooth.BaseClasses;
 
-public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoothDevice
+public abstract partial class BaseBluetoothDevice
 {
     /// <summary>
     /// Clears all services and their characteristics, disposing of them properly.

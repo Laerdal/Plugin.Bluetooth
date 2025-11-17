@@ -52,7 +52,7 @@ public abstract class CharacteristicAccessService : IBluetoothCharacteristicAcce
     /// <inheritdoc />
     public async Task<IBluetoothCharacteristic> GetCharacteristicAsync(IBluetoothDevice device)
     {
-        ArgumentNullException.ThrowIfNull(device, nameof(device));
+        ArgumentNullException.ThrowIfNull(device);
         var service = await device.GetServiceOrDefaultAsync(ServiceId).ConfigureAwait(false);
         if (service == null)
         {
@@ -71,7 +71,7 @@ public abstract class CharacteristicAccessService : IBluetoothCharacteristicAcce
     /// <inheritdoc />
     public async ValueTask<IBluetoothCharacteristic?> TryGetCharacteristicAsync(IBluetoothDevice device)
     {
-        ArgumentNullException.ThrowIfNull(device, nameof(device));
+        ArgumentNullException.ThrowIfNull(device);
         var service = await device.GetServiceOrDefaultAsync(ServiceId).ConfigureAwait(false);
         if (service == null)
         {

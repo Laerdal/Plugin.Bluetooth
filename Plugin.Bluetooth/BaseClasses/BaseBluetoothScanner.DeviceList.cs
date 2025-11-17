@@ -14,7 +14,9 @@ public abstract partial class BaseBluetoothScanner
 
     private ObservableCollection<IBluetoothDevice>? _devices;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the collection of Bluetooth devices managed by this scanner.
+    /// </summary>
     protected ObservableCollection<IBluetoothDevice> Devices
     {
         get

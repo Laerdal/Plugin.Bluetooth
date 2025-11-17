@@ -1,7 +1,7 @@
 
 namespace Plugin.Bluetooth.BaseClasses;
 
-public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoothDevice
+public abstract partial class BaseBluetoothDevice
 {
     /// <inheritdoc/>
     public bool IsConnected
@@ -95,7 +95,7 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
         NativeRefreshIsConnected();
 
         // Attempt to dispatch exception to the TaskCompletionSource
-        var success = ConnectionTcs?.TrySetException(e) ?? false;
+        var success = (ConnectionTcs?.TrySetException(e) ?? false) || (DisconnectionTcs?.TrySetException(e) ?? false);
         if (success)
         {
             return;
@@ -106,7 +106,7 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
     }
 
     /// <inheritdoc/>
-    public async virtual ValueTask ConnectIfNeededAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async virtual ValueTask ConnectIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();
         if (IsConnected)
@@ -114,11 +114,11 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
             return;
         }
 
-        await ConnectAsync(nativeOptions, timeout, cancellationToken).ConfigureAwait(false);
+        await ConnectAsync(timeout, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
-    public async virtual Task ConnectAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async virtual Task ConnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure we are not already connected
         DeviceIsAlreadyConnectedException.ThrowIfAlreadyConnected(this);
@@ -136,7 +136,7 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
 
         try // try-catch to dispatch exceptions rising from start
         {
-            NativeConnect(nativeOptions, timeout, cancellationToken); // actual start native call
+            NativeConnect(); // actual start native call
         }
         catch (Exception e)
         {
@@ -165,10 +165,7 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
     /// <summary>
     /// Platform-specific implementation to initiate a connection to the device.
     /// </summary>
-    /// <param name="nativeOptions">Platform-specific options for the connection.</param>
-    /// <param name="timeout">Optional timeout for the connection attempt.</param>
-    /// <param name="cancellationToken">Token to cancel the connection attempt.</param>
-    protected abstract void NativeConnect(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    protected abstract void NativeConnect();
 
     #endregion
 
@@ -204,7 +201,7 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
         NativeRefreshIsConnected();
 
         // Attempt to dispatch success to the TaskCompletionSource
-        var success = DisconnectionTcs?.TrySetResultOrException() ?? false;
+        var success = (DisconnectionTcs?.TrySetResultOrException(e) ?? false) || (ConnectionTcs?.TrySetResultOrException(e) ?? false);
         if (success)
         {
             return;
@@ -214,7 +211,7 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
     }
 
     /// <inheritdoc/>
-    public async ValueTask DisconnectIfNeededAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask DisconnectIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();
         if (!IsConnected)
@@ -222,11 +219,11 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
             return;
         }
 
-        await DisconnectAsync(nativeOptions, timeout, cancellationToken).ConfigureAwait(false);
+        await DisconnectAsync(timeout, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
-    public async Task DisconnectAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async Task DisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure we are not already disconnected
         DeviceIsAlreadyDisconnectedException.ThrowIfAlreadyDisconnected(this);
@@ -244,7 +241,7 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
 
         try // try-catch to dispatch exceptions rising from start
         {
-            NativeDisconnect(nativeOptions, timeout, cancellationToken); // actual start native call
+            NativeDisconnect(); // actual start native call
         }
         catch (Exception e)
         {
@@ -273,10 +270,7 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
     /// <summary>
     /// Platform-specific implementation to initiate a disconnection from the device.
     /// </summary>
-    /// <param name="nativeOptions">Platform-specific options for the disconnection.</param>
-    /// <param name="timeout">Optional timeout for the disconnection attempt.</param>
-    /// <param name="cancellationToken">Token to cancel the disconnection attempt.</param>
-    protected abstract void NativeDisconnect(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    protected abstract void NativeDisconnect();
 
     #endregion
 

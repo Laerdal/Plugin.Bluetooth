@@ -75,59 +75,53 @@ public interface IBluetoothCharacteristic : INotifyPropertyChanged, IAsyncDispos
     /// Reads the value of the characteristic asynchronously.
     /// </summary>
     /// <param name="skipIfPreviouslyRead">If true, skips reading if the value was previously read.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous read operation. The task result contains the value read.</returns>
-    ValueTask<ReadOnlyMemory<byte>> ReadValueAsync(bool skipIfPreviouslyRead = false, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<ReadOnlyMemory<byte>> ReadValueAsync(bool skipIfPreviouslyRead = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Writes a value to the characteristic asynchronously.
     /// </summary>
     /// <param name="value">The value to write.</param>
     /// <param name="skipIfOldValueMatchesNewValue">If true, skips writing if the old value matches the new value.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous write operation.</returns>
-    Task WriteValueAsync(ReadOnlyMemory<byte> value, bool skipIfOldValueMatchesNewValue = false, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task WriteValueAsync(ReadOnlyMemory<byte> value, bool skipIfOldValueMatchesNewValue = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Reads the listening status of the characteristic asynchronously.
     /// </summary>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous read operation. The task result contains the listening status.</returns>
-    ValueTask<bool> ReadIsListeningAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<bool> ReadIsListeningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Writes the listening status of the characteristic asynchronously.
     /// </summary>
     /// <param name="shouldBeListening">The desired listening status.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous write operation.</returns>
-    ValueTask WriteIsListeningAsync(bool shouldBeListening, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask WriteIsListeningAsync(bool shouldBeListening,TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Starts listening for notifications from the characteristic asynchronously.
     /// </summary>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    ValueTask StartListeningAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask StartListeningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Stops listening for notifications from the characteristic asynchronously.
     /// </summary>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    ValueTask StopListeningAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask StopListeningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Waits for the value of the characteristic to change asynchronously.

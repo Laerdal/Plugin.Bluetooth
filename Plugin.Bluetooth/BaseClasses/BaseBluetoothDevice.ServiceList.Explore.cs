@@ -1,6 +1,6 @@
 namespace Plugin.Bluetooth.BaseClasses;
 
-public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoothDevice
+public abstract partial class BaseBluetoothDevice
 {
     /// <summary>
     /// Gets a value indicating whether service exploration is currently in progress.
@@ -56,11 +56,16 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
         BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
     }
 
-    /// <inheritdoc/>
-    protected abstract ValueTask NativeServicesExplorationAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Platform-specific implementation to explore services.
+    /// </summary>
+    /// <param name="timeout">Optional timeout for the operation.</param>
+    /// <param name="cancellationToken">Optional cancellation token for the operation.</param>
+    /// <returns>A ValueTask representing the asynchronous operation.</returns>
+    protected abstract ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <inheritdoc/>
-    public async Task ExploreServicesAsync(bool clearBeforeExploring = false, bool exploreCharacteristicsToo = false, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async Task ExploreServicesAsync(bool clearBeforeExploring = false, bool exploreCharacteristicsToo = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Check if services have already been explored
         if (Services.Any() && !clearBeforeExploring)
@@ -90,7 +95,7 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
             // Ensure Device is Connected
             DeviceNotConnectedException.ThrowIfNotConnected(this);
 
-            await NativeServicesExplorationAsync(nativeOptions, timeout, cancellationToken).ConfigureAwait(false); // actual service exploration native call
+            await NativeServicesExplorationAsync(timeout, cancellationToken).ConfigureAwait(false); // actual service exploration native call
         }
         catch (Exception e)
         {
@@ -107,7 +112,7 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
             {
                 foreach (var service in Services.ToList())
                 {
-                    await service.ExploreCharacteristicsAsync(false, nativeOptions, timeout, cancellationToken).ConfigureAwait(false);
+                    await service.ExploreCharacteristicsAsync(false, timeout, cancellationToken).ConfigureAwait(false);
                 }
             }
         }

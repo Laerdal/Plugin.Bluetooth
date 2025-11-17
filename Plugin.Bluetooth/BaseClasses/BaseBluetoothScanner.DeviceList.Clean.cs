@@ -9,7 +9,9 @@ public abstract partial class BaseBluetoothScanner
     /// <returns>A task that completes when all devices have been cleaned up.</returns>
     public async ValueTask CleanAsync(IEnumerable<IBluetoothDevice> devices)
     {
-        foreach (var device in devices ?? [])
+        ArgumentNullException.ThrowIfNull(devices);
+        
+        foreach (var device in devices)
         {
             await CleanAsync(device).ConfigureAwait(false);
         }

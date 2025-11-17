@@ -4,7 +4,7 @@ namespace Plugin.Bluetooth.Abstractions;
 /// <summary>
 /// Interface for managing and scanning Bluetooth devices, extending <see cref="IBluetoothActivity" />.
 /// </summary>
-public partial interface IBluetoothScanner : IBluetoothActivity
+public interface IBluetoothScanner : IBluetoothActivity
 {
     /// <summary>
     /// Gets the repository for known Bluetooth services and characteristics.

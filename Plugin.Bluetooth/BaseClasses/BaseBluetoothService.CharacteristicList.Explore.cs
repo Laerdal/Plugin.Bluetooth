@@ -56,11 +56,16 @@ public abstract partial class BaseBluetoothService
         BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
     }
 
-    /// <inheritdoc/>
-    protected abstract ValueTask NativeCharacteristicsExplorationAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Platform-specific implementation to explore characteristics.
+    /// </summary>
+    /// <param name="timeout">Optional timeout for the operation.</param>
+    /// <param name="cancellationToken">Optional cancellation token for the operation.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    protected abstract ValueTask NativeCharacteristicsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <inheritdoc/>
-    public async Task ExploreCharacteristicsAsync(bool clearBeforeExploring = false, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async Task ExploreCharacteristicsAsync(bool clearBeforeExploring = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Check if characteristics have already been explored
         if (Characteristics.Any() && !clearBeforeExploring)
@@ -90,7 +95,7 @@ public abstract partial class BaseBluetoothService
             // Ensure Device is Connected
             DeviceNotConnectedException.ThrowIfNotConnected(this.Device);
 
-            await NativeCharacteristicsExplorationAsync(nativeOptions, timeout, cancellationToken).ConfigureAwait(false); // actual characteristic exploration native call
+            await NativeCharacteristicsExplorationAsync(timeout, cancellationToken).ConfigureAwait(false); // actual characteristic exploration native call
         }
         catch (Exception e)
         {

@@ -36,7 +36,7 @@ public abstract partial class BaseBluetoothCharacteristic
     /// <exception cref="CharacteristicAlreadyWritingException">Thrown when another write operation is already in progress despite semaphore protection.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
-    public async Task WriteValueAsync(ReadOnlyMemory<byte> value, bool skipIfOldValueMatchesNewValue = false, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async Task WriteValueAsync(ReadOnlyMemory<byte> value, bool skipIfOldValueMatchesNewValue = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
         DeviceNotConnectedException.ThrowIfNotConnected(Service.Device);
@@ -65,7 +65,7 @@ public abstract partial class BaseBluetoothCharacteristic
         try
         {
             // Actual start writing native call
-            await NativeWriteValueAsync(value, nativeOptions).ConfigureAwait(false);
+            await NativeWriteValueAsync(value).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -95,13 +95,12 @@ public abstract partial class BaseBluetoothCharacteristic
     /// This method should initiate the platform-specific operation to write the value to the characteristic.
     /// </summary>
     /// <param name="value">The value to write to the characteristic.</param>
-    /// <param name="nativeOptions">Platform-specific options for the write operation.</param>
     /// <returns>A task that completes when the native write operation is initiated.</returns>
     /// <remarks>
     /// Implementations should call <see cref="OnWriteValueSucceeded"/> when the operation succeeds
     /// or <see cref="OnWriteValueFailed"/> when it fails.
     /// </remarks>
-    protected abstract ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value, Dictionary<string, object>? nativeOptions = null);
+    protected abstract ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value);
 
     /// <summary>
     /// Called when writing the characteristic's value succeeds. Completes the task successfully.

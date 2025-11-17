@@ -4,7 +4,7 @@ namespace Plugin.Bluetooth.Abstractions;
 /// <summary>
 /// Interface representing a Bluetooth device, providing properties and methods for interacting with it.
 /// </summary>
-public partial interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDisposable
+public interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDisposable
 {
     /// <summary>
     /// Gets the Bluetooth scanner associated with this device.
@@ -100,19 +100,17 @@ public partial interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDispos
     /// <summary>
     /// Connects to the device if it is not already connected asynchronously.
     /// </summary>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="TimeoutException">Thrown if the connection attempt times out.</exception>
     /// <exception cref="DeviceFailedToConnectException">Thrown if the connection attempt fails.</exception>
     /// <exception cref="NativeBluetoothException">Thrown if the native connection layer fails.</exception>
-    ValueTask ConnectIfNeededAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask ConnectIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Connects to the device asynchronously.
     /// </summary>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
@@ -120,7 +118,7 @@ public partial interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDispos
     /// <exception cref="DeviceFailedToConnectException">Thrown if the connection attempt fails.</exception>
     /// <exception cref="DeviceIsAlreadyConnectedException">Thrown if the device is already connecting.</exception>
     /// <exception cref="NativeBluetoothException">Thrown if the native connection layer fails.</exception>
-    Task ConnectAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task ConnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -144,19 +142,17 @@ public partial interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDispos
     /// <summary>
     /// Disconnects from the device if it is not already disconnected asynchronously.
     /// </summary>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="TimeoutException">Thrown if the disconnection attempt times out.</exception>
     /// <exception cref="DeviceFailedToConnectException">Thrown if the disconnection attempt fails.</exception>
     /// <exception cref="NativeBluetoothException">Thrown if the native disconnection layer fails.</exception>
-    ValueTask DisconnectIfNeededAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask DisconnectIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Disconnects from the device asynchronously.
     /// </summary>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
@@ -164,7 +160,7 @@ public partial interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDispos
     /// <exception cref="DeviceFailedToDisconnectException">Thrown if the disconnection attempt fails.</exception>
     /// <exception cref="DeviceIsAlreadyDisconnectedException">Thrown if the device is already disconnected.</exception>
     /// <exception cref="NativeBluetoothException">Thrown if the native connection layer fails.</exception>
-    Task DisconnectAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task DisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #region UnexpectedDisconnection
 
@@ -243,11 +239,10 @@ public partial interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDispos
     /// </summary>
     /// <param name="clearBeforeExploring">True to clear the services before exploring.</param>
     /// <param name="exploreCharacteristicsToo">True to explore characteristics as well.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task ExploreServicesAsync(bool clearBeforeExploring = false, bool exploreCharacteristicsToo = false, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task ExploreServicesAsync(bool clearBeforeExploring = false, bool exploreCharacteristicsToo = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -281,22 +276,20 @@ public partial interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDispos
     /// Explore then bool
     /// </summary>
     /// <param name="id">The ID of the service to check for.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating whether the device has the service.</returns>
-    ValueTask<bool> HasServiceAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<bool> HasServiceAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if the device has a service with the specified ID asynchronously.
     /// Explore then bool
     /// </summary>
     /// <param name="filter">The filter to apply to the services.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating whether the device has the service.</returns>
-    ValueTask<bool> HasServiceAsync(Func<IBluetoothService, bool> filter, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<bool> HasServiceAsync(Func<IBluetoothService, bool> filter,TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -341,46 +334,42 @@ public partial interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDispos
     /// Explore then 0-1
     /// </summary>
     /// <param name="filter">The filter to apply to the services.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the service that matches the filter, or null if no such service exists.</returns>
     /// <exception cref="MultipleServicesFoundException">If more than 1 result exists.</exception>
-    ValueTask<IBluetoothService?> GetServiceOrDefaultAsync(Func<IBluetoothService, bool> filter, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<IBluetoothService?> GetServiceOrDefaultAsync(Func<IBluetoothService, bool> filter, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the service with the specified ID asynchronously.
     /// Explore then 0-1
     /// </summary>
     /// <param name="id">The ID of the service to get.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the service with the specified ID, or null if no such service exists.</returns>
     /// <exception cref="MultipleServicesFoundException">If more than 1 result exists.</exception>
-    ValueTask<IBluetoothService?> GetServiceOrDefaultAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<IBluetoothService?> GetServiceOrDefaultAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the services that match the specified filter asynchronously.
     /// Explore then 0-N
     /// </summary>
     /// <param name="filter">The filter to apply to the services.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the services that match the filter, or all services if the filter is null.</returns>
-    ValueTask<IEnumerable<IBluetoothService>> GetServicesAsync(Func<IBluetoothService, bool>? filter = null, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<IEnumerable<IBluetoothService>> GetServicesAsync(Func<IBluetoothService, bool>? filter = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the services with the specified ID asynchronously.
     /// Explore then 0-N
     /// </summary>
     /// <param name="id">The ID of the services to get.</param>
-    /// <param name="nativeOptions">Native platform-specific options for this operation.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the services with the specified ID.</returns>
-    ValueTask<IEnumerable<IBluetoothService>> GetServicesAsync(Guid id, Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<IEnumerable<IBluetoothService>> GetServicesAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 

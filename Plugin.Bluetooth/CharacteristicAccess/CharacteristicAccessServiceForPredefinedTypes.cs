@@ -20,33 +20,18 @@ public class CharacteristicAccessServiceForPredefinedTypes<TRead, TWrite> : Char
     /// <inheritdoc />
     protected override ReadOnlyMemory<byte> ToBytes(TWrite input)
     {
-        try
-        {
-            return input.ToByteArray();
-        }
-        catch (Exception)
-        {
-            // LOG : WARNING - Error occurred serializing input of type {typeof(TWrite)} into bytes
-            throw;
-        }
+        return input.ToByteArray();
     }
 
     /// <inheritdoc />
     protected override TRead FromBytes(ReadOnlyMemory<byte> value)
     {
         var output = new TRead();
-        try
+
+        output.FromByteArray(value);
+        if (output is IBluetoothCharacteristicObjectReadableMultiType multiType)
         {
-            output.FromByteArray(value);
-            if (output is IBluetoothCharacteristicObjectReadableMultiType multiType)
-            {
-                output = (TRead)multiType.ToFinalObjectType();
-            }
-        }
-        catch (Exception)
-        {
-            // LOG : WARNING - Error occurred parsing value into {typeof(TRead)}
-            throw;
+            output = (TRead)multiType.ToFinalObjectType();
         }
 
         return output;
