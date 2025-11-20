@@ -13,7 +13,7 @@
         <TargetFrameworks>net10.0</TargetFrameworks>
         <TargetFrameworks>$(TargetFrameworks);net10.0-android36.1</TargetFrameworks>
         <TargetFrameworks>$(TargetFrameworks);net10.0-maccatalyst</TargetFrameworks>
-        <TargetFrameworks>$(TargetFrameworks);net10.0-ios</TargetFrameworks> 
+        <TargetFrameworks>$(TargetFrameworks);net10.0-ios</TargetFrameworks>
         <TargetFrameworks>$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
     </PropertyGroup>
 
@@ -39,14 +39,20 @@
     <!-- ==================== NESTED FILES ======================= -->
     <ItemGroup>
         <!-- Files dependent on eachother -->
+        <Compile Update="**\BaseBluetoothActivity.*.cs">
+            <DependentUpon>BaseBluetoothActivity.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\BaseBluetoothAdvertisement.*.cs">
+            <DependentUpon>BaseBluetoothAdvertisement.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\BaseBluetoothBroadcaster.*.cs">
+            <DependentUpon>BaseBluetoothBroadcaster.cs</DependentUpon>
+        </Compile>
         <Compile Update="**\BaseBluetoothCharacteristic.*.cs">
             <DependentUpon>BaseBluetoothCharacteristic.cs</DependentUpon>
         </Compile>
         <Compile Update="**\BaseBluetoothDevice.*.cs">
             <DependentUpon>BaseBluetoothDevice.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BaseBluetoothManager.*.cs">
-            <DependentUpon>BaseBluetoothManager.cs</DependentUpon>
         </Compile>
         <Compile Update="**\BaseBluetoothScanner.*.cs">
             <DependentUpon>BaseBluetoothScanner.cs</DependentUpon>
@@ -54,14 +60,21 @@
         <Compile Update="**\BaseBluetoothService.*.cs">
             <DependentUpon>BaseBluetoothService.cs</DependentUpon>
         </Compile>
+
+        <Compile Update="**\BluetoothActivity.*.cs">
+            <DependentUpon>BluetoothActivity.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\BluetoothAdvertisement.*.cs">
+            <DependentUpon>BluetoothAdvertisement.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\BluetoothBroadcaster.*.cs">
+            <DependentUpon>BluetoothBroadcaster.cs</DependentUpon>
+        </Compile>
         <Compile Update="**\BluetoothCharacteristic.*.cs">
             <DependentUpon>BluetoothCharacteristic.cs</DependentUpon>
         </Compile>
         <Compile Update="**\BluetoothDevice.*.cs">
             <DependentUpon>BluetoothDevice.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothManager.*.cs">
-            <DependentUpon>BluetoothManager.cs</DependentUpon>
         </Compile>
         <Compile Update="**\BluetoothScanner.*.cs">
             <DependentUpon>BluetoothScanner.cs</DependentUpon>
