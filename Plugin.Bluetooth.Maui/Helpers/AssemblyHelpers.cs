@@ -14,8 +14,6 @@ public static class AssemblyHelpers
     /// <exception cref="InvalidOperationException"></exception>
     public static Assembly GetAssemblyFromName(string assemblyName)
     {
-        ArgumentNullException.ThrowIfNull(assemblyName, nameof(assemblyName));
-
         return AppDomain.CurrentDomain.GetAssemblies()
             .FirstOrDefault(a => a.GetName().Name == assemblyName)
                ?? throw new InvalidOperationException($"Assembly with name '{assemblyName}' not found in current AppDomain.");

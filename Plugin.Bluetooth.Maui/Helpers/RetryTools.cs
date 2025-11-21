@@ -16,7 +16,7 @@ public static class RetryTools
     /// <exception cref="AggregateException">Thrown when all retry attempts fail, containing all exceptions encountered.</exception>
     public async static Task RunWithRetriesAsync(Func<bool> action, int maxRetries, TimeSpan delayBetweenRetries)
     {
-        ArgumentNullException.ThrowIfNull(action, nameof(action));
+        ArgumentNullException.ThrowIfNull(action);
         var success = false;
         var attempts = 0;
         var exceptions = new List<Exception>();
@@ -51,7 +51,7 @@ public static class RetryTools
     /// <exception cref="AggregateException">Thrown when all retry attempts fail, containing all exceptions encountered.</exception>
     public async static Task RunWithRetriesAsync(Action action, int maxRetries, TimeSpan delayBetweenRetries)
     {
-        ArgumentNullException.ThrowIfNull(action, nameof(action));
+        ArgumentNullException.ThrowIfNull(action);
         var success = false;
         var attempts = 0;
         var exceptions = new List<Exception>();

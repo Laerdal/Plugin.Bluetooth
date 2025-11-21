@@ -7,36 +7,30 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster
     /// <inheritdoc/>
     protected override void NativeRefreshIsBluetoothOn()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     protected override void NativeRefreshIsRunning()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
-    protected override void NativeStart(Dictionary<string, object>? nativeOptions = null)
+    protected override void NativeStart()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     protected override void NativeStop()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
-    protected override ValueTask NativeInitializeAsync(Dictionary<string, object>? nativeOptions = null)
+    protected override ValueTask NativeInitializeAsync()
     {
-        throw new NotImplementedException();
-    }
-
-    /// <inheritdoc/>
-    public override Task NativeSetAdvertisingDataAsync(Dictionary<string, object>? nativeOptions = null)
-    {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 }
