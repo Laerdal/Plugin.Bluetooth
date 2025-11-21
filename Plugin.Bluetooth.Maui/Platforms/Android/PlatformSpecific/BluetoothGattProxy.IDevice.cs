@@ -13,9 +13,9 @@ public partial class BluetoothGattProxy
         /// <summary>
         /// Gets the service wrapper for the specified GATT service.
         /// </summary>
-        /// <param name="characteristicService">The GATT service to get a wrapper for.</param>
+        /// <param name="nativeService">The GATT service to get a wrapper for.</param>
         /// <returns>The service wrapper instance.</returns>
-        public IService GetService(BluetoothGattService? characteristicService);
+        public IService GetService(BluetoothGattService? nativeService);
 
         /// <summary>
         /// Called when the connection state changes.

@@ -14,10 +14,10 @@ public partial class BluetoothCharacteristic
     }
 
     /// <inheritdoc/>
-    protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value, Dictionary<string, object>? nativeOptions = null)
+    protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
         // Ensure BluetoothGatt exists and is available
-        ArgumentNullException.ThrowIfNull(BluetoothGattProxy, nameof(BluetoothGattProxy));
+        ArgumentNullException.ThrowIfNull(BluetoothGattProxy);
 
         // Ensure READ is supported
         CharacteristicCantWriteException.ThrowIfCantWrite(this);
@@ -29,7 +29,7 @@ public partial class BluetoothCharacteristic
     private void BluetoothGattCharacteristicWrite(ReadOnlyMemory<byte> value)
     {
         // Ensure BluetoothGatt exists and is available
-        ArgumentNullException.ThrowIfNull(BluetoothGattProxy, nameof(BluetoothGattProxy));
+        ArgumentNullException.ThrowIfNull(BluetoothGattProxy);
 
         // Ensure WRITE is supported
         CharacteristicCantWriteException.ThrowIfCantWrite(this);
@@ -77,20 +77,16 @@ public partial class BluetoothCharacteristic
             return GattWriteType.Default;
         }
 
-        throw new UnreachableException("This case should be cought by CharacteristicCantWriteException.ThrowIfCantWrite");
+        throw new UnreachableException("This case should be caught by CharacteristicCantWriteException.ThrowIfCantWrite");
     }
 
-    /// <summary>
-    /// Called when a GATT characteristic write operation completes on the Android platform.
-    /// </summary>
-    /// <param name="status">The status of the GATT operation.</param>
-    /// <param name="characteristic">The characteristic that was written to.</param>
+    /// <inheritdoc/>
     /// <exception cref="AndroidNativeGattStatusException">Thrown when the GATT status indicates an error.</exception>
-    public void OnCharacteristicWrite(GattStatus status, BluetoothGattCharacteristic? characteristic)
+    public void OnCharacteristicWrite(GattStatus status, BluetoothGattCharacteristic? nativeCharacteristic)
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(characteristic, nameof(characteristic));
+            ArgumentNullException.ThrowIfNull(nativeCharacteristic);
             AndroidNativeGattStatusException.ThrowIfNotSuccess(status);
             OnWriteValueSucceeded();
         }

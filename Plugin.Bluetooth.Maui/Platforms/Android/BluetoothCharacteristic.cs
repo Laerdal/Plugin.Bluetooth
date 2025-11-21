@@ -2,7 +2,7 @@ using Plugin.Bluetooth.Maui.PlatformSpecific;
 
 namespace Plugin.Bluetooth.Maui;
 
-/// <inheritdoc/>
+/// <inheritdoc cref="BaseBluetoothCharacteristic"/>
 public partial class BluetoothCharacteristic : BaseBluetoothCharacteristic, BluetoothGattProxy.ICharacteristic
 {
     /// <summary>

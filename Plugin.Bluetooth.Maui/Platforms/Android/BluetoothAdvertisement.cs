@@ -14,7 +14,7 @@ public class BluetoothAdvertisement : BaseBluetoothAdvertisement
 
     public BluetoothAdvertisement(ScanResult scanResult)
     {
-        ArgumentNullException.ThrowIfNull(scanResult, nameof(scanResult));
+        ArgumentNullException.ThrowIfNull(scanResult);
         ArgumentNullException.ThrowIfNull(scanResult.ScanRecord, nameof(scanResult.ScanRecord));
         ArgumentNullException.ThrowIfNull(scanResult.Device, nameof(scanResult.Device));
 
@@ -127,7 +127,7 @@ public class BluetoothAdvertisement : BaseBluetoothAdvertisement
     /// <inheritdoc/>
     protected override string InitBluetoothAddress()
     {
-        return ScanResult.Device?.Address ?? string.Empty;
+        return BluetoothDevice.Address ?? string.Empty;
     }
 
     #endregion

@@ -1,3 +1,6 @@
+using Plugin.Bluetooth.Maui.PlatformSpecific.Exceptions;
+using Plugin.Bluetooth.Maui.PlatformSpecific.NativeOptions;
+
 using Exception = System.Exception;
 
 namespace Plugin.Bluetooth.Maui.PlatformSpecific;
@@ -31,29 +34,12 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
     /// <param name="connectionOptions">The connection options for the GATT connection.</param>
     /// <param name="nativeDevice">The native Android Bluetooth device.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null or when GATT connection fails.</exception>
-    public BluetoothGattProxy(IDevice device, IConnectionOptions connectionOptions, Android.Bluetooth.BluetoothDevice nativeDevice)
+    public BluetoothGattProxy(IDevice device, ConnectionOptions? connectionOptions, Android.Bluetooth.BluetoothDevice nativeDevice)
     {
         Device = device ?? throw new ArgumentNullException(nameof(device));
         ArgumentNullException.ThrowIfNull(connectionOptions);
         ArgumentNullException.ThrowIfNull(nativeDevice);
-
-        if (OperatingSystem.IsAndroidVersionAtLeast(26) && connectionOptions.BluetoothPhy.HasValue)
-        {
-            BluetoothGatt = nativeDevice.ConnectGatt(Android.App.Application.Context,
-                                                     connectionOptions.UseAutoConnect,
-                                                     this,
-                                                     connectionOptions.BluetoothTransports ?? Android.Bluetooth.BluetoothTransports.Le,
-                                                     connectionOptions.BluetoothPhy.Value)
-                         ?? throw new InvalidOperationException("Failed to create GATT connection");
-        }
-        else if (OperatingSystem.IsAndroidVersionAtLeast(23))
-        {
-            BluetoothGatt = nativeDevice.ConnectGatt(Android.App.Application.Context, connectionOptions.UseAutoConnect, this, connectionOptions.BluetoothTransports ?? Android.Bluetooth.BluetoothTransports.Le) ?? throw new InvalidOperationException("Failed to create GATT connection");
-        }
-        else
-        {
-            BluetoothGatt = nativeDevice.ConnectGatt(Android.App.Application.Context, connectionOptions.UseAutoConnect, this) ?? throw new InvalidOperationException("Failed to create GATT connection");
-        }
+        BluetoothGatt = nativeDevice.ConnectGatt(connectionOptions, this) ?? throw new InvalidOperationException("Failed to create GATT connection");
     }
 
     /// <inheritdoc/>
@@ -103,15 +89,34 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
             return false;
         }
     }
-
-    /// <inheritdoc cref="BluetoothGattCallback.OnCharacteristicChanged(BluetoothGatt, BluetoothGattCharacteristic)"/>
+    /// <param name="gatt">GATT client the characteristic is associated with</param>
+    /// <param name="characteristic">Characteristic that has been updated as a result of a remote
+    /// notification event.</param>
+    /// <summary>Callback triggered as a result of a remote characteristic notification.</summary>
+    /// <remarks>
+    ///     <para>Callback triggered as a result of a remote characteristic notification.</para>
+    ///     <para>This member is deprecated. Use <c>BluetoothGattCallback#onCharacteristicChanged(BluetoothGatt,
+    ///     BluetoothGattCharacteristic, byte[])</c> as it is memory safe by providing the
+    ///     characteristic value at the time of notification.</para>
+    ///     <para>
+    ///         <format type="text/html">
+    ///             <a href="https://developer.android.com/reference/android/bluetooth/BluetoothGattCallback#onCharacteristicChanged(android.bluetooth.BluetoothGatt,%20android.bluetooth.BluetoothGattCharacteristic)" title="Reference documentation">Java documentation for <code>android.bluetooth.BluetoothGattCallback.onCharacteristicChanged(android.bluetooth.BluetoothGatt, android.bluetooth.BluetoothGattCharacteristic)</code>.</a>
+    ///         </format>
+    ///     </para>
+    ///     <para>
+    ///         Portions of this page are modifications based on work created and shared by the
+    ///         <format type="text/html"><a href="https://developers.google.com/terms/site-policies" title="Android Open Source Project">Android Open Source Project</a></format>
+    ///          and used according to terms described in the
+    ///         <format type="text/html"><a href="https://creativecommons.org/licenses/by/2.5/" title="Creative Commons 2.5 Attribution License">Creative Commons 2.5 Attribution License.</a></format></para>
+    /// </remarks>
+    /// <since version="Added in API level 18" />
     public override void OnCharacteristicChanged(BluetoothGatt? gatt, BluetoothGattCharacteristic? characteristic)
     {
         try
         {
             if (OperatingSystem.IsAndroidVersionAtLeast(33))
             {
-                throw new NotImplementedException("This callback OnCharacteristicChanged(BluetoothGatt?, BluetoothGattCharacteristic?) should not be triggered in Android versions above 33.");
+                throw new AndroidNativeBluetoothException("This callback OnCharacteristicChanged(BluetoothGatt?, BluetoothGattCharacteristic?) should not be triggered in Android versions above 33.");
             }
 
             // GET SERVICE
@@ -129,7 +134,26 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         }
     }
 
-    /// <inheritdoc cref="BluetoothGattCallback.OnCharacteristicChanged(BluetoothGatt, BluetoothGattCharacteristic, byte[])"/>
+    /// <param name="gatt">GATT client the characteristic is associated with</param>
+    /// <param name="characteristic">Characteristic that has been updated as a result of a remote
+    /// notification event.</param>
+    /// <param name="value">notified characteristic value</param>
+    /// <summary>Callback triggered as a result of a remote characteristic notification.</summary>
+    /// <remarks>
+    ///     <para>Callback triggered as a result of a remote characteristic notification. Note that the value
+    /// within the characteristic object may have changed since receiving the remote characteristic
+    /// notification, so check the parameter value for the value at the time of notification.</para>
+    ///     <para>
+    ///         <format type="text/html">
+    ///             <a href="https://developer.android.com/reference/android/bluetooth/BluetoothGattCallback#onCharacteristicChanged(android.bluetooth.BluetoothGatt,%20android.bluetooth.BluetoothGattCharacteristic,%20byte[])" title="Reference documentation">Java documentation for <code>android.bluetooth.BluetoothGattCallback.onCharacteristicChanged(android.bluetooth.BluetoothGatt, android.bluetooth.BluetoothGattCharacteristic, byte[])</code>.</a>
+    ///         </format>
+    ///     </para>
+    ///     <para>
+    ///         Portions of this page are modifications based on work created and shared by the
+    ///         <format type="text/html"><a href="https://developers.google.com/terms/site-policies" title="Android Open Source Project">Android Open Source Project</a></format>
+    ///          and used according to terms described in the
+    ///         <format type="text/html"><a href="https://creativecommons.org/licenses/by/2.5/" title="Creative Commons 2.5 Attribution License">Creative Commons 2.5 Attribution License.</a></format></para>
+    /// </remarks>
     public override void OnCharacteristicChanged(BluetoothGatt? gatt, BluetoothGattCharacteristic? characteristic, byte[]? value)
     {
         try
@@ -201,7 +225,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         {
             if (OperatingSystem.IsAndroidVersionAtLeast(33))
             {
-                throw new NotImplementedException("This callback OnCharacteristicRead(BluetoothGatt?, BluetoothGattCharacteristic?, GattStatus) should not be triggered in Android versions above 33.");
+                throw new AndroidNativeBluetoothException("This callback OnCharacteristicRead(BluetoothGatt?, BluetoothGattCharacteristic?, GattStatus) should not be triggered in Android versions above 33.");
             }
 
             // GET SERVICE
@@ -405,7 +429,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         {
             if (OperatingSystem.IsAndroidVersionAtLeast(33))
             {
-                throw new NotImplementedException("This callback OnDescriptorRead(BluetoothGatt?, BluetoothGattDescriptor?, GattStatus) should not be triggered in Android versions above 33.");
+                throw new AndroidNativeBluetoothException("This callback OnDescriptorRead(BluetoothGatt?, BluetoothGattDescriptor?, GattStatus) should not be triggered in Android versions above 33.");
             }
 
             // GET SERVICE
@@ -559,7 +583,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         }
     }
 
-    /// <inheritdoc cref="BluetoothGattCallback.OnServicesDiscovered(BluetoothGatt, GattStatus)"/>
+    /// <inheritdoc cref="BluetoothGattCallback.OnServicesDiscovered"/>
     public override void OnServicesDiscovered(BluetoothGatt? gatt, GattStatus status)
     {
         try
@@ -573,7 +597,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         }
     }
 
-    /// <inheritdoc cref="BluetoothGattCallback.OnConnectionStateChange(BluetoothGatt, GattStatus, ProfileState)"/>
+    /// <inheritdoc cref="BluetoothGattCallback.OnConnectionStateChange"/>
     public override void OnConnectionStateChange(BluetoothGatt? gatt, GattStatus status, ProfileState newState)
     {
         try

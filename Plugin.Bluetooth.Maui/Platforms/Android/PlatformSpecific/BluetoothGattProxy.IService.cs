@@ -13,9 +13,9 @@ public partial class BluetoothGattProxy
         /// <summary>
         /// Gets the characteristic wrapper for the specified GATT characteristic.
         /// </summary>
-        /// <param name="characteristic">The GATT characteristic to get a wrapper for.</param>
+        /// <param name="nativeCharacteristic">The GATT characteristic to get a wrapper for.</param>
         /// <returns>The characteristic wrapper instance.</returns>
-        ICharacteristic GetCharacteristic(BluetoothGattCharacteristic? characteristic);
+        ICharacteristic GetCharacteristic(BluetoothGattCharacteristic? nativeCharacteristic);
     }
 }
 

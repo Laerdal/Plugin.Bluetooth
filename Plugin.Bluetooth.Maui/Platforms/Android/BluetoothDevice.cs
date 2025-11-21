@@ -1,68 +1,50 @@
 using Plugin.Bluetooth.Maui.PlatformSpecific;
-using Plugin.Bluetooth.Maui.PlatformSpecific.BroadcastReceivers;
+using Plugin.Bluetooth.Maui.PlatformSpecific.Exceptions;
 
 namespace Plugin.Bluetooth.Maui;
 
-public class BluetoothDevice : BaseBluetoothDevice
+public partial class BluetoothDevice : BaseBluetoothDevice, BluetoothGattProxy.IDevice, BluetoothDeviceEventProxy.IDevice
 {
     public Android.Bluetooth.BluetoothDevice NativeDevice { get; }
 
     public BluetoothGattProxy? BluetoothGattProxy { get; protected set; }
 
-    public BluetoothDevice(IBluetoothScanner scanner, string id, Manufacturer manufacturer) : base(scanner, id, manufacturer)
+    public BluetoothDevice(IBluetoothScanner scanner, string id, Manufacturer manufacturer, Android.Bluetooth.BluetoothDevice nativeDevice) : base(scanner, id, manufacturer)
     {
-        // TODO : NativeDevice = advertisement.BluetoothDevice;
-        BluetoothEventReceiverProxy.BluetoothDeviceEventReceiver.BondStateChanged += OnBondStateChangedEventReceived;
+        NativeDevice = nativeDevice ?? throw new ArgumentNullException(nameof(nativeDevice));
 
     }
 
     public BluetoothDevice(IBluetoothScanner scanner, BluetoothAdvertisement advertisement) : base(scanner, advertisement)
     {
+        ArgumentNullException.ThrowIfNull(advertisement);
+        ArgumentNullException.ThrowIfNull(advertisement.BluetoothDevice, nameof(advertisement.BluetoothDevice));
         NativeDevice = advertisement.BluetoothDevice;
-        BluetoothEventReceiverProxy.BluetoothDeviceEventReceiver.BondStateChanged += OnBondStateChangedEventReceived;
     }
 
-    protected override ValueTask DisposeAsyncCore()
+    public void OnNameChanged(string? newName)
     {
-        BluetoothEventReceiverProxy.BluetoothDeviceEventReceiver.BondStateChanged -= OnBondStateChangedEventReceived;
-        return base.DisposeAsyncCore();
+        CachedName = newName ?? CachedName;
     }
 
-    #region BluetoothEventReceiverProxy
-
-    private void OnBondStateChangedEventReceived(object? sender, BluetoothDeviceEventReceiver.BondStateChangedEventArgs e)
+    public void OnMtuChanged(GattStatus status, int mtu)
     {
-        throw new NotImplementedException();
+        AndroidNativeGattStatusException.ThrowIfNotSuccess(status);
+        // Placeholder for future implementation
     }
 
-    #endregion
-
-    #region BaseBluetoothDevice
-
-    protected async override ValueTask NativeServicesExplorationAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public void OnAclConnected()
     {
-        throw new NotImplementedException();
+        // Placeholder for future implementation
     }
 
-    protected override void NativeRefreshIsConnected()
+    public void OnClassChanged(BluetoothClass? deviceClass)
     {
-        throw new NotImplementedException();
+        // Placeholder for future implementation
     }
 
-    protected override void NativeConnect(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public void OnUuidChanged(ReadOnlyCollection<ParcelUuid> uuids)
     {
-        throw new NotImplementedException();
+        // Placeholder for future implementation
     }
-
-    protected override void NativeDisconnect(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override void NativeReadSignalStrength()
-    {
-        throw new NotImplementedException();
-    }
-
-    #endregion
 }

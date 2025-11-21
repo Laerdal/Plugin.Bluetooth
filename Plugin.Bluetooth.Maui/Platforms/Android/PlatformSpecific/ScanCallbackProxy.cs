@@ -76,4 +76,3 @@ public partial class ScanCallbackProxy : ScanCallback
         }
     }
 }
-

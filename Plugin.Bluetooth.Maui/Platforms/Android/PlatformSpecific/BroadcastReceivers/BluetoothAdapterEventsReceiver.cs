@@ -2,6 +2,10 @@ using ScanMode = Android.Bluetooth.ScanMode;
 
 namespace Plugin.Bluetooth.Maui.PlatformSpecific.BroadcastReceivers;
 
+
+
+
+
 /// <summary>
 /// Broadcast receiver for handling Bluetooth adapter events such as state changes,
 /// connection state changes, and discovery events.

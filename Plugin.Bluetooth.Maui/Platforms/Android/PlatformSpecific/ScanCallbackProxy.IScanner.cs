@@ -27,8 +27,8 @@ public partial class ScanCallbackProxy
         /// Called when a single scan result is received.
         /// </summary>
         /// <param name="callbackType">The type of callback that triggered the result.</param>
-        /// <param name="results">The scan result.</param>
-        void OnScanResult(ScanCallbackType callbackType, ScanResult results);
+        /// <param name="result">The scan result.</param>
+        void OnScanResult(ScanCallbackType callbackType, ScanResult result);
     }
 }
 

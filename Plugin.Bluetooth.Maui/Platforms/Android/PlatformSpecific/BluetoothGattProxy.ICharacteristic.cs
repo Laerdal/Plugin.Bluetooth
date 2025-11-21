@@ -1,3 +1,5 @@
+using Plugin.Bluetooth.Maui.PlatformSpecific.Exceptions;
+
 namespace Plugin.Bluetooth.Maui.PlatformSpecific;
 
 #pragma warning disable CA1034 // Nested types should not be visible
@@ -15,37 +17,39 @@ public partial class BluetoothGattProxy
         /// </summary>
         /// <param name="characteristic">The characteristic that changed.</param>
         /// <param name="value">The new value of the characteristic.</param>
-        void OnCharacteristicChanged(BluetoothGattCharacteristic? characteristic, byte[]? value);
-
-        /// <summary>
-        /// Called when a characteristic read operation has completed.
-        /// </summary>
-        /// <param name="status">The status of the read operation.</param>
-        /// <param name="characteristic">The characteristic that was read.</param>
-        /// <param name="value">The value that was read from the characteristic.</param>
-        void OnCharacteristicRead(GattStatus status, BluetoothGattCharacteristic? characteristic, byte[]? value);
+        void OnCharacteristicChanged(BluetoothGattCharacteristic? nativeCharacteristic, byte[]? value);
 
         /// <summary>
         /// Called when a characteristic write operation has completed.
         /// </summary>
         /// <param name="status">The status of the write operation.</param>
-        /// <param name="characteristic">The characteristic that was written to.</param>
-        void OnCharacteristicWrite(GattStatus status, BluetoothGattCharacteristic? characteristic);
+        /// <param name="nativeCharacteristic">The characteristic that was written to.</param>
+        void OnCharacteristicWrite(GattStatus status, BluetoothGattCharacteristic? nativeCharacteristic);
 
         /// <summary>
         /// Called when a descriptor read operation has completed.
         /// </summary>
         /// <param name="status">The status of the read operation.</param>
-        /// <param name="descriptor">The descriptor that was read.</param>
+        /// <param name="nativeDescriptor">The descriptor that was read.</param>
         /// <param name="value">The value that was read from the descriptor.</param>
-        void OnDescriptorRead(GattStatus status, BluetoothGattDescriptor? descriptor, byte[]? value);
+        void OnDescriptorRead(GattStatus status, BluetoothGattDescriptor? nativeDescriptor, byte[]? value);
 
         /// <summary>
         /// Called when a descriptor write operation has completed.
         /// </summary>
         /// <param name="status">The status of the write operation.</param>
-        /// <param name="descriptor">The descriptor that was written to.</param>
-        void OnDescriptorWrite(GattStatus status, BluetoothGattDescriptor? descriptor);
+        /// <param name="nativeDescriptor">The descriptor that was written to.</param>
+        void OnDescriptorWrite(GattStatus status, BluetoothGattDescriptor? nativeDescriptor);
+
+        /// <summary>
+        /// Called when a GATT characteristic read operation completes on the Android platform.
+        /// </summary>
+        /// <param name="status">The status of the GATT operation.</param>
+        /// <param name="nativeCharacteristic">The characteristic that was read.</param>
+        /// <param name="value">The value read from the characteristic.</param>
+        /// <exception cref="AndroidNativeGattCallbackStatusException">Thrown when the GATT status indicates an error.</exception>
+        /// <exception cref="CharacteristicReadException">Thrown when the characteristic UUID doesn't match the expected UUID.</exception>
+        void OnCharacteristicRead(GattStatus status, BluetoothGattCharacteristic? nativeCharacteristic, byte[]? value);
     }
 }
 

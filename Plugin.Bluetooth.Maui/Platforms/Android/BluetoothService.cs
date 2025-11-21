@@ -1,6 +1,8 @@
+using Plugin.Bluetooth.Maui.PlatformSpecific;
+
 namespace Plugin.Bluetooth.Maui;
 
-public partial class BluetoothService : BaseBluetoothService
+public partial class BluetoothService : BaseBluetoothService, BluetoothGattProxy.IService
 {
     public BluetoothGattService NativeService { get; }
 
@@ -9,12 +11,4 @@ public partial class BluetoothService : BaseBluetoothService
         NativeService = nativeService;
     }
 
-    #region BaseBluetoothService
-
-    protected async override ValueTask NativeCharacteristicsExplorationAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    #endregion
 }

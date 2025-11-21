@@ -2,7 +2,7 @@ using Plugin.Bluetooth.Maui.PlatformSpecific;
 
 namespace Plugin.Bluetooth.Maui;
 
-public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackProxy.IBroadcaster, BluetoothGattServerCallbackProxy.IBluetoothGattServerCallbackProxyDelegate
+public partial class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackProxy.IBroadcaster, BluetoothGattServerCallbackProxy.IBluetoothGattServerCallbackProxyDelegate
 {
     public BluetoothGattServerCallbackProxy? BluetoothGattServerCallbackProxy { get; protected set; }
 
@@ -12,93 +12,6 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackP
     {
         AdvertiseCallbackProxy = new AdvertiseCallbackProxy(this);
     }
-
-    private AdvertiseData? GetScanResponseData(Dictionary<string, object>? nativeOptions)
-    {
-        throw new NotImplementedException();
-    }
-
-    private AdvertiseData? GetAdvertiseData(Dictionary<string, object>? nativeOptions)
-    {
-        throw new NotImplementedException();
-    }
-
-    private AdvertiseSettings? GetSettings(Dictionary<string, object>? nativeOptions)
-    {
-        throw new NotImplementedException();
-    }
-
-    #region AdvertiseCallbackProxy.IBroadcaster
-
-    public void OnStartSuccess(AdvertiseSettings? settingsInEffect)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void OnStartFailure(AdvertiseFailure errorCode)
-    {
-        throw new NotImplementedException();
-    }
-
-    #endregion
-
-    #region BaseBluetoothBroadcaster
-
-    protected override void NativeRefreshIsBluetoothOn()
-    {
-        IsBluetoothOn = BluetoothAdapterProxy.BluetoothAdapter.IsEnabled;
-    }
-
-    protected override void NativeRefreshIsRunning()
-    {
-        IsRunning = BluetoothAdapterProxy.BluetoothAdapter.IsDiscovering;
-    }
-
-    protected override void NativeStart(Dictionary<string, object>? nativeOptions = null)
-    {
-        var settings = GetSettings(nativeOptions);
-        var advertiseData = GetAdvertiseData(nativeOptions);
-        var scanResponse = GetScanResponseData(nativeOptions);
-        BluetoothLeAdvertiserProxy.BluetoothLeAdvertiser.StartAdvertising(settings, advertiseData, scanResponse, AdvertiseCallbackProxy);
-        BluetoothGattServerCallbackProxy = new BluetoothGattServerCallbackProxy(this);
-    }
-
-    protected override void NativeStop()
-    {
-        BluetoothLeAdvertiserProxy.BluetoothLeAdvertiser.StopAdvertising(AdvertiseCallbackProxy);
-        BluetoothGattServerCallbackProxy?.Dispose();
-        BluetoothGattServerCallbackProxy = null;
-    }
-
-
-    protected async override ValueTask NativeInitializeAsync(Dictionary<string, object>? nativeOptions = null)
-    {
-        NativeRefreshIsBluetoothOn();
-        await BluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
-
-        if (OperatingSystem.IsAndroidVersionAtLeast(31))
-        {
-            await BluetoothPermissions.BluetoothAdvertisePermission.RequestIfNeededAsync().ConfigureAwait(false);
-        }
-        else if (OperatingSystem.IsAndroidVersionAtLeast(29))
-        {
-            await BluetoothPermissions.FineLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
-
-            // For using Bluetooth LE in Background
-            await BluetoothPermissions.BackgroundLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
-        }
-        else
-        {
-            await BluetoothPermissions.CoarseLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
-        }
-    }
-
-    public async override Task NativeSetAdvertisingDataAsync(Dictionary<string, object>? nativeOptions = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    #endregion
 
     #region BluetoothGattServerCallbackProxy.IBluetoothGattServerCallbackProxyDelegate
 
