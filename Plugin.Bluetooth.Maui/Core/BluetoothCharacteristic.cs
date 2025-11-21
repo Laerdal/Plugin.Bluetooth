@@ -1,7 +1,7 @@
 namespace Plugin.Bluetooth.Maui;
 
 /// <inheritdoc/>
-public partial class BluetoothCharacteristic : BaseBluetoothCharacteristic
+public class BluetoothCharacteristic : BaseBluetoothCharacteristic
 {
 
     /// <summary>
@@ -18,49 +18,49 @@ public partial class BluetoothCharacteristic : BaseBluetoothCharacteristic
     /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
     protected override bool NativeCanListen()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
-    protected async override ValueTask NativeReadIsListeningAsync(Dictionary<string, object>? nativeOptions = null)
+    protected override ValueTask NativeReadIsListeningAsync()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
-    protected async override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening, Dictionary<string, object>? nativeOptions = null)
+    protected override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
-    protected async override ValueTask NativeReadValueAsync(Dictionary<string, object>? nativeOptions = null)
+    protected override ValueTask NativeReadValueAsync()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
     protected override bool NativeCanRead()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
-    protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value, Dictionary<string, object>? nativeOptions = null)
+    protected override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
     protected override bool NativeCanWrite()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
     #endregion
 }

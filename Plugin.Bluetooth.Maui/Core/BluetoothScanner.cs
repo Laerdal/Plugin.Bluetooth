@@ -1,38 +1,47 @@
 namespace Plugin.Bluetooth.Maui;
 
 /// <inheritdoc  />
-public partial class BluetoothScanner : BaseBluetoothScanner
+public class BluetoothScanner : BaseBluetoothScanner
 {
-
-    #region BaseBluetoothScanner
+    /// <inheritdoc/>
+    /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
     protected override void NativeRefreshIsBluetoothOn()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
+    /// <inheritdoc/>
+    /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
     protected override void NativeRefreshIsRunning()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
-    protected override void NativeStart(Dictionary<string, object>? nativeOptions = null)
+    /// <inheritdoc/>
+    /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
+    protected override void NativeStart()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
+    /// <inheritdoc/>
+    /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
     protected override void NativeStop()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
-    protected async override ValueTask NativeInitializeAsync(Dictionary<string, object>? nativeOptions = null)
+    /// <inheritdoc/>
+    /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
+    protected override ValueTask NativeInitializeAsync()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
+    /// <inheritdoc/>
+    /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
     protected override IBluetoothDevice NativeCreateDevice(IBluetoothAdvertisement advertisement)
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
-    #endregion
 }

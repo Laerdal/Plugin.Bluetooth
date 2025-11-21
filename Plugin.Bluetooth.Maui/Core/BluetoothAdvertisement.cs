@@ -6,42 +6,42 @@ public class BluetoothAdvertisement : BaseBluetoothAdvertisement
     /// <inheritdoc/>
     protected override string InitDeviceName()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     protected override IEnumerable<Guid> InitServicesGuids()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     protected override bool InitIsConnectable()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     protected override int InitRawSignalStrengthInDBm()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     protected override int InitTransmitPowerLevelInDBm()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     protected override byte[] InitManufacturerData()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     protected override string InitBluetoothAddress()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 }
