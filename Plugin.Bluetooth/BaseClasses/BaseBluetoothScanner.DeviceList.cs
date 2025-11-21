@@ -12,8 +12,6 @@ public abstract partial class BaseBluetoothScanner
     /// <inheritdoc/>
     public event EventHandler<DevicesRemovedEventArgs>? DevicesRemoved;
 
-    private ObservableCollection<IBluetoothDevice>? _devices;
-
     /// <summary>
     /// Gets the collection of Bluetooth devices managed by this scanner.
     /// </summary>
@@ -21,13 +19,13 @@ public abstract partial class BaseBluetoothScanner
     {
         get
         {
-            if (_devices == null)
+            if (field == null)
             {
-                _devices = [];
-                _devices.CollectionChanged += DevicesOnCollectionChanged;
+                field = [];
+                field.CollectionChanged += DevicesOnCollectionChanged;
             }
 
-            return _devices;
+            return field;
         }
     }
 

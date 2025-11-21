@@ -39,10 +39,8 @@ public abstract class BaseBluetoothAdvertisement : BaseBindableObject, IBluetoot
     /// <inheritdoc/>
     public int TransmitPowerLevelInDBm => LazyTransmitPowerLevelInDBm.Value;
 
-    private string? _bluetoothAddress;
-
     /// <inheritdoc/>
-    public string BluetoothAddress => _bluetoothAddress ??= InitBluetoothAddress();
+    public string BluetoothAddress => field ??= InitBluetoothAddress();
 
     /// <inheritdoc/>
     public ReadOnlyMemory<byte> ManufacturerData => LazyManufacturerData.Value;

@@ -465,13 +465,4 @@ public interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDisposable
     Task<double?> ReadBatteryLevelAsync();
 
     #endregion
-
-    #region MtuSize
-
-    /// <summary>
-    /// Gets the current MTU size of the device.
-    /// </summary>
-    int MtuSize { get; }
-
-    #endregion
 }

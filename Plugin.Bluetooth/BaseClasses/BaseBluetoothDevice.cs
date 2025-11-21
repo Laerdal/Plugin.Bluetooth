@@ -40,16 +40,13 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
     public Manufacturer Manufacturer { get; set; }
 
     /// <inheritdoc/>
-    public DateTimeOffset LastSeen { get; set; }
-
-    /// <inheritdoc/>
-    public int MtuSize { get; set; }
+    public DateTimeOffset LastSeen { get; private set; }
 
     /// <summary>
     /// Performs the core disposal logic for the device, including disconnection, cleanup of pending operations, and resource disposal.
     /// </summary>
     /// <returns>A task that represents the asynchronous disposal operation.</returns>
-    protected virtual async ValueTask DisposeAsyncCore()
+    protected async virtual ValueTask DisposeAsyncCore()
     {
 
         try

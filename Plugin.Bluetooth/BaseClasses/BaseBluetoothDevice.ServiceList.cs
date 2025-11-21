@@ -12,8 +12,6 @@ public abstract partial class BaseBluetoothDevice
     /// <inheritdoc/>
     public event EventHandler<ServiceListChangedEventArgs>? ServiceListChanged;
 
-    private ObservableCollection<IBluetoothService>? _services;
-
     /// <summary>
     /// The services collection.
     /// </summary>
@@ -21,13 +19,13 @@ public abstract partial class BaseBluetoothDevice
     {
         get
         {
-            if (_services == null)
+            if (field == null)
             {
-                _services = [];
-                _services.CollectionChanged += ServicesOnCollectionChanged;
+                field = [];
+                field.CollectionChanged += ServicesOnCollectionChanged;
             }
 
-            return _services;
+            return field;
         }
     }
 

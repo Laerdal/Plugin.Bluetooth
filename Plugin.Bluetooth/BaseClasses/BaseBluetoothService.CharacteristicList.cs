@@ -12,8 +12,6 @@ public abstract partial class BaseBluetoothService
     /// <inheritdoc/>
     public event EventHandler<CharacteristicListChangedEventArgs>? CharacteristicListChanged;
 
-    private ObservableCollection<IBluetoothCharacteristic>? _characteristics;
-
     /// <summary>
     /// Gets the collection of characteristics associated with this Bluetooth service.
     /// </summary>
@@ -21,13 +19,13 @@ public abstract partial class BaseBluetoothService
     {
         get
         {
-            if (_characteristics == null)
+            if (field == null)
             {
-                _characteristics = [];
-                _characteristics.CollectionChanged += CharacteristicsOnCollectionChanged;
+                field = [];
+                field.CollectionChanged += CharacteristicsOnCollectionChanged;
             }
 
-            return _characteristics;
+            return field;
         }
     }
 
