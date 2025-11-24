@@ -58,7 +58,7 @@ jobs:
       has-docs: ${{ steps.check-docs.outputs.exists }}
     steps:
       - name: '🔄 Checkout'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: '⬇️ Download Version artifact'
         uses: actions/download-artifact@v6
@@ -231,7 +231,7 @@ jobs:
     needs: [version, publish-nuget, publish-docs, publish-tests]
     steps:
       - name: '🔄 Checkout'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
