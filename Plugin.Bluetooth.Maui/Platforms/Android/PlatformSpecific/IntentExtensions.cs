@@ -74,4 +74,35 @@ public static class IntentExtensions
 #pragma warning restore CS0618 // Type or member is obsolete
         }
     }
+
+    /// <summary>
+    /// Safely extracts an array of ParcelUuid objects from an intent with proper API version handling.
+    /// </summary>
+    /// <param name="intent">The intent to extract from.</param>
+    /// <param name="key">The key of the extra to extract.</param>
+    /// <returns>An array of ParcelUuid objects if found; otherwise, null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when intent is null.</exception>
+    public static ParcelUuid[]? GetParcelUuidArrayExtraSafe(this Intent intent, string key)
+    {
+        ArgumentNullException.ThrowIfNull(intent);
+        
+        Java.Lang.Object[]? parcelables;
+        if (OperatingSystem.IsAndroidVersionAtLeast(33))
+        {
+            parcelables = intent.GetParcelableArrayExtra(key, Java.Lang.Class.FromType(typeof(ParcelUuid)));
+        }
+        else
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            parcelables = intent.GetParcelableArrayExtra(key) as Java.Lang.Object[];
+#pragma warning restore CS0618 // Type or member is obsolete
+        }
+
+        if (parcelables is null || parcelables.Length == 0)
+        {
+            return null;
+        }
+
+        return parcelables.OfType<ParcelUuid>().ToArray();
+    }
 }

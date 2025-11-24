@@ -165,8 +165,8 @@ public class BluetoothDeviceEventReceiver : BaseNativeEventReceiver
                 break;
 
             case Android.Bluetooth.BluetoothDevice.ActionUuid:
-                // TODO : Handle reading UUIDs from the intent (beware, SDK33+)
-                OnUuidChanged(new UuidEventArgs(device, new ReadOnlyCollection<ParcelUuid>(new List<ParcelUuid>())));
+                var uuids = intent.GetParcelUuidArrayExtraSafe(Android.Bluetooth.BluetoothDevice.ExtraUuid);
+                OnUuidChanged(new UuidEventArgs(device, new ReadOnlyCollection<ParcelUuid>(uuids ?? [])));
                 break;
 
             case Android.Bluetooth.BluetoothDevice.ActionClassChanged:
