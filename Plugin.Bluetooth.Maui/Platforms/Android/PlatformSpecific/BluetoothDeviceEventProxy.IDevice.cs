@@ -76,7 +76,7 @@ public partial class BluetoothDeviceEventProxy
         /// Corresponds to Android's ACTION_UUID. UUIDs are fetched using Service Discovery Protocol
         /// and identify the services available on the remote device.
         /// </remarks>
-        void OnUuidChanged(ReadOnlyCollection<ParcelUuid> uuids);
+        void OnUuidChanged(IEnumerable<ParcelUuid>? uuids);
     }
 }
 

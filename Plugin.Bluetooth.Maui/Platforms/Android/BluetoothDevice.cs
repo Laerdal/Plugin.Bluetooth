@@ -43,7 +43,7 @@ public partial class BluetoothDevice : BaseBluetoothDevice, BluetoothGattProxy.I
         // Placeholder for future implementation
     }
 
-    public void OnUuidChanged(ReadOnlyCollection<ParcelUuid> uuids)
+    public void OnUuidChanged(IEnumerable<ParcelUuid>? uuids)
     {
         // Placeholder for future implementation
     }

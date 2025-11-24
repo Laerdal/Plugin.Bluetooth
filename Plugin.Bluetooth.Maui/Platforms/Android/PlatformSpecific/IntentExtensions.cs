@@ -37,17 +37,17 @@ public static class IntentExtensions
     /// <param name="key">The key of the extra to extract.</param>
     /// <returns>The parcelable array list if found; otherwise, null.</returns>
     /// <exception cref="ArgumentNullException">Thrown when intent is null.</exception>
-    public static T? GetParcelableArrayListExtraSafe<T>(this Intent intent, string key) where T : Java.Lang.Object
+    public static IEnumerable<T>? GetParcelableArrayListExtraSafe<T>(this Intent intent, string key) where T : Java.Lang.Object
     {
         ArgumentNullException.ThrowIfNull(intent);
         if (OperatingSystem.IsAndroidVersionAtLeast(33))
         {
-            return intent.GetParcelableArrayListExtra(key, Java.Lang.Class.FromType(typeof(T))) as T;
+            return intent.GetParcelableArrayListExtra(key, Java.Lang.Class.FromType(typeof(T))) as IEnumerable<T>;
         }
         else
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            return intent.GetParcelableArrayListExtra(key) as T;
+            return intent.GetParcelableArrayListExtra(key) as IEnumerable<T>;
 #pragma warning restore CS0618 // Type or member is obsolete
         }
     }

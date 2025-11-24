@@ -29,7 +29,7 @@ public class BluetoothDeviceEventReceiver : BaseNativeEventReceiver
     /// </summary>
     /// <param name="Device">The Bluetooth device whose UUIDs were discovered.</param>
     /// <param name="Uuids">The collection of discovered UUIDs.</param>
-    public record struct UuidEventArgs(Android.Bluetooth.BluetoothDevice Device, ReadOnlyCollection<ParcelUuid> Uuids);
+    public record struct UuidEventArgs(Android.Bluetooth.BluetoothDevice Device, IEnumerable<ParcelUuid>? Uuids);
 
     /// <summary>
     /// Event arguments for pairing request events.
@@ -165,10 +165,9 @@ public class BluetoothDeviceEventReceiver : BaseNativeEventReceiver
                 break;
 
             case Android.Bluetooth.BluetoothDevice.ActionUuid:
-                // TODO : Handle reading UUIDs from the intent (beware, SDK33+)
-                OnUuidChanged(new UuidEventArgs(device, new ReadOnlyCollection<ParcelUuid>(new List<ParcelUuid>())));
+                var uuidExtras = intent.GetParcelableArrayListExtraSafe<ParcelUuid>(Android.Bluetooth.BluetoothDevice.ExtraUuid);
+                OnUuidChanged(new UuidEventArgs(device, uuidExtras?.ToList()));
                 break;
-
             case Android.Bluetooth.BluetoothDevice.ActionClassChanged:
                 var deviceClass = intent.GetParcelableExtraSafe<BluetoothClass>(Android.Bluetooth.BluetoothDevice.ExtraClass);
                 OnClassChanged(new ClassChangedEventArgs(device, deviceClass));
