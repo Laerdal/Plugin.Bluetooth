@@ -200,7 +200,7 @@ jobs:
           path: '${{ github.workspace }}/packages'
 
       - name: '📦 Push Packages to NuGet.org'
-        uses: framinosona/github_actions/dotnet-nuget-upload@main
+        uses: laerdal/github_actions/dotnet-nuget-upload@main
         with:
           package-path: '${{ github.workspace }}/packages/*.nupkg'
           api-key: ${{ secrets.NUGET_ORG_API_KEY }}
@@ -237,7 +237,7 @@ jobs:
           fetch-tags: true
 
       - name: '🚀 Create GitHub Release'
-        uses: framinosona/github_actions/github-release@main
+        uses: laerdal/github_actions/github-release@main
         with:
           tag: ${{ needs.version.outputs.version-fortag }}
           title: 'Release ${{ needs.version.outputs.version-full }}'
