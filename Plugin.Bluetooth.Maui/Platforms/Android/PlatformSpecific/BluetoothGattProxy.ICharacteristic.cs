@@ -15,7 +15,7 @@ public partial class BluetoothGattProxy
         /// <summary>
         /// Called when a characteristic's value has changed.
         /// </summary>
-        /// <param name="characteristic">The characteristic that changed.</param>
+        /// <param name="nativeCharacteristic">The characteristic that changed.</param>
         /// <param name="value">The new value of the characteristic.</param>
         void OnCharacteristicChanged(BluetoothGattCharacteristic? nativeCharacteristic, byte[]? value);
 

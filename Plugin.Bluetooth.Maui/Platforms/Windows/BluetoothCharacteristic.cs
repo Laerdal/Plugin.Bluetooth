@@ -29,6 +29,6 @@ public partial class BluetoothCharacteristic : BaseBluetoothCharacteristic, Gatt
     /// <exception cref="NotImplementedException">This method is not yet implemented for the Windows platform.</exception>
     public void OnValueChanged(byte[] value, DateTimeOffset argsTimestamp)
     {
-        throw new NotImplementedException();
+        Value = value;
     }
 }

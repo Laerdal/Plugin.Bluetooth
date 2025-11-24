@@ -58,16 +58,17 @@ public class AppleNativeBluetoothException : NativeBluetoothException
     /// </summary>
     /// <param name="nsError">The NSError containing the native error details.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="nsError"/> is null.</exception>
+    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
     public AppleNativeBluetoothException(NSError nsError) : base($"Native Bluetooth Exception: {nsError?.LocalizedDescription ?? "Unknown error"} ({nsError?.Code ?? 0})")
     {
         ArgumentNullException.ThrowIfNull(nsError);
 
         Code = (int)nsError.Code;
-        Domain = nsError.Domain ?? string.Empty;
-        Description = nsError.LocalizedDescription ?? string.Empty;
-        FailureReason = nsError.LocalizedFailureReason ?? string.Empty;
-        RecoveryOptions = nsError.LocalizedRecoveryOptions != null ? string.Join(";", nsError.LocalizedRecoveryOptions) : string.Empty;
-        RecoverySuggestion = nsError.LocalizedRecoverySuggestion ?? string.Empty;
+        Domain = nsError.Domain;
+        Description = nsError.LocalizedDescription;
+        FailureReason = nsError.LocalizedFailureReason;
+        RecoveryOptions = string.Join(";", nsError.LocalizedRecoveryOptions);
+        RecoverySuggestion = nsError.LocalizedRecoverySuggestion;
     }
 
     /// <summary>

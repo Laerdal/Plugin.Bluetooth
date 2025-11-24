@@ -51,6 +51,7 @@ public partial class CbCentralManagerProxy : CBCentralManagerDelegate
     #region CBCentralManager
 
     /// <inheritdoc cref="CBCentralManagerDelegate.DiscoveredPeripheral" />
+    // ReSharper disable once InconsistentNaming
     public override void DiscoveredPeripheral(CBCentralManager central, CBPeripheral peripheral, NSDictionary advertisementData, NSNumber RSSI)
     {
         try

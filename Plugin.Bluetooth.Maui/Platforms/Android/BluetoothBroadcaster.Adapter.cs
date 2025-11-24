@@ -4,11 +4,6 @@ namespace Plugin.Bluetooth.Maui;
 
 public partial class BluetoothBroadcaster
 {
-    protected override void NativeRefreshIsBluetoothOn()
-    {
-        IsBluetoothOn = BluetoothAdapterProxy.BluetoothAdapter.IsEnabled;
-    }
-
     protected async override ValueTask NativeInitializeAsync()
     {
         await BluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
@@ -28,5 +23,10 @@ public partial class BluetoothBroadcaster
         {
             await BluetoothPermissions.CoarseLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
         }
+    }
+
+    protected override void NativeRefreshIsBluetoothOn()
+    {
+        IsBluetoothOn = BluetoothAdapterProxy.BluetoothAdapter.IsEnabled;
     }
 }

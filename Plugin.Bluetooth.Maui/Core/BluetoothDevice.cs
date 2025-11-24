@@ -20,7 +20,7 @@ public class BluetoothDevice : BaseBluetoothDevice
 
     /// <inheritdoc/>
     /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
-    protected override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override void NativeServicesExploration()
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

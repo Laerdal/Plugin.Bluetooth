@@ -12,10 +12,10 @@ public partial class BluetoothCharacteristic
     }
 
     /// <inheritdoc/>
-    protected override ValueTask NativeReadIsListeningAsync(Dictionary<string, object>? nativeOptions = null)
+    protected override ValueTask NativeReadIsListeningAsync()
     {
         // Ensure CbCharacteristic ref exists and is available
-        ArgumentNullException.ThrowIfNull(NativeCharacteristic, nameof(NativeCharacteristic));
+        ArgumentNullException.ThrowIfNull(NativeCharacteristic);
 
         OnReadIsListeningSucceeded(NativeCharacteristic.IsNotifying);
 
@@ -23,10 +23,10 @@ public partial class BluetoothCharacteristic
     }
 
     /// <inheritdoc/>
-    protected override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening, Dictionary<string, object>? nativeOptions = null)
+    protected override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
         // Ensure CbCharacteristic.Service.Peripheral ref exists and is available
-        ArgumentNullException.ThrowIfNull(NativeCharacteristic, nameof(NativeCharacteristic));
+        ArgumentNullException.ThrowIfNull(NativeCharacteristic);
         ArgumentNullException.ThrowIfNull(NativeCharacteristic.Service, nameof(NativeCharacteristic.Service));
         ArgumentNullException.ThrowIfNull(NativeCharacteristic.Service.Peripheral, nameof(NativeCharacteristic.Service.Peripheral));
 
@@ -47,7 +47,7 @@ public partial class BluetoothCharacteristic
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(characteristic, nameof(characteristic));
+            ArgumentNullException.ThrowIfNull(characteristic);
             AppleNativeBluetoothException.ThrowIfError(error);
 
             // Should not happen ... but just in case

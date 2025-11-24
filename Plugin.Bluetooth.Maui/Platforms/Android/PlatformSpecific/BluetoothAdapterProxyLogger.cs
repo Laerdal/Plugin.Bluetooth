@@ -127,7 +127,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public State BluetoothAdapterState
     {
         get => GetValue(State.Off);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     /// <summary>
@@ -136,7 +136,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public bool BluetoothAdapterIsEnabled
     {
         get => GetValue(false);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     /// <summary>
@@ -145,7 +145,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public string BluetoothAdapterName
     {
         get => GetValue(string.Empty);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     /// <summary>
@@ -154,7 +154,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public string BluetoothAdapterAddress
     {
         get => GetValue(string.Empty);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     #endregion
@@ -167,7 +167,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public ScanMode BluetoothAdapterScanMode
     {
         get => GetValue(ScanMode.None);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     /// <summary>
@@ -176,7 +176,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public bool BluetoothAdapterIsDiscovering
     {
         get => GetValue(false);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     #endregion
@@ -189,7 +189,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public bool BluetoothAdapterIsMultipleAdvertisementSupported
     {
         get => GetValue(false);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     /// <summary>
@@ -198,7 +198,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public bool BluetoothAdapterIsOffloadedFilteringSupported
     {
         get => GetValue(false);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     /// <summary>
@@ -207,7 +207,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public bool BluetoothAdapterIsOffloadedScanBatchingSupported
     {
         get => GetValue(false);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     #endregion
@@ -221,7 +221,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public bool BluetoothAdapterIsLe2MPhySupported
     {
         get => GetValue(false);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     /// <summary>
@@ -231,7 +231,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public bool BluetoothAdapterIsLeCodedPhySupported
     {
         get => GetValue(false);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     /// <summary>
@@ -241,7 +241,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public bool BluetoothAdapterIsLeExtendedAdvertisingSupported
     {
         get => GetValue(false);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     /// <summary>
@@ -251,7 +251,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public bool BluetoothAdapterIsLePeriodicAdvertisingSupported
     {
         get => GetValue(false);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     #endregion
@@ -265,7 +265,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public int BluetoothAdapterMaxConnectedAudioDevices
     {
         get => GetValue(0);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     #endregion
@@ -278,7 +278,7 @@ public class BluetoothAdapterProxyLogger : BaseBindableObject
     public int BluetoothAdapterBondedDevicesCount
     {
         get => GetValue(0);
-        private set => SetValue(value, LoggingFlags.BluetoothAdapter, LogLevel.Trace);
+        private set => SetValue(value);
     }
 
     #endregion

@@ -14,7 +14,7 @@ public partial class BluetoothCharacteristic
     }
 
     /// <inheritdoc/>
-    protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value, Dictionary<string, object>? nativeOptions = null)
+    protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
         try
         {

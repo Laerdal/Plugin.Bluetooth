@@ -1,4 +1,5 @@
 using Plugin.Bluetooth.Maui.PlatformSpecific;
+using Plugin.Bluetooth.Maui.PlatformSpecific.Exceptions;
 
 namespace Plugin.Bluetooth.Maui;
 
@@ -11,29 +12,11 @@ public partial class BluetoothService : BaseBluetoothService, CbPeripheralProxy.
         NativeService = nativeService;
     }
 
-    #region BaseBluetoothService
-
-    protected async override ValueTask NativeCharacteristicsExplorationAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    #endregion
-
     #region CbPeripheralProxy.ICbServiceDelegate
     public void DiscoveredIncludedService(NSError? error, CBService service)
     {
-        throw new NotImplementedException();
+        AppleNativeBluetoothException.ThrowIfError(error);
     }
 
-    public void DiscoveredCharacteristics(NSError? error, CBService service)
-    {
-        throw new NotImplementedException();
-    }
-
-    public CbPeripheralProxy.ICbCharacteristicDelegate GetCharacteristic(CBCharacteristic? characteristic)
-    {
-        throw new NotImplementedException();
-    }
     #endregion
 }

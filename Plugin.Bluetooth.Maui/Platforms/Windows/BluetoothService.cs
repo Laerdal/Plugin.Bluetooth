@@ -13,7 +13,7 @@ public partial class BluetoothService : BaseBluetoothService, GattDeviceServiceP
 
     #region BaseBluetoothService
 
-    protected async override ValueTask NativeCharacteristicsExplorationAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected async override ValueTask NativeCharacteristicsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

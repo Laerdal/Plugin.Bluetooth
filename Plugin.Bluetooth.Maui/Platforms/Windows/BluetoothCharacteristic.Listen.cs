@@ -13,7 +13,7 @@ public partial class BluetoothCharacteristic
     }
 
     /// <inheritdoc/>
-    protected async override ValueTask NativeReadIsListeningAsync(Dictionary<string, object>? nativeOptions = null)
+    protected async override ValueTask NativeReadIsListeningAsync()
     {
         // Ensure LISTEN is supported
         CharacteristicCantListenException.ThrowIfCantListen(this);
@@ -28,7 +28,7 @@ public partial class BluetoothCharacteristic
     }
 
     /// <inheritdoc/>
-    protected async override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening, Dictionary<string, object>? nativeOptions = null)
+    protected async override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
         // Ensure LISTEN is supported
         CharacteristicCantListenException.ThrowIfCantListen(this);

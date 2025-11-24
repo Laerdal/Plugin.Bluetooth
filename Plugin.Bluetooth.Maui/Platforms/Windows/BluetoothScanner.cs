@@ -3,34 +3,60 @@ using Plugin.Bluetooth.Maui.PlatformSpecific;
 namespace Plugin.Bluetooth.Maui;
 
 /// <inheritdoc  />
-public partial class BluetoothScanner : BaseBluetoothScanner, BluetoothLeAdvertisementWatcherProxy.IBluetoothLeAdvertisementWatcherProxyDelegate
+public partial class BluetoothScanner : BaseBluetoothScanner, BluetoothLeAdvertisementWatcherProxy.IBluetoothLeAdvertisementWatcherProxyDelegate, RadioProxy.IRadioProxyDelegate, BluetoothAdapterProxy.IBluetoothAdapterProxyDelegate
 {
     public BluetoothLeAdvertisementWatcherProxy? BluetoothLeAdvertisementWatcherProxy { get; protected set; }
 
-    #region BaseBluetoothScanner
-    protected override void NativeRefreshIsBluetoothOn()
+
+    public BluetoothScanner()
     {
-        throw new NotImplementedException();
     }
+
+    public BluetoothLEAdvertisementWatcherStatus BluetoothLeAdvertisementWatcherStatus
+    {
+        get => GetValue(BluetoothLEAdvertisementWatcherStatus.Stopped);
+        private set
+        {
+            if (SetValue(value))
+            {
+                NativeRefreshIsRunning();
+                if (value == BluetoothLEAdvertisementWatcherStatus.Started)
+                {
+                    OnStartSucceeded();
+                }
+                else if (value == BluetoothLEAdvertisementWatcherStatus.Stopped)
+                {
+                    OnStopSucceeded();
+                }
+            }
+        }
+    }
+
+    public ValueTask WaitForBluetoothLeAdvertisementWatcherStatusAsync(BluetoothLEAdvertisementWatcherStatus state, TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        return WaitForPropertyToBeOfValue(nameof(BluetoothLeAdvertisementWatcherStatus), state, timeout, cancellationToken);
+    }
+
+
+    #region BaseBluetoothScanner
 
     protected override void NativeRefreshIsRunning()
     {
-        throw new NotImplementedException();
+        BluetoothLeAdvertisementWatcherStatus = BluetoothLeAdvertisementWatcherProxy?.BluetoothLeAdvertisementWatcher.Status ?? BluetoothLEAdvertisementWatcherStatus.Stopped;
+        IsRunning = BluetoothLeAdvertisementWatcherStatus == BluetoothLEAdvertisementWatcherStatus.Started;
     }
 
-    protected override void NativeStart(Dictionary<string, object>? nativeOptions = null)
+    protected override void NativeStart()
     {
-        throw new NotImplementedException();
+        BluetoothLeAdvertisementWatcherProxy = new BluetoothLeAdvertisementWatcherProxy(this);
+        BluetoothLeAdvertisementWatcherProxy.BluetoothLeAdvertisementWatcher.Start();
+        NativeRefreshIsRunning();
     }
 
     protected override void NativeStop()
     {
-        throw new NotImplementedException();
-    }
-
-    protected async override ValueTask NativeInitializeAsync(Dictionary<string, object>? nativeOptions = null)
-    {
-        throw new NotImplementedException();
+        BluetoothLeAdvertisementWatcherProxy?.BluetoothLeAdvertisementWatcher.Stop();
+        NativeRefreshIsRunning();
     }
 
     protected override IBluetoothDevice NativeCreateDevice(IBluetoothAdvertisement advertisement)
@@ -52,4 +78,56 @@ public partial class BluetoothScanner : BaseBluetoothScanner, BluetoothLeAdverti
     }
 
     #endregion
+
+
+
+    public BluetoothAdapterProxy? BluetoothAdapterProxy { get; protected set; }
+
+    public RadioProxy? RadioProxy { get; protected set; }
+
+
+    public RadioState RadioState
+    {
+        get => GetValue(RadioState.Unknown);
+        private set
+        {
+            if (SetValue(value))
+            {
+                NativeRefreshIsBluetoothOn();
+            }
+        }
+    }
+
+    #region RadioProxy.IRadioProxyDelegate
+
+    /// <inheritdoc />
+    public void OnRadioStateChanged(RadioState senderState)
+    {
+        RadioState = senderState;
+    }
+
+    #endregion
+
+    public ValueTask WaitForRadioStateAsync(RadioState state, TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        return WaitForPropertyToBeOfValue(nameof(RadioState), state, timeout, cancellationToken);
+    }
+
+    public ValueTask WaitForRadioStateToBeKnownAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        return WaitForPropertyToBeDifferentThanValue(nameof(RadioState), RadioState.Unknown, timeout, cancellationToken);
+    }
+
+    protected async override ValueTask NativeInitializeAsync()
+    {
+        BluetoothAdapterProxy = await BluetoothAdapterProxy.GetInstanceAsync(this).ConfigureAwait(false);
+        RadioProxy = await RadioProxy.GetInstanceAsync(BluetoothAdapterProxy, this).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    protected override void NativeRefreshIsBluetoothOn()
+    {
+        RadioState = RadioProxy?.Radio.State ?? RadioState.Unknown;
+        IsBluetoothOn = RadioState == RadioState.On && (BluetoothAdapterProxy?.BluetoothAdapter.IsLowEnergySupported ?? false) && (BluetoothAdapterProxy?.BluetoothAdapter.IsCentralRoleSupported ?? false);
+    }
 }

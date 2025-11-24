@@ -155,7 +155,7 @@ public sealed partial class CbPeripheralProxy : CBPeripheralDelegate
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(service, nameof(service));
+            ArgumentNullException.ThrowIfNull(service);
 
             // GET SERVICE
             var sharedService = CbPeripheralProxyDelegate.GetService(service);
@@ -178,7 +178,7 @@ public sealed partial class CbPeripheralProxy : CBPeripheralDelegate
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(characteristic, nameof(characteristic));
+            ArgumentNullException.ThrowIfNull(characteristic);
             ArgumentNullException.ThrowIfNull(characteristic.Service, nameof(characteristic.Service));
 
             // GET SERVICE
@@ -201,7 +201,7 @@ public sealed partial class CbPeripheralProxy : CBPeripheralDelegate
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(characteristic, nameof(characteristic));
+            ArgumentNullException.ThrowIfNull(characteristic);
             ArgumentNullException.ThrowIfNull(characteristic.Service, nameof(characteristic.Service));
 
             // GET SERVICE
@@ -224,7 +224,7 @@ public sealed partial class CbPeripheralProxy : CBPeripheralDelegate
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(characteristic, nameof(characteristic));
+            ArgumentNullException.ThrowIfNull(characteristic);
             ArgumentNullException.ThrowIfNull(characteristic.Service, nameof(characteristic.Service));
 
             // GET SERVICE
@@ -247,7 +247,7 @@ public sealed partial class CbPeripheralProxy : CBPeripheralDelegate
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(characteristic, nameof(characteristic));
+            ArgumentNullException.ThrowIfNull(characteristic);
             ArgumentNullException.ThrowIfNull(characteristic.Service, nameof(characteristic.Service));
 
             // GET SERVICE
@@ -274,7 +274,7 @@ public sealed partial class CbPeripheralProxy : CBPeripheralDelegate
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(descriptor, nameof(descriptor));
+            ArgumentNullException.ThrowIfNull(descriptor);
             ArgumentNullException.ThrowIfNull(descriptor.Characteristic, nameof(descriptor.Characteristic));
             ArgumentNullException.ThrowIfNull(descriptor.Characteristic.Service, nameof(descriptor.Characteristic.Service));
 
@@ -298,7 +298,7 @@ public sealed partial class CbPeripheralProxy : CBPeripheralDelegate
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(descriptor, nameof(descriptor));
+            ArgumentNullException.ThrowIfNull(descriptor);
             ArgumentNullException.ThrowIfNull(descriptor.Characteristic, nameof(descriptor.Characteristic));
             ArgumentNullException.ThrowIfNull(descriptor.Characteristic.Service, nameof(descriptor.Characteristic.Service));
 

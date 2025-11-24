@@ -5,12 +5,10 @@ namespace Plugin.Bluetooth.Maui;
 
 public partial class BluetoothDevice
 {
-    protected override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override void NativeServicesExploration()
     {
         ArgumentNullException.ThrowIfNull(BluetoothGattProxy);
         BluetoothGattProxy.BluetoothGatt.DiscoverServices();
-        // Callback in android is OnServicesDiscovered, see below.
-        return ValueTask.CompletedTask;
     }
 
     public BluetoothGattProxy.IService GetService(BluetoothGattService? nativeService)

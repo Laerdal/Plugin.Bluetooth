@@ -12,7 +12,7 @@ public partial class BluetoothCharacteristic
     }
 
     /// <inheritdoc/>
-    protected async override ValueTask NativeReadValueAsync(Dictionary<string, object>? nativeOptions = null)
+    protected async override ValueTask NativeReadValueAsync()
     {
         var result = await GattCharacteristicProxy.GattCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached).AsTask().ConfigureAwait(false);
         if (result.Status != GattCommunicationStatus.Success)

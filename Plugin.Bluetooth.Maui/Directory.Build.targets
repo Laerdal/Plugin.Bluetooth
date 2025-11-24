@@ -139,6 +139,8 @@
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(Project_Name).xml</DocumentationFile>
+    <!-- Ignore CS1591 -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <!-- ==================== PACK : SOURCELINK ==================== -->

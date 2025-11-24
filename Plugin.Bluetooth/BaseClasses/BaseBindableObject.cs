@@ -105,33 +105,6 @@ public abstract class BaseBindableObject : INotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Sets the value of the specified property, raises the <see cref="PropertyChanged"/> event if the value changes, and logs the change.
-    /// </summary>
-    /// <typeparam name="T">The type of the property value.</typeparam>
-    /// <param name="value">The value to set.</param>
-    /// <param name="loggingFlag">The logging flag to use for the log entry.</param>
-    /// <param name="logLevel">The log level to use for the log entry.</param>
-    /// <param name="propertyName">The name of the property. If not provided, the caller's member name is used.</param>
-    /// <returns>True if the value was changed and the property was set; otherwise, false.</returns>
-    /// <exception cref="ArgumentException">If the property name is null or whitespace.</exception>
-    protected bool SetValue<T>(T value, string loggingFlag, LogLevel logLevel, [CallerMemberName] string? propertyName = null)
-    {
-        if (string.IsNullOrWhiteSpace(propertyName))
-        {
-            throw new ArgumentException("Invalid property name", propertyName);
-        }
-
-        if (_values.TryGetValue(propertyName, out var existingValue) && Equals(existingValue, value))
-        {
-            return false; // No change
-        }
-
-        _values.AddOrUpdate(propertyName, value, (_, _) => value);
-        OnPropertyChanged(propertyName);
-        return true;
-    }
-
-    /// <summary>
     ///     Clears the value of the specified property and raises the <see cref="PropertyChanged"/> event.
     /// </summary>
     /// <param name="propertyName">The name of the property to clear. If not provided, the caller's member name is used.</param>

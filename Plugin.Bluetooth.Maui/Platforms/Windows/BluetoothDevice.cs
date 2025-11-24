@@ -18,7 +18,7 @@ public partial class BluetoothDevice : BaseBluetoothDevice, BluetoothLeDevicePro
 
     #region BaseBluetoothDevice
 
-    protected async override ValueTask NativeServicesExplorationAsync(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override void NativeServicesExploration()
     {
         throw new NotImplementedException();
     }
@@ -28,12 +28,12 @@ public partial class BluetoothDevice : BaseBluetoothDevice, BluetoothLeDevicePro
         throw new NotImplementedException();
     }
 
-    protected override void NativeConnect(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override void NativeConnect()
     {
         throw new NotImplementedException();
     }
 
-    protected override void NativeDisconnect(Dictionary<string, object>? nativeOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override void NativeDisconnect()
     {
         throw new NotImplementedException();
     }

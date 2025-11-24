@@ -46,7 +46,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     /// </summary>
     public IBluetoothGattServerCallbackProxyDelegate BluetoothGattServerCallbackProxyDelegate { get; }
 
-    /// <inheritdoc cref="BluetoothGattServerCallback.OnMtuChanged(BluetoothDevice, int)"/>
+    /// <inheritdoc/>
     public override void OnMtuChanged(Android.Bluetooth.BluetoothDevice? device, int mtu)
     {
         try
@@ -60,7 +60,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         }
     }
 
-    /// <inheritdoc cref="BluetoothGattServerCallback.OnExecuteWrite(BluetoothDevice, int, bool)"/>
+    /// <inheritdoc/>
     public override void OnExecuteWrite(Android.Bluetooth.BluetoothDevice? device, int requestId, bool execute)
     {
         try
@@ -74,7 +74,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         }
     }
 
-    /// <inheritdoc cref="BluetoothGattServerCallback.OnNotificationSent(BluetoothDevice, GattStatus)"/>
+    /// <inheritdoc/>
     public override void OnNotificationSent(Android.Bluetooth.BluetoothDevice? device, GattStatus status)
     {
         try
@@ -222,7 +222,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         }
     }
 
-    /// <inheritdoc cref="BluetoothGattServerCallback.OnConnectionStateChange(BluetoothDevice, ProfileState, ProfileState)"/>
+    /// <inheritdoc/>
     public override void OnConnectionStateChange(Android.Bluetooth.BluetoothDevice? device, ProfileState status, ProfileState newState)
     {
         try

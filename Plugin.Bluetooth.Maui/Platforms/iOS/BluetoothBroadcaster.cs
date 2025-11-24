@@ -19,7 +19,7 @@ public partial class BluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripher
         throw new NotImplementedException();
     }
 
-    protected override void NativeStart(Dictionary<string, object>? nativeOptions)
+    protected override void NativeStart()
     {
         throw new NotImplementedException();
     }
@@ -29,12 +29,7 @@ public partial class BluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripher
         throw new NotImplementedException();
     }
 
-    protected async override ValueTask NativeInitializeAsync(Dictionary<string, object>? nativeOptions = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async override Task NativeSetAdvertisingDataAsync(Dictionary<string, object>? nativeOptions = null)
+    protected async override ValueTask NativeInitializeAsync()
     {
         throw new NotImplementedException();
     }

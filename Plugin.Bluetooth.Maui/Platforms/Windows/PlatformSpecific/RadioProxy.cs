@@ -55,7 +55,7 @@ public partial class RadioProxy
     /// <exception cref="PermissionException">Thrown when the radio cannot be retrieved, indicating missing Bluetooth capability.</exception>
     public async static Task<RadioProxy> GetInstanceAsync(BluetoothAdapterProxy bluetoothAdapterProxy, IRadioProxyDelegate radioProxyDelegate)
     {
-        ArgumentNullException.ThrowIfNull(bluetoothAdapterProxy, nameof(bluetoothAdapterProxy));
+        ArgumentNullException.ThrowIfNull(bluetoothAdapterProxy);
         RadioInstance ??= await bluetoothAdapterProxy.BluetoothAdapter.GetRadioAsync();
         if (RadioInstance == null)
         {

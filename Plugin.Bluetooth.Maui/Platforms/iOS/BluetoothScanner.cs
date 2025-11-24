@@ -4,61 +4,36 @@ namespace Plugin.Bluetooth.Maui;
 
 public partial class BluetoothScanner : BaseBluetoothScanner, CbCentralManagerProxy.ICbCentralManagerProxyDelegate
 {
+    public CbCentralManagerProxy? CbCentralManagerProxy { get; protected set; }
+
 
     #region CbCentralManagerProxy
 
-    public void DiscoveredPeripheral(CBPeripheral peripheral, NSDictionary advertisementData, NSNumber rssi)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdatedState()
-    {
-        throw new NotImplementedException();
-    }
-
     public void WillRestoreState(NSDictionary dict)
     {
-        throw new NotImplementedException();
+        // Placeholder for future implementation if needed
     }
 
     public CbCentralManagerProxy.ICbPeripheralDelegate GetDevice(CBPeripheral peripheral)
     {
-        throw new NotImplementedException();
-    }
+        try
+        {
+            ArgumentNullException.ThrowIfNull(peripheral);
 
-    #endregion
+            var match = Devices.OfType<BluetoothDevice>().SingleOrDefault(device => device.CbPeripheralDelegateProxy.CbPeripheral.Identifier.ToString() == peripheral.Identifier.ToString() && device.CbPeripheralDelegateProxy.CbPeripheral.Handle.Handle == peripheral.Handle.Handle);
 
-    #region BaseBluetoothScanner
+            if (match == null)
+            {
+                throw new DeviceNotFoundException(this, peripheral.Identifier.ToString());
+            }
 
-    protected override void NativeRefreshIsBluetoothOn()
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override void NativeRefreshIsRunning()
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override void NativeStart(Dictionary<string, object>? nativeOptions = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override void NativeStop()
-    {
-        throw new NotImplementedException();
-    }
-
-    protected async override ValueTask NativeInitializeAsync(Dictionary<string, object>? nativeOptions = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override IBluetoothDevice NativeCreateDevice(IBluetoothAdvertisement advertisement)
-    {
-        throw new NotImplementedException();
+            return match;
+        }
+        catch (InvalidOperationException e)
+        {
+            var matches = Devices.OfType<BluetoothDevice>().Where(device => device.CbPeripheralDelegateProxy.CbPeripheral.Identifier.ToString() == peripheral.Identifier.ToString() && device.CbPeripheralDelegateProxy.CbPeripheral.Handle.Handle == peripheral.Handle.Handle).ToArray();
+            throw new MultipleDevicesFoundException(this, matches, e);
+        }
     }
 
     #endregion
