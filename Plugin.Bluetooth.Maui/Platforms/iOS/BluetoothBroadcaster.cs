@@ -2,46 +2,14 @@ using Plugin.Bluetooth.Maui.PlatformSpecific;
 
 namespace Plugin.Bluetooth.Maui;
 
+/// <inheritdoc cref="BaseBluetoothBroadcaster" />
 public partial class BluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralManagerProxy.ICbPeripheralManagerProxyDelegate
 {
 
     public CbPeripheralManagerProxy? CbPeripheralManagerProxy { get; protected set; }
 
-    #region BaseBluetoothBroadcaster
-
-    protected override void NativeRefreshIsBluetoothOn()
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override void NativeRefreshIsRunning()
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override void NativeStart()
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override void NativeStop()
-    {
-        throw new NotImplementedException();
-    }
-
-    protected async override ValueTask NativeInitializeAsync()
-    {
-        throw new NotImplementedException();
-    }
-
-    #endregion
-
     #region CbPeripheralManagerProxy.ICbPeripheralManagerProxyDelegate
 
-    public void AdvertisingStarted(NSError? error)
-    {
-        throw new NotImplementedException();
-    }
 
     public void CharacteristicSubscribed(CBCentral central, CBCharacteristic characteristic)
     {
@@ -84,11 +52,6 @@ public partial class BluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripher
     }
 
     public void DidUnpublishL2CapChannel(NSError? error, ushort psm)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void StateUpdated()
     {
         throw new NotImplementedException();
     }
