@@ -6,6 +6,9 @@ namespace Bluetooth.Maui;
 
 public partial class BluetoothDevice
 {
+    /// <summary>
+    /// Gets or sets the current Android GATT profile connection state.
+    /// </summary>
     public ProfileState ProfileState
     {
         get => GetValue(ProfileState.Disconnected);
@@ -18,6 +21,9 @@ public partial class BluetoothDevice
         IsConnected = ProfileState == ProfileState.Connected;
     }
 
+    /// <summary>
+    /// Gets or sets the Android-specific connection options used when connecting to the device.
+    /// </summary>
     public ConnectionOptions? ConnectionOptions { get; set; }
 
     protected override ValueTask NativeConnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
@@ -73,6 +79,11 @@ public partial class BluetoothDevice
         }
     }
 
+    /// <summary>
+    /// Called when the GATT connection state changes on the Android platform.
+    /// </summary>
+    /// <param name="status">The status of the connection state change.</param>
+    /// <param name="newState">The new connection state.</param>
     public void OnConnectionStateChange(GattStatus status, ProfileState newState)
     {
         ProfileState = newState;

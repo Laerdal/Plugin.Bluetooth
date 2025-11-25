@@ -6,17 +6,31 @@ public partial class BluetoothDevice
 {
     #region Connection - GattSessionStatus
 
+    /// <summary>
+    /// Gets or sets the current Windows GATT session status.
+    /// </summary>
     public GattSessionStatus GattSessionStatus
     {
         get => GetValue(GattSessionStatus.Closed);
         private set => SetValue(value);
     }
 
+    /// <summary>
+    /// Waits for the GATT session status to reach a specific state.
+    /// </summary>
+    /// <param name="state">The desired GATT session status.</param>
+    /// <param name="timeout">Optional timeout for the operation.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>A task that completes when the desired state is reached.</returns>
     public ValueTask WaitForGattSessionStatusAsync(GattSessionStatus state, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         return WaitForPropertyToBeOfValue(nameof(GattSessionStatus), state, timeout, cancellationToken);
     }
 
+    /// <summary>
+    /// Called when the GATT session status changes on the Windows platform.
+    /// </summary>
+    /// <param name="argsStatus">The new GATT session status.</param>
     public void OnGattSessionStatusChanged(GattSessionStatus argsStatus)
     {
         GattSessionStatus = argsStatus;
@@ -26,17 +40,32 @@ public partial class BluetoothDevice
 
     #region Connection - BluetoothConnectionStatus
 
+    /// <summary>
+    /// Gets or sets the current Windows Bluetooth connection status.
+    /// </summary>
     public BluetoothConnectionStatus BluetoothConnectionStatus
     {
         get => GetValue(BluetoothConnectionStatus.Disconnected);
         private set => SetValue(value);
     }
 
+    /// <summary>
+    /// Waits for the Bluetooth connection status to reach a specific state.
+    /// </summary>
+    /// <param name="state">The desired Bluetooth connection status.</param>
+    /// <param name="timeout">Optional timeout for the operation.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>A task that completes when the desired state is reached.</returns>
     public ValueTask WaitForBluetoothConnectionStatusAsync(BluetoothConnectionStatus state, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         return WaitForPropertyToBeOfValue(nameof(BluetoothConnectionStatus), state, timeout, cancellationToken);
     }
 
+    /// <summary>
+    /// Called when the Bluetooth connection status changes on the Windows platform.
+    /// </summary>
+    /// <param name="newConnectionStatus">The new connection status.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the connection status is not a recognized value.</exception>
     public void OnConnectionStatusChanged(BluetoothConnectionStatus newConnectionStatus)
     {
         BluetoothConnectionStatus = newConnectionStatus;
