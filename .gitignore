@@ -473,6 +473,6 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/```
 
-Plugin.Bluetooth.Docs/site/
+Bluetooth.Docs/site/
 
-Plugin.Bluetooth.Docs/api/
+Bluetooth.Docs/api/

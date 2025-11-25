@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- ==================== CORE VARIABLES ==================== -->
+    <PropertyGroup>
+        <Project_Name>Bluetooth.Core</Project_Name>
+        <Project_Tags>Bluetooth;Core;Tools;Toolkit</Project_Tags>
+        <Project_Copyright>Francois Raminosona</Project_Copyright>
+        <Project_Description>Bluetooth.Core for .NET</Project_Description>
+    </PropertyGroup>
+
+    <!-- ==================== TARGET FRAMEWORKS ==================== -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+
+    <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <PackageReference Include="Plugin.ByteArrays" />
+        <PackageReference Include="Plugin.BaseTypeExtensions" />
+        <PackageReference Include="Plugin.ExceptionListeners" />
+    </ItemGroup>
+
+    <!-- ==================== FILE DEPENDENCIES ==================== -->
+    <ItemGroup>
+
+		<!-- Files dependent on eachother -->
+		<Compile Update="**\BaseBluetoothCharacteristic.*.cs">
+			<DependentUpon>BaseBluetoothCharacteristic.cs</DependentUpon>
+		</Compile>
+		<Compile Update="**\BaseBluetoothDevice.*.cs">
+			<DependentUpon>BaseBluetoothDevice.cs</DependentUpon>
+		</Compile>
+		<Compile Update="**\BaseBluetoothManager.*.cs">
+			<DependentUpon>BaseBluetoothManager.cs</DependentUpon>
+		</Compile>
+		<Compile Update="**\BaseBluetoothScanner.*.cs">
+			<DependentUpon>BaseBluetoothScanner.cs</DependentUpon>
+		</Compile>
+		<Compile Update="**\BaseBluetoothService.*.cs">
+			<DependentUpon>BaseBluetoothService.cs</DependentUpon>
+		</Compile>
+    </ItemGroup>
+</Project>

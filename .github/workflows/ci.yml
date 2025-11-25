@@ -36,7 +36,7 @@ defaults:
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: '1'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
-  PROJECT_NAME: Plugin.Bluetooth
+  PROJECT_NAME: Bluetooth
 
 jobs:
   version:
@@ -54,8 +54,8 @@ jobs:
     runs-on: windows-latest
     needs: version
     outputs:
-      has-tests: ${{ steps.check-tests.outputs.exists }}
       has-docs: ${{ steps.check-docs.outputs.exists }}
+      has-tests: ${{ steps.test-artifact-check.outputs.found }}
     steps:
       - name: '🔄 Checkout'
         uses: actions/checkout@v6
@@ -107,18 +107,9 @@ jobs:
           if-no-files-found: error
 
       # ============================ TESTS & COVERAGE ============================
-      - name: '🔍 Check if tests are needed'
-        id: check-tests
-        run: |
-          if [ -d "${{ github.workspace }}/${{ env.PROJECT_NAME }}.Tests" ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: '🧪 Test with coverage'
         uses: laerdal/github_actions/dotnet-test@main
-        if: ${{ success() && !cancelled() && steps.check-tests.outputs.exists == 'true' }}
+        if: ${{ success() && !cancelled() }}
         with:
           path: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.Tests/${{ env.PROJECT_NAME }}.Tests.csproj'
           configuration: Release
@@ -132,9 +123,18 @@ jobs:
             -p:CoverletOutput='${{ github.workspace }}/${{ env.PROJECT_NAME }}.Output/Tests/coverage.cobertura.xml'
           show-summary: true
 
+      - name: '🔍 Check for test artifacts'
+        id: test-artifact-check
+        run: |
+          if [ -d "${{ github.workspace }}/${{ env.PROJECT_NAME }}.Output/Tests" ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: '📦 Upload test artifacts'
         uses: actions/upload-artifact@v5
-        if: ${{ success() && !cancelled() && steps.check-tests.outputs.exists == 'true' }}
+        if: ${{ success() && !cancelled() && steps.test-artifact-check.outputs.found == 'true' }}
         with:
           name: tests
           path: '${{ env.PROJECT_NAME }}.Output/Tests/'

@@ -1,1 +1,1 @@
-# Plugin.Bluetooth
+# Bluetooth.Core & Bluetooth.Maui

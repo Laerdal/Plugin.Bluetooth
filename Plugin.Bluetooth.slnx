@@ -1,9 +1,0 @@
-<Solution>
-  <Folder Name="/_Extras/">
-    <File Path="Directory.Packages.props" />
-    <File Path="nuget.config" />
-    <File Path="global.json" />
-  </Folder>
-  <Project Path="Plugin.Bluetooth.Maui/Plugin.Bluetooth.Maui.csproj" />
-  <Project Path="Plugin.Bluetooth/Plugin.Bluetooth.csproj" />
-</Solution>
