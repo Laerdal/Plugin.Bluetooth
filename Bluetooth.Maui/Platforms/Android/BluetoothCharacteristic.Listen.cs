@@ -9,12 +9,17 @@ namespace Bluetooth.Maui;
 public partial class BluetoothCharacteristic
 {
     /// <inheritdoc/>
+    /// <remarks>
+    /// On Android, checks if the characteristic has the Notify or Indicate property flag set.
+    /// </remarks>
     protected override bool NativeCanListen()
     {
         return NativeCharacteristic.Properties.HasFlag(GattProperty.Indicate) || NativeCharacteristic.Properties.HasFlag(GattProperty.Notify);
     }
 
     /// <inheritdoc/>
+    /// <exception cref="CharacteristicNotifyException">Thrown when the notification descriptor is not found.</exception>
+    /// <exception cref="CharacteristicNotifyException">Thrown when the BluetoothGatt.ReadDescriptor operation fails.</exception>
     protected override ValueTask NativeReadIsListeningAsync()
     {
         // Ensure BluetoothGatt exists and is available
@@ -37,6 +42,9 @@ public partial class BluetoothCharacteristic
     }
 
     /// <inheritdoc/>
+    /// <exception cref="CharacteristicNotifyException">Thrown when SetCharacteristicNotification fails.</exception>
+    /// <exception cref="CharacteristicNotifyException">Thrown when the notification descriptor is not found.</exception>
+    /// <exception cref="CharacteristicNotifyException">Thrown when the characteristic doesn't support Notify or Indicate properties.</exception>
     protected async override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
         // Ensure LISTEN is supported
@@ -80,6 +88,18 @@ public partial class BluetoothCharacteristic
     }
 
 
+    /// <summary>
+    /// Writes a value to a GATT descriptor using the appropriate Android API based on the Android version.
+    /// </summary>
+    /// <param name="descriptor">The descriptor to write to.</param>
+    /// <param name="value">The value to write.</param>
+    /// <exception cref="CharacteristicNotifyException">Thrown when SetValue fails on Android versions prior to API 33.</exception>
+    /// <exception cref="CharacteristicNotifyException">Thrown when WriteDescriptor fails on Android versions prior to API 33.</exception>
+    /// <exception cref="CharacteristicNotifyException">Thrown when WriteDescriptor fails on Android API 33 and above.</exception>
+    /// <remarks>
+    /// On Android 13 (API 33) and above, uses the new WriteDescriptor API that takes the value directly.
+    /// On earlier versions, uses the legacy SetValue followed by WriteDescriptor pattern.
+    /// </remarks>
     private void BluetoothGattCharacteristicWriteDescriptor(BluetoothGattDescriptor descriptor, byte[] value)
     {
         // Ensure BluetoothGatt exists and is available

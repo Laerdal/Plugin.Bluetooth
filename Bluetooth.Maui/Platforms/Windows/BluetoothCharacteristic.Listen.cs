@@ -7,12 +7,16 @@ namespace Bluetooth.Maui;
 public partial class BluetoothCharacteristic
 {
     /// <inheritdoc/>
+    /// <remarks>
+    /// On Windows, checks if the characteristic has the Indicate or Notify property flag set.
+    /// </remarks>
     protected override bool NativeCanListen()
     {
         return GattCharacteristicProxy.GattCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Indicate) || GattCharacteristicProxy.GattCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify);
     }
 
     /// <inheritdoc/>
+    /// <exception cref="WindowsNativeBluetoothException">Thrown when the read operation fails with a status other than Success.</exception>
     protected async override ValueTask NativeReadIsListeningAsync()
     {
         // Ensure LISTEN is supported
@@ -28,6 +32,8 @@ public partial class BluetoothCharacteristic
     }
 
     /// <inheritdoc/>
+    /// <exception cref="WindowsNativeBluetoothException">Thrown when the write operation fails with a status other than Success.</exception>
+    /// <exception cref="UnreachableException">Thrown when the characteristic doesn't support Notify or Indicate (should be caught by CharacteristicCantListenException).</exception>
     protected async override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
         // Ensure LISTEN is supported

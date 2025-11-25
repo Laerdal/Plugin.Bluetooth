@@ -6,12 +6,16 @@ namespace Bluetooth.Maui;
 public partial class BluetoothCharacteristic
 {
     /// <inheritdoc/>
+    /// <remarks>
+    /// On iOS, checks if the characteristic has the Read property flag set.
+    /// </remarks>
     protected override bool NativeCanRead()
     {
         return NativeCharacteristic.Properties.HasFlag(CBCharacteristicProperties.Read);
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown when the native characteristic, its service, or peripheral is <c>null</c>.</exception>
     protected override ValueTask NativeReadValueAsync()
     {
         // Ensure CbCharacteristic.Service.Peripheral ref exists and is available

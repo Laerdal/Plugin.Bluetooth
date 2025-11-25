@@ -6,12 +6,18 @@ namespace Bluetooth.Maui;
 public partial class BluetoothCharacteristic
 {
     /// <inheritdoc/>
+    /// <remarks>
+    /// On iOS, checks if the characteristic has the Notify or Indicate property flag set.
+    /// </remarks>
     protected override bool NativeCanListen()
     {
         return NativeCharacteristic.Properties.HasFlag(CBCharacteristicProperties.Indicate) || NativeCharacteristic.Properties.HasFlag(CBCharacteristicProperties.Notify);
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// On iOS, calls DiscoverDescriptors on the peripheral to read the current notification state.
+    /// </remarks>
     protected override ValueTask NativeReadIsListeningAsync()
     {
         // Ensure CbCharacteristic ref exists and is available
@@ -23,6 +29,9 @@ public partial class BluetoothCharacteristic
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// On iOS, calls SetNotifyValue on the peripheral to enable or disable notifications/indications.
+    /// </remarks>
     protected override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
         // Ensure CbCharacteristic.Service.Peripheral ref exists and is available

@@ -6,12 +6,20 @@ namespace Bluetooth.Maui;
 public partial class BluetoothCharacteristic
 {
     /// <inheritdoc/>
+    /// <remarks>
+    /// On iOS, checks if the characteristic has the WriteWithoutResponse or Write property flag set.
+    /// </remarks>
     protected override bool NativeCanWrite()
     {
         return NativeCharacteristic.Properties.HasFlag(CBCharacteristicProperties.WriteWithoutResponse) || NativeCharacteristic.Properties.HasFlag(CBCharacteristicProperties.Write);
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException">Thrown when the native characteristic, its service, or peripheral is <c>null</c>.</exception>
+    /// <remarks>
+    /// On iOS, uses WriteWithoutResponse type if the characteristic supports it, otherwise uses WithResponse.
+    /// Write operations without response complete immediately without confirmation.
+    /// </remarks>
     protected override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
         // Ensure CbCharacteristic.Service.Peripheral ref exists and is available
