@@ -2,6 +2,7 @@ using Plugin.Bluetooth.Maui.PlatformSpecific;
 
 namespace Plugin.Bluetooth.Maui;
 
+/// <inheritdoc cref="BaseBluetoothBroadcaster" />
 public partial class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackProxy.IBroadcaster, BluetoothGattServerCallbackProxy.IBluetoothGattServerCallbackProxyDelegate
 {
     public BluetoothGattServerCallbackProxy? BluetoothGattServerCallbackProxy { get; protected set; }
