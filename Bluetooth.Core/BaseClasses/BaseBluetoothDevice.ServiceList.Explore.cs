@@ -92,7 +92,7 @@ public abstract partial class BaseBluetoothDevice
             // Ensure Device is Connected
             DeviceNotConnectedException.ThrowIfNotConnected(this);
 
-            NativeServicesExplorationAsync(); // actual service exploration native call
+           await NativeServicesExplorationAsync(timeout, cancellationToken).ConfigureAwait(false); // actual service exploration native call
         }
         catch (Exception e)
         {

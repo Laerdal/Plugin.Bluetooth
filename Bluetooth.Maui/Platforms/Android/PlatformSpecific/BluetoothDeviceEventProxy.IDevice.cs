@@ -6,7 +6,7 @@ public partial class BluetoothDeviceEventProxy
 {
     /// <summary>
     /// Interface for device implementations that handle Android Bluetooth device events.
-    /// Extends <see cref="Abstractions.IBluetoothDevice"/> to provide device-specific event handlers.
+    /// Extends <see cref="IBluetoothDevice"/> to provide device-specific event handlers.
     /// </summary>
     /// <remarks>
     /// <para>Implementations of this interface receive notifications for various Bluetooth device events
@@ -15,7 +15,7 @@ public partial class BluetoothDeviceEventProxy
     /// <see href="https://developer.android.com/reference/android/bluetooth/BluetoothDevice">BluetoothDevice</see>
     /// </para>
     /// </remarks>
-    public interface IDevice : Bluetooth.Core.Abstractions.IBluetoothDevice
+    public interface IDevice : IBluetoothDevice
     {
         /// <summary>
         /// Called when the device's bond state changes.

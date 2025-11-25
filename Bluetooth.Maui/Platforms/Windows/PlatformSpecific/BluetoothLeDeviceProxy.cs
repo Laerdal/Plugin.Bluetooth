@@ -53,7 +53,7 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// </summary>
     /// <param name="bluetoothAddress">The Bluetooth address of the device to connect to.</param>
     /// <param name="bluetoothLeDeviceProxyDelegate">The delegate for handling Bluetooth LE device events.</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the device proxy instance.</returns>
     /// <exception cref="WindowsNativeBluetoothException">Thrown when the Bluetooth LE device cannot be created.</exception>
     public async static Task<BluetoothLeDeviceProxy> GetInstanceAsync(ulong bluetoothAddress, IBluetoothLeDeviceProxyDelegate bluetoothLeDeviceProxyDelegate, CancellationToken cancellationToken = default)

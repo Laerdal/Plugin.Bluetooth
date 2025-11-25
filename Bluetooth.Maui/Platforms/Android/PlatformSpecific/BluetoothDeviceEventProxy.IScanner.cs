@@ -6,7 +6,7 @@ public partial class BluetoothDeviceEventProxy
 {
     /// <summary>
     /// Interface for scanner implementations that handle device discovery and event routing.
-    /// Extends <see cref="Abstractions.IBluetoothScanner"/> to provide scanner-specific methods.
+    /// Extends <see cref="IBluetoothScanner"/> to provide scanner-specific methods.
     /// </summary>
     /// <remarks>
     /// <para>Implementations are responsible for managing discovered devices and routing device events
@@ -15,7 +15,7 @@ public partial class BluetoothDeviceEventProxy
     /// <see href="https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#startDiscovery()">BluetoothAdapter.startDiscovery()</see>
     /// </para>
     /// </remarks>
-    public interface IScanner : Bluetooth.Core.Abstractions.IBluetoothScanner
+    public interface IScanner : IBluetoothScanner
     {
         /// <summary>
         /// Retrieves a device instance for the specified native Android Bluetooth device.
