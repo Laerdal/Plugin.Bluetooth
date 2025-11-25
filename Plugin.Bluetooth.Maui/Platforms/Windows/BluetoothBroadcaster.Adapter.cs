@@ -2,13 +2,11 @@ using Plugin.Bluetooth.Maui.PlatformSpecific;
 
 namespace Plugin.Bluetooth.Maui;
 
-public partial class BluetoothScanner
+public partial class BluetoothBroadcaster
 {
 
-    public BluetoothAdapterProxy? BluetoothAdapterProxy { get; protected set; }
-
+    #region RadioState
     public RadioProxy? RadioProxy { get; protected set; }
-
 
     public RadioState RadioState
     {
@@ -28,7 +26,6 @@ public partial class BluetoothScanner
         RadioState = senderState;
     }
 
-
     public ValueTask WaitForRadioStateAsync(RadioState state, TimeSpan timeout, CancellationToken cancellationToken = default)
     {
         return WaitForPropertyToBeOfValue(nameof(RadioState), state, timeout, cancellationToken);
@@ -38,6 +35,10 @@ public partial class BluetoothScanner
     {
         return WaitForPropertyToBeDifferentThanValue(nameof(RadioState), RadioState.Unknown, timeout, cancellationToken);
     }
+
+    #endregion
+
+    public BluetoothAdapterProxy? BluetoothAdapterProxy { get; protected set; }
 
     protected async override ValueTask NativeInitializeAsync()
     {

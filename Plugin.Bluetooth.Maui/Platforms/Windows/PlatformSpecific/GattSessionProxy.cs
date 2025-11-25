@@ -81,14 +81,15 @@ public sealed partial class GattSessionProxy : IDisposable
     /// </summary>
     /// <param name="bluetoothLeDevice">The Bluetooth LE device to create a GATT session for.</param>
     /// <param name="gattSessionProxyDelegate">The delegate for handling GATT session events.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the GATT session proxy instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="bluetoothLeDevice"/> is null.</exception>
     /// <exception cref="WindowsNativeBluetoothException">Thrown when the GATT session cannot be created.</exception>
-    public async static Task<GattSessionProxy> GetInstanceAsync(BluetoothLEDevice bluetoothLeDevice, IGattSessionProxyDelegate gattSessionProxyDelegate)
+    public async static Task<GattSessionProxy> GetInstanceAsync(BluetoothLEDevice bluetoothLeDevice, IGattSessionProxyDelegate gattSessionProxyDelegate, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(bluetoothLeDevice);
 
-        var nativeGattSession = await GattSession.FromDeviceIdAsync(bluetoothLeDevice.BluetoothDeviceId).AsTask().ConfigureAwait(false);
+        var nativeGattSession = await GattSession.FromDeviceIdAsync(bluetoothLeDevice.BluetoothDeviceId).AsTask(cancellationToken).ConfigureAwait(false);
 
         if (nativeGattSession == null)
         {

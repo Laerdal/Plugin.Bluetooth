@@ -53,11 +53,12 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// </summary>
     /// <param name="bluetoothAddress">The Bluetooth address of the device to connect to.</param>
     /// <param name="bluetoothLeDeviceProxyDelegate">The delegate for handling Bluetooth LE device events.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param
     /// <returns>A task that represents the asynchronous operation. The task result contains the device proxy instance.</returns>
     /// <exception cref="WindowsNativeBluetoothException">Thrown when the Bluetooth LE device cannot be created.</exception>
-    public async static Task<BluetoothLeDeviceProxy> GetInstanceAsync(ulong bluetoothAddress, IBluetoothLeDeviceProxyDelegate bluetoothLeDeviceProxyDelegate)
+    public async static Task<BluetoothLeDeviceProxy> GetInstanceAsync(ulong bluetoothAddress, IBluetoothLeDeviceProxyDelegate bluetoothLeDeviceProxyDelegate, CancellationToken cancellationToken = default)
     {
-        var nativeBleDevice = await BluetoothLEDevice.FromBluetoothAddressAsync(bluetoothAddress).AsTask().ConfigureAwait(false);
+        var nativeBleDevice = await BluetoothLEDevice.FromBluetoothAddressAsync(bluetoothAddress).AsTask(cancellationToken).ConfigureAwait(false);
 
         if (nativeBleDevice == null)
         {
@@ -73,19 +74,26 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="bluetoothCacheMode">The cache mode to use when reading services.</param>
     /// <param name="maxNumberOfAttempts">The maximum number of retry attempts (default: 3).</param>
     /// <param name="delayBetweenAttemptsInMs">The delay between retry attempts in milliseconds (default: 100).</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the list of GATT services.</returns>
     /// <exception cref="WindowsNativeBluetoothException">Thrown when GATT communication fails.</exception>
     /// <exception cref="AggregateException">Thrown when all retry attempts fail.</exception>
-    public async Task<List<GattDeviceService>> ReadGattServicesAsync(BluetoothCacheMode bluetoothCacheMode, uint maxNumberOfAttempts = 3, int delayBetweenAttemptsInMs = 100)
+    public async Task<List<GattDeviceService>> ReadGattServicesAsync(BluetoothCacheMode bluetoothCacheMode, uint maxNumberOfAttempts = 3, int delayBetweenAttemptsInMs = 100, CancellationToken cancellationToken = default)
     {
         var attempts = 0;
         var exceptions = new List<Exception>();
         while (attempts < maxNumberOfAttempts)
         {
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
             attempts++;
             try
             {
-                var result = await BluetoothLeDevice.GetGattServicesAsync(bluetoothCacheMode).AsTask().ConfigureAwait(false);
+                var result = await BluetoothLeDevice.GetGattServicesAsync(bluetoothCacheMode).AsTask(cancellationToken).ConfigureAwait(false);
 
                 if (result.Status != GattCommunicationStatus.Success)
                 {
@@ -96,7 +104,7 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
             }
             catch (Exception e)
             {
-                await Task.Delay(delayBetweenAttemptsInMs).ConfigureAwait(false);
+                await Task.Delay(delayBetweenAttemptsInMs, cancellationToken).ConfigureAwait(false);
                 exceptions.Add(e);
             }
         }

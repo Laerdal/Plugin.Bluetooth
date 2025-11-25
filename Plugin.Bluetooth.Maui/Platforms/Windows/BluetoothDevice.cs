@@ -16,76 +16,28 @@ public partial class BluetoothDevice : BaseBluetoothDevice, BluetoothLeDevicePro
     {
     }
 
-    #region BaseBluetoothDevice
-
-    protected override void NativeServicesExploration()
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override void NativeRefreshIsConnected()
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override void NativeConnect()
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override void NativeDisconnect()
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override void NativeReadSignalStrength()
-    {
-        throw new NotImplementedException();
-    }
-
-    #endregion
-
-    #region BluetoothLeDeviceProxy.IBluetoothLeDeviceProxyDelegate
-
     public void OnGattServicesChanged()
     {
-        throw new NotImplementedException();
-    }
-
-    public void OnConnectionStatusChanged(BluetoothConnectionStatus newConnectionStatus)
-    {
-        throw new NotImplementedException();
+        // Placeholder for future implementation
     }
 
     public void OnNameChanged(string senderName)
     {
-        throw new NotImplementedException();
+        CachedName = senderName;
     }
 
     public void OnAccessChanged(string argsId, DeviceAccessStatus argsStatus)
     {
-        throw new NotImplementedException();
+        // Placeholder for future implementation
     }
 
     public void OnCustomPairingRequested(DevicePairingRequestedEventArgs args)
     {
-        throw new NotImplementedException();
-    }
-
-    #endregion
-
-    #region GattSessionProxy.IGattSessionProxyDelegate
-
-    public void OnGattSessionStatusChanged(GattSessionStatus argsStatus)
-    {
-        throw new NotImplementedException();
+        // Placeholder for future implementation
     }
 
     public void OnMaxPduSizeChanged()
     {
-        throw new NotImplementedException();
+        // Placeholder for future implementation
     }
-
-    #endregion
-
 }

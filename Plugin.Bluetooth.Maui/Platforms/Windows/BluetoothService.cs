@@ -1,4 +1,5 @@
 using Plugin.Bluetooth.Maui.PlatformSpecific;
+using Plugin.Bluetooth.Maui.PlatformSpecific.Exceptions;
 
 namespace Plugin.Bluetooth.Maui;
 
@@ -11,22 +12,18 @@ public partial class BluetoothService : BaseBluetoothService, GattDeviceServiceP
         NativeServiceProxy = new GattDeviceServiceProxy(nativeService, this);
     }
 
-    #region BaseBluetoothService
-
-    protected async override ValueTask NativeCharacteristicsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask DisposeAsyncCore()
     {
-        throw new NotImplementedException();
+        NativeServiceProxy.Dispose();
+        return base.DisposeAsyncCore();
     }
-
-    #endregion
 
     #region GattDeviceServiceProxy.IBluetoothServiceProxyDelegate
 
     public void OnAccessChanged(string argsId, DeviceAccessStatus argsStatus)
     {
-        throw new NotImplementedException();
+        // Placeholder for future implementation
     }
 
     #endregion
-
 }
