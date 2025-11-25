@@ -2,16 +2,44 @@ using Bluetooth.Maui.PlatformSpecific;
 
 namespace Bluetooth.Maui;
 
+/// <summary>
+/// Represents a Bluetooth Low Energy advertisement packet received from an Android device.
+/// This class wraps Android's ScanResult and provides access to advertisement data including
+/// device information, services, signal strength, and manufacturer-specific data.
+/// </summary>
 public class BluetoothAdvertisement : BaseBluetoothAdvertisement
 {
+    /// <summary>
+    /// Gets the native Android scan result containing the advertisement data.
+    /// </summary>
     public ScanResult ScanResult { get; }
 
+    /// <summary>
+    /// Gets the scan record containing the parsed advertisement data such as device name,
+    /// service UUIDs, manufacturer data, and transmit power level.
+    /// </summary>
     public ScanRecord ScanRecord { get; }
 
+    /// <summary>
+    /// Gets the collection of individual advertisement data parts parsed from the raw scan record bytes.
+    /// Each part represents a specific type of data (e.g., manufacturer data, service UUIDs, local name).
+    /// </summary>
     public IReadOnlyList<ScanRecordPart> ScanRecordParts { get; }
 
+    /// <summary>
+    /// Gets the native Android Bluetooth device that sent this advertisement.
+    /// </summary>
     public Android.Bluetooth.BluetoothDevice BluetoothDevice { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BluetoothAdvertisement"/> class from an Android scan result.
+    /// </summary>
+    /// <param name="scanResult">The Android scan result containing the advertisement data.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="scanResult"/> is <c>null</c>, or when
+    /// <see cref="ScanResult.ScanRecord"/> is <c>null</c>, or when
+    /// <see cref="ScanResult.Device"/> is <c>null</c>.
+    /// </exception>
     public BluetoothAdvertisement(ScanResult scanResult)
     {
         ArgumentNullException.ThrowIfNull(scanResult);
@@ -31,12 +59,20 @@ public class BluetoothAdvertisement : BaseBluetoothAdvertisement
     #region BaseBluetoothAdvertisement
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Retrieves the device name from the Android scan record.
+    /// Returns an empty string if no device name is available in the advertisement.
+    /// </remarks>
     protected override string InitDeviceName()
     {
         return ScanRecord.DeviceName ?? string.Empty;
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Extracts service UUIDs from the Android scan record and converts them to GUIDs.
+    /// Returns an empty collection if no service UUIDs are advertised or if any UUID conversion fails.
+    /// </remarks>
     protected override IEnumerable<Guid> InitServicesGuids()
     {
         if (ScanRecord.ServiceUuids == null || ScanRecord.ServiceUuids.Count == 0)
@@ -65,6 +101,11 @@ public class BluetoothAdvertisement : BaseBluetoothAdvertisement
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// On Android versions prior to API level 26 (Android 8.0), this property always returns <c>true</c>
+    /// because the IsConnectable property is not available. On API level 26 and above, returns the
+    /// actual connectable status from the scan result.
+    /// </remarks>
     protected override bool InitIsConnectable()
     {
         // IsConnectable is not available prior to API 8.0 (API level 26)
@@ -72,18 +113,30 @@ public class BluetoothAdvertisement : BaseBluetoothAdvertisement
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Returns the RSSI (Received Signal Strength Indicator) value in dBm from the Android scan result.
+    /// </remarks>
     protected override int InitRawSignalStrengthInDBm()
     {
         return ScanResult.Rssi;
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Returns the transmit power level from the Android scan record, or 0 if not available.
+    /// </remarks>
     protected override int InitTransmitPowerLevelInDBm()
     {
         return ScanResult.ScanRecord?.TxPowerLevel ?? 0;
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Extracts and consolidates all manufacturer-specific data from the scan record parts.
+    /// The data is formatted with a 2-byte manufacturer ID followed by the manufacturer data.
+    /// If multiple manufacturer data parts exist, they are concatenated. Returns an empty array
+    /// if no manufacturer data is present.
+    /// </remarks>
     protected override byte[] InitManufacturerData()
     {
         var manufacturerDataParts = ScanRecordParts.Where(part => part.Type == ScanRecordPart.AdvertisementRecordType.ManufacturerSpecificData).ToArray(); // Enumerate once
@@ -125,6 +178,10 @@ public class BluetoothAdvertisement : BaseBluetoothAdvertisement
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Returns the Bluetooth MAC address of the device from the Android BluetoothDevice.
+    /// Returns an empty string if the address is not available.
+    /// </remarks>
     protected override string InitBluetoothAddress()
     {
         return BluetoothDevice.Address ?? string.Empty;
