@@ -11,7 +11,7 @@ public partial class BluetoothScanner
         IsRunning = CbCentralManagerProxy?.CbCentralManager.IsScanning ?? false;
     }
 
-    protected override void NativeStart()
+    protected override ValueTask NativeStartAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(CbCentralManagerProxy);
 
@@ -47,13 +47,15 @@ public partial class BluetoothScanner
         }
 
         NativeRefreshIsRunning();
+        return ValueTask.CompletedTask;
     }
 
-    protected override void NativeStop()
+    protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(CbCentralManagerProxy);
         CbCentralManagerProxy.CbCentralManager.StopScan();
         NativeRefreshIsRunning();
+        return ValueTask.CompletedTask;
     }
 
 }

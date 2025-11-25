@@ -15,10 +15,11 @@ public partial class BluetoothScanner
 
     public StartScanningOptions? StartScanningOptions { get; set; }
 
-    protected override void NativeStart()
+    protected override ValueTask NativeStartAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(BluetoothLeScannerProxy.BluetoothLeScanner, nameof(BluetoothLeScannerProxy.BluetoothLeScanner));
         BluetoothLeScannerProxy.BluetoothLeScanner.StartScan(StartScanningOptions.ToNativeScanFilters(), StartScanningOptions.ToNativeScanSettings(), ScanCallbackProxy);
+        return ValueTask.CompletedTask;
     }
 
     public virtual void OnScanFailed(ScanFailure errorCode)
@@ -40,7 +41,7 @@ public partial class BluetoothScanner
         }
     }
 
-    protected override void NativeStop()
+    protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -54,6 +55,7 @@ public partial class BluetoothScanner
             IsRunning = false;
             OnStopFailed(e);
         }
+        return ValueTask.CompletedTask;
     }
 
 }

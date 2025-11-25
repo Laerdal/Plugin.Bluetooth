@@ -268,7 +268,7 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
             }
             BluetoothIsOffException.ThrowIfBluetoothIsOff(this);
 
-            NativeStart(); // actual start native call
+            await NativeStartAsync(timeout, cancellationToken).ConfigureAwait(false); // actual start native call
         }
         catch (Exception e)
         {
@@ -299,7 +299,7 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
     /// Starts the native Bluetooth activity with the specified options.
     /// This method is called by <see cref="StartAsync"/> to perform platform-specific start operations.
     /// </summary>
-    protected abstract void NativeStart();
+    protected abstract ValueTask NativeStartAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -396,7 +396,7 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
 
         try // try-catch to dispatch exceptions rising from start
         {
-            NativeStop(); // actual stop native call
+            await NativeStopAsync(timeout, cancellationToken).ConfigureAwait(false); // actual stop native call
         }
         catch (Exception e)
         {
@@ -426,7 +426,7 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
     /// Stops the native Bluetooth activity.
     /// This method is called by <see cref="StopAsync"/> to perform platform-specific stop operations.
     /// </summary>
-    protected abstract void NativeStop();
+    protected abstract ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 

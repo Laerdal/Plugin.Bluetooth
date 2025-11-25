@@ -10,10 +10,11 @@ public partial class BluetoothBroadcaster
         IsRunning = BluetoothAdapterProxy.BluetoothAdapter.ScanMode == Android.Bluetooth.ScanMode.ConnectableDiscoverable;
     }
 
-    protected override void NativeStart()
+    protected override ValueTask NativeStartAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         BluetoothLeAdvertiserProxy.BluetoothLeAdvertiser.StartAdvertising(AdvertiseSettings, AdvertiseData, ScanResponseData, AdvertiseCallbackProxy);
         BluetoothGattServerCallbackProxy = new BluetoothGattServerCallbackProxy(this);
+        return ValueTask.CompletedTask;
     }
 
     public AdvertiseSettings? AdvertiseSettings
@@ -34,11 +35,12 @@ public partial class BluetoothBroadcaster
         set => SetValue(value);
     }
 
-    protected override void NativeStop()
+    protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         BluetoothLeAdvertiserProxy.BluetoothLeAdvertiser.StopAdvertising(AdvertiseCallbackProxy);
         BluetoothGattServerCallbackProxy?.Dispose();
         BluetoothGattServerCallbackProxy = null;
+        return ValueTask.CompletedTask;
     }
 
     public AdvertiseSettings? AdvertiseSettingsInEffect

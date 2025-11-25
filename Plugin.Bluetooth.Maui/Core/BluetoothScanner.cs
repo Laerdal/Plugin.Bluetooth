@@ -26,14 +26,14 @@ public class BluetoothScanner : BaseBluetoothScanner
 
     /// <inheritdoc/>
     /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
-    protected override void NativeStart()
+    protected override ValueTask NativeStartAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
     /// <exception cref="NotImplementedException">This platform-agnostic implementation throws NotImplementedException.</exception>
-    protected override void NativeStop()
+    protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
