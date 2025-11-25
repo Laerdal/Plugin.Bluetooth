@@ -14,6 +14,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <DebugSymbols>true</DebugSymbols>
     <Deterministic>true</Deterministic>
+    <!-- Ignore CS1591 : Missing documentation for publicly visible type or member
+    <NoWarn>$(NoWarn);1591</NoWarn>-->
   </PropertyGroup>
 
   <!-- ==================== LOGGING ==================== -->
