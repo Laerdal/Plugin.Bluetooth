@@ -18,20 +18,22 @@ public partial class BluetoothDevice
 
     public PeripheralConnectionOptions? PeripheralConnectionOptions { get; set; }
 
-    protected override void NativeConnect()
+    protected override ValueTask NativeConnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();
         var centralManager = ((BluetoothScanner) Scanner).CbCentralManagerProxy;
         ArgumentNullException.ThrowIfNull(centralManager);
         centralManager.CbCentralManager.ConnectPeripheral(CbPeripheralDelegateProxy.CbPeripheral, PeripheralConnectionOptions);
+        return ValueTask.CompletedTask;
     }
 
-    protected override void NativeDisconnect()
+    protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();
         var centralManager = ((BluetoothScanner) Scanner).CbCentralManagerProxy;
         ArgumentNullException.ThrowIfNull(centralManager);
         centralManager.CbCentralManager.CancelPeripheralConnection(CbPeripheralDelegateProxy.CbPeripheral);
+        return ValueTask.CompletedTask;
     }
 
     public void FailedToConnectPeripheral(NSError? error)

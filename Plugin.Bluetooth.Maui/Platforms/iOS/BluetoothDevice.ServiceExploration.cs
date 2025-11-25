@@ -5,9 +5,10 @@ namespace Plugin.Bluetooth.Maui;
 
 public partial class BluetoothDevice
 {
-    protected override void NativeServicesExploration()
+    protected override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         CbPeripheralDelegateProxy.CbPeripheral.DiscoverServices();
+        return ValueTask.CompletedTask;
     }
 
     public void DiscoveredService(NSError? error)
@@ -64,6 +65,4 @@ public partial class BluetoothDevice
             throw new MultipleServicesFoundException(this, matches, e);
         }
     }
-
-
 }

@@ -59,7 +59,7 @@ public abstract partial class BaseBluetoothDevice
     /// <summary>
     /// Platform-specific implementation to explore services.
     /// </summary>
-    protected abstract void NativeServicesExploration();
+    protected abstract ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <inheritdoc/>
     public async Task ExploreServicesAsync(bool clearBeforeExploring = false, bool exploreCharacteristicsToo = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
@@ -92,7 +92,7 @@ public abstract partial class BaseBluetoothDevice
             // Ensure Device is Connected
             DeviceNotConnectedException.ThrowIfNotConnected(this);
 
-            NativeServicesExploration(); // actual service exploration native call
+            NativeServicesExplorationAsync(); // actual service exploration native call
         }
         catch (Exception e)
         {

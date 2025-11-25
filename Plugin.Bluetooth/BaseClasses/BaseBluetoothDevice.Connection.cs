@@ -136,7 +136,7 @@ public abstract partial class BaseBluetoothDevice
 
         try // try-catch to dispatch exceptions rising from start
         {
-            NativeConnect(); // actual start native call
+            await NativeConnectAsync(timeout, cancellationToken).ConfigureAwait(false); // actual start native call
         }
         catch (Exception e)
         {
@@ -165,7 +165,9 @@ public abstract partial class BaseBluetoothDevice
     /// <summary>
     /// Platform-specific implementation to initiate a connection to the device.
     /// </summary>
-    protected abstract void NativeConnect();
+    /// <param name="timeout">Optional timeout for the operation.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    protected abstract ValueTask NativeConnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -241,7 +243,7 @@ public abstract partial class BaseBluetoothDevice
 
         try // try-catch to dispatch exceptions rising from start
         {
-            NativeDisconnect(); // actual start native call
+            await NativeDisconnectAsync(timeout, cancellationToken).ConfigureAwait(false); // actual start native call
         }
         catch (Exception e)
         {
@@ -270,7 +272,9 @@ public abstract partial class BaseBluetoothDevice
     /// <summary>
     /// Platform-specific implementation to initiate a disconnection from the device.
     /// </summary>
-    protected abstract void NativeDisconnect();
+    /// <param name="timeout">Optional timeout for the operation.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    protected abstract ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 

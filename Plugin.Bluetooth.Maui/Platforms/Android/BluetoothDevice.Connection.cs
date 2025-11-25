@@ -20,7 +20,7 @@ public partial class BluetoothDevice
 
     public ConnectionOptions? ConnectionOptions { get; set; }
 
-    protected override void NativeConnect()
+    protected override ValueTask NativeConnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         if (BluetoothGattProxy is null)
         {
@@ -30,6 +30,8 @@ public partial class BluetoothDevice
         {
             BluetoothGattProxy.Reconnect();
         }
+
+        return ValueTask.CompletedTask;
     }
 
     private void OnConnectionStateChangedToConnected(GattStatus status)
@@ -45,11 +47,12 @@ public partial class BluetoothDevice
         }
     }
 
-    protected override void NativeDisconnect()
+    protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure BluetoothGatt exists and is available
         ArgumentNullException.ThrowIfNull(BluetoothGattProxy);
         BluetoothGattProxy.BluetoothGatt.Disconnect();
+        return ValueTask.CompletedTask;
     }
 
     private void OnConnectionStateChangedToDisconnected(GattStatus status)
