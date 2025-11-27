@@ -188,4 +188,73 @@ public class BluetoothAdvertisement : BaseBluetoothAdvertisement
     }
 
     #endregion
+
+    #region Equality
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current advertisement.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current advertisement.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current advertisement; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Two advertisements are considered equal if they have the same Bluetooth device address and
+    /// identical raw scan record bytes.
+    /// </remarks>
+    public override bool Equals(object? obj)
+    {
+        if (obj is not BluetoothAdvertisement other)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        // Compare Bluetooth device address
+        if (BluetoothDevice.Address != other.BluetoothDevice.Address)
+        {
+            return false;
+        }
+
+        // Compare raw scan record bytes
+        var thisBytes = ScanRecord.GetBytes();
+        var otherBytes = other.ScanRecord.GetBytes();
+
+        if (thisBytes == null && otherBytes == null)
+        {
+            return true;
+        }
+
+        if (thisBytes == null || otherBytes == null)
+        {
+            return false;
+        }
+
+        return thisBytes.AsSpan().SequenceEqual(otherBytes.AsSpan());
+    }
+
+    /// <summary>
+    /// Returns a hash code for the current advertisement.
+    /// </summary>
+    /// <returns>A hash code for the current advertisement.</returns>
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(BluetoothDevice.Address);
+
+        var bytes = ScanRecord.GetBytes();
+        if (bytes != null)
+        {
+            foreach (var b in bytes)
+            {
+                hash.Add(b);
+            }
+        }
+
+        return hash.ToHashCode();
+    }
+
+    #endregion
 }

@@ -138,4 +138,41 @@ public partial class BluetoothAdvertisement(BluetoothLEAdvertisementReceivedEven
     }
 
     #endregion
+
+    #region Equality
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current advertisement.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current advertisement.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current advertisement; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Two advertisements are considered equal if they have the same Bluetooth address, RSSI, advertisement type,
+    /// and the data sections contain the same information.
+    /// </remarks>
+    public override bool Equals(object? obj)
+    {
+        if (obj is not BluetoothAdvertisement other)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        return BluetoothLeAdvertisementReceivedEventArgs.Advertisement.GetHashCode() == other.BluetoothLeAdvertisementReceivedEventArgs.Advertisement.GetHashCode();
+    }
+
+    /// <summary>
+    /// Returns a hash code for the current advertisement.
+    /// </summary>
+    /// <returns>A hash code for the current advertisement.</returns>
+    public override int GetHashCode()
+    {
+        return BluetoothLeAdvertisementReceivedEventArgs.Advertisement.GetHashCode();
+    }
+
+    #endregion
 }

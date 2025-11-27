@@ -100,4 +100,41 @@ public class BluetoothAdvertisement(CBPeripheral peripheral, NSDictionary advert
         return Peripheral.Identifier.AsString();
     }
 
+    #region Equality
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current advertisement.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current advertisement.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current advertisement; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Two advertisements are considered equal if they have the same peripheral identifier and
+    /// the native advertisement data dictionaries are equal.
+    /// </remarks>
+    public override bool Equals(object? obj)
+    {
+        if (obj is not BluetoothAdvertisement other)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        return AdvertisementData.GetHashCode() == other.AdvertisementData.GetHashCode();
+    }
+
+    /// <summary>
+    /// Returns a hash code for the current advertisement.
+    /// </summary>
+    /// <returns>A hash code for the current advertisement.</returns>
+    public override int GetHashCode()
+    {
+        return AdvertisementData.GetHashCode();
+    }
+
+    #endregion
+
 }
