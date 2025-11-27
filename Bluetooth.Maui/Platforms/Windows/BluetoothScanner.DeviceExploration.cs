@@ -2,6 +2,13 @@ namespace Bluetooth.Maui;
 
 public partial class BluetoothScanner
 {
+    /// <summary>
+    /// Called when a Bluetooth LE advertisement is received.
+    /// </summary>
+    /// <param name="argsAdvertisement">The advertisement event arguments.</param>
+    /// <remarks>
+    /// This method creates a <see cref="BluetoothAdvertisement"/> from the received data and processes it.
+    /// </remarks>
     public void OnAdvertisementReceived(BluetoothLEAdvertisementReceivedEventArgs argsAdvertisement)
     {
         NativeRefreshIsRunning();
@@ -9,6 +16,11 @@ public partial class BluetoothScanner
         OnAdvertisementReceived(new BluetoothAdvertisement(argsAdvertisement));
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Creates a Windows-specific <see cref="BluetoothDevice"/> from the advertisement.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">Thrown when the advertisement is not of type <see cref="BluetoothAdvertisement"/>.</exception>
     protected override IBluetoothDevice NativeCreateDevice(IBluetoothAdvertisement advertisement)
     {
         if (advertisement is BluetoothAdvertisement bluetoothAdvertisement)

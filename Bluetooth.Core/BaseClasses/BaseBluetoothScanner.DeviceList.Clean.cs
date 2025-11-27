@@ -7,10 +7,11 @@ public abstract partial class BaseBluetoothScanner
     /// </summary>
     /// <param name="devices">The devices to clean up.</param>
     /// <returns>A task that completes when all devices have been cleaned up.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="devices"/> is <c>null</c>.</exception>
     public async ValueTask CleanAsync(IEnumerable<IBluetoothDevice> devices)
     {
         ArgumentNullException.ThrowIfNull(devices);
-        
+
         foreach (var device in devices)
         {
             await CleanAsync(device).ConfigureAwait(false);
@@ -20,7 +21,7 @@ public abstract partial class BaseBluetoothScanner
     /// <summary>
     /// Cleans up a single device by disconnecting it and removing it from the device list.
     /// </summary>
-    /// <param name="device">The device to clean up.</param>
+    /// <param name="device">The device to clean up. If <c>null</c>, no action is taken.</param>
     /// <returns>A task that completes when the device has been cleaned up.</returns>
     public async ValueTask CleanAsync(IBluetoothDevice? device)
     {
@@ -51,7 +52,7 @@ public abstract partial class BaseBluetoothScanner
     }
 
     /// <summary>
-    /// Cleans up all devices by disconnecting them and removing them from the device list.
+    /// Cleans up all devices by disconnecting them and clearing the device list.
     /// </summary>
     /// <returns>A task that completes when all devices have been cleaned up.</returns>
     public async ValueTask CleanAsync()

@@ -2,15 +2,37 @@ namespace Bluetooth.Maui;
 
 public partial class BluetoothScanner
 {
+    /// <summary>
+    /// Gets or sets the list of service UUIDs to filter peripherals during scanning.
+    /// </summary>
+    /// <remarks>
+    /// If empty, all peripherals will be discovered. If specified, only peripherals advertising these services will be reported.
+    /// </remarks>
     public IReadOnlyList<CBUUID> PeripheralScanningServiceUuids { get; private set; } = Array.Empty<CBUUID>();
 
+    /// <summary>
+    /// Gets or sets the peripheral scanning options.
+    /// </summary>
+    /// <remarks>
+    /// These options control whether to allow duplicate advertisements and other scanning behaviors.
+    /// </remarks>
     public PeripheralScanningOptions? PeripheralScanningOptions { get; private set; }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On iOS, this checks if the central manager's <see cref="CBCentralManager.IsScanning"/> property is <c>true</c>.
+    /// </remarks>
     protected override void NativeRefreshIsRunning()
     {
         IsRunning = CbCentralManagerProxy?.CbCentralManager.IsScanning ?? false;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Starts scanning for peripherals using the Core Bluetooth central manager.
+    /// The method determines which overload to call based on available service UUIDs and options.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown when <see cref="CbCentralManagerProxy"/> is <c>null</c>.</exception>
     protected override ValueTask NativeStartAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(CbCentralManagerProxy);
@@ -50,6 +72,11 @@ public partial class BluetoothScanner
         return ValueTask.CompletedTask;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Stops scanning for peripherals using the Core Bluetooth central manager.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown when <see cref="CbCentralManagerProxy"/> is <c>null</c>.</exception>
     protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(CbCentralManagerProxy);
