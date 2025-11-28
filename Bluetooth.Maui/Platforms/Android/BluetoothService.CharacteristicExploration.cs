@@ -4,6 +4,12 @@ namespace Bluetooth.Maui;
 
 public partial class BluetoothService
 {
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On Android, characteristics are discovered at the same time as services during service discovery.
+    /// This method validates that characteristics are available and processes them.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">Thrown when <see cref="NativeService.Characteristics"/> is <c>null</c>.</exception>
     protected override ValueTask NativeCharacteristicsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         if (NativeService.Characteristics == null)
@@ -20,6 +26,12 @@ public partial class BluetoothService
 
     }
 
+    /// <summary>
+    /// Converts a native Android GATT characteristic to a shared <see cref="BluetoothCharacteristic"/> instance.
+    /// </summary>
+    /// <param name="native">The native Android GATT characteristic.</param>
+    /// <returns>A new <see cref="BluetoothCharacteristic"/> wrapping the native characteristic.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the native characteristic's UUID is <c>null</c>.</exception>
     private BluetoothCharacteristic FromInputTypeToOutputTypeConversion(BluetoothGattCharacteristic native)
     {
         var id = native.Uuid?.ToGuid() ?? throw new InvalidOperationException("nativeService.Uuid == null");
@@ -27,18 +39,27 @@ public partial class BluetoothService
     }
 
     /// <summary>
-    /// Compares a native Characteristic to a shared Characteristic.
-    /// While they are different types, we can usually determine if the
-    /// shared Characteristic is a wrapper around the same Native characteristic or not.
+    /// Compares a native characteristic to a shared characteristic to determine if they represent the same object.
     /// </summary>
-    /// <param name="native">Native characteristic</param>
-    /// <param name="shared">Shared characteristic</param>
-    /// <returns>true if the Native characteristic wrapped in the Shared characteristic, and the Native characteristic are the same</returns>
+    /// <param name="native">Native Android GATT characteristic.</param>
+    /// <param name="shared">Shared characteristic interface.</param>
+    /// <returns><c>true</c> if the shared characteristic wraps the same native characteristic; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Comparison is based on UUID and InstanceId equality.
+    /// </remarks>
     private static bool AreRepresentingTheSameObject(BluetoothGattCharacteristic native, IBluetoothCharacteristic shared)
     {
         return shared is BluetoothCharacteristic s && (native.Uuid?.Equals(s.NativeCharacteristic.Uuid) ?? false) && native.InstanceId.Equals(s.NativeCharacteristic.InstanceId);
     }
 
+    /// <summary>
+    /// Gets the characteristic proxy for a given native Android GATT characteristic.
+    /// </summary>
+    /// <param name="nativeCharacteristic">The native characteristic to find.</param>
+    /// <returns>The characteristic proxy for the native characteristic.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="nativeCharacteristic"/> is <c>null</c>.</exception>
+    /// <exception cref="CharacteristicNotFoundException">Thrown when the characteristic is not found in the characteristics list.</exception>
+    /// <exception cref="MultipleCharacteristicsFoundException">Thrown when multiple characteristics match the native characteristic.</exception>
     public BluetoothGattProxy.ICharacteristic GetCharacteristic(BluetoothGattCharacteristic? nativeCharacteristic)
     {
         ArgumentNullException.ThrowIfNull(nativeCharacteristic);
