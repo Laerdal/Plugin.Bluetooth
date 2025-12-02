@@ -5,6 +5,11 @@ namespace Bluetooth.Maui;
 
 public partial class BluetoothDevice
 {
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On iOS, this initiates service discovery by calling <c>CBPeripheral.DiscoverServices</c>.
+    /// Results are delivered asynchronously via the <see cref="DiscoveredService"/> callback.
+    /// </remarks>
     protected override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         CbPeripheralDelegateProxy.CbPeripheral.DiscoverServices();

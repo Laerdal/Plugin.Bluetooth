@@ -7,7 +7,7 @@ public partial class BluetoothService
 {
     /// <inheritdoc/>
     /// <remarks>
-    /// On iOS, this initiates characteristic discovery by calling <see cref="CBPeripheral.DiscoverCharacteristics"/>.
+    /// On iOS, this initiates characteristic discovery by calling <see cref="CBPeripheral.DiscoverCharacteristics(CBService)"/>.
     /// Results are delivered asynchronously via the <see cref="DiscoveredCharacteristics"/> callback.
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when <see cref="NativeService"/> or <see cref="CBService.Peripheral"/> is <c>null</c>.</exception>
@@ -25,7 +25,7 @@ public partial class BluetoothService
     /// </summary>
     /// <param name="error">Error that occurred during discovery, or <c>null</c> if successful.</param>
     /// <param name="service">The service for which characteristics were discovered.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <see cref="NativeService.Characteristics"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <see cref="CBService.Characteristics"/> is <c>null</c>.</exception>
     /// <exception cref="AppleNativeBluetoothException">Thrown when an error occurred during characteristic discovery.</exception>
     public void DiscoveredCharacteristics(NSError? error, CBService service)
     {

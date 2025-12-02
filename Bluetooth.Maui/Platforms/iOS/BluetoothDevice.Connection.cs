@@ -13,6 +13,10 @@ public partial class BluetoothDevice
         protected set => SetValue(value);
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On iOS, this checks the <see cref="CBPeripheral.State"/> property of the Core Bluetooth peripheral.
+    /// </remarks>
     protected override void NativeRefreshIsConnected()
     {
         CbPeripheralState = CbPeripheralDelegateProxy.CbPeripheral.State;
@@ -24,6 +28,12 @@ public partial class BluetoothDevice
     /// </summary>
     public PeripheralConnectionOptions? PeripheralConnectionOptions { get; set; }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On iOS, this initiates a connection by calling <c>CBCentralManager.ConnectPeripheral</c> with the configured <see cref="PeripheralConnectionOptions"/>.
+    /// The connection result is delivered asynchronously via the <see cref="ConnectedPeripheral"/> or <see cref="FailedToConnectPeripheral"/> callbacks.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown when the central manager is <c>null</c>.</exception>
     protected override ValueTask NativeConnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();
@@ -33,6 +43,12 @@ public partial class BluetoothDevice
         return ValueTask.CompletedTask;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On iOS, this initiates a disconnection by calling <c>CBCentralManager.CancelPeripheralConnection</c>.
+    /// The disconnection result is delivered asynchronously via the <see cref="DisconnectedPeripheral"/> callback.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown when the central manager is <c>null</c>.</exception>
     protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();

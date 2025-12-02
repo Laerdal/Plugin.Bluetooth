@@ -45,7 +45,7 @@ public partial class BluetoothDevice
     /// <returns>A task that completes when the device is bonded.</returns>
     /// <exception cref="InvalidOperationException">Thrown when a bonding operation is already in progress.</exception>
     /// <exception cref="BondingFailedException">Thrown when the CreateBond call fails or when bonding fails.</exception>
-    /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
+    /// <exception cref="System.OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     public async Task BondAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
     {
