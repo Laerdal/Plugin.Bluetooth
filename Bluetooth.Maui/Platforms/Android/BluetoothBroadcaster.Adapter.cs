@@ -4,6 +4,15 @@ namespace Bluetooth.Maui;
 
 public partial class BluetoothBroadcaster
 {
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Requests necessary Bluetooth permissions based on the Android API level:
+    /// <list type="bullet">
+    /// <item>API 31+: BLUETOOTH_ADVERTISE</item>
+    /// <item>API 29-30: ACCESS_FINE_LOCATION, ACCESS_BACKGROUND_LOCATION</item>
+    /// <item>Below API 29: ACCESS_COARSE_LOCATION</item>
+    /// </list>
+    /// </remarks>
     protected async override ValueTask NativeInitializeAsync()
     {
         await BluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
@@ -25,6 +34,10 @@ public partial class BluetoothBroadcaster
         }
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On Android, this checks if the Bluetooth adapter is enabled.
+    /// </remarks>
     protected override void NativeRefreshIsBluetoothOn()
     {
         IsBluetoothOn = BluetoothAdapterProxy.BluetoothAdapter.IsEnabled;
