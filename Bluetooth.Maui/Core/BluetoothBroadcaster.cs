@@ -1,7 +1,7 @@
 namespace Bluetooth.Maui;
 
 /// <inheritdoc />
-public class BluetoothBroadcaster : BaseBluetoothBroadcaster
+public partial class BluetoothBroadcaster : BaseBluetoothBroadcaster
 {
 
     /// <inheritdoc/>

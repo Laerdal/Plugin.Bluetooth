@@ -1,7 +1,7 @@
 namespace Bluetooth.Maui;
 
 /// <inheritdoc  />
-public class BluetoothScanner : BaseBluetoothScanner
+public partial class BluetoothScanner : BaseBluetoothScanner
 {
     /// <inheritdoc/>
     /// <exception cref="PlatformNotSupportedException">This platform-agnostic implementation is not supported on non-native platforms.</exception>
