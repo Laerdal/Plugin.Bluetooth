@@ -111,7 +111,7 @@ jobs:
         uses: laerdal/github_actions/dotnet-test@main
         if: ${{ success() && !cancelled() }}
         with:
-          path: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.Tests/${{ env.PROJECT_NAME }}.Tests.csproj'
+          path: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.slnx'
           configuration: Release
           no-build: true
           logger: 'trx;LogFileName=test-results.trx'
