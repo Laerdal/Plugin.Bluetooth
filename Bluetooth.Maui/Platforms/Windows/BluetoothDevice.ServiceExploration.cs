@@ -2,6 +2,10 @@ namespace Bluetooth.Maui;
 
 public partial class BluetoothDevice
 {
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On Windows, this queries services using <see cref="BluetoothLEDevice.GetGattServicesAsync()"/> with uncached mode.
+    /// </remarks>
     protected async override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         try

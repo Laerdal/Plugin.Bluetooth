@@ -6,7 +6,7 @@ public partial class BluetoothService
 {
     /// <inheritdoc/>
     /// <remarks>
-    /// On Windows, this queries characteristics using <see cref="GattDeviceService.GetCharacteristicsAsync"/> with uncached mode.
+    /// On Windows, this queries characteristics using <see cref="GattDeviceService.GetCharacteristicsAsync()"/> with uncached mode.
     /// </remarks>
     /// <exception cref="WindowsNativeBluetoothException">Thrown when the GATT communication fails or returns an error status.</exception>
     protected async override ValueTask NativeCharacteristicsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
