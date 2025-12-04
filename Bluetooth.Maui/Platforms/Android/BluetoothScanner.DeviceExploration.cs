@@ -50,5 +50,4 @@ public partial class BluetoothScanner
             OnAdvertisementReceived(new BluetoothAdvertisement(result));
         }
     }
-
 }

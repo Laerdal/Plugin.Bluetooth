@@ -84,11 +84,22 @@ public partial class BluetoothDevice
 
     #endregion
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On Windows, this checks the <c>BluetoothLeDevice.ConnectionStatus</c> property to determine if the device is connected.
+    /// </remarks>
     protected override void NativeRefreshIsConnected()
     {
         IsConnected = BluetoothLeDeviceProxy?.BluetoothLeDevice is { ConnectionStatus: BluetoothConnectionStatus.Connected };
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On Windows, this establishes a connection by creating a <c>BluetoothLeDeviceProxy</c> and <c>GattSessionProxy</c>,
+    /// requesting device access, and initiating GATT service discovery. The GATT session is configured to maintain the connection.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown when the BluetoothLeDeviceProxy is <c>null</c>.</exception>
+    /// <exception cref="WindowsNativeBluetoothException">Thrown when device access is denied.</exception>
     protected async override ValueTask NativeConnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();
@@ -120,6 +131,11 @@ public partial class BluetoothDevice
         }
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On Windows, this disconnects by clearing all services, disposing the <c>BluetoothLeDeviceProxy</c>,
+    /// and releasing the GATT session. The GATT session's <c>MaintainConnection</c> property is set to <c>false</c> before disposal.
+    /// </remarks>
     protected async override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();
