@@ -9,12 +9,12 @@ public partial class BluetoothService
     /// On Android, characteristics are discovered at the same time as services during service discovery.
     /// This method validates that characteristics are available and processes them.
     /// </remarks>
-    /// <exception cref="InvalidOperationException">Thrown when <see cref="NativeService.Characteristics"/> is <c>null</c>.</exception>
+    /// <exception cref="CharacteristicExplorationException">Thrown when <see cref="BluetoothGattService.Characteristics"/> is <c>null</c>.</exception>
     protected override ValueTask NativeCharacteristicsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         if (NativeService.Characteristics == null)
         {
-            throw new InvalidOperationException("NativeService.Characteristics == null");
+            throw new CharacteristicExplorationException("NativeService.Characteristics == null");
 
             // MIGHT NEED Retries and/or delays
         }

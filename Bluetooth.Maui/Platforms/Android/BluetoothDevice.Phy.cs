@@ -20,7 +20,7 @@ public partial class BluetoothDevice
     /// <exception cref="NotSupportedException">Thrown when called on Android versions below 8.0 (API level 26).</exception>
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
     /// <exception cref="ArgumentNullException">Thrown when BluetoothGattProxy is <c>null</c>.</exception>
-    /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
+    /// <exception cref="System.OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     /// <remarks>
     /// This method is only supported on Android 8.0 (API level 26) and later.
