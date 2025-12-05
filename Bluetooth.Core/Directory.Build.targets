@@ -84,6 +84,12 @@
   </PropertyGroup>
   <Import Condition=" '$(UseMaui)' == 'true' AND Exists('$(MauiTargetsFile)')" Project="$(MauiTargetsFile)" />
 
+  <!-- ==================== MAUI INTEGRATION ==================== -->
+  <PropertyGroup>
+    <MauiAppTargetsFile Condition=" $(MauiAppTargetsFile) == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `Directory.Build.MauiApp.targets`))</MauiAppTargetsFile>
+  </PropertyGroup>
+  <Import Condition=" '$(UseMaui)' == 'true' AND Exists('$(MauiAppTargetsFile)')" Project="$(MauiAppTargetsFile)" />
+
   <!-- ==================== NUGET INTEGRATION ==================== -->
   <PropertyGroup>
     <NugetTargetsFile Condition=" $(NugetTargetsFile) == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `Directory.Build.Nuget.targets`))</NugetTargetsFile>
