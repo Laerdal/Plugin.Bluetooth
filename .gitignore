@@ -208,6 +208,8 @@ PublishScripts/
 # NuGet v3's project.json files produces more ignorable files
 *.nuget.props
 *.nuget.targets
+!Directory.Build.Nuget.props
+!Directory.Build.Nuget.targets
 
 # Microsoft Azure Build Output
 csx/
