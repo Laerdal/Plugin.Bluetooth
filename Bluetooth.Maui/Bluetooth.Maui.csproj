@@ -35,6 +35,10 @@
         <PackageReference Include="Plugin.ExceptionListeners.Maui"/>
     </ItemGroup>
 
+    <!-- ==================== ANDROID MANIFEST OVERLAY ==================== -->
+    <ItemGroup Condition=" '$(IsForAndroid)' == 'true' ">
+        <AndroidManifestOverlay Include="Platforms\Android\AndroidManifestOverlay.xml" />
+    </ItemGroup>
 
     <!-- ==================== NESTED FILES ======================= -->
     <ItemGroup>
