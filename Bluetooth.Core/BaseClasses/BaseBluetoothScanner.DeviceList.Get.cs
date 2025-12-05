@@ -5,9 +5,10 @@ public abstract partial class BaseBluetoothScanner
     private readonly static Func<IBluetoothDevice, bool> _defaultAcceptAllFilter = _ => true;
 
     /// <inheritdoc/>
-    public IBluetoothDevice? GetClosestDeviceOrDefault()
+    public IBluetoothDevice? GetClosestDeviceOrDefault(Func<IBluetoothDevice, bool>? filter = null)
     {
-        return GetDevices().MaxBy(d => d.SignalStrengthPercent);
+        filter ??= _defaultAcceptAllFilter;
+        return GetDevices(filter).MaxBy(d => d.SignalStrengthPercent);
     }
 
     /// <inheritdoc/>

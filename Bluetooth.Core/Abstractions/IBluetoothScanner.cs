@@ -80,8 +80,9 @@ public interface IBluetoothScanner : IBluetoothActivity
     /// <summary>
     /// Returns the closest Bluetooth device currently available.
     /// </summary>
+    /// <param name="filter">An optional function to filter devices. Defaults to null for all devices.</param>
     /// <returns>The closest <see cref="IBluetoothDevice" />, or null if none are found.</returns>
-    IBluetoothDevice? GetClosestDeviceOrDefault();
+    IBluetoothDevice? GetClosestDeviceOrDefault(Func<IBluetoothDevice, bool>? filter = null);
 
     /// <summary>
     /// Returns the first Bluetooth device that matches the specified filter.
