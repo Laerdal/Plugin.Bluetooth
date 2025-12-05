@@ -36,7 +36,7 @@ defaults:
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: '1'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
-  PROJECT_NAME: Bluetooth
+  SOLUTION_NAME: Bluetooth.slnx
 
 jobs:
   version:
@@ -64,7 +64,7 @@ jobs:
         uses: actions/download-artifact@v6
         with:
           name: version
-          path: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.Output/Version'
+          path: '${{ github.workspace }}/Output/Version'
 
       - name: '🔧 Setup .NET'
         uses: actions/setup-dotnet@v5
@@ -75,7 +75,7 @@ jobs:
         uses: laerdal/github_actions/dotnet@main
         with:
           command: workload
-          arguments: restore '${{ github.workspace }}/${{ env.PROJECT_NAME }}.slnx'
+          arguments: restore '${{ github.workspace }}/${{ env.SOLUTION_NAME }}'
           show-summary: true
 
       # ============================ BUILD ============================
@@ -83,27 +83,27 @@ jobs:
         uses: laerdal/github_actions/dotnet@main
         with:
           command: restore
-          path: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.slnx'
+          path: '${{ github.workspace }}/${{ env.SOLUTION_NAME }}'
           show-summary: true
 
       - name: '🔨 Build'
         uses: laerdal/github_actions/dotnet@main
         with:
           command: build
-          path: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.slnx'
+          path: '${{ github.workspace }}/${{ env.SOLUTION_NAME }}'
           configuration: Release
           no-restore: true
           arguments: >
-            -p:Version_Props_Path='${{ github.workspace }}/${{ env.PROJECT_NAME }}.Output/Version/version.props'
+            -p:Version_Props_Path='${{ github.workspace }}/Output/Version/version.props'
             -p:GeneratePackageOnBuild=true
-            -p:PackageOutputPath='${{ github.workspace }}/${{ env.PROJECT_NAME }}.Output/Packages'
+            -p:PackageOutputPath='${{ github.workspace }}/Output/Packages'
           show-summary: true
 
       - name: '📦 Upload NuGet packages'
         uses: actions/upload-artifact@v5
         with:
           name: packages
-          path: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.Output/Packages'
+          path: '${{ github.workspace }}/Output/Packages'
           if-no-files-found: error
 
       # ============================ TESTS & COVERAGE ============================
@@ -111,22 +111,22 @@ jobs:
         uses: laerdal/github_actions/dotnet-test@main
         if: ${{ success() && !cancelled() }}
         with:
-          path: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.slnx'
+          path: '${{ github.workspace }}/${{ env.SOLUTION_NAME }}'
           configuration: Release
           no-build: true
           logger: 'trx;LogFileName=test-results.trx'
-          results-directory: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.Output/Tests'
+          results-directory: '${{ github.workspace }}/Output/Tests'
           arguments: >
-            -p:TestOutputPath='${{ github.workspace }}/${{ env.PROJECT_NAME }}.Output/Tests'
+            -p:TestOutputPath='${{ github.workspace }}/Output/Tests'
             -p:CollectCoverage=true
             -p:CoverletOutputFormat=cobertura
-            -p:CoverletOutput='${{ github.workspace }}/${{ env.PROJECT_NAME }}.Output/Tests/coverage.cobertura.xml'
+            -p:CoverletOutput='${{ github.workspace }}/Output/Tests/coverage.cobertura.xml'
           show-summary: true
 
       - name: '🔍 Check for test artifacts'
         id: test-artifact-check
         run: |
-          if [ -d "${{ github.workspace }}/${{ env.PROJECT_NAME }}.Output/Tests" ]; then
+          if [ -d "${{ github.workspace }}/Output/Tests" ]; then
             echo "found=true" >> "$GITHUB_OUTPUT"
           else
             echo "found=false" >> "$GITHUB_OUTPUT"
@@ -137,13 +137,13 @@ jobs:
         if: ${{ success() && !cancelled() && steps.test-artifact-check.outputs.found == 'true' }}
         with:
           name: tests
-          path: '${{ env.PROJECT_NAME }}.Output/Tests/'
+          path: 'Output/Tests/'
 
       # ============================ DOCS ============================
       - name: '🔍 Check if docs are needed'
         id: check-docs
         run: |
-          if [ -d "${{ github.workspace }}/${{ env.PROJECT_NAME }}.Docs" ]; then
+          if [ -d "${{ github.workspace }}/Docs" ]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
@@ -153,23 +153,23 @@ jobs:
         uses: laerdal/github_actions/dotnet-docfx-metadata@main
         if: ${{ success() && !cancelled() && steps.check-docs.outputs.exists == 'true' }}
         with:
-          config: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.Docs/docfx.json'
-          output: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.Docs/api'
+          config: '${{ github.workspace }}/Docs/docfx.json'
+          output: '${{ github.workspace }}/Docs/api'
           show-summary: true
 
       - name: "📚 Build documentation site"
         uses: laerdal/github_actions/dotnet-docfx-build@main
         if: ${{ success() && !cancelled() && steps.check-docs.outputs.exists == 'true' }}
         with:
-          config: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.Docs/docfx.json'
-          output: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.Docs/site'
+          config: '${{ github.workspace }}/Docs/docfx.json'
+          output: '${{ github.workspace }}/Docs/site'
           show-summary: true
 
       - name: "📦 Upload GitHub Pages artifact"
         if: ${{ success() && !cancelled() && github.ref == 'refs/heads/main' && steps.check-docs.outputs.exists == 'true' }}
         uses: actions/upload-pages-artifact@v4
         with:
-          path: '${{ github.workspace }}/${{ env.PROJECT_NAME }}.Docs/site'
+          path: '${{ github.workspace }}/Docs/site'
           name: github-pages
 
   publish-docs:
