@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!-- Note : This is read BEFORE the initial project file -->
+
+  <!-- ==================== SELF REF ==================== -->
+  <ItemGroup>
+    <None Include="$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), $(MSBuildThisFile)))" Pack="false" />
+  </ItemGroup>
+
+</Project>
