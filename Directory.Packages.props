@@ -6,7 +6,7 @@
   </PropertyGroup>
   <!-- ==================== INTERNAL DEPENDENCIES ==================== -->
   <ItemGroup>
-    <PackageVersion Include="Plugin.ByteArrays" Version="1.0.25" />
+    <PackageVersion Include="Plugin.ByteArrays" Version="1.0.26" />
     <PackageVersion Include="Plugin.ExceptionListeners" Version="1.0.3" />
     <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.18" />
     <PackageVersion Include="Plugin.ExceptionListeners.Maui" Version="1.0.2" />
