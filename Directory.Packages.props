@@ -14,7 +14,7 @@
   <!-- ==================== CORE DEPENDENCIES ==================== -->
   <ItemGroup>
       <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
-      <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+      <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
   </ItemGroup>
   <!-- ==================== MAUI DEPENDENCIES ==================== -->
   <ItemGroup>
