@@ -9,6 +9,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Core", "Bluetooth
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui.Sample", "Bluetooth.Maui.Sample\Bluetooth.Maui.Sample.csproj", "{4A1655AF-BF14-4C38-BFF5-771EFEDAF57E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Extras", "_Extras", "{CD5FDAAE-EF99-4AD6-BB36-2A105892C8DE}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Packages.props = Directory.Packages.props
+		README.md = README.md
+		global.json = global.json
+		LICENSE.md = LICENSE.md
+		nuget.config = nuget.config
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
