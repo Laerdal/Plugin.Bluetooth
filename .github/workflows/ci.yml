@@ -176,12 +176,17 @@ jobs:
 
 
   publish-nuget:
-    name: '🚀 Publish to NuGet.org'
+    name: '🚀 Publish ${{ matrix.package }} to NuGet.org'
     if: github.ref == 'refs/heads/main'
     environment:
       name: nuget-org
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      matrix:
+        package:
+          - Bluetooth.Core
+          - Bluetooth.Maui
     steps:
       - name: '📦 Download NuGet packages'
         uses: actions/download-artifact@v7
@@ -189,10 +194,10 @@ jobs:
           name: packages
           path: '${{ github.workspace }}/packages'
 
-      - name: '📦 Push Packages to NuGet.org'
+      - name: '📦 Push ${{ matrix.package }} to NuGet.org'
         uses: laerdal/github_actions/dotnet-nuget-upload@main
         with:
-          package-path: '${{ github.workspace }}/packages/*.nupkg'
+          package-path: '${{ github.workspace }}/packages/${{ matrix.package }}.*.nupkg'
           api-key: ${{ secrets.NUGET_ORG_API_KEY }}
           source: 'https://api.nuget.org/v3/index.json'
           show-summary: true
@@ -228,10 +233,15 @@ jobs:
         uses: actions/deploy-pages@v4
 
   tag-and-release:
-    name: '🏷️ Tag & Release'
+    name: '🏷️ Tag & Release ${{ matrix.package }}'
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [version, publish-nuget]
+    strategy:
+      matrix:
+        package:
+          - Bluetooth.Core
+          - Bluetooth.Maui
     steps:
       - name: '🔄 Checkout'
         uses: actions/checkout@v6
@@ -239,11 +249,11 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: '🚀 Create GitHub Release'
+      - name: '🚀 Create GitHub Release for ${{ matrix.package }}'
         uses: laerdal/github_actions/github-release@main
         with:
-          tag: ${{ needs.version.outputs.version-fortag }}
-          title: 'Release ${{ needs.version.outputs.version-full }}'
+          tag: ${{ matrix.package }}-${{ needs.version.outputs.version-fortag }}
+          title: 'Release ${{ matrix.package }} ${{ needs.version.outputs.version-full }}'
           generate-notes: 'true'
           prerelease: ${{ needs.version.outputs.version-isprerelease }}
           show-summary: 'true'

@@ -50,16 +50,16 @@
 
   <!-- ==================== PACK : LICENSE ==================== -->
   <PropertyGroup Condition=" '$(PackageLicencePath)' == '' ">
-    <PackageLicencePath>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `../LICENSE`))</PackageLicencePath>
+    <PackageLicencePath>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `../LICENSE.md`))</PackageLicencePath>
   </PropertyGroup>
   <PropertyGroup Condition="Exists('$(PackageLicencePath)')">
-    <PackageLicense Condition="Exists('$(PackageLicencePath)')">LICENSE</PackageLicense>
+    <PackageLicenseFile Condition="Exists('$(PackageLicencePath)')">LICENSE.md</PackageLicenseFile>
   </PropertyGroup>
   <ItemGroup Condition="Exists('$(PackageLicencePath)')">
     <None Include="$(PackageLicencePath)" Pack="true" PackagePath="\" Condition="Exists('$(PackageLicencePath)')" />
   </ItemGroup>
   <Target Condition=" !Exists('$(PackageLicencePath)') " Name="WarnMissingPackageLicense" BeforeTargets="Pack">
-    <Message Importance="High" Text="WARNING: Package license file not found at '$(PackageLicencePath)'. Please add a LICENSE file to the project root to have a proper package license." />
+    <Message Importance="High" Text="WARNING: Package license file not found at '$(PackageLicencePath)'. Please add a LICENSE.md file to the project root to have a proper package license." />
   </Target>
 
   <!-- ==================== PACK : README ==================== -->
