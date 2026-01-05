@@ -1,5 +1,18 @@
 # Bluetooth.Core & Bluetooth.Maui
 
+<div align="center">
+
+[![Icon](icon.png)](https://github.com/laerdal/Plugin.Bluetooth)
+
+</div>
+
+[![CI](https://img.shields.io/github/actions/workflow/status/laerdal/Plugin.Bluetooth/ci.yml?logo=github)](https://github.com/laerdal/Plugin.Bluetooth/actions/workflows/ci.yml)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![NuGet](https://img.shields.io/nuget/v/Bluetooth.Maui?logo=nuget&color=004880)](https://www.nuget.org/packages/Bluetooth.Maui)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Bluetooth.Maui?logo=nuget&color=004880)](https://www.nuget.org/packages/Bluetooth.Maui)
+[![GitHub Release](https://img.shields.io/github/v/release/laerdal/Plugin.Bluetooth?logo=github)](https://github.com/laerdal/Plugin.Bluetooth/releases)
+[![License](https://img.shields.io/github/license/laerdal/Plugin.Bluetooth?color=blue)](LICENSE.md)
+
 A cross-platform .NET MAUI Bluetooth Low Energy (BLE) library providing a unified API for Android, iOS, and Windows platforms.
 
 ## Features
