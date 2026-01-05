@@ -6,21 +6,28 @@
   </PropertyGroup>
   <!-- ==================== INTERNAL DEPENDENCIES ==================== -->
   <ItemGroup>
+    <PackageVersion Include="NLog.Extensions.Logging" Version="6.1.0" />
+    <PackageVersion Include="NLog.Targets.MauiLog" Version="10.0.3" />
     <PackageVersion Include="Plugin.ByteArrays" Version="1.0.27" />
     <PackageVersion Include="Plugin.ExceptionListeners" Version="1.0.3" />
     <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.18" />
-    <PackageVersion Include="Plugin.ExceptionListeners.Maui" Version="1.0.2" />
+    <PackageVersion Include="Plugin.ExceptionListeners.Maui" Version="1.0.3" />
   </ItemGroup>
   <!-- ==================== CORE DEPENDENCIES ==================== -->
   <ItemGroup>
-      <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
-      <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
   </ItemGroup>
   <!-- ==================== MAUI DEPENDENCIES ==================== -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
     <PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageVersion Include="Microsoft.Maui.Essentials" Version="$(MauiVersion)" />
+  </ItemGroup>
+  <!-- ==================== COMMUNITY DEPENDENCIES ==================== -->
+  <ItemGroup>
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageVersion Include="CommunityToolkit.Maui" Version="12.3.0" />
   </ItemGroup>
   <!-- ==================== TEST DEPENDENCIES ==================== -->
   <ItemGroup>
