@@ -6,8 +6,6 @@
   </PropertyGroup>
   <!-- ==================== INTERNAL DEPENDENCIES ==================== -->
   <ItemGroup>
-    <PackageVersion Include="NLog.Extensions.Logging" Version="6.1.0" />
-    <PackageVersion Include="NLog.Targets.MauiLog" Version="10.0.3" />
     <PackageVersion Include="Plugin.ByteArrays" Version="1.0.27" />
     <PackageVersion Include="Plugin.ExceptionListeners" Version="1.0.3" />
     <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.18" />
@@ -48,5 +46,10 @@
   <ItemGroup>
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.101" />
+  </ItemGroup>
+  <!-- ==================== LOGGING DEPENDENCIES ==================== -->
+  <ItemGroup>
+    <PackageVersion Include="NLog.Extensions.Logging" Version="6.1.0" />
+    <PackageVersion Include="NLog.Targets.MauiLog" Version="10.0.3" />
   </ItemGroup>
 </Project>
