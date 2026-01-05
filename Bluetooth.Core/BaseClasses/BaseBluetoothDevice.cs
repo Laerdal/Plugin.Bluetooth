@@ -28,6 +28,8 @@ public abstract partial class BaseBluetoothDevice : BaseBindableObject, IBluetoo
         Scanner = scanner;
         Id = advertisement.BluetoothAddress;
         Manufacturer = advertisement.Manufacturer;
+
+        OnAdvertisementReceived(advertisement);
     }
 
     /// <inheritdoc/>

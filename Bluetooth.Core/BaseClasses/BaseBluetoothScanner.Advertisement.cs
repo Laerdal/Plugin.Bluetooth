@@ -1,4 +1,3 @@
-
 namespace Bluetooth.Core.BaseClasses;
 
 public abstract partial class BaseBluetoothScanner
@@ -57,21 +56,24 @@ public abstract partial class BaseBluetoothScanner
         // Throw event
         AdvertisementReceived?.Invoke(this, new AdvertisementReceivedEventArgs(advertisement));
 
-        // Group by device
-        var device = GetDeviceOrDefault(advertisement.BluetoothAddress) ?? AddDeviceFromAdvertisement(advertisement);
-
-        // Filter out duplicates if needed
-        if (IgnoreDuplicateAdvertisements && device.LastAdvertisement != null && device.LastAdvertisement.Equals(advertisement))
+        // Get or create device
+        if (GetDeviceOrDefault(advertisement.BluetoothAddress) is { } existingDevice)
         {
-            return;
+            // Filter out duplicates if needed
+            if (IgnoreDuplicateAdvertisements && existingDevice.LastAdvertisement != null && existingDevice.LastAdvertisement.Equals(advertisement))
+            {
+                return;
+            }
+
+            // Process advertisement infos
+            existingDevice.OnAdvertisementReceived(advertisement);
         }
-
-        // Process advertisement infos
-        device.OnAdvertisementReceived(advertisement);
+        else
+        {
+            // New device
+            AddDeviceFromAdvertisement(advertisement);
+        }
     }
-
-
-
 
     /// <summary>
     /// Processes multiple received advertisements in batch, primarily for Android batch advertisement processing.
@@ -97,12 +99,22 @@ public abstract partial class BaseBluetoothScanner
         foreach (var advertisementGroup in groupedAdvertisements)
         {
             // Get or create device
-            var device = GetDeviceOrDefault(advertisementGroup.Key) ?? AddDeviceFromAdvertisement(advertisementGroup.First());
-
-            // Process advertisement infos
-            foreach (var advertisement in advertisementGroup)
+            if (GetDeviceOrDefault(advertisementGroup.Key) is { } existingDevice)
             {
-                device.OnAdvertisementReceived(advertisement);
+                // Process advertisement infos
+                foreach (var advertisement in advertisementGroup)
+                {
+                    existingDevice.OnAdvertisementReceived(advertisement);
+                }
+            }
+            else
+            {
+                // Process advertisement infos
+                var newDevice = AddDeviceFromAdvertisement(advertisementGroup.First());
+                foreach (var advertisement in advertisementGroup.Skip(1))
+                {
+                    newDevice.OnAdvertisementReceived(advertisement);
+                }
             }
         }
     }
