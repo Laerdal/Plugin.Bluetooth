@@ -27,7 +27,12 @@ public interface IBluetoothActivity : INotifyPropertyChanged
     Task WaitForBluetoothToBeOnAsync(TimeSpan? timeout, CancellationToken cancellationToken = default);
 
     #endregion
-    
+
+    /// <summary>
+    /// Occurs when the running state of the Bluetooth activity changes.
+    /// </summary>
+    event EventHandler? RunningStateChanged;
+
     /// <summary>
     /// Gets a value indicating whether the Bluetooth activity is actively running.
     /// </summary>

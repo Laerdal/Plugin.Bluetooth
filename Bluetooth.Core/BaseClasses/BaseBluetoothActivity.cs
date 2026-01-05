@@ -103,6 +103,9 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
     #region IsRunning
 
     /// <inheritdoc />
+    public event EventHandler? RunningStateChanged;
+
+    /// <inheritdoc />
     public bool IsRunning
     {
         get => GetValue(false);
@@ -131,6 +134,7 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
             // Stopped
             OnStopSucceeded();
         }
+        RunningStateChanged?.Invoke(this, System.EventArgs.Empty);
     }
 
     /// <summary>
@@ -240,7 +244,9 @@ public abstract class BaseBluetoothActivity : BaseBindableObject, IBluetoothActi
     /// <inheritdoc/>
     public virtual ValueTask StartIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return IsRunning ? new ValueTask(StartAsync(timeout, cancellationToken)) : ValueTask.CompletedTask;
+        return IsRunning ?
+                   ValueTask.CompletedTask :
+                   new ValueTask(StartAsync(timeout, cancellationToken));
     }
 
     /// <inheritdoc/>
