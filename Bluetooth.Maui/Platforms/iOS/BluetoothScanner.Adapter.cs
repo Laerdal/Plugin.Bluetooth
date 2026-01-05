@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using Bluetooth.Maui.PlatformSpecific;
 
 namespace Bluetooth.Maui;
@@ -89,7 +91,7 @@ public partial class BluetoothScanner
     /// </remarks>
     protected async override ValueTask NativeInitializeAsync()
     {
-        if (OperatingSystem.IsIOSVersionAtLeast(13))
+        if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(10, 15))
         {
             BluetoothPermissions.BluetoothAlways.EnsureDeclared();
         }
