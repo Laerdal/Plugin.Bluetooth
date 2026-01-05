@@ -2,6 +2,9 @@ namespace Bluetooth.Core.BaseClasses;
 
 public abstract partial class BaseBluetoothDevice
 {
+
+
+
     // Max and Min are dynamic, meaning if a value higher or lower is detected it will push those bounds
     private static double _closeRssiValue = -50;
     private static double _farRssiValue = -100;
@@ -25,6 +28,12 @@ public abstract partial class BaseBluetoothDevice
     ///     This is the value to use when connected : the signal strength is more stable when connected.
     /// </summary>
     public static int SignalStrengthJitterSmoothingStrengthConnected { get; set; } = 3;
+
+    /// <summary>
+    ///    Function to convert RSSI in DBM to a signal strength percentage (0.0 to 1.0).
+    ///   Default implementation is linear conversion via <see cref="LinearRssiToSignalStrengthConverter" />.
+    /// </summary>
+    public static Func<double,double> RssiToSignalStrengthConverter { get; set; } = LinearRssiToSignalStrengthConverter;
 
     /// <summary>
     /// Gets a value indicating whether a signal strength reading operation is currently in progress.
@@ -69,7 +78,7 @@ public abstract partial class BaseBluetoothDevice
     /// </summary>
     /// <param name="rssi">Input in DBM.</param>
     /// <returns>Percentage.</returns>
-    protected static double RssiToSignalStrengthConverter(double rssi)
+    public static double LinearRssiToSignalStrengthConverter(double rssi)
     {
         if (rssi <= _farRssiValue)
         {
