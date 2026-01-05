@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<popup:BaseView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                xmlns:vm="clr-namespace:Bluetooth.Maui.Sample.ViewModels"
+                xmlns:views="clr-namespace:Bluetooth.Maui.Sample.Views"
+                xmlns:popup="clr-namespace:Bluetooth.Maui.Sample.Views.Popup"
+                x:Class="Bluetooth.Maui.Sample.Views.Popup.ScannerConfigPopup"
+                x:DataType="vm:ScannerConfigPopupViewModel"
+                BackgroundColor="DarkSlateGrey">
+        <Grid RowDefinitions="Auto,*,Auto"
+              Padding="20">
+            <Label Text="Scanner Configuration"
+                   FontSize="20"
+                   Grid.Row="0"
+                   HorizontalOptions="Center" />
+            <StackLayout
+                Grid.Row="1"
+                Padding="20"
+                         Spacing="15">
+                <!-- IncludeUnnamedDevices -->
+
+                <HorizontalStackLayout VerticalOptions="Center"
+                                       Spacing="10">
+                    <Label Text="Include Unnamed Devices"
+                           VerticalOptions="Center" />
+                    <Switch IsToggled="{Binding IncludeUnnamedDevices}" />
+                </HorizontalStackLayout>
+
+            </StackLayout>
+
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto,*" >
+                <Button Text="️Close"
+                        Grid.Column="2"
+                        HorizontalOptions="End"
+                        Command="{Binding OnCloseButtonClickedCommand}" />
+            </Grid>
+        </Grid>
+</popup:BaseView>

@@ -41,8 +41,8 @@
 
     <!-- ios -->
     <TargetPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">26.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion Condition=" '$(IsForIOS)' == 'true' ">12.2</TargetPlatformMinVersion>
-    <SupportedOSPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">12.2</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition=" '$(IsForIOS)' == 'true' ">15.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">15.0</SupportedOSPlatformVersion>
 
     <!-- mac-catalyst -->
     <TargetPlatformVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">26.0</TargetPlatformVersion>

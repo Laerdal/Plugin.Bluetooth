@@ -51,13 +51,38 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="CommunityToolkit.Mvvm" />
         <PackageReference Include="Microsoft.Maui.Controls"/>
-        <PackageReference Include="Microsoft.Maui.Essentials"/>
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug"/>
+        <PackageReference Include="Microsoft.Maui.Essentials" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+        <PackageReference Include="CommunityToolkit.Maui" />
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="NLog.Extensions.Logging" />
+        <PackageReference Include="NLog.Targets.MauiLog" />
+        <PackageReference Include="Plugin.ByteArrays" />
+        <PackageReference Include="Plugin.BaseTypeExtensions" />
+        <PackageReference Include="Plugin.ExceptionListeners" />
+        <PackageReference Include="Plugin.ExceptionListeners.Maui" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Bluetooth.Core\Bluetooth.Core.csproj" />
         <ProjectReference Include="..\Bluetooth.Maui\Bluetooth.Maui.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiXaml Update="Views\Popup\ScannerConfigPopup.xaml">
+        <SubType>Designer</SubType>
+      </MauiXaml>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\Popup\ScannerConfigPopup.xaml.cs">
+        <DependentUpon>ScannerConfigPopup.xaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
 </Project>
