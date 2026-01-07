@@ -297,7 +297,7 @@ public interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDisposable
 
     /// <summary>
     /// Gets the service that matches the specified filter.
-    /// 0-1
+    /// 0-1?
     /// </summary>
     /// <param name="filter">The filter to apply to the services.</param>
     /// <returns>The service that matches the filter, or null if no such service exists.</returns>
@@ -306,32 +306,17 @@ public interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDisposable
 
     /// <summary>
     /// Gets the service with the specified ID.
-    /// 0-1
+    /// 0-1?
     /// </summary>
     /// <param name="id">The ID of the service to get.</param>
     /// <returns>The service with the specified ID, or null if no such service exists.</returns>
     /// <exception cref="MultipleServicesFoundException">If more than 1 result exists.</exception>
     IBluetoothService? GetServiceOrDefault(Guid id);
 
-    /// <summary>
-    /// Gets the services that match the specified filter.
-    /// 0-N
-    /// </summary>
-    /// <param name="filter">The filter to apply to the services.</param>
-    /// <returns>The services that match the filter, or all services if the filter is null.</returns>
-    IEnumerable<IBluetoothService> GetServices(Func<IBluetoothService, bool>? filter = null);
-
-    /// <summary>
-    /// Gets the services with the specified ID.
-    /// 0-N
-    /// </summary>
-    /// <param name="id">The ID of the services to get.</param>
-    /// <returns>The services with the specified ID.</returns>
-    IEnumerable<IBluetoothService> GetServices(Guid id);
 
     /// <summary>
     /// Gets the service that matches the specified filter asynchronously.
-    /// Explore then 0-1
+    /// Explore then 0-1?
     /// </summary>
     /// <param name="filter">The filter to apply to the services.</param>
     /// <param name="timeout">The timeout for this operation</param>
@@ -342,7 +327,7 @@ public interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDisposable
 
     /// <summary>
     /// Gets the service with the specified ID asynchronously.
-    /// Explore then 0-1
+    /// Explore then 0-1?
     /// </summary>
     /// <param name="id">The ID of the service to get.</param>
     /// <param name="timeout">The timeout for this operation</param>
@@ -350,6 +335,50 @@ public interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDisposable
     /// <returns>A task that represents the asynchronous operation. The task result contains the service with the specified ID, or null if no such service exists.</returns>
     /// <exception cref="MultipleServicesFoundException">If more than 1 result exists.</exception>
     ValueTask<IBluetoothService?> GetServiceOrDefaultAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the service that matches the specified filter.
+    /// 0-1!
+    /// </summary>
+    /// <param name="filter">The filter to apply to the services.</param>
+    /// <returns>The service that matches the filter, or null if no such service exists.</returns>
+    /// <exception cref="MultipleServicesFoundException">If more than 1 result exists.</exception>
+    /// <exception cref="ServiceNotFoundException">If no service matching the filter exists.</exception>
+    IBluetoothService GetService(Func<IBluetoothService, bool> filter);
+
+    /// <summary>
+    /// Gets the service with the specified ID.
+    /// 0-1!
+    /// </summary>
+    /// <param name="id">The ID of the service to get.</param>
+    /// <returns>The service with the specified ID, or null if no such service exists.</returns>
+    /// <exception cref="MultipleServicesFoundException">If more than 1 result exists.</exception>
+    /// <exception cref="ServiceNotFoundException">If no service with the specified ID exists.</exception>
+    IBluetoothService GetService(Guid id);
+
+    /// <summary>
+    /// Gets the service that matches the specified filter asynchronously.
+    /// Explore then 0-1!
+    /// </summary>
+    /// <param name="filter">The filter to apply to the services.</param>
+    /// <param name="timeout">The timeout for this operation</param>
+    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the service that matches the filter, or null if no such service exists.</returns>
+    /// <exception cref="MultipleServicesFoundException">If more than 1 result exists.</exception>
+    /// <exception cref="ServiceNotFoundException">If no service matching the filter exists.</exception>
+    ValueTask<IBluetoothService> GetServiceAsync(Func<IBluetoothService, bool> filter, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the service with the specified ID asynchronously.
+    /// Explore then 0-1!
+    /// </summary>
+    /// <param name="id">The ID of the service to get.</param>
+    /// <param name="timeout">The timeout for this operation</param>
+    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the service with the specified ID, or null if no such service exists.</returns>
+    /// <exception cref="MultipleServicesFoundException">If more than 1 result exists.</exception>
+    /// <exception cref="ServiceNotFoundException">If no service with the specified ID exists.</exception>
+    ValueTask<IBluetoothService> GetServiceAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the services that match the specified filter asynchronously.
@@ -362,6 +391,14 @@ public interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDisposable
     ValueTask<IEnumerable<IBluetoothService>> GetServicesAsync(Func<IBluetoothService, bool>? filter = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets the services that match the specified filter.
+    /// 0-N
+    /// </summary>
+    /// <param name="filter">The filter to apply to the services.</param>
+    /// <returns>The services that match the filter, or all services if the filter is null.</returns>
+    IEnumerable<IBluetoothService> GetServices(Func<IBluetoothService, bool>? filter = null);
+
+    /// <summary>
     /// Gets the services with the specified ID asynchronously.
     /// Explore then 0-N
     /// </summary>
@@ -370,6 +407,14 @@ public interface IBluetoothDevice : INotifyPropertyChanged, IAsyncDisposable
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the services with the specified ID.</returns>
     ValueTask<IEnumerable<IBluetoothService>> GetServicesAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the services with the specified ID.
+    /// 0-N
+    /// </summary>
+    /// <param name="id">The ID of the services to get.</param>
+    /// <returns>The services with the specified ID.</returns>
+    IEnumerable<IBluetoothService> GetServices(Guid id);
 
     #endregion
 

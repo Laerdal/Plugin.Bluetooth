@@ -6,6 +6,32 @@ public abstract partial class BaseBluetoothDevice
     private readonly static Func<IBluetoothService, bool> _defaultAcceptAllFilter = _ => true;
 
     /// <inheritdoc/>
+    public IBluetoothService GetService(Func<IBluetoothService, bool> filter)
+    {
+        try
+        {
+            return Services.SingleOrDefault(filter) ?? throw new ServiceNotFoundException(this, null, null);
+        }
+        catch (InvalidOperationException e)
+        {
+            throw new MultipleServicesFoundException(this, Services.Where(filter), e);
+        }
+    }
+
+    /// <inheritdoc/>
+    public IBluetoothService GetService(Guid id)
+    {
+        try
+        {
+            return Services.SingleOrDefault(service => service.Id == id) ?? throw new ServiceNotFoundException(this, id, null);
+        }
+        catch (InvalidOperationException e)
+        {
+            throw new MultipleServicesFoundException(this, Services.Where(service => service.Id == id), e);
+        }
+    }
+
+    /// <inheritdoc/>
     public IBluetoothService? GetServiceOrDefault(Func<IBluetoothService, bool> filter)
     {
         try
@@ -58,6 +84,20 @@ public abstract partial class BaseBluetoothDevice
     public ValueTask<IBluetoothService?> GetServiceOrDefaultAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         return GetServiceOrDefaultAsync(service => service.Id == id, timeout, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask<IBluetoothService> GetServiceAsync(Func<IBluetoothService, bool> filter, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        await ExploreServicesAsync(false, false, timeout, cancellationToken).ConfigureAwait(false);
+        return GetService(filter);
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask<IBluetoothService> GetServiceAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        await ExploreServicesAsync(false, false, timeout, cancellationToken).ConfigureAwait(false);
+        return GetService(id);
     }
 
     /// <inheritdoc/>
