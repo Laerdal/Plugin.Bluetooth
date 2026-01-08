@@ -23,7 +23,6 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
 
     #endregion
 
-
     #region BluetoothAdapterEventProxy.IAdapter Implementation
 
     /// <inheritdoc/>
@@ -56,6 +55,7 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
         // Placeholder for future implementation if needed
     }
 
+    /// <inheritdoc/>
     public virtual void OnLocalNameChanged(string? newName)
     {
         // Placeholder for future implementation if needed

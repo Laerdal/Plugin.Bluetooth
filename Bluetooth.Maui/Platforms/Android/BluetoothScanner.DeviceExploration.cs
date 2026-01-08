@@ -28,7 +28,8 @@ public partial class BluetoothScanner
     public virtual void OnScanResult(ScanCallbackType callbackType, IEnumerable<ScanResult> results)
     {
         IsRunning = true;
-        OnStartSucceeded(); // Since there is no success callback for start scanning, we assume that we started when we receive an advertisement
+        InternalAndroidStartScanResultReceived.Set();
+        OnStartSucceeded();
         OnAdvertisementsReceived(results.Where(result => NativeAdvertisementFilter.Invoke(callbackType, result)).Select(result => new BluetoothAdvertisement(result)));
     }
 
@@ -44,7 +45,8 @@ public partial class BluetoothScanner
     public virtual void OnScanResult(ScanCallbackType callbackType, ScanResult result)
     {
         IsRunning = true;
-        OnStartSucceeded(); // Since there is no success callback for start scanning, we assume that we started when we receive an advertisement
+        InternalAndroidStartScanResultReceived.Set();
+        OnStartSucceeded();
         if (NativeAdvertisementFilter.Invoke(callbackType, result))
         {
             OnAdvertisementReceived(new BluetoothAdvertisement(result));

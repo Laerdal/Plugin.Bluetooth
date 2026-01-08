@@ -2,6 +2,8 @@ using Bluetooth.Maui.PlatformSpecific;
 using Bluetooth.Maui.PlatformSpecific.Exceptions;
 using Bluetooth.Maui.PlatformSpecific.NativeOptions;
 
+using Plugin.BaseTypeExtensions;
+
 namespace Bluetooth.Maui;
 
 public partial class BluetoothScanner
@@ -26,16 +28,35 @@ public partial class BluetoothScanner
     /// </remarks>
     public StartScanningOptions? StartScanningOptions { get; set; }
 
+    private AutoResetEvent InternalAndroidStartScanResultReceived { get; set; }
+
+    /// <summary>
+    /// On Android, we only get feedback on "StartScanFailed" (see below) and on "AdvertisementReceived" (see DeviceExploration) ...
+    /// If no bluetooth devices are around and the scan has started successfully : we don't receive anything.
+    /// Adjust this value to wait for longer or shorter.
+    /// </summary>
+    public static TimeSpan ScannerStartedTimeout { get; set; } = TimeSpan.FromSeconds(2);
+
     /// <inheritdoc/>
     /// <remarks>
     /// Starts BLE scanning using the Android <see cref="BluetoothLeScanner"/> with the configured <see cref="StartScanningOptions"/>.
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when <see cref="BluetoothLeScannerProxy.BluetoothLeScanner"/> is <c>null</c>.</exception>
-    protected override ValueTask NativeStartAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected async override ValueTask NativeStartAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(BluetoothLeScannerProxy.BluetoothLeScanner, nameof(BluetoothLeScannerProxy.BluetoothLeScanner));
         BluetoothLeScannerProxy.BluetoothLeScanner.StartScan(StartScanningOptions.ToNativeScanFilters(), StartScanningOptions.ToNativeScanSettings(), ScanCallbackProxy);
-        return ValueTask.CompletedTask;
+        try
+        {
+            await Task.Run(() => InternalAndroidStartScanResultReceived.WaitOne(ScannerStartedTimeout), cancellationToken).ConfigureAwait(false);
+        }
+        catch (TimeoutException)
+        {
+            // On Android, we only get feedback on "StartScanFailed" (see below) and on "AdvertisementReceived" (see DeviceExploration) ...
+            // If no bluetooth devices are around and the scan has started successfully : we don't receive anything.
+            // In this timeout case, we ignore timeout and we sent a StartScanSuccess :
+            OnStartSucceeded();
+        }
     }
 
     /// <summary>
@@ -58,6 +79,7 @@ public partial class BluetoothScanner
         catch (Exception e)
         {
             IsRunning = false;
+            InternalAndroidStartScanResultReceived.Set();
             OnStartFailed(e);
         }
     }
