@@ -14,34 +14,56 @@ public interface IBluetoothBroadcaster : IBluetoothActivity
     #region Advertisement
 
     /// <summary>
-    /// Gets a value indicating whether the broadcaster is currently advertising.
-    /// This reflects the state controlled by <see cref="IBluetoothActivity.StartAsync"/> and <see cref="IBluetoothActivity.StopAsync"/>.
+    /// Gets the device name advertised to potential clients.
     /// </summary>
-    bool IsAdvertising { get; }
+    string? LocalDeviceName { get; }
 
     /// <summary>
-    /// Gets or sets the local device name advertised to potential clients.
-    /// </summary>
-    string? LocalDeviceName { get; set; }
-
-    /// <summary>
-    /// Gets or sets whether the device is connectable when advertising.
+    /// Gets whether the device is connectable when advertising.
     /// When false, the device will only broadcast advertisement data without accepting connections.
     /// </summary>
-    bool IsConnectable { get; set; }
+    bool IsConnectable { get; }
+
+    /// <summary>
+    /// Gets the advertised manufacturerId
+    /// </summary>
+    ushort? ManufacturerId { get; }
+
+    /// <summary>
+    /// Gets the advertised manufacturerData
+    /// </summary>
+    ReadOnlyMemory<byte>? ManufacturerData { get; }
+
+    /// <summary>
+    /// Gets the Uuids of the advertised services
+    /// </summary>
+    IReadOnlyList<Guid>? AdvertisedServiceUuids { get; }
 
     /// <summary>
     /// Sets custom manufacturer-specific data to include in the advertisement.
     /// </summary>
     /// <param name="manufacturerId">The manufacturer identifier (company ID).</param>
     /// <param name="data">The manufacturer-specific data.</param>
-    void SetManufacturerData(ushort manufacturerId, byte[] data);
+    void SetManufacturerData(ushort manufacturerId, ReadOnlySpan<byte> data);
 
     /// <summary>
     /// Sets service UUIDs to advertise, making the device discoverable for these specific services.
     /// </summary>
     /// <param name="serviceUuids">The collection of service UUIDs to advertise.</param>
     void SetAdvertisedServiceUuids(IEnumerable<Guid> serviceUuids);
+
+    /// <summary>
+    /// Sets whether the device is connectable when advertising.
+    /// When false, the device will only broadcast advertisement data without accepting connections.
+    /// </summary>
+    /// <param name="isConnectable">True when the device accepts connections, false otherwise.</param>
+    void SetIsConnectable(bool isConnectable);
+
+    /// <summary>
+    /// Sets the device name advertised to potential clients.
+    /// </summary>
+    /// <param name="localDeviceName">The new name.</param>
+    void SetLocalDeviceName(string? localDeviceName);
 
     /// <summary>
     /// Clears all custom advertisement data.

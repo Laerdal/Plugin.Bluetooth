@@ -2,86 +2,86 @@ namespace Bluetooth.Core.BaseClasses;
 
 public abstract partial class BaseBluetoothBroadcaster
 {
-    /// <inheritdoc/>
-    public bool IsAdvertising
-    {
-        get => GetValue(false);
-        protected set => SetValue(value);
-    }
+
+    #region LocalDeviceName
 
     /// <inheritdoc/>
     public string? LocalDeviceName
     {
         get => GetValue<string?>(null);
-        set => SetValue(value);
+        private set => SetValue(value);
     }
+
+    /// <inheritdoc/>
+    public void SetLocalDeviceName(string? localDeviceName)
+    {
+        LocalDeviceName = localDeviceName;
+        NativeAdvertisementDataChanged();
+    }
+
+    #endregion
+
+    #region IsConnectable
 
     /// <inheritdoc/>
     public bool IsConnectable
     {
-        get => GetValue(true);
-        set => SetValue(value);
+        get => GetValue(false);
+        private set => SetValue(value);
     }
-
-    private ushort? _manufacturerId;
-    private byte[]? _manufacturerData;
-    private List<Guid>? _advertisedServiceUuids;
 
     /// <inheritdoc/>
-    public void SetManufacturerData(ushort manufacturerId, byte[] data)
+    public void SetIsConnectable(bool isConnectable)
     {
-        ArgumentNullException.ThrowIfNull(data);
-
-        _manufacturerId = manufacturerId;
-        _manufacturerData = data;
-
-        NativeSetManufacturerData(manufacturerId, data);
+        IsConnectable = isConnectable;
+        NativeAdvertisementDataChanged();
     }
 
-    /// <summary>
-    /// Platform-specific implementation for setting manufacturer data in the advertisement.
-    /// </summary>
-    /// <param name="manufacturerId">The manufacturer identifier.</param>
-    /// <param name="data">The manufacturer-specific data.</param>
-    protected abstract void NativeSetManufacturerData(ushort manufacturerId, byte[] data);
+    #endregion
+
+    #region Manufacturer
+
+    /// <inheritdoc/>
+    public ushort? ManufacturerId { get; set; }
+
+    /// <inheritdoc/>
+    public ReadOnlyMemory<byte>? ManufacturerData { get; set; }
+
+    /// <inheritdoc/>
+    public void SetManufacturerData(ushort manufacturerId, ReadOnlySpan<byte> data)
+    {
+        ManufacturerId = manufacturerId;
+        ManufacturerData = data.ToArray();
+        NativeAdvertisementDataChanged();
+    }
+
+    #endregion
+
+    #region ServiceUuids
+
+    /// <inheritdoc/>
+    public IReadOnlyList<Guid>? AdvertisedServiceUuids { get; set; }
 
     /// <inheritdoc/>
     public void SetAdvertisedServiceUuids(IEnumerable<Guid> serviceUuids)
     {
-        ArgumentNullException.ThrowIfNull(serviceUuids);
-
-        _advertisedServiceUuids = serviceUuids.ToList();
-
-        NativeSetAdvertisedServiceUuids(_advertisedServiceUuids);
+        AdvertisedServiceUuids = serviceUuids.ToList();
+        NativeAdvertisementDataChanged();
     }
 
-    /// <summary>
-    /// Platform-specific implementation for setting advertised service UUIDs.
-    /// </summary>
-    /// <param name="serviceUuids">The collection of service UUIDs to advertise.</param>
-    protected abstract void NativeSetAdvertisedServiceUuids(IEnumerable<Guid> serviceUuids);
+    #endregion
 
     /// <inheritdoc/>
     public void ClearAdvertisementData()
     {
-        _manufacturerId = null;
-        _manufacturerData = null;
-        _advertisedServiceUuids = null;
-
-        NativeClearAdvertisementData();
+        ManufacturerId = null;
+        ManufacturerData = null;
+        AdvertisedServiceUuids = null;
+        NativeAdvertisementDataChanged();
     }
 
     /// <summary>
-    /// Platform-specific implementation for clearing advertisement data.
+    /// Platform-specific implementation for updating advertised data.
     /// </summary>
-    protected abstract void NativeClearAdvertisementData();
-
-    /// <summary>
-    /// Called when the advertising state changes.
-    /// </summary>
-    /// <param name="isAdvertising">The new advertising state.</param>
-    protected virtual void OnAdvertisingStateChanged(bool isAdvertising)
-    {
-        IsAdvertising = isAdvertising;
-    }
+    protected abstract void NativeAdvertisementDataChanged();
 }

@@ -41,6 +41,13 @@ public partial class BluetoothBroadcaster : BaseBluetoothBroadcaster
 
     /// <inheritdoc/>
     /// <exception cref="PlatformNotSupportedException">This platform-agnostic implementation is not supported on non-native platforms.</exception>
+    protected override void NativeAdvertisementDataChanged()
+    {
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+    }
+
+    /// <inheritdoc/>
+    /// <exception cref="PlatformNotSupportedException">This platform-agnostic implementation is not supported on non-native platforms.</exception>
     protected override IBluetoothService NativeCreateService(Guid serviceId, bool isPrimary)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
@@ -100,27 +107,6 @@ public partial class BluetoothBroadcaster : BaseBluetoothBroadcaster
     /// <inheritdoc/>
     /// <exception cref="PlatformNotSupportedException">This platform-agnostic implementation is not supported on non-native platforms.</exception>
     protected override Task NativeDisconnectClientAsync(string clientId, TimeSpan? timeout, CancellationToken cancellationToken)
-    {
-        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
-    }
-
-    /// <inheritdoc/>
-    /// <exception cref="PlatformNotSupportedException">This platform-agnostic implementation is not supported on non-native platforms.</exception>
-    protected override void NativeSetManufacturerData(ushort manufacturerId, byte[] data)
-    {
-        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
-    }
-
-    /// <inheritdoc/>
-    /// <exception cref="PlatformNotSupportedException">This platform-agnostic implementation is not supported on non-native platforms.</exception>
-    protected override void NativeSetAdvertisedServiceUuids(IEnumerable<Guid> serviceUuids)
-    {
-        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
-    }
-
-    /// <inheritdoc/>
-    /// <exception cref="PlatformNotSupportedException">This platform-agnostic implementation is not supported on non-native platforms.</exception>
-    protected override void NativeClearAdvertisementData()
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
