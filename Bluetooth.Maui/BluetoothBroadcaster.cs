@@ -36,7 +36,7 @@ public partial class BluetoothBroadcaster
     /// </code>
     /// </para>
     /// </remarks>
-    public static async ValueTask<IBluetoothBroadcaster> GetOrCreateDefaultBroadcasterAsync()
+    public async static ValueTask<IBluetoothBroadcaster> GetOrCreateDefaultBroadcasterAsync()
     {
         _defaultInstance = new BluetoothBroadcaster();
         await _defaultInstance.InitializeAsync().ConfigureAwait(false);

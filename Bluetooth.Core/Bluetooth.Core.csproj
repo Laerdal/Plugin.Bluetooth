@@ -33,9 +33,12 @@
 		<Compile Update="**\BaseBluetoothManager.*.cs">
 			<DependentUpon>BaseBluetoothManager.cs</DependentUpon>
 		</Compile>
-		<Compile Update="**\BaseBluetoothScanner.*.cs">
-			<DependentUpon>BaseBluetoothScanner.cs</DependentUpon>
-		</Compile>
+        <Compile Update="**\BaseBluetoothScanner.*.cs">
+            <DependentUpon>BaseBluetoothScanner.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\BaseBluetoothBroadcaster.*.cs">
+            <DependentUpon>BaseBluetoothBroadcaster.cs</DependentUpon>
+        </Compile>
 		<Compile Update="**\BaseBluetoothService.*.cs">
 			<DependentUpon>BaseBluetoothService.cs</DependentUpon>
 		</Compile>
