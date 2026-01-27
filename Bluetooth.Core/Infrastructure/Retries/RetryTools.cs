@@ -1,4 +1,4 @@
-namespace Bluetooth.Maui.Helpers;
+namespace Bluetooth.Core.Infrastructure.Retries;
 
 /// <summary>
 /// Provides utility methods for executing actions with retry logic.
