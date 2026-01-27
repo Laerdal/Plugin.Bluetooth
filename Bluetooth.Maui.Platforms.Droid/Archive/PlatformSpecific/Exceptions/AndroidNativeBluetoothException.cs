@@ -7,8 +7,8 @@ namespace Bluetooth.Maui.PlatformSpecific.Exceptions;
 /// This exception is used for wrapping Android-specific Bluetooth exceptions
 /// and providing a unified exception model for Android platform operations.
 /// </remarks>
-/// <seealso cref="NativeBluetoothException" />
-public class AndroidNativeBluetoothException : NativeBluetoothException
+/// <seealso cref="BluetoothException" />
+public class AndroidNativeBluetoothException : BluetoothException
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AndroidNativeBluetoothException"/> class.

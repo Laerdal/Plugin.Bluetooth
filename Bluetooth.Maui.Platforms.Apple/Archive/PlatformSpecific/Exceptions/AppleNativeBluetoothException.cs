@@ -8,8 +8,8 @@ namespace Bluetooth.Maui.PlatformSpecific.Exceptions;
 /// about iOS/macOS Bluetooth operation failures, including error codes, domains,
 /// descriptions, and recovery suggestions.
 /// </remarks>
-/// <seealso cref="NativeBluetoothException" />
-public class AppleNativeBluetoothException : NativeBluetoothException
+/// <seealso cref="BluetoothException" />
+public class AppleNativeBluetoothException : BluetoothException
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AppleNativeBluetoothException"/> class.

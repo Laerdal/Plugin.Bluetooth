@@ -4,7 +4,7 @@ namespace Bluetooth.Maui.PlatformSpecific.Exceptions;
 /// Represents a Windows-specific native Bluetooth exception that provides detailed error descriptions
 /// for various Windows Bluetooth API error conditions.
 /// </summary>
-public class WindowsNativeBluetoothException : NativeBluetoothException
+public class WindowsNativeBluetoothException : BluetoothException
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="WindowsNativeBluetoothException"/> class.
