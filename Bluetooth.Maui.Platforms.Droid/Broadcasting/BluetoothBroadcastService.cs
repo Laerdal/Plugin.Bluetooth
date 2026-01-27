@@ -14,6 +14,6 @@ public class BluetoothBroadcastService : BaseBluetoothBroadcastService
     /// <inheritdoc/>
     public override ValueTask DisposeAsync()
     {
-        throw new NotImplementedException();
+        return base.DisposeAsync();
     }
 }
