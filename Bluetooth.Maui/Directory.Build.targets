@@ -16,7 +16,17 @@
     <Deterministic>true</Deterministic>
     <!-- Ignore CS1591 : Missing documentation for publicly visible type or member
     <NoWarn>$(NoWarn);1591</NoWarn>-->
+    <!-- Ignore CA1816 : Call GC.SuppressFinalize correctly -->
+    <NoWarn>$(NoWarn);CA1816</NoWarn>
   </PropertyGroup>
+
+  <!-- ==================== DEPENDENCIES ==================== -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
+  </ItemGroup>
 
   <!-- ==================== LOGGING ==================== -->
   <Target Name="PrintBuildInfo" BeforeTargets="CoreCompile">
@@ -28,9 +38,6 @@
     <Message Importance="High" Text="IsHostMachineLinux   : $(IsHostMachineLinux)" />
     <Message Importance="High" Text="IsHostMachineUnix    : $(IsHostMachineUnix)" />
   </Target>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" PrivateAssets="All" />
-  </ItemGroup>
 
   <!-- ==================== VERSION ==================== -->
   <Import Project="$(Version_Props_Path)" Condition="Exists('$(Version_Props_Path)')" />

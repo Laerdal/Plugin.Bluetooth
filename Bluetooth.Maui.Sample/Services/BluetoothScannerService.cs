@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 
 using Bluetooth.Core.Abstractions;
-using Bluetooth.Core.EventArgs;
+using Bluetooth.Core.Abstractions.Scan;
 
 using Plugin.BaseTypeExtensions;
 

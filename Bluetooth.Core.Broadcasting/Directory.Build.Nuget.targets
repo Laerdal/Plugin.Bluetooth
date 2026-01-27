@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!-- Note : This is read AFTER the initial project file -->
+
+  <!-- ==================== SELF REF ==================== -->
+  <ItemGroup>
+    <None Include="$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), $(MSBuildThisFile)))" Pack="false" />
+  </ItemGroup>
+
+  <!-- ==================== PACK : VARIABLES ==================== -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+
+    <!-- this is set to true only in from within our build scripts -->
+    <GeneratePackageOnBuild Condition="'$(GeneratePackageOnBuild)' == ''">false</GeneratePackageOnBuild>
+    <PackOnBuild>$(GeneratePackageOnBuild)</PackOnBuild>
+
+    <IncludeSource>True</IncludeSource>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- Project_Name -->
+    <PackageId>$(Project_Name)</PackageId>
+
+    <!-- Project_Description -->
+    <PackageDescription>$(Project_Description)</PackageDescription>
+
+    <!-- Project_Url -->
+    <PackageProjectUrl>$(Project_Url)</PackageProjectUrl>
+
+    <!-- Extra files and properties -->
+    <PackageTags>$(Project_Tags)</PackageTags>
+    <PackageOutputPath Condition="'$(PackageOutputPath)' == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `../output/packages`))</PackageOutputPath>
+  </PropertyGroup>
+
+  <!-- ==================== PACK : ICON ==================== -->
+  <PropertyGroup Condition=" '$(PackageIconPath)' == '' ">
+    <PackageIconPath>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `icon.png`))</PackageIconPath>
+    <PackageIconPath Condition="Exists('$(PackageIconPath)')">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `../icon.png`))</PackageIconPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="Exists('$(PackageIconPath)')">
+    <PackageIcon Condition="Exists('$(PackageIconPath)')">icon.png</PackageIcon>
+  </PropertyGroup>
+  <ItemGroup Condition="Exists('$(PackageIconPath)')">
+    <None Include="$(PackageIconPath)" Pack="true" PackagePath="\" Condition="Exists('$(PackageIconPath)')" />
+  </ItemGroup>
+  <Target Condition=" !Exists('$(PackageIconPath)') " Name="WarnMissingPackageIcon" BeforeTargets="Pack">
+    <Message Importance="High" Text="WARNING: Package icon not found at '$(PackageIconPath)'. Please add an icon.png file to the project root to have a proper package icon." />
+  </Target>
+
+  <!-- ==================== PACK : LICENSE ==================== -->
+  <PropertyGroup Condition=" '$(PackageLicencePath)' == '' ">
+    <PackageLicencePath>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `../LICENSE.md`))</PackageLicencePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="Exists('$(PackageLicencePath)')">
+    <PackageLicenseFile Condition="Exists('$(PackageLicencePath)')">LICENSE.md</PackageLicenseFile>
+  </PropertyGroup>
+  <ItemGroup Condition="Exists('$(PackageLicencePath)')">
+    <None Include="$(PackageLicencePath)" Pack="true" PackagePath="\" Condition="Exists('$(PackageLicencePath)')" />
+  </ItemGroup>
+  <Target Condition=" !Exists('$(PackageLicencePath)') " Name="WarnMissingPackageLicense" BeforeTargets="Pack">
+    <Message Importance="High" Text="WARNING: Package license file not found at '$(PackageLicencePath)'. Please add a LICENSE.md file to the project root to have a proper package license." />
+  </Target>
+
+  <!-- ==================== PACK : README ==================== -->
+  <PropertyGroup Condition=" '$(PackageReadMePath)' == '' ">
+    <PackageReadMePath>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `../README.md`))</PackageReadMePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="Exists('$(PackageReadMePath)')">
+    <PackageReadmeFile Condition="Exists('$(PackageReadMePath)')">README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup Condition="Exists('$(PackageReadMePath)')">
+    <None Include="$(PackageReadMePath)" Pack="true" PackagePath="\" Condition="Exists('$(PackageReadMePath)')" />
+  </ItemGroup>
+  <Target Condition=" !Exists('$(PackageReadMePath)') " Name="WarnMissingPackageReadme" BeforeTargets="Pack">
+    <Message Importance="High" Text="WARNING: Package README file not found at '$(PackageReadMePath)'. Please add a README.md file to the project root to have a proper package README." />
+  </Target>
+
+  <!-- ==================== PACK : DOCUMENTATION ======================= -->
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(Project_Name).xml</DocumentationFile>
+  </PropertyGroup>
+
+  <!-- ==================== PACK : SOURCELINK ==================== -->
+  <PropertyGroup>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- sourcelink: Include PDB in the built .nupkg -->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb;.md</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!-- ==================== PACK : .NET ANALYZERS ======================= -->
+  <PropertyGroup>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- ==================== PUBLIC API TRACKING : Later ====================
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup> -->
+</Project>

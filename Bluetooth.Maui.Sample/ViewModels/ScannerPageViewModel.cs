@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Windows.Input;
 
 using Bluetooth.Core.Abstractions;
-using Bluetooth.Core.EventArgs;
+using Bluetooth.Core.Abstractions.Scan;
 using Bluetooth.Maui.Sample.Services;
 using Bluetooth.Maui.Sample.Views;
 using Bluetooth.Maui.Sample.Views.Popup;

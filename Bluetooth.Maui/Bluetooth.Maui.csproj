@@ -3,7 +3,7 @@
     <!-- ==================== CORE VARIABLES ==================== -->
     <PropertyGroup>
         <Project_Name>Bluetooth.Maui</Project_Name>
-        <Project_Tags>Bluetooth;Maui;Android;iOS;Windows;Tools;Toolkit</Project_Tags>
+        <Project_Tags>Bluetooth;Maui;Android;iOS;MacCatalyst;Windows;Tools;Toolkit</Project_Tags>
         <Project_Copyright>Francois Raminosona</Project_Copyright>
         <Project_Description>Bluetooth.Maui for .NET Maui</Project_Description>
     </PropertyGroup>
@@ -25,7 +25,16 @@
 
     <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
     <ItemGroup>
-        <ProjectReference Include="../Bluetooth.Core/Bluetooth.Core.csproj"/>
+        <ProjectReference Include="../Bluetooth.Abstractions/Bluetooth.Abstractions.csproj" PrivateAssets="all"/>
+
+        <ProjectReference Include="../Bluetooth.Core/Bluetooth.Core.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="../Bluetooth.Core.Broadcasting/Bluetooth.Core.Broadcasting.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="../Bluetooth.Core.Scanning/Bluetooth.Core.Scanning.csproj" PrivateAssets="all"/>
+
+        <ProjectReference Condition=" '$(IsForAndroid)' == 'true' " Include="../Bluetooth.Maui.Platforms.Droid/Bluetooth.Maui.Platforms.Droid.csproj" PrivateAssets="all"/>
+        <ProjectReference Condition=" '$(IsForAppleStuff)' == 'true' " Include="../Bluetooth.Maui.Platforms.Apple/Bluetooth.Maui.Platforms.Apple.csproj" PrivateAssets="all"/>
+        <ProjectReference Condition=" '$(IsForWindows)' == 'true' " Include="../Bluetooth.Maui.Platforms.Windows/Bluetooth.Maui.Platforms.Windows.csproj" PrivateAssets="all"/>
+        <ProjectReference Condition=" '$(IsForPlainNetX)' == 'true' " Include="../Bluetooth.Maui.Platforms.DotNetCore/Bluetooth.Maui.Platforms.DotNetCore.csproj" PrivateAssets="all"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -34,58 +43,4 @@
         <PackageReference Include="Plugin.ExceptionListeners"/>
         <PackageReference Include="Plugin.ExceptionListeners.Maui"/>
     </ItemGroup>
-
-    <!-- ==================== ANDROID MANIFEST OVERLAY ==================== -->
-    <ItemGroup Condition=" '$(IsForAndroid)' == 'true' ">
-        <AndroidManifestOverlay Include="Platforms\Android\AndroidManifestOverlay.xml" />
-    </ItemGroup>
-
-    <!-- ==================== NESTED FILES ======================= -->
-    <ItemGroup>
-        <!-- Files dependent on eachother -->
-        <Compile Update="**\BaseBluetoothActivity.*.cs">
-            <DependentUpon>BaseBluetoothActivity.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BaseBluetoothAdvertisement.*.cs">
-            <DependentUpon>BaseBluetoothAdvertisement.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BaseBluetoothBroadcaster.*.cs">
-            <DependentUpon>BaseBluetoothBroadcaster.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BaseBluetoothCharacteristic.*.cs">
-            <DependentUpon>BaseBluetoothCharacteristic.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BaseBluetoothDevice.*.cs">
-            <DependentUpon>BaseBluetoothDevice.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BaseBluetoothScanner.*.cs">
-            <DependentUpon>BaseBluetoothScanner.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BaseBluetoothService.*.cs">
-            <DependentUpon>BaseBluetoothService.cs</DependentUpon>
-        </Compile>
-
-        <Compile Update="**\BluetoothActivity.*.cs">
-            <DependentUpon>BluetoothActivity.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothAdvertisement.*.cs">
-            <DependentUpon>BluetoothAdvertisement.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothBroadcaster.*.cs">
-            <DependentUpon>BluetoothBroadcaster.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothCharacteristic.*.cs">
-            <DependentUpon>BluetoothCharacteristic.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothDevice.*.cs">
-            <DependentUpon>BluetoothDevice.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothScanner.*.cs">
-            <DependentUpon>BluetoothScanner.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothService.*.cs">
-            <DependentUpon>BluetoothService.cs</DependentUpon>
-        </Compile>
-    </ItemGroup>
-
 </Project>

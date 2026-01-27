@@ -6,15 +6,17 @@
   </PropertyGroup>
   <!-- ==================== INTERNAL DEPENDENCIES ==================== -->
   <ItemGroup>
-    <PackageVersion Include="Plugin.ByteArrays" Version="1.0.27" />
-    <PackageVersion Include="Plugin.ExceptionListeners" Version="1.0.3" />
-    <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.18" />
-    <PackageVersion Include="Plugin.ExceptionListeners.Maui" Version="1.0.3" />
+    <PackageVersion Include="Plugin.ByteArrays" Version="1.0.30" />
+    <PackageVersion Include="Plugin.ExceptionListeners" Version="1.0.5" />
+    <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.23" />
+    <PackageVersion Include="Plugin.ExceptionListeners.Maui" Version="1.0.5" />
   </ItemGroup>
   <!-- ==================== CORE DEPENDENCIES ==================== -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.Abstractions" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.2" />
   </ItemGroup>
   <!-- ==================== MAUI DEPENDENCIES ==================== -->
   <ItemGroup>

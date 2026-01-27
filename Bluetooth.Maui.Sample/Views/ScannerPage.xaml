@@ -5,6 +5,7 @@
                        xmlns:vm="clr-namespace:Bluetooth.Maui.Sample.ViewModels"
                        xmlns:abstractions="clr-namespace:Bluetooth.Core.Abstractions;assembly=Bluetooth.Core"
                        xmlns:views="clr-namespace:Bluetooth.Maui.Sample.Views"
+                       xmlns:scan="clr-namespace:Bluetooth.Core.Abstractions.Scan;assembly=Bluetooth.Core"
                        x:Class="Bluetooth.Maui.Sample.Views.ScannerPage"
                        x:DataType="vm:ScannerPageViewModel"
                        Title="Bluetooth Scanner">
@@ -83,7 +84,7 @@
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="abstractions:IBluetoothDevice">
+                <DataTemplate x:DataType="scan:IBluetoothDevice">
                     <Border Padding="15"
                             BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#2C2C2C}"
                             Stroke="{AppThemeBinding Light=#E0E0E0, Dark=#404040}">

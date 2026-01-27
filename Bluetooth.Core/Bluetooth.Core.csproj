@@ -20,27 +20,8 @@
         <PackageReference Include="Plugin.ExceptionListeners" />
     </ItemGroup>
 
-    <!-- ==================== FILE DEPENDENCIES ==================== -->
+    <!-- ==================== PROJECT REFERENCES / DEPENDENCIES ==================== -->
     <ItemGroup>
-
-		<!-- Files dependent on eachother -->
-		<Compile Update="**\BaseBluetoothCharacteristic.*.cs">
-			<DependentUpon>BaseBluetoothCharacteristic.cs</DependentUpon>
-		</Compile>
-		<Compile Update="**\BaseBluetoothDevice.*.cs">
-			<DependentUpon>BaseBluetoothDevice.cs</DependentUpon>
-		</Compile>
-		<Compile Update="**\BaseBluetoothManager.*.cs">
-			<DependentUpon>BaseBluetoothManager.cs</DependentUpon>
-		</Compile>
-        <Compile Update="**\BaseBluetoothScanner.*.cs">
-            <DependentUpon>BaseBluetoothScanner.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BaseBluetoothBroadcaster.*.cs">
-            <DependentUpon>BaseBluetoothBroadcaster.cs</DependentUpon>
-        </Compile>
-		<Compile Update="**\BaseBluetoothService.*.cs">
-			<DependentUpon>BaseBluetoothService.cs</DependentUpon>
-		</Compile>
+      <ProjectReference Include="..\Bluetooth.Abstractions\Bluetooth.Abstractions.csproj" PrivateAssets="all" />
     </ItemGroup>
 </Project>

@@ -1,0 +1,81 @@
+using Bluetooth.Maui.PlatformSpecific;
+
+namespace Bluetooth.Maui;
+
+public partial class BluetoothDevice
+{
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On iOS, this initiates service discovery by calling <c>CBPeripheral.DiscoverServices</c>.
+    /// Results are delivered asynchronously via the <see cref="DiscoveredService"/> callback.
+    /// </remarks>
+    protected override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        CbPeripheralDelegateWrapper.CbPeripheral.DiscoverServices();
+        return ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// Called when service discovery completes on the iOS platform.
+    /// </summary>
+    /// <param name="error">The error that occurred during service discovery, or <c>null</c> if successful.</param>
+    /// <exception cref="AppleNativeBluetoothException">Thrown when the error parameter indicates a Bluetooth error.</exception>
+    public void DiscoveredService(NSError? error)
+    {
+        try
+        {
+            AppleNativeBluetoothException.ThrowIfError(error);
+            var services = CbPeripheralDelegateWrapper.CbPeripheral.Services ?? [];
+            OnServicesExplorationSucceeded(services, FromInputTypeToOutputTypeConversion, AreRepresentingTheSameObject);
+        }
+        catch (Exception e)
+        {
+            OnServicesExplorationFailed(e);
+        }
+        return;
+
+        BluetoothService FromInputTypeToOutputTypeConversion(CBService native)
+        {
+            return new BluetoothService(this, native.UUID.ToGuid(), native);
+        }
+    }
+
+    private static bool AreRepresentingTheSameObject(CBService native, IBluetoothService shared)
+    {
+        return shared is BluetoothService s && native.UUID.Equals(s.NativeService.UUID) &&  native.Handle.Handle.Equals(s.NativeService.Handle.Handle) ;
+    }
+
+    /// <summary>
+    /// Called when the device's services are modified on the iOS platform.
+    /// </summary>
+    /// <param name="services">The services that were modified.</param>
+    /// <remarks>
+    /// Placeholder for future implementation.
+    /// </remarks>
+    public void ModifiedServices(CBService[] services)
+    {
+        // Placeholder for future implementation
+    }
+
+    /// <summary>
+    /// Gets the corresponding <see cref="IBluetoothService"/> wrapper for a native iOS Core Bluetooth service.
+    /// </summary>
+    /// <param name="characteristicService">The native iOS Core Bluetooth service.</param>
+    /// <returns>The corresponding Bluetooth service wrapper.</returns>
+    /// <exception cref="ServiceNotFoundException">Thrown when <paramref name="characteristicService"/> is <c>null</c> or when no matching service is found.</exception>
+    /// <exception cref="MultipleServicesFoundException">Thrown when multiple services match the criteria.</exception>
+    public CbPeripheralWrapper.ICbServiceDelegate GetService(CBService? characteristicService)
+    {
+        ArgumentNullException.ThrowIfNull(characteristicService);
+        try
+        {
+            var match = GetServiceOrDefault(service => AreRepresentingTheSameObject(characteristicService, service));
+            return match as CbPeripheralWrapper.ICbServiceDelegate ?? throw new ServiceNotFoundException(this, characteristicService.UUID.ToGuid());
+        }
+        catch (InvalidOperationException e)
+        {
+            var matches = GetServices(service => AreRepresentingTheSameObject(characteristicService, service)).ToArray();
+            throw new MultipleServicesFoundException(this, matches, e);
+        }
+    }
+}

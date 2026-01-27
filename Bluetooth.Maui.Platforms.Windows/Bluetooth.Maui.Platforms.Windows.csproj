@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- ==================== CORE VARIABLES ==================== -->
+    <PropertyGroup>
+        <Project_Name>Bluetooth.Maui.Platforms.Windows</Project_Name>
+        <Project_Tags>Bluetooth;Maui;Windows;Tools;Toolkit</Project_Tags>
+        <Project_Copyright>Francois Raminosona</Project_Copyright>
+        <Project_Description>Windows platform implementation for Bluetooth.Maui</Project_Description>
+    </PropertyGroup>
+
+    <!-- ==================== TARGET FRAMEWORKS ==================== -->
+    <PropertyGroup>
+        <TargetFrameworks>net10.0</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-android36.1</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-maccatalyst</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-ios</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+    </PropertyGroup>
+
+    <!-- ==================== MAUI ==================== -->
+    <PropertyGroup>
+        <UseMaui>true</UseMaui>
+        <SingleProject>true</SingleProject>
+    </PropertyGroup>
+
+    <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <ProjectReference Include="../Bluetooth.Abstractions/Bluetooth.Abstractions.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="../Bluetooth.Core/Bluetooth.Core.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="../Bluetooth.Core.Broadcasting/Bluetooth.Core.Broadcasting.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="../Bluetooth.Core.Scanning/Bluetooth.Core.Scanning.csproj" PrivateAssets="all"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Plugin.ByteArrays"/>
+        <PackageReference Include="Plugin.BaseTypeExtensions"/>
+        <PackageReference Include="Plugin.ExceptionListeners"/>
+        <PackageReference Include="Plugin.ExceptionListeners.Maui"/>
+    </ItemGroup>
+
+    <!-- ==================== NESTED FILES ======================= -->
+    <ItemGroup>
+        <Compile Update="**\BluetoothActivity.*.cs">
+            <DependentUpon>BluetoothActivity.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\BluetoothAdvertisement.*.cs">
+            <DependentUpon>BluetoothAdvertisement.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\BluetoothBroadcaster.*.cs">
+            <DependentUpon>BluetoothBroadcaster.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\BluetoothCharacteristic.*.cs">
+            <DependentUpon>BluetoothCharacteristic.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\BluetoothDevice.*.cs">
+            <DependentUpon>BluetoothDevice.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\BluetoothScanner.*.cs">
+            <DependentUpon>BluetoothScanner.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\BluetoothService.*.cs">
+            <DependentUpon>BluetoothService.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+</Project>

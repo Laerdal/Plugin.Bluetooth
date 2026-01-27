@@ -81,6 +81,9 @@ dotnet_style_prefer_auto_properties = false
 # CA1721: Property names should not match get methods
 dotnet_diagnostic.CA1721.severity = none
 
+# CA1816: Call GC.SuppressFinalize correctly
+dotnet_diagnostic.CA1816.severity = none
+
 [*.xml]
 max_line_length = 0
 indent_style = space
