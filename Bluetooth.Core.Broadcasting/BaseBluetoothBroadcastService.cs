@@ -72,7 +72,7 @@ public abstract class BaseBluetoothBroadcastService : BaseBindableObject, IBluet
             Permissions = permissions,
             InitialValue = initialValue,
         };
-        var newCharacteristic = await CharacteristicFactory.CreateBroadcastCharacteristicAsync(this, newCharacteristicRequest, timeout, cancellationToken).ConfigureAwait(false);
+        var newCharacteristic = CharacteristicFactory.CreateBroadcastCharacteristic(this, newCharacteristicRequest);
         lock (WritableCharacteristicsList)
         {
             WritableCharacteristicsList.Add(id, newCharacteristic);

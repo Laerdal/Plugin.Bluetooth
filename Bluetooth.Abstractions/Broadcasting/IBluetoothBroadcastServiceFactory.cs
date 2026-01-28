@@ -13,10 +13,8 @@ public interface IBluetoothBroadcastServiceFactory
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster to which the service will be associated.</param>
     /// <param name="request">The request containing the details for creating the service.</param>
-    /// <param name="timeout">The timeout for this operation.</param>
-    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>The created Bluetooth broadcast service.</returns>
-    ValueTask<IBluetoothBroadcastService> CreateBroadcastServiceAsync(IBluetoothBroadcaster broadcaster, BluetoothBroadcastServiceFactoryRequest request, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    IBluetoothBroadcastService CreateBroadcastService(IBluetoothBroadcaster broadcaster, BluetoothBroadcastServiceFactoryRequest request);
 
     /// <summary>
     /// Record representing a request to create a Bluetooth broadcast service.

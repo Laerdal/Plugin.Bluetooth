@@ -15,10 +15,8 @@ public interface IBluetoothServiceFactory
     /// </summary>
     /// <param name="device">The Bluetooth device to which the service will be associated.</param>
     /// <param name="request">The factory request containing the necessary information to create the service.</param>
-    /// <param name="timeout">An optional timeout for the creation operation.</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>The created Bluetooth service.</returns>
-    ValueTask<IBluetoothService> CreateServiceAsync(IBluetoothDevice device, BluetoothServiceFactoryRequest request, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    IBluetoothService CreateService(IBluetoothDevice device, BluetoothServiceFactoryRequest request);
 
     /// <summary>
     /// Record representing a request to create a Bluetooth service.

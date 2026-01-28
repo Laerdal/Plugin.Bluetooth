@@ -17,10 +17,8 @@ public class BluetoothServiceFactory : IBluetoothServiceFactory
     private IBluetoothCharacteristicFactory CharacteristicFactory { get; }
 
     /// <inheritdoc/>
-    public ValueTask<IBluetoothService> CreateServiceAsync(IBluetoothDevice device, IBluetoothServiceFactory.BluetoothServiceFactoryRequest request, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public IBluetoothService CreateService(IBluetoothDevice device, IBluetoothServiceFactory.BluetoothServiceFactoryRequest request)
     {
-#pragma warning disable CA2000 // Dispose objects before losing scope
-        return ValueTask.FromResult<IBluetoothService>(new BluetoothService(device, request, CharacteristicFactory, CharacteristicAccessServicesRepository));
-#pragma warning restore CA2000 // Dispose objects before losing scope
+        return new BluetoothService(device, request, CharacteristicFactory, CharacteristicAccessServicesRepository);
     }
 }

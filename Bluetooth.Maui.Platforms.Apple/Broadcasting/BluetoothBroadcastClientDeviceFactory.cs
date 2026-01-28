@@ -4,13 +4,9 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 public class BluetoothBroadcastClientDeviceFactory : IBluetoothBroadcastClientDeviceFactory
 {
     /// <inheritdoc/>
-    public ValueTask<IBluetoothBroadcastClientDevice> CreateBroadcastClientDeviceAsync(IBluetoothBroadcaster bluetoothBroadcaster,
-        IBluetoothBroadcastClientDeviceFactory.BluetoothBroadcastClientDeviceFactoryRequest request,
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+    public IBluetoothBroadcastClientDevice CreateBroadcastClientDevice(IBluetoothBroadcaster bluetoothBroadcaster,
+        IBluetoothBroadcastClientDeviceFactory.BluetoothBroadcastClientDeviceFactoryRequest request)
     {
-#pragma warning disable CA2000 // Dispose objects before losing scope
-        return ValueTask.FromResult<IBluetoothBroadcastClientDevice>(new BluetoothBroadcastClientDevice(bluetoothBroadcaster, request));
-#pragma warning restore CA2000 // Dispose objects before losing scope
+        return new BluetoothBroadcastClientDevice(bluetoothBroadcaster, request);
     }
 }

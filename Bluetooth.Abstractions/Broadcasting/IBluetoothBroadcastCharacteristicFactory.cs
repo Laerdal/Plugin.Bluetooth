@@ -16,10 +16,8 @@ public interface IBluetoothBroadcastCharacteristicFactory
     /// </summary>
     /// <param name="service">The Bluetooth broadcast service to which the characteristic will belong.</param>
     /// <param name="request">The request containing the details for creating the characteristic.</param>
-    /// <param name="timeout">An optional timeout for the creation operation.</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>The created Bluetooth broadcast characteristic.</returns>
-    ValueTask<IBluetoothBroadcastCharacteristic> CreateBroadcastCharacteristicAsync(IBluetoothBroadcastService service, BluetoothBroadcastCharacteristicFactoryRequest request, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    IBluetoothBroadcastCharacteristic CreateBroadcastCharacteristic(IBluetoothBroadcastService service, BluetoothBroadcastCharacteristicFactoryRequest request);
 
     /// <summary>
     /// Record representing a request to create a Bluetooth broadcast characteristic.

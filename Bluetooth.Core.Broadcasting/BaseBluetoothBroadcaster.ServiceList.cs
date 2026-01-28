@@ -29,7 +29,7 @@ public abstract partial class BaseBluetoothBroadcaster
             Name = name,
             IsPrimary = isPrimary,
         };
-        var newService = await ServiceFactory.CreateBroadcastServiceAsync(this, newServiceRequest, timeout, cancellationToken).ConfigureAwait(false);
+        var newService = ServiceFactory.CreateBroadcastService(this, newServiceRequest);
         lock (WritableServiceList)
         {
             WritableServiceList.Add(id, newService);

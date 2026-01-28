@@ -13,10 +13,8 @@ public interface IBluetoothBroadcastClientDeviceFactory
     /// </summary>
     /// <param name="bluetoothBroadcaster">The Bluetooth broadcaster associated with the device.</param>
     /// <param name="request">The request containing information needed to create the broadcast device.</param>
-    /// <param name="timeout">An optional timeout for the creation operation.</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A new instance of <see cref="IBluetoothBroadcastClientDevice"/>.</returns>
-    ValueTask<IBluetoothBroadcastClientDevice> CreateBroadcastClientDeviceAsync(IBluetoothBroadcaster bluetoothBroadcaster, BluetoothBroadcastClientDeviceFactoryRequest request, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    IBluetoothBroadcastClientDevice CreateBroadcastClientDevice(IBluetoothBroadcaster bluetoothBroadcaster, BluetoothBroadcastClientDeviceFactoryRequest request);
 
     /// <summary>
     /// Record representing a request to create a Bluetooth broadcast device.

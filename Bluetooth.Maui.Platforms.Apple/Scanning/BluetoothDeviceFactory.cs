@@ -14,10 +14,8 @@ public class BluetoothDeviceFactory : IBluetoothDeviceFactory
     private IBluetoothServiceFactory ServiceFactory { get; }
 
     /// <inheritdoc/>
-    public IBluetoothDevice CreateDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request)
+    public IBluetoothDevice CreateDevice(IBluetoothScanner scanner, BluetoothDeviceFactoryRequest request)
     {
-#pragma warning disable CA2000 // Dispose objects before losing scope
         return new BluetoothDevice(scanner, request, ServiceFactory);
-#pragma warning restore CA2000 // Dispose objects before losing scope
     }
 }
