@@ -3,5 +3,8 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 /// <inheritdoc/>
 public record BluetoothServiceFactoryRequest : IBluetoothServiceFactory.BluetoothServiceFactoryRequest
 {
-    // Add any platform-specific properties here if needed in the future
+    /// <summary>
+    /// Gets the native iOS Core Bluetooth service.
+    /// </summary>
+    public CBService? NativeService { get; init; }
 }
