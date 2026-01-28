@@ -1,4 +1,6 @@
-namespace Bluetooth.Maui.PlatformSpecific.Exceptions;
+using Bluetooth.Maui.Platforms.Droid.Enums;
+
+namespace Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 /// <summary>
 /// Represents an exception that occurs when Android GATT connection callback operations return a non-success status.

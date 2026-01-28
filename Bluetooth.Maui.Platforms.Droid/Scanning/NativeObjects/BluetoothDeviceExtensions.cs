@@ -1,4 +1,4 @@
-namespace Bluetooth.Maui.PlatformSpecific;
+namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 
 public static class BluetoothDeviceExtensions
 {
@@ -6,8 +6,9 @@ public static class BluetoothDeviceExtensions
     {
         ArgumentNullException.ThrowIfNull(bluetoothGattCallback);
         ArgumentNullException.ThrowIfNull(nativeDevice);
+        connectionOptions ??= new BluetoothDeviceConnectionOptions();
 
-        if (OperatingSystem.IsAndroidVersionAtLeast(26) && (connectionOptions?.BluetoothPhy.HasValue ?? false))
+        if (OperatingSystem.IsAndroidVersionAtLeast(26) && (connectionOptions.BluetoothPhy.HasValue))
         {
             // https://developer.android.com/reference/android/bluetooth/BluetoothDevice.html#connectGatt(android.content.Context,%20boolean,%20android.bluetooth.BluetoothGattCallback,%20int,%20int)
             return nativeDevice.ConnectGatt(Android.App.Application.Context,

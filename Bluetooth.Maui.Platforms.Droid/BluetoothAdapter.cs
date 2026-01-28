@@ -39,7 +39,6 @@ public abstract class BluetoothAdapter : BaseBluetoothAdapter, IDisposable
         }
     }
 
-
     #region BluetoothManager
 
     private Android.Bluetooth.BluetoothManager GetBluetoothManager()

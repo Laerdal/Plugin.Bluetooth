@@ -44,5 +44,6 @@ public abstract partial class BaseBluetoothBroadcaster : BaseBindableObject, IBl
         DeviceFactory = deviceFactory;
         PermissionManager = permissionManager;
         Services = new ReadOnlyDictionary<Guid, IBluetoothBroadcastService>(WritableServiceList);
+        ClientDevices = new ReadOnlyDictionary<string, IBluetoothBroadcastClientDevice>(WritableClientDevicesList);
     }
 }

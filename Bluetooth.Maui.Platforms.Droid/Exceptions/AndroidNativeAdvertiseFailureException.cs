@@ -1,4 +1,4 @@
-namespace Bluetooth.Maui.PlatformSpecific.Exceptions;
+namespace Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 /// <summary>
 /// Represents an exception that occurs when Android Bluetooth LE advertising fails.

@@ -1,4 +1,4 @@
-namespace Bluetooth.Maui.PlatformSpecific;
+namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 
 #pragma warning disable CA1034 // Nested types should not be visible
 #pragma warning disable CA1711 // Identifiers should not have incorrect suffix

@@ -4,31 +4,173 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
 {
     public async ValueTask<bool> HasBluetoothPermissionsAsync()
     {
-        throw new NotImplementedException();
+        try
+        {
+            // For API 31+ (Android 12+), need BLUETOOTH_CONNECT
+            if (OperatingSystem.IsAndroidVersionAtLeast(31))
+            {
+                var status = await BluetoothPermissions.BluetoothConnectPermission.CheckStatusAsync().ConfigureAwait(false);
+                return status == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+            }
+
+            // For older versions, need location permissions
+            if (OperatingSystem.IsAndroidVersionAtLeast(29))
+            {
+                var status = await BluetoothPermissions.FineLocationPermission.CheckStatusAsync().ConfigureAwait(false);
+                return status == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+            }
+
+            var coarseStatus = await BluetoothPermissions.CoarseLocationPermission.CheckStatusAsync().ConfigureAwait(false);
+            return coarseStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async ValueTask<bool> HasScannerPermissionsAsync()
     {
-        throw new NotImplementedException();
+        try
+        {
+            await BluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
+
+            // For API 31+ (Android 12+), need BLUETOOTH_SCAN and BLUETOOTH_CONNECT
+            if (OperatingSystem.IsAndroidVersionAtLeast(31))
+            {
+                var scanStatus = await BluetoothPermissions.BluetoothScanPermission.CheckStatusAsync().ConfigureAwait(false);
+                var connectStatus = await BluetoothPermissions.BluetoothConnectPermission.CheckStatusAsync().ConfigureAwait(false);
+                return scanStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted &&
+                       connectStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+            }
+
+            // For API 29-30 (Android 10-11), need FINE_LOCATION
+            if (OperatingSystem.IsAndroidVersionAtLeast(29))
+            {
+                var status = await BluetoothPermissions.FineLocationPermission.CheckStatusAsync().ConfigureAwait(false);
+                return status == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+            }
+
+            // For older versions, COARSE_LOCATION is sufficient
+            var coarseStatus = await BluetoothPermissions.CoarseLocationPermission.CheckStatusAsync().ConfigureAwait(false);
+            return coarseStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async ValueTask<bool> HasBroadcasterPermissionsAsync()
     {
-        throw new NotImplementedException();
+        try
+        {
+            await BluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
+
+            // For API 31+ (Android 12+), need BLUETOOTH_ADVERTISE
+            if (OperatingSystem.IsAndroidVersionAtLeast(31))
+            {
+                var status = await BluetoothPermissions.BluetoothAdvertisePermission.CheckStatusAsync().ConfigureAwait(false);
+                return status == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+            }
+
+            // For older versions, advertising doesn't need special permissions beyond basic Bluetooth
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async ValueTask<bool> RequestBluetoothPermissionsAsync()
     {
-        throw new NotImplementedException();
+        try
+        {
+            await BluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
+
+            // For API 31+ (Android 12+), request BLUETOOTH_CONNECT
+            if (OperatingSystem.IsAndroidVersionAtLeast(31))
+            {
+                await BluetoothPermissions.BluetoothConnectPermission.RequestIfNeededAsync().ConfigureAwait(false);
+                return true;
+            }
+
+            // For older versions, request location permissions
+            if (OperatingSystem.IsAndroidVersionAtLeast(29))
+            {
+                await BluetoothPermissions.FineLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
+                return true;
+            }
+
+            await BluetoothPermissions.CoarseLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async ValueTask<bool> RequestScannerPermissionsAsync()
     {
-        throw new NotImplementedException();
+        try
+        {
+            await BluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
+
+            // For API 31+ (Android 12+), request BLUETOOTH_SCAN and BLUETOOTH_CONNECT
+            if (OperatingSystem.IsAndroidVersionAtLeast(31))
+            {
+                await BluetoothPermissions.BluetoothScanPermission.RequestIfNeededAsync().ConfigureAwait(false);
+                await BluetoothPermissions.BluetoothConnectPermission.RequestIfNeededAsync().ConfigureAwait(false);
+                return true;
+            }
+
+            // For API 29-30 (Android 10-11), request FINE_LOCATION and optionally BACKGROUND_LOCATION
+            if (OperatingSystem.IsAndroidVersionAtLeast(29))
+            {
+                await BluetoothPermissions.FineLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
+                // For using Bluetooth LE in Background (optional, may be denied by user)
+                try
+                {
+                    await BluetoothPermissions.BackgroundLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
+                }
+                catch
+                {
+                    // Background location is optional, continue without it
+                }
+                return true;
+            }
+
+            // For older versions, request COARSE_LOCATION
+            await BluetoothPermissions.CoarseLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async ValueTask<bool> RequestBroadcasterPermissionsAsync()
     {
-        throw new NotImplementedException();
+        try
+        {
+            await BluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
+
+            // For API 31+ (Android 12+), request BLUETOOTH_ADVERTISE
+            if (OperatingSystem.IsAndroidVersionAtLeast(31))
+            {
+                await BluetoothPermissions.BluetoothAdvertisePermission.RequestIfNeededAsync().ConfigureAwait(false);
+                return true;
+            }
+
+            // For older versions, no special permissions needed
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

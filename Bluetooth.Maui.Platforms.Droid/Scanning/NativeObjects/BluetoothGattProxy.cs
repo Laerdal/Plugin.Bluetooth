@@ -1,6 +1,8 @@
+using Bluetooth.Maui.Platforms.Droid.Exceptions;
+
 using Exception = System.Exception;
 
-namespace Bluetooth.Maui.PlatformSpecific;
+namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 
 
 /// <summary>
@@ -22,7 +24,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
     /// <summary>
     /// Gets the device instance that will receive the callback events.
     /// </summary>
-    public IDevice Device { get; }
+    private IDevice Device { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BluetoothGattProxy"/> class.

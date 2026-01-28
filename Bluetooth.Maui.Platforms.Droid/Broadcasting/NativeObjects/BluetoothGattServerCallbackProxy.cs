@@ -1,6 +1,6 @@
 using Exception = System.Exception;
 
-namespace Bluetooth.Maui.PlatformSpecific;
+namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 
 /// <summary>
 /// Android Bluetooth GATT server callback proxy that handles GATT server events.
@@ -14,6 +14,11 @@ namespace Bluetooth.Maui.PlatformSpecific;
 public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallback
 {
     /// <summary>
+    /// Gets the delegate instance that receives callback events.
+    /// </summary>
+    private IBroadcaster Broadcaster { get; }
+
+    /// <summary>
     /// Gets the Bluetooth GATT server instance for communication with remote devices.
     /// </summary>
     public BluetoothGattServer BluetoothGattServer { get; }
@@ -23,11 +28,14 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     /// </summary>
     /// <param name="broadcaster">The delegate instance that will receive callback events.</param>
     /// <exception cref="InvalidOperationException">Thrown when the GATT server cannot be opened.</exception>
-    public BluetoothGattServerCallbackProxy(IBroadcaster broadcaster)
+    public BluetoothGattServerCallbackProxy(IBroadcaster broadcaster, BluetoothManager bluetoothManager)
     {
+        ArgumentNullException.ThrowIfNull(broadcaster);
+        ArgumentNullException.ThrowIfNull(bluetoothManager);
+
         Broadcaster = broadcaster;
 
-        BluetoothGattServer = BluetoothManagerProxy.BluetoothManager.OpenGattServer(Android.App.Application.Context, this) ?? throw new InvalidOperationException("Failed to open GATT server");
+        BluetoothGattServer = bluetoothManager.OpenGattServer(Android.App.Application.Context, this) ?? throw new InvalidOperationException("Failed to open GATT server");
     }
 
     /// <inheritdoc/>
@@ -40,11 +48,6 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         }
         base.Dispose(disposing);
     }
-
-    /// <summary>
-    /// Gets the delegate instance that receives callback events.
-    /// </summary>
-    public IBroadcaster Broadcaster { get; }
 
     /// <inheritdoc/>
     public override void OnMtuChanged(Android.Bluetooth.BluetoothDevice? device, int mtu)

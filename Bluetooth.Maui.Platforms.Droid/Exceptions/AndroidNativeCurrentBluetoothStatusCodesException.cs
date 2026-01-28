@@ -1,5 +1,5 @@
 
-namespace Bluetooth.Maui.PlatformSpecific.Exceptions;
+namespace Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 /// <summary>
 /// Represents an exception that occurs when Android Bluetooth operations return a non-success status code.

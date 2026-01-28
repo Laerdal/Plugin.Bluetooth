@@ -1,4 +1,6 @@
-namespace Bluetooth.Maui.PlatformSpecific;
+using Bluetooth.Maui.Platforms.Droid.Exceptions;
+
+namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 
 #pragma warning disable CA1034 // Nested types should not be visible
 

@@ -3,5 +3,8 @@ namespace Bluetooth.Maui.Platforms.Droid.Scanning;
 /// <inheritdoc/>
 public record BluetoothDeviceFactoryRequest : IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest
 {
-    // Add any platform-specific properties here if needed in the future
+    /// <summary>
+    /// Gets or sets the native Android Bluetooth device.
+    /// </summary>
+    public Android.Bluetooth.BluetoothDevice? NativeDevice { get; init; }
 }
