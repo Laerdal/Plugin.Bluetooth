@@ -14,7 +14,8 @@ public class BluetoothDeviceFactory : IBluetoothDeviceFactory
     private IBluetoothServiceFactory ServiceFactory { get; }
 
     /// <inheritdoc/>
-    public IBluetoothDevice CreateDevice(IBluetoothScanner scanner, BluetoothDeviceFactoryRequest request)
+
+    public IBluetoothDevice CreateDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request)
     {
         return new BluetoothDevice(scanner, request, ServiceFactory);
     }
