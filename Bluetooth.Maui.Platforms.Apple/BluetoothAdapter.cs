@@ -41,14 +41,6 @@ public class BluetoothAdapter : BaseBluetoothAdapter, IDisposable
         }
     }
 
-    /// <summary>
-    /// Gets a value indicating whether Bluetooth is currently powered on.
-    /// </summary>
-    public bool IsBluetoothOn
-    {
-        get => GetValue(false);
-        private set => SetValue(value);
-    }
 
     /// <summary>
     /// Refreshes cached values from native managers.
@@ -148,7 +140,7 @@ public class BluetoothAdapter : BaseBluetoothAdapter, IDisposable
         var initOptions = new CbPeripheralManagerOptions
         {
             ShowPowerAlert = options?.Value.ShowPowerAlert ?? false,
-            RestoreIdentifier = options?.Value.RestoreIdentifierKey
+            RestoreIdentifierKey =  options?.Value.RestoreIdentifierKey
         };
         CbPeripheralManagerWrapper = new CbPeripheralManagerWrapper(broadcaster, dispatchQueue, initOptions);
         return CbPeripheralManagerWrapper;
