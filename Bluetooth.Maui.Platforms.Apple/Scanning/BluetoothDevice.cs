@@ -2,8 +2,6 @@ using Bluetooth.Maui.Platforms.Apple.PlatformSpecific;
 using Bluetooth.Maui.Platforms.Apple.PlatformSpecific.Exceptions;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
-using Microsoft.Extensions.Logging;
-
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
 /// <summary>
@@ -11,7 +9,7 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 /// This class wraps iOS Core Bluetooth's CBPeripheral, providing platform-specific
 /// implementations for device connection, service discovery, and device property management.
 /// </summary>
-public partial class BluetoothDevice : BaseBluetoothDevice, CbPeripheralWrapper.ICbPeripheralDelegate, CbCentralManagerWrapper.ICbPeripheralDelegate
+public class BluetoothDevice : BaseBluetoothDevice, CbPeripheralWrapper.ICbPeripheralDelegate, CbCentralManagerWrapper.ICbPeripheralDelegate
 {
     /// <summary>
     /// Gets the iOS Core Bluetooth peripheral delegate proxy used for peripheral operations.
@@ -103,14 +101,13 @@ public partial class BluetoothDevice : BaseBluetoothDevice, CbPeripheralWrapper.
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
         }
+        if (connectionOptions is not BluetoothDeviceConnectionOptions iosConnectionOptions)
+        {
+            throw new ArgumentException($"Connection options must be of type {nameof(PeripheralConnectionOptions)} for iOS platform.", nameof(connectionOptions));
+        }
 
         ArgumentNullException.ThrowIfNull(scanner.CbCentralManager);
-
-        // Create connection options dictionary if needed
-        var options = new NSMutableDictionary();
-        // Additional connection options can be added here based on connectionOptions properties
-
-        scanner.CbCentralManager.ConnectPeripheral(CbPeripheralWrapper.CbPeripheral, options);
+        scanner.CbCentralManager.ConnectPeripheral(CbPeripheralWrapper.CbPeripheral, iosConnectionOptions.ToCBConnectPeripheralOptions());
         return ValueTask.CompletedTask;
     }
 
@@ -257,7 +254,6 @@ public partial class BluetoothDevice : BaseBluetoothDevice, CbPeripheralWrapper.
                 ServiceId = native.UUID.ToGuid(),
                 NativeService = native
             };
-            // Note: This blocks, but is necessary since OnServicesExplorationSucceeded expects a synchronous function
             return ServiceFactory.CreateService(this, request);
         }
     }
@@ -352,12 +348,31 @@ public partial class BluetoothDevice : BaseBluetoothDevice, CbPeripheralWrapper.
 
     #endregion
 
+    #region Ready to Send Write Without Response
+
     /// <summary>
-    /// Called when the peripheral is ready to send write without response.
+    /// Gets the auto-reset event used to signal when the peripheral is ready to send write-without-response commands.
+    /// </summary>
+    private AutoResetEvent ReadyToSendWriteWithoutResponse { get; } = new AutoResetEvent(false);
+
+    /// <summary>
+    /// Called when the peripheral is ready to send more write-without-response commands on the iOS platform.
     /// </summary>
     public void IsReadyToSendWriteWithoutResponse()
     {
-        // This is a performance optimization callback - we don't need to handle it
-        Logger?.LogDebug("Peripheral is ready to send write without response");
+        ReadyToSendWriteWithoutResponse.Set();
     }
+
+    /// <summary>
+    /// Waits for the peripheral to be ready to send write-without-response commands.
+    /// </summary>
+    /// <param name="timeout">The timeout for the operation.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>A task that completes when the peripheral is ready or immediately if already ready.</returns>
+    public Task WaitForReadyToSendWriteWithoutResponseAsync(TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        return CbPeripheralWrapper.CbPeripheral.CanSendWriteWithoutResponse ? Task.CompletedTask : Task.Run(() => ReadyToSendWriteWithoutResponse.WaitOne(timeout), cancellationToken);
+    }
+
+    #endregion
 }

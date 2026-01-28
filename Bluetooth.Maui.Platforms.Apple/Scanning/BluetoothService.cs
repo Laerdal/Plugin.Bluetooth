@@ -11,7 +11,7 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 /// This class wraps iOS Core Bluetooth's CBService and provides platform-specific
 /// implementations for characteristic discovery.
 /// </summary>
-public partial class BluetoothService : BaseBluetoothService, CbPeripheralWrapper.ICbServiceDelegate
+public class BluetoothService : BaseBluetoothService, CbPeripheralWrapper.ICbServiceDelegate
 {
     /// <summary>
     /// Gets the native iOS Core Bluetooth service.
@@ -154,6 +154,7 @@ public partial class BluetoothService : BaseBluetoothService, CbPeripheralWrappe
     /// <param name="service">The discovered included service.</param>
     public void DiscoveredIncludedService(NSError? error, CBService service)
     {
+        ArgumentNullException.ThrowIfNull(service);
         // iOS doesn't require included services for our use case, so this is a no-op
         if (Logger is not null)
         {

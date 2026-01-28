@@ -268,6 +268,7 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralManage
     /// <param name="central">The central device that disconnected.</param>
     public void CentralDisconnected(CBCentral central)
     {
+        ArgumentNullException.ThrowIfNull(central);
         var deviceId = central.Identifier.ToString();
         if (Logger is not null)
         {
