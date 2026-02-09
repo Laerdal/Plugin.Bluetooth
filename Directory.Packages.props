@@ -44,7 +44,7 @@
   </ItemGroup>
   <!-- ==================== BUILD & ANALYSIS DEPENDENCIES ==================== -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.102" />
     <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.101" />
   </ItemGroup>
   <!-- ==================== LOGGING DEPENDENCIES ==================== -->
