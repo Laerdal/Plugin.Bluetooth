@@ -1,5 +1,6 @@
 using Bluetooth.Abstractions.Broadcasting;
 using Bluetooth.Abstractions.Scanning;
+using Bluetooth.Core.Infrastructure.Scheduling;
 using Bluetooth.Maui.Platforms.Windows.Broadcasting;
 using Bluetooth.Maui.Platforms.Windows.Permissions;
 using Bluetooth.Maui.Platforms.Windows.Scanning;
@@ -20,10 +21,21 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection for method chaining.</returns>
     public static void AddBluetoothMauiWindowsServices(this IServiceCollection services)
     {
+        // Core infrastructure services
+        services.AddSingleton<ITicker, Ticker>();
+        services.AddBluetoothCoreServices();
+        services.AddBluetoothCoreScanningServices();
+        services.AddBluetoothCoreBroadcastingServices();
+
+        // Platform-specific services
         services.AddSingleton<IBluetoothAdapter, BluetoothAdapter>();
         services.AddSingleton<IBluetoothPermissionManager, BluetoothPermissionManager>();
 
         services.AddSingleton<IBluetoothScanner, Scanning.BluetoothScanner>();
         services.AddSingleton<IBluetoothBroadcaster, Broadcasting.BluetoothBroadcaster>();
+
+        // Register scanning and broadcasting factories
+        services.AddBluetoothMauiWindowsScanningServices();
+        services.AddBluetoothMauiWindowsBroadcastingServices();
     }
 }

@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Bluetooth.Abstractions.Broadcasting.Factories;
 
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
@@ -11,7 +13,7 @@ public record AppleBluetoothConnectedDeviceSpec : IBluetoothConnectedDeviceFacto
     /// Initializes a new instance of the <see cref="AppleBluetoothConnectedDeviceSpec"/> record.
     /// </summary>
     /// <param name="cbCentral">The native iOS Core Bluetooth central device.</param>
-    public AppleBluetoothConnectedDeviceSpec(CBCentral cbCentral) : base(cbCentral.Identifier.ToString())
+    public AppleBluetoothConnectedDeviceSpec([NotNull]CBCentral cbCentral) : base(cbCentral.Identifier.ToString())
     {
         CbCentral = cbCentral;
         MaxUpdateValueLength = (int)cbCentral.MaximumUpdateValueLength;

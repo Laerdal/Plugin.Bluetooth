@@ -10,7 +10,7 @@ namespace Bluetooth.Maui.Platforms.Windows;
 /// </summary>
 public partial class BluetoothAdapter : BaseBluetoothAdapter, RadioProxy.IRadioProxyDelegate, BluetoothAdapterProxy.IBluetoothAdapterProxyDelegate
 {
-    
+
     /*
     /// <inheritdoc/>
     protected override void NativeRefreshValues()
@@ -238,8 +238,18 @@ public partial class BluetoothAdapter : BaseBluetoothAdapter, RadioProxy.IRadioP
 
     #endregion
 */
+
+    /// <summary>
+    /// Handles radio state changes.
+    /// </summary>
+    /// <param name="senderState">The new radio state.</param>
+    /// <remarks>
+    /// This is a placeholder for future implementation. The RadioProxy is not currently instantiated,
+    /// so this method is not called in the current scanning implementation.
+    /// </remarks>
     public void OnRadioStateChanged(RadioState senderState)
     {
-        throw new NotImplementedException();
+        // No-op: RadioProxy is not currently used in the scanning implementation
+        // Future enhancement: Update adapter state properties when radio state changes
     }
 }

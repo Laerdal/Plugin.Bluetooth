@@ -7,16 +7,16 @@ namespace Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
 public class BluetoothServiceFactory : BaseBluetoothServiceFactory, Abstractions.Scanning.Factories.IBluetoothServiceFactory
 {
     /// <inheritdoc/>
-    /// <exception cref="PlatformNotSupportedException"></exception>
-    public BluetoothServiceFactory(IBluetoothCharacteristicFactory characteristicFactory) : base(characteristicFactory)
+    public BluetoothServiceFactory(IBluetoothCharacteristicFactory characteristicFactory)
+        : base(characteristicFactory)
     {
-        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
-       }
+    }
 
     /// <inheritdoc/>
-    /// <exception cref="PlatformNotSupportedException"></exception>
-    public override Abstractions.Scanning.IBluetoothRemoteService CreateService(IBluetoothRemoteDevice device, IBluetoothServiceFactory.BluetoothServiceFactoryRequest request)
+    public override Abstractions.Scanning.IBluetoothRemoteService CreateService(
+        IBluetoothRemoteDevice device,
+        IBluetoothServiceFactory.BluetoothServiceFactoryRequest request)
     {
-        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+        return new BluetoothService(device, request, CharacteristicFactory);
     }
 }
