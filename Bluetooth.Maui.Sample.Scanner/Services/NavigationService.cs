@@ -27,9 +27,11 @@ public class NavigationService : INavigationService
     {
         var page = _serviceProvider.GetRequiredService<TPage>();
 
-        // If the page has a ViewModel that needs parameters, we could add a method
-        // like OnNavigatingTo(parameters) to BaseViewModel to pass them
-        // For now, parameters can be accessed directly by the caller before navigation
+        // Pass parameters to the page if provided
+        if (parameters != null && page is IQueryAttributable queryAttributable)
+        {
+            queryAttributable.ApplyQueryAttributes(parameters);
+        }
 
         if (Navigation != null)
         {

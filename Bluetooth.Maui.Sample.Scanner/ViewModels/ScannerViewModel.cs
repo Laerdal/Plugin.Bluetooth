@@ -140,21 +140,11 @@ public class ScannerViewModel : BaseViewModel
     {
         if (device == null) return;
 
-        // For now, just show device info
-        // In Phase 4, this will navigate to DevicePage
-        await Application.Current!.MainPage!.DisplayAlert(
-            "Device Selected",
-            $"Name: {device.Name ?? "Unknown"}\n" +
-            $"ID: {device.Id}\n" +
-            $"RSSI: {device.SignalStrengthDbm} dBm\n" +
-            $"Connected: {device.IsConnected}",
-            "OK");
-
-        // Phase 4 implementation (uncomment when DevicePage is ready):
-        // await _navigation.NavigateToAsync<DevicePage>(new Dictionary<string, object>
-        // {
-        //     ["Device"] = device
-        // });
+        // Navigate to DevicePage with the selected device
+        await _navigation.NavigateToAsync<DevicePage>(new Dictionary<string, object>
+        {
+            ["Device"] = device
+        });
     }
 
     /// <summary>
