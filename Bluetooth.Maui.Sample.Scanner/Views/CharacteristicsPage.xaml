@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<base:BaseContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                      xmlns:base="clr-namespace:Bluetooth.Maui.Sample.Scanner.Infrastructure"
+                      xmlns:vm="clr-namespace:Bluetooth.Maui.Sample.Scanner.ViewModels"
+                      xmlns:scan="clr-namespace:Bluetooth.Abstractions.Scanning;assembly=Bluetooth.Abstractions.Scanning"
+                      x:Class="Bluetooth.Maui.Sample.Scanner.Views.CharacteristicsPage"
+                      x:TypeArguments="vm:CharacteristicsViewModel"
+                      x:DataType="vm:CharacteristicsViewModel"
+                      Title="Service Characteristics">
+
+    <Grid RowDefinitions="Auto,*" Padding="16">
+
+        <!-- Service Info & Controls -->
+        <VerticalStackLayout Grid.Row="0" Spacing="12">
+
+            <!-- Service UUID -->
+            <Label Text="{Binding ServiceId, StringFormat='Service: {0}'}"
+                   FontAttributes="Bold"
+                   FontSize="18"
+                   HorizontalOptions="Center" />
+
+            <!-- Explore Characteristics Button -->
+            <Button Text="Explore Characteristics"
+                    Command="{Binding ExploreCharacteristicsCommand}"
+                    HorizontalOptions="Center"
+                    WidthRequest="220"
+                    Margin="0,8,0,0" />
+
+            <!-- Characteristic Count -->
+            <Label Text="{Binding CharacteristicCount, StringFormat='{0} characteristics discovered'}"
+                   FontSize="14"
+                   FontAttributes="Italic"
+                   TextColor="{StaticResource Gray600}"
+                   HorizontalOptions="Center"
+                   IsVisible="{Binding CharacteristicCount, Converter={StaticResource IsNotZeroConverter}}" />
+
+            <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,12" />
+        </VerticalStackLayout>
+
+        <!-- Characteristics List -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Characteristics}"
+                        SelectionMode="Single"
+                        SelectionChangedCommand="{Binding SelectCharacteristicCommand}"
+                        SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">
+
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="12">
+                    <Label Text="No characteristics discovered"
+                           FontSize="18"
+                           TextColor="{StaticResource Gray500}"
+                           HorizontalOptions="Center" />
+                    <Label Text="Tap 'Explore Characteristics' to discover characteristic properties"
+                           FontSize="14"
+                           TextColor="{StaticResource Gray500}"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           Margin="20,0" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="scan:IBluetoothRemoteCharacteristic">
+                    <Frame Padding="12" Margin="0,4" CornerRadius="8" HasShadow="True">
+                        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
+
+                            <!-- Characteristic Icon -->
+                            <Label Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                                   Text="⚙️"
+                                   FontSize="28"
+                                   VerticalOptions="Center" />
+
+                            <!-- Characteristic UUID -->
+                            <Label Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding Id}"
+                                   FontAttributes="Bold"
+                                   FontSize="13"
+                                   LineBreakMode="TailTruncation" />
+
+                            <!-- Properties -->
+                            <HorizontalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
+                                <Label Text="R"
+                                       FontSize="10"
+                                       FontAttributes="Bold"
+                                       TextColor="White"
+                                       BackgroundColor="{StaticResource Primary}"
+                                       Padding="4,2"
+                                       IsVisible="{Binding CanRead}" />
+                                <Label Text="W"
+                                       FontSize="10"
+                                       FontAttributes="Bold"
+                                       TextColor="White"
+                                       BackgroundColor="{StaticResource Secondary}"
+                                       Padding="4,2"
+                                       IsVisible="{Binding CanWrite}" />
+                                <Label Text="L"
+                                       FontSize="10"
+                                       FontAttributes="Bold"
+                                       TextColor="White"
+                                       BackgroundColor="{StaticResource Tertiary}"
+                                       Padding="4,2"
+                                       IsVisible="{Binding CanListen}" />
+                            </HorizontalStackLayout>
+
+                            <!-- Arrow Icon -->
+                            <Label Grid.Row="0" Grid.Column="2" Grid.RowSpan="2"
+                                   Text="›"
+                                   FontSize="24"
+                                   TextColor="{StaticResource Gray400}"
+                                   VerticalOptions="Center" />
+
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+        </CollectionView>
+
+    </Grid>
+
+</base:BaseContentPage>

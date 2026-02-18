@@ -107,10 +107,14 @@ public class ScannerViewModel : BaseViewModel
         catch (Exception ex)
         {
             // Handle scanning errors (permissions, Bluetooth off, etc.)
-            await Application.Current!.MainPage!.DisplayAlert(
-                "Scan Error",
-                $"Failed to start scanning: {ex.Message}",
-                "OK");
+            var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
+            if (mainPage != null)
+            {
+                await mainPage.DisplayAlertAsync(
+                    "Scan Error",
+                    $"Failed to start scanning: {ex.Message}",
+                    "OK");
+            }
         }
     }
 
@@ -125,10 +129,14 @@ public class ScannerViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            await Application.Current!.MainPage!.DisplayAlert(
-                "Stop Error",
-                $"Failed to stop scanning: {ex.Message}",
-                "OK");
+            var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
+            if (mainPage != null)
+            {
+                await mainPage.DisplayAlertAsync(
+                    "Stop Error",
+                    $"Failed to stop scanning: {ex.Message}",
+                    "OK");
+            }
         }
     }
 

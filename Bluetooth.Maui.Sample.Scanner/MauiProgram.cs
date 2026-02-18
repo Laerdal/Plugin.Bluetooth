@@ -36,7 +36,8 @@ public static class MauiProgram
         builder.Services.AddTransient<ScannerViewModel>();
         builder.Services.AddTransient<DevicePage>();
         builder.Services.AddTransient<DeviceViewModel>();
-        // Phase 5: CharacteristicsPage and CharacteristicsViewModel
+        builder.Services.AddTransient<CharacteristicsPage>();
+        builder.Services.AddTransient<CharacteristicsViewModel>();
 
         return builder.Build();
     }

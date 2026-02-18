@@ -8,9 +8,9 @@ public class NavigationService : INavigationService
     private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
-    /// Gets the current navigation instance from the application's main page.
+    /// Gets the current navigation instance from the application's main window.
     /// </summary>
-    private INavigation? Navigation => Application.Current?.MainPage?.Navigation;
+    private INavigation? Navigation => Application.Current?.Windows.FirstOrDefault()?.Page?.Navigation;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="NavigationService"/> class.

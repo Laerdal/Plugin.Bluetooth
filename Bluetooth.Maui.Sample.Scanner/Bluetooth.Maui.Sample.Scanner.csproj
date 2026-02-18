@@ -1,58 +1,46 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst;net10.0-windows10.0.26100.0</TargetFrameworks>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Bluetooth.Maui.Sample.Scanner</RootNamespace>
-    <UseMaui>true</UseMaui>
-    <SingleProject>true</SingleProject>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
 
-    <!-- Allow Windows targeting on non-Windows platforms -->
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <PropertyGroup>
+        <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+        <TargetFrameworks Condition=" '$(IncludeWindowsPlatform)' == 'true' ">$(TargetFrameworks);net10.0-windows10.0.26100.0</TargetFrameworks>
+    </PropertyGroup>
 
-    <!-- App info -->
-    <ApplicationTitle>Bluetooth Scanner</ApplicationTitle>
-    <ApplicationId>com.bluetooth.sample.scanner</ApplicationId>
-    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <ApplicationVersion>1</ApplicationVersion>
+    <PropertyGroup>
+        <RootNamespace>Bluetooth.Maui.Sample.Scanner</RootNamespace>
+        <AssemblyName>Bluetooth.Maui.Sample.Scanner</AssemblyName>
+        <ProductName>Bluetooth.Maui.Sample.Scanner</ProductName>
+        <ApplicationTitle>Bluetooth Scanner</ApplicationTitle>
+        <ApplicationId>com.bluetooth.sample.scanner</ApplicationId>
+    </PropertyGroup>
 
-    <!-- Platform versions -->
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Maui.Controls" />
-    <PackageReference Include="Microsoft.Maui.Essentials" />
-    <PackageReference Include="CommunityToolkit.Maui" />
-    <PackageReference Include="CommunityToolkit.Mvvm" />
-    <PackageReference Include="NLog.Extensions.Logging" />
-    <PackageReference Include="NLog.Targets.MauiLog" />
-      
-    <PackageReference Include="Plugin.ByteArrays" />
-    <PackageReference Include="Plugin.BaseTypeExtensions" />
-    <PackageReference Include="Plugin.ExceptionListeners" />
-    <PackageReference Include="Plugin.ExceptionListeners.Maui" />
-  </ItemGroup>
+        <UseMaui>true</UseMaui>
+        <SingleProject>true</SingleProject>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Bluetooth.Maui\Bluetooth.Maui.csproj" />
-    <ProjectReference Include="..\Bluetooth.Abstractions\Bluetooth.Abstractions.csproj" />
-    <ProjectReference Include="..\Bluetooth.Abstractions.Scanning\Bluetooth.Abstractions.Scanning.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Plugin.ByteArrays" />
+        <PackageReference Include="Plugin.BaseTypeExtensions" />
+        <PackageReference Include="Plugin.ExceptionListeners" />
+        <PackageReference Include="Plugin.ExceptionListeners.Maui" />
+    </ItemGroup>
 
-  <!-- MAUI essential items -->
-  <ItemGroup>
-    <!-- Temporarily disabled due to MAUI 10.0.20 resizetizer SVG bug -->
-    <!-- <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" /> -->
-    <!-- <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" /> -->
-    <MauiImage Include="Resources\Images\*" />
-    <MauiFont Include="Resources\Fonts\*" />
-    <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Bluetooth.Maui\Bluetooth.Maui.csproj" />
+        <ProjectReference Include="..\Bluetooth.Abstractions\Bluetooth.Abstractions.csproj" />
+        <ProjectReference Include="..\Bluetooth.Abstractions.Scanning\Bluetooth.Abstractions.Scanning.csproj" />
+    </ItemGroup>
+
+    <!-- MAUI essential items -->
+    <ItemGroup>
+        <!-- Temporarily disabled due to MAUI 10.0.20 resizetizer SVG bug -->
+        <!-- <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" /> -->
+        <!-- <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" /> -->
+        <MauiImage Include="Resources\Images\*" />
+        <MauiFont Include="Resources\Fonts\*" />
+        <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
 
 </Project>

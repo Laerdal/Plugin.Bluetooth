@@ -1,4 +1,5 @@
 using Plugin.ExceptionListeners;
+using Bluetooth.Abstractions.Exceptions;
 
 namespace Bluetooth.Maui.Sample.Scanner;
 
@@ -8,6 +9,7 @@ namespace Bluetooth.Maui.Sample.Scanner;
 public partial class App : Application
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly BluetoothUnhandledExceptionListener _exceptionListener;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="App"/> class.
@@ -19,20 +21,32 @@ public partial class App : Application
         _serviceProvider = serviceProvider;
 
         // Setup global exception handling
-        SetupExceptionHandlers();
+        _exceptionListener = SetupExceptionHandlers();
+    }
 
-        // Set main page with navigation
+    /// <summary>
+    /// Creates and configures the main application window.
+    /// </summary>
+    /// <param name="activationState">The activation state for the window.</param>
+    /// <returns>A configured window with the main navigation page.</returns>
+    protected override Window CreateWindow(IActivationState? activationState)
+    {
         var scannerPage = _serviceProvider.GetRequiredService<ScannerPage>();
-        MainPage = new NavigationPage(scannerPage);
+        var navigationPage = new NavigationPage(scannerPage);
+        return new Window(navigationPage);
     }
 
     /// <summary>
     /// Sets up global exception handlers for the application.
     /// </summary>
-    private void SetupExceptionHandlers()
+    /// <returns>The Bluetooth exception listener instance.</returns>
+    private BluetoothUnhandledExceptionListener SetupExceptionHandlers()
     {
-        // TODO: Setup global exception listeners after Plugin.ExceptionListeners is properly configured
-        // BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException += OnBluetoothException;
+        // Setup Bluetooth exception listener
+        return new BluetoothUnhandledExceptionListener((sender, args) =>
+        {
+            OnBluetoothException(sender, args.Exception);
+        });
     }
 
     /// <summary>
@@ -42,9 +56,10 @@ public partial class App : Application
     {
         MainThread.BeginInvokeOnMainThread(async () =>
         {
-            if (MainPage != null)
+            var mainPage = Windows.FirstOrDefault()?.Page;
+            if (mainPage != null)
             {
-                await MainPage.DisplayAlert("Bluetooth Error", exception.Message, "OK");
+                await mainPage.DisplayAlertAsync("Bluetooth Error", exception.Message, "OK");
             }
         });
     }

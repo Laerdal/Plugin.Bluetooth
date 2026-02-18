@@ -122,11 +122,14 @@ public class DeviceViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            await Application.Current?.MainPage?.DisplayAlert(
-                "Connection Error",
-                $"Failed to connect: {ex.Message}",
-                "OK"
-            )!;
+            var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
+            if (mainPage != null)
+            {
+                await mainPage.DisplayAlertAsync(
+                    "Connection Error",
+                    $"Failed to connect: {ex.Message}",
+                    "OK");
+            }
         }
     }
 
@@ -145,11 +148,14 @@ public class DeviceViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            await Application.Current?.MainPage?.DisplayAlert(
-                "Disconnection Error",
-                $"Failed to disconnect: {ex.Message}",
-                "OK"
-            )!;
+            var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
+            if (mainPage != null)
+            {
+                await mainPage.DisplayAlertAsync(
+                    "Disconnection Error",
+                    $"Failed to disconnect: {ex.Message}",
+                    "OK");
+            }
         }
     }
 
@@ -174,11 +180,14 @@ public class DeviceViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            await Application.Current?.MainPage?.DisplayAlert(
-                "Service Discovery Error",
-                $"Failed to discover services: {ex.Message}",
-                "OK"
-            )!;
+            var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
+            if (mainPage != null)
+            {
+                await mainPage.DisplayAlertAsync(
+                    "Service Discovery Error",
+                    $"Failed to discover services: {ex.Message}",
+                    "OK");
+            }
         }
     }
 
@@ -189,18 +198,12 @@ public class DeviceViewModel : BaseViewModel
     {
         if (service == null) return;
 
-        // TODO: Phase 5 - Navigate to CharacteristicsPage
-        // var parameters = new Dictionary<string, object>
-        // {
-        //     ["Service"] = service
-        // };
-        // await _navigation.NavigateToAsync<CharacteristicsPage>(parameters);
-
-        await Application.Current?.MainPage?.DisplayAlert(
-            "Service Selected",
-            $"Service UUID: {service.Id}\n\nCharacteristics page will be implemented in Phase 5.",
-            "OK"
-        )!;
+        // Navigate to CharacteristicsPage with the selected service
+        var parameters = new Dictionary<string, object>
+        {
+            ["Service"] = service
+        };
+        await _navigation.NavigateToAsync<CharacteristicsPage>(parameters);
     }
 
     /// <summary>

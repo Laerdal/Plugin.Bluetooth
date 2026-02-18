@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+    <!-- Note : This is read AFTER the initial project file -->
+
+    <!-- ==================== SELF REF ==================== -->
+    <ItemGroup>
+        <None Include="$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), $(MSBuildThisFile)))" Pack="false" />
+    </ItemGroup>
+
+    <!-- ==================== PLATFORM DETECTION ==================== -->
+    <!-- Detect which platform we're currently building for -->
+    <PropertyGroup>
+        <IsForIOS>false</IsForIOS>
+        <IsForIOS Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">true</IsForIOS>
+
+        <IsForAndroid>false</IsForAndroid>
+        <IsForAndroid Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">true</IsForAndroid>
+
+        <IsForWindows>false</IsForWindows>
+        <IsForWindows Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">true</IsForWindows>
+
+        <IsForMacCatalyst>false</IsForMacCatalyst>
+        <IsForMacCatalyst Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">true</IsForMacCatalyst>
+
+        <IsForAppleStuff>false</IsForAppleStuff>
+        <IsForAppleStuff Condition=" $(IsForIOS) Or $(IsForMacCatalyst) ">true</IsForAppleStuff>
+
+        <IsForPlainNetX>false</IsForPlainNetX>
+        <IsForPlainNetX Condition=" !$(IsForIOS) And !$(IsForAndroid) And !$(IsForWindows) And !$(IsForMacCatalyst) ">true</IsForPlainNetX>
+    </PropertyGroup>
+
+    <!-- ==================== PLATFORM VERSIONS ==================== -->
+    <!-- Set minimum platform versions -->
+    <PropertyGroup>
+        <!-- iOS -->
+        <SupportedOSPlatformVersion Condition=" $(IsForIOS) And '$(SupportedOSPlatformVersion)' == '' ">15.0</SupportedOSPlatformVersion>
+        <TargetPlatformMinVersion Condition=" $(IsForIOS) And '$(TargetPlatformMinVersion)' == '' ">15.0</TargetPlatformMinVersion>
+
+        <!-- MacCatalyst -->
+        <SupportedOSPlatformVersion Condition=" $(IsForMacCatalyst) And '$(SupportedOSPlatformVersion)' == '' ">15.0</SupportedOSPlatformVersion>
+        <TargetPlatformMinVersion Condition=" $(IsForMacCatalyst) And '$(TargetPlatformMinVersion)' == '' ">15.0</TargetPlatformMinVersion>
+
+        <!-- Android -->
+        <SupportedOSPlatformVersion Condition=" $(IsForAndroid) And '$(SupportedOSPlatformVersion)' == '' ">21.0</SupportedOSPlatformVersion>
+        <TargetPlatformMinVersion Condition=" $(IsForAndroid) And '$(TargetPlatformMinVersion)' == '' ">21.0</TargetPlatformMinVersion>
+
+        <!-- Windows -->
+        <SupportedOSPlatformVersion Condition=" $(IsForWindows) And '$(SupportedOSPlatformVersion)' == '' ">10.0.26100.0</SupportedOSPlatformVersion>
+        <TargetPlatformMinVersion Condition=" $(IsForWindows) And '$(TargetPlatformMinVersion)' == '' ">10.0.26100.0</TargetPlatformMinVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Maui.Controls" />
+        <PackageReference Include="Microsoft.Maui.Essentials" />
+        <PackageReference Include="CommunityToolkit.Maui" />
+        <PackageReference Include="CommunityToolkit.Mvvm" />
+        <PackageReference Include="NLog.Targets.MauiLog" />
+    </ItemGroup>
+
+
+    <!-- ==================== CONDITIONAL WINDOWS BUILD ==================== -->
+    <!-- For apps: Completely exclude Windows TFM when building on non-Windows hosts -->
+    <!-- For libraries: Use EnableWindowsTargeting to include TFM but skip actual build -->
+    <PropertyGroup>
+        <!-- Set flag to control Windows TFM inclusion -->
+        <IncludeWindowsPlatform Condition=" '$(IncludeWindowsPlatform)' == '' And $(IsHostMachineWindows) ">true</IncludeWindowsPlatform>
+        <IncludeWindowsPlatform Condition=" '$(IncludeWindowsPlatform)' == '' And !$(IsHostMachineWindows) ">false</IncludeWindowsPlatform>
+    </PropertyGroup>
+
+    <!-- ==================== BUILD LOGGING ==================== -->
+    <Target Name="PrintBuildInfo" BeforeTargets="CoreCompile">
+        <Message Importance="High" Text="Building App      : $(AssemblyName) - $(TargetFramework) - $(Configuration)" />
+        <Message Importance="High" Text="HostMachine       : $(HostMachine)" />
+        <Message Importance="High" Text="Is for            : iOS=$(IsForIOS); Android=$(IsForAndroid); Windows=$(IsForWindows); MacCatalyst=$(IsForMacCatalyst)" />
+    </Target>
+
+    <!-- ==================== XCCONFIG INCLUDE (iOS/MacCatalyst) ==================== -->
+    <!-- This target adds xcconfig files to the build for iOS and MacCatalyst platforms -->
+    <!-- The xcconfig files are used to configure the native Xcode build -->
+    <Target Name="IncludeXCConfigFiles" Condition=" $(IsForAppleStuff) " BeforeTargets="BeforeBuild">
+        <ItemGroup>
+            <CustomBuildXCConfig Include="$(MSBuildThisFileDirectory)Platforms\iOS\app.xcconfig" Condition=" $(IsForIOS) And Exists('$(MSBuildThisFileDirectory)Platforms\iOS\app.xcconfig') " />
+            <CustomBuildXCConfig Include="$(MSBuildThisFileDirectory)Platforms\MacCatalyst\app.xcconfig" Condition=" $(IsForMacCatalyst) And Exists('$(MSBuildThisFileDirectory)Platforms\MacCatalyst\app.xcconfig') " />
+        </ItemGroup>
+    </Target>
+
+</Project>
