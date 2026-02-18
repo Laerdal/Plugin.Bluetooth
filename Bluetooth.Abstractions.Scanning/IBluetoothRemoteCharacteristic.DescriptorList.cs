@@ -33,48 +33,38 @@ public partial interface IBluetoothRemoteCharacteristic
     /// <summary>
     /// Explores (discovers) the descriptors of this characteristic asynchronously.
     /// </summary>
-    /// <param name="timeout">The timeout for this operation.</param>
-    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    Task ExploreDescriptorsAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Explores (discovers) the descriptors of this characteristic asynchronously only if they have not been explored yet.
-    /// </summary>
-    /// <param name="timeout">The timeout for this operation.</param>
-    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    Task ExploreDescriptorsIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Explores (discovers) the descriptors of this characteristic asynchronously with configurable exploration options.
-    /// </summary>
-    /// <param name="options">The exploration options to use. If null, uses default options (with caching).</param>
+    /// <param name="options">
+    /// Optional exploration configuration. If null, uses default options (with caching enabled).
+    /// Set <c>UseCache = false</c> to force re-exploration even if descriptors were previously discovered.
+    /// Use <c>DescriptorUuidFilter</c> to discover only specific descriptors by UUID.
+    /// </param>
     /// <param name="timeout">The timeout for this operation.</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <remarks>
-    /// This method provides flexible control over descriptor exploration.
-    /// Use <see cref="Options.DescriptorExplorationOptions"/> to configure:
-    /// <list type="bullet">
-    /// <item>Caching behavior</item>
-    /// <item>Descriptor UUID filtering</item>
-    /// </list>
+    /// <b>Common Usage Patterns:</b>
     /// <example>
     /// <code>
-    /// // Discover all descriptors:
-    /// await characteristic.ExploreDescriptorsAsync(DescriptorExplorationOptions.Default);
+    /// // Simple exploration (uses defaults: all descriptors, with caching):
+    /// await characteristic.ExploreDescriptorsAsync();
     ///
-    /// // Discover with custom filter (only specific descriptor UUIDs):
-    /// var options = new DescriptorExplorationOptions
+    /// // Force re-exploration (ignore cache):
+    /// await characteristic.ExploreDescriptorsAsync(new() { UseCache = false });
+    ///
+    /// // Filter by descriptor UUID (e.g., Client Characteristic Configuration):
+    /// await characteristic.ExploreDescriptorsAsync(new DescriptorExplorationOptions
     /// {
     ///     DescriptorUuidFilter = uuid => uuid == BluetoothUuids.ClientCharacteristicConfiguration
-    /// };
-    /// await characteristic.ExploreDescriptorsAsync(options);
+    /// });
     /// </code>
     /// </example>
+    ///
+    /// <b>Caching Behavior:</b>
+    /// By default (<c>options = null</c>), caching is enabled (<c>UseCache = true</c>).
+    /// This means if descriptors have already been explored, the method returns immediately
+    /// without re-querying the device. To force re-exploration, explicitly set <c>UseCache = false</c>.
     /// </remarks>
-    Task ExploreDescriptorsAsync(Options.DescriptorExplorationOptions? options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task ExploreDescriptorsAsync(Options.DescriptorExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 

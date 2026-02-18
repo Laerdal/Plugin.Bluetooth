@@ -71,53 +71,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <inheritdoc/>
-    public async Task ExploreDescriptorsAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        // Prevents multiple calls to ExploreDescriptorsAsync
-        if (DescriptorsExplorationTcs is { Task.IsCompleted: false })
-        {
-            await DescriptorsExplorationTcs.Task.ConfigureAwait(false);
-            return;
-        }
-
-        DescriptorsExplorationTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        IsExploringDescriptors = true;
-
-        try
-        {
-            await NativeDescriptorsExplorationAsync(timeout, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception e)
-        {
-            OnDescriptorsExplorationFailed(e);
-        }
-
-        try
-        {
-            await DescriptorsExplorationTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            IsExploringDescriptors = false;
-            DescriptorsExplorationTcs = null;
-        }
-    }
-
-    /// <inheritdoc/>
-    public async Task ExploreDescriptorsIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        // Check if descriptors have already been explored
-        if (Descriptors.Any())
-        {
-            return;
-        }
-
-        // No descriptors exist yet, perform exploration
-        await ExploreDescriptorsAsync(timeout, cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc/>
-    public async Task ExploreDescriptorsAsync(Bluetooth.Abstractions.Scanning.Options.DescriptorExplorationOptions? options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async Task ExploreDescriptorsAsync(Bluetooth.Abstractions.Scanning.Options.DescriptorExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Use default options if none provided
         options ??= new Bluetooth.Abstractions.Scanning.Options.DescriptorExplorationOptions();

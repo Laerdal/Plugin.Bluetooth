@@ -1,3 +1,5 @@
+using Bluetooth.Abstractions.Exceptions;
+
 namespace Bluetooth.Abstractions.Options;
 
 /// <summary>
@@ -104,7 +106,7 @@ public record BluetoothInfrastructureOptions
     /// Default: <c>false</c>
     /// <para><b>Warning:</b> Enabling this can significantly impact performance and log size.</para>
     /// </remarks>
-    public bool EnableVerboseLogging { get; init; } = false;
+    public bool EnableVerboseLogging { get; init; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to throw exceptions on unhandled Bluetooth errors.
@@ -113,5 +115,5 @@ public record BluetoothInfrastructureOptions
     /// When <c>false</c>, unhandled exceptions are dispatched to <see cref="BluetoothUnhandledExceptionListener"/> instead of being thrown.
     /// Default: <c>false</c>
     /// </remarks>
-    public bool ThrowOnUnhandledExceptions { get; init; } = false;
+    public bool ThrowOnUnhandledExceptions { get; init; }
 }

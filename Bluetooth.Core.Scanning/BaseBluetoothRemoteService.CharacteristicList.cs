@@ -147,61 +147,7 @@ public abstract partial class BaseBluetoothRemoteService
     /// and optionally clears existing characteristics before exploring.
     /// </remarks>
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
-    public async ValueTask ExploreCharacteristicsAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        // Prevents multiple calls to ReadValueAsync, if already exploring, we merge the calls
-        if (CharacteristicsExplorationTcs is { Task.IsCompleted: false })
-        {
-            LogMergingCharacteristicExploration(Id, Device.Id);
-            await CharacteristicsExplorationTcs.Task.ConfigureAwait(false);
-            return;
-        }
-
-        CharacteristicsExplorationTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); // Reset the TCS
-        IsExploringCharacteristics = true; // Set the flag to true
-
-        try // try-catch to dispatch exceptions rising from start
-        {
-            // Ensure Device is Connected
-            DeviceNotConnectedException.ThrowIfNotConnected(this.Device);
-
-            LogExploringCharacteristics(Id, Device.Id);
-            await NativeCharacteristicsExplorationAsync(timeout, cancellationToken).ConfigureAwait(false); // actual characteristic exploration native call
-        }
-        catch (Exception e)
-        {
-            OnCharacteristicsExplorationFailed(e); // if exception is thrown during start, we trigger the failure
-        }
-
-        // try-finally to ensure disposal and release of resources
-        try
-        {
-            // Wait for OnCharacteristicsExplorationSucceeded to be called
-            await CharacteristicsExplorationTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            IsExploringCharacteristics = false; // Reset the flag
-            CharacteristicsExplorationTcs = null;
-        }
-    }
-
-    /// <inheritdoc/>
-    public async ValueTask ExploreCharacteristicsIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        // Check if characteristics have already been explored
-        if (Characteristics.Any())
-        {
-            LogUsingCachedCharacteristics(Id, Device.Id, Characteristics.Count);
-            return;
-        }
-
-        // No characteristics exist yet, perform exploration
-        await ExploreCharacteristicsAsync(timeout, cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc/>
-    public async ValueTask ExploreCharacteristicsAsync(Bluetooth.Abstractions.Scanning.Options.CharacteristicExplorationOptions? options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask ExploreCharacteristicsAsync(Bluetooth.Abstractions.Scanning.Options.CharacteristicExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Use default options if none provided
         options ??= new Bluetooth.Abstractions.Scanning.Options.CharacteristicExplorationOptions();

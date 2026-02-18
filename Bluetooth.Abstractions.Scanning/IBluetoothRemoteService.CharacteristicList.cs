@@ -33,49 +33,29 @@ public partial interface IBluetoothRemoteService
     /// <summary>
     /// Explores the characteristics of the service asynchronously.
     /// </summary>
-    /// <param name="timeout">The timeout for this operation</param>
-    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when exploration is already in progress.</exception>
-    /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
-    /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
-    ValueTask ExploreCharacteristicsAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Explores the characteristics of the service asynchronously only if they have not been explored yet.
-    /// </summary>
-    /// <param name="timeout">The timeout for this operation</param>
-    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when exploration is already in progress.</exception>
-    /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
-    /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
-    ValueTask ExploreCharacteristicsIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Explores the characteristics of the service asynchronously with configurable exploration options.
-    /// </summary>
-    /// <param name="options">The exploration options to use. If null, uses default options (with caching, no descriptor exploration).</param>
+    /// <param name="options">
+    /// Optional exploration configuration. If null, uses default options (characteristics only, with caching enabled).
+    /// Use <see cref="Options.CharacteristicExplorationOptions.CharacteristicsOnly"/> for basic exploration,
+    /// or <see cref="Options.CharacteristicExplorationOptions.Full"/> to include descriptors.
+    /// Set <c>UseCache = false</c> to force re-exploration even if characteristics were previously discovered.
+    /// </param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <remarks>
-    /// This method provides flexible control over characteristic exploration.
-    /// Use <see cref="Options.CharacteristicExplorationOptions"/> to configure:
-    /// <list type="bullet">
-    /// <item>Whether to automatically explore descriptors</item>
-    /// <item>Caching behavior</item>
-    /// <item>Characteristic UUID filtering</item>
-    /// </list>
+    /// <b>Common Usage Patterns:</b>
     /// <example>
     /// <code>
-    /// // Discover only characteristics:
-    /// await service.ExploreCharacteristicsAsync(CharacteristicExplorationOptions.CharacteristicsOnly);
+    /// // Simple exploration (uses defaults: characteristics only, with caching):
+    /// await service.ExploreCharacteristicsAsync();
     ///
-    /// // Discover characteristics and descriptors:
+    /// // Force re-exploration (ignore cache):
+    /// await service.ExploreCharacteristicsAsync(new() { UseCache = false });
+    ///
+    /// // Explore characteristics and descriptors:
     /// await service.ExploreCharacteristicsAsync(CharacteristicExplorationOptions.Full);
     ///
-    /// // Custom options with filtering:
+    /// // Custom options with UUID filtering:
     /// await service.ExploreCharacteristicsAsync(new CharacteristicExplorationOptions
     /// {
     ///     ExploreDescriptors = true,
@@ -84,12 +64,17 @@ public partial interface IBluetoothRemoteService
     /// });
     /// </code>
     /// </example>
+    ///
+    /// <b>Caching Behavior:</b>
+    /// By default (<c>options = null</c>), caching is enabled (<c>UseCache = true</c>).
+    /// This means if characteristics have already been explored, the method returns immediately
+    /// without re-querying the device. To force re-exploration, explicitly set <c>UseCache = false</c>.
     /// </remarks>
     /// <exception cref="InvalidOperationException">Thrown when exploration is already in progress.</exception>
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
-    ValueTask ExploreCharacteristicsAsync(Options.CharacteristicExplorationOptions? options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask ExploreCharacteristicsAsync(Options.CharacteristicExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
