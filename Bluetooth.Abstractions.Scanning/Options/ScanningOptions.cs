@@ -160,8 +160,14 @@ public enum BluetoothScanMode
 /// <summary>
 /// Defines when scan result callbacks should be triggered.
 /// </summary>
+[Flags]
 public enum BluetoothScanCallbackType
 {
+    /// <summary>
+    /// Do not report any advertisement packets. This can be used when only interested in scan start/stop events or when filtering is performed in software.
+    /// </summary>
+    None = 0,
+
     /// <summary>
     /// Report all advertisement packets as they are received.
     /// </summary>
