@@ -1,0 +1,6 @@
+<Project>
+  <!-- Opt out of library packaging targets -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

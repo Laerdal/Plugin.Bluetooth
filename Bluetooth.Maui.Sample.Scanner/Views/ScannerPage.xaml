@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<base:BaseContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                      xmlns:base="clr-namespace:Bluetooth.Maui.Sample.Scanner.Infrastructure"
+                      xmlns:vm="clr-namespace:Bluetooth.Maui.Sample.Scanner.ViewModels"
+                      xmlns:scan="clr-namespace:Bluetooth.Abstractions.Scanning;assembly=Bluetooth.Abstractions.Scanning"
+                      xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+                      x:Class="Bluetooth.Maui.Sample.Scanner.Views.ScannerPage"
+                      x:TypeArguments="vm:ScannerViewModel"
+                      x:DataType="vm:ScannerViewModel"
+                      Title="BLE Scanner">
+
+    <base:BaseContentPage.Resources>
+        <ResourceDictionary>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </base:BaseContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*" Padding="16">
+
+        <!-- Control Panel -->
+        <VerticalStackLayout Grid.Row="0" Spacing="12">
+
+            <!-- Status Label -->
+            <Label x:Name="StatusLabel"
+                   FontAttributes="Bold"
+                   FontSize="18"
+                   HorizontalOptions="Center">
+                <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding IsScanning}" Value="True">
+                        <Setter Property="Text" Value="🔵 Scanning for devices..." />
+                        <Setter Property="TextColor" Value="{StaticResource Primary}" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Label" Binding="{Binding IsScanning}" Value="False">
+                        <Setter Property="Text" Value="⚫ Stopped" />
+                        <Setter Property="TextColor" Value="{StaticResource Gray600}" />
+                    </DataTrigger>
+                </Label.Triggers>
+            </Label>
+
+            <!-- Device Count -->
+            <Label Text="{Binding DeviceCount, StringFormat='{0} devices found'}"
+                   FontSize="14"
+                   TextColor="{StaticResource Gray600}"
+                   HorizontalOptions="Center" />
+
+            <!-- Scan Controls -->
+            <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                <Button Text="Start Scan"
+                        Command="{Binding StartScanCommand}"
+                        IsVisible="{Binding IsScanning, Converter={StaticResource InvertedBoolConverter}}"
+                        WidthRequest="120" />
+                <Button Text="Stop Scan"
+                        Command="{Binding StopScanCommand}"
+                        IsVisible="{Binding IsScanning}"
+                        WidthRequest="120" />
+            </HorizontalStackLayout>
+
+            <BoxView HeightRequest="1" Color="{StaticResource Gray300}" Margin="0,8" />
+        </VerticalStackLayout>
+
+        <!-- Device List -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Devices}"
+                        SelectionMode="Single"
+                        SelectionChangedCommand="{Binding SelectDeviceCommand}"
+                        SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">
+
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Spacing="12">
+                    <Label Text="No devices found"
+                           FontSize="18"
+                           TextColor="{StaticResource Gray600}"
+                           HorizontalOptions="Center" />
+                    <Label Text="Start scanning to discover BLE devices"
+                           FontSize="14"
+                           TextColor="{StaticResource Gray500}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="scan:IBluetoothRemoteDevice">
+                    <Frame Padding="12"
+                           Margin="0,4"
+                           CornerRadius="8"
+                           HasShadow="False"
+                           BorderColor="{StaticResource Gray300}">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+
+                            <!-- Device Name -->
+                            <Label Grid.Row="0" Grid.Column="0"
+                                   Text="{Binding Name, TargetNullValue='Unknown Device'}"
+                                   FontAttributes="Bold"
+                                   FontSize="16" />
+
+                            <!-- Connection Indicator -->
+                            <Label Grid.Row="0" Grid.Column="1"
+                                   Text="🔗"
+                                   FontSize="16"
+                                   IsVisible="{Binding IsConnected}"
+                                   VerticalOptions="Center"
+                                   Margin="8,0,0,0" />
+
+                            <!-- Device ID -->
+                            <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                   Text="{Binding Id}"
+                                   FontSize="12"
+                                   TextColor="{StaticResource Gray600}" />
+
+                            <!-- Signal Strength -->
+                            <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                  ColumnDefinitions="Auto,*,Auto"
+                                  ColumnSpacing="8"
+                                  Margin="0,4,0,0">
+                                <Label Grid.Column="0"
+                                       Text="RSSI:"
+                                       FontSize="12"
+                                       TextColor="{StaticResource Gray600}" />
+                                <ProgressBar Grid.Column="1"
+                                             Progress="{Binding SignalStrengthPercent}"
+                                             ProgressColor="{StaticResource Primary}"
+                                             VerticalOptions="Center" />
+                                <Label Grid.Column="2"
+                                       Text="{Binding SignalStrengthDbm, StringFormat='{0} dBm'}"
+                                       FontSize="12"
+                                       TextColor="{StaticResource Gray600}" />
+                            </Grid>
+
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+        </CollectionView>
+
+    </Grid>
+
+</base:BaseContentPage>

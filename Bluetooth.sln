@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -39,6 +39,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui.Platforms.Windows", "Bluetooth.Maui.Platforms.Windows\Bluetooth.Maui.Platforms.Windows.csproj", "{B8C9D0E1-F2A3-4B5C-8D9E-0F1A2B3C4D5E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui", "Bluetooth.Maui\Bluetooth.Maui.csproj", "{B64B9C4F-0C25-46A4-B2C2-45CB27E0512B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui.Sample.Scanner", "Bluetooth.Maui.Sample.Scanner\Bluetooth.Maui.Sample.Scanner.csproj", "{2966EA1B-C6E4-4F9F-9982-23CF837909FC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{5D20AA90-6969-D8BD-9DCD-8634F4692FDA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -182,6 +186,18 @@ Global
 		{B64B9C4F-0C25-46A4-B2C2-45CB27E0512B}.Release|x64.Build.0 = Release|Any CPU
 		{B64B9C4F-0C25-46A4-B2C2-45CB27E0512B}.Release|x86.ActiveCfg = Release|Any CPU
 		{B64B9C4F-0C25-46A4-B2C2-45CB27E0512B}.Release|x86.Build.0 = Release|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Debug|x64.Build.0 = Debug|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Debug|x86.Build.0 = Debug|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Release|x64.ActiveCfg = Release|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Release|x64.Build.0 = Release|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Release|x86.ActiveCfg = Release|Any CPU
+		{2966EA1B-C6E4-4F9F-9982-23CF837909FC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

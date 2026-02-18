@@ -1,0 +1,3 @@
+<Project>
+  <!-- Empty - prevents inheriting library-specific targets from parent -->
+</Project>

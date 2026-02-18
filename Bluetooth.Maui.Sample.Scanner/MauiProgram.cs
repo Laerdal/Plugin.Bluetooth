@@ -1,0 +1,42 @@
+using Bluetooth.Maui;
+using CommunityToolkit.Maui;
+
+namespace Bluetooth.Maui.Sample.Scanner;
+
+/// <summary>
+/// Main entry point for MAUI application configuration.
+/// </summary>
+public static class MauiProgram
+{
+    /// <summary>
+    /// Creates and configures the MAUI application.
+    /// </summary>
+    /// <returns>The configured MAUI application.</returns>
+    public static MauiApp CreateMauiApp()
+    {
+        var builder = MauiApp.CreateBuilder();
+
+        builder
+            .UseMauiApp<App>()
+            .UseMauiCommunityToolkit()
+            .ConfigureFonts(fonts =>
+            {
+                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+            });
+
+        // Register Bluetooth services
+        builder.Services.AddBluetoothServices();
+
+        // Register app services
+        builder.Services.AddSingleton<INavigationService, NavigationService>();
+
+        // Register pages and view models
+        builder.Services.AddTransient<ScannerPage>();
+        builder.Services.AddTransient<ScannerViewModel>();
+        // Phase 4: DevicePage and DeviceViewModel
+        // Phase 5: CharacteristicsPage and CharacteristicsViewModel
+
+        return builder.Build();
+    }
+}
