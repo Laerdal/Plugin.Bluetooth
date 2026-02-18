@@ -13,17 +13,36 @@
 [![GitHub Release](https://img.shields.io/github/v/release/laerdal/Plugin.Bluetooth?logo=github)](https://github.com/laerdal/Plugin.Bluetooth/releases)
 [![License](https://img.shields.io/github/license/laerdal/Plugin.Bluetooth?color=blue)](LICENSE.md)
 
-A cross-platform .NET MAUI Bluetooth Low Energy (BLE) library providing a unified API for Android, iOS, and Windows platforms.
+A cross-platform .NET MAUI Bluetooth Low Energy (BLE) library providing a clean, unified API for **Android**, **iOS/MacCatalyst**, and **Windows** platforms.
+
+## ✨ Recent Updates
+
+🎉 **Windows Platform Complete** - Full BLE scanning & GATT operations now available on Windows
+🔧 **API Simplified** - Exploration methods refactored for clarity and ease of use
+📦 **Modern DI** - Streamlined dependency injection with `AddBluetoothServices()`
 
 ## Features
 
-- 🔍 **Bluetooth Scanning** - Discover nearby BLE devices with filtering
-- 🔗 **Device Connection** - Connect and manage multiple devices
-- 📡 **GATT Operations** - Read, write, and subscribe to characteristics
-- 📢 **Broadcasting** - Act as a BLE peripheral (Android only)
-- 🎯 **Cross-Platform** - Consistent API across Android, iOS, and Windows
-- 🔄 **Async/Await** - Modern async patterns with cancellation support
-- 💉 **Dependency Injection** - Built-in MAUI DI support
+- 🔍 **BLE Scanning** - Discover nearby devices with customizable filtering
+- 🔗 **Connection Management** - Robust connect/disconnect with auto-reconnect support
+- 📡 **GATT Operations** - Full support for services, characteristics, and descriptors
+- 📊 **Read/Write/Notify** - Read values, write data, and subscribe to notifications
+- 🎯 **Cross-Platform** - Consistent API across all major platforms
+- 🔄 **Modern Async** - Async/await throughout with cancellation token support
+- 💉 **DI-First** - Built for MAUI dependency injection
+- 🧩 **Options Pattern** - Flexible configuration via options objects
+- 📝 **Well-Documented** - Comprehensive XML docs and examples
+
+## Platform Support
+
+| Platform | Scanning | Connection | GATT Operations | Broadcasting |
+|----------|----------|------------|-----------------|--------------|
+| **Android** | ✅ | ✅ | ✅ | ✅ |
+| **iOS** | ✅ | ✅ | ✅ | ❌ |
+| **MacCatalyst** | ✅ | ✅ | ✅ | ❌ |
+| **Windows** | ✅ | ✅ | ✅ | ❌ |
+
+> **Note**: Broadcasting (peripheral mode) is currently Android-only. iOS/MacCatalyst/Windows throw `NotImplementedException`.
 
 ## Installation
 
@@ -31,11 +50,15 @@ A cross-platform .NET MAUI Bluetooth Low Energy (BLE) library providing a unifie
 dotnet add package Bluetooth.Maui
 ```
 
+Or via NuGet Package Manager:
+
+```xml
+<PackageReference Include="Bluetooth.Maui" Version="1.0.0" />
+```
+
 ## Quick Start
 
-### Option 1: MAUI Dependency Injection (Recommended)
-
-Register Bluetooth services in your `MauiProgram.cs`:
+### 1. Register Services in MauiProgram.cs
 
 ```csharp
 public static class MauiProgram
@@ -46,312 +69,437 @@ public static class MauiProgram
 
         builder
             .UseMauiApp<App>()
-            .UseBluetooth(
-                configureScanner: scanner =>
-                {
-                    // Optional: Configure scanner
-                    scanner.AdvertisementFilter = ad => ad.IsConnectable;
-                }
-            );
+            .UseMauiCommunityToolkit();
+
+        // Register Bluetooth services
+        builder.Services.AddBluetoothServices();
 
         return builder.Build();
     }
 }
 ```
 
-Then inject `IBluetoothScanner` in your pages or view models:
+### 2. Inject and Use IBluetoothScanner
 
 ```csharp
-public partial class MainPage : ContentPage
+public class ScannerViewModel
 {
     private readonly IBluetoothScanner _scanner;
 
-    public MainPage(IBluetoothScanner scanner)
+    public ScannerViewModel(IBluetoothScanner scanner)
     {
-        InitializeComponent();
         _scanner = scanner;
+
+        // Subscribe to device discovery
+        _scanner.DeviceListChanged += OnDeviceListChanged;
     }
 
-    protected override async void OnAppearing()
+    public async Task StartScanningAsync()
     {
-        base.OnAppearing();
+        var options = new ScanningOptions
+        {
+            // Optional: Configure scanning behavior
+        };
 
-        // Explicitly initialize when ready (handles permissions)
-        await _scanner.InitializeAsync();
+        await _scanner.StartScanningAsync(options);
+    }
 
-        // Start scanning
-        await _scanner.StartAsync();
+    private void OnDeviceListChanged(object? sender, DeviceListChangedEventArgs e)
+    {
+        foreach (var device in _scanner.Devices)
+        {
+            Console.WriteLine($"Found: {device.Name} ({device.Id})");
+            Console.WriteLine($"  RSSI: {device.SignalStrengthDbm} dBm");
+        }
     }
 }
 ```
 
-### Option 2: Direct Instantiation
-
-If you prefer full control over initialization timing:
-
-```csharp
-// Create and initialize scanner
-var scanner = await BluetoothScanner.GetOrCreateDefaultScannerAsync();
-
-// Configure scanner
-scanner.AdvertisementFilter = ad => ad.IsConnectable;
-
-// Start scanning
-await scanner.StartAsync();
-```
-
-## Usage Examples
+## Usage Guide
 
 ### Scanning for Devices
 
 ```csharp
-var scanner = await BluetoothScanner.GetOrCreateDefaultScannerAsync();
-
-// Subscribe to device discovery
-scanner.DevicesAdded += (sender, args) =>
-{
-    foreach (var device in args.Devices)
-    {
-        Console.WriteLine($"Found: {device.Name} ({device.Id})");
-    }
-};
-
 // Start scanning
-await scanner.StartAsync();
+await _scanner.StartScanningAsync();
 
-// Stop scanning
-await scanner.StopAsync();
+// Access discovered devices
+var devices = _scanner.Devices;
+
+// Stop scanning when done
+await _scanner.StopScanningAsync();
 ```
 
 ### Connecting to a Device
 
 ```csharp
-// Get a specific device
-var device = await scanner.GetDeviceAsync(deviceId);
+// Get a device from the scanner
+var device = _scanner.Devices.FirstOrDefault(d => d.Name == "MyDevice");
 
-// Or wait for a device matching criteria
-var device = await scanner.GetDeviceOrWaitForDeviceToAppearAsync(
-    filter: d => d.Name.Contains("MyDevice"),
-    timeout: TimeSpan.FromSeconds(10)
-);
-
-// Connect
-await device.ConnectAsync();
-
-// Check connection status
-if (device.IsConnected)
+if (device != null)
 {
-    Console.WriteLine("Connected!");
+    // Connect with options
+    var connectionOptions = new ConnectionOptions
+    {
+        // Platform-specific connection parameters
+    };
+
+    await device.ConnectAsync(connectionOptions);
+
+    // Check connection status
+    Console.WriteLine($"Connected: {device.IsConnected}");
 }
 ```
 
-### Exploring Services and Characteristics
+### Service Discovery - Simplified API
+
+The new exploration APIs use a single, flexible method with optional configuration:
 
 ```csharp
-// Discover services
-await device.ExploreServicesAsync(exploreCharacteristicsToo: true);
+// Simple exploration (defaults: services only, caching enabled)
+await device.ExploreServicesAsync();
 
-// Get a specific service
+// Explore services AND characteristics
+await device.ExploreServicesAsync(ServiceExplorationOptions.WithCharacteristics);
+
+// Full exploration (services + characteristics + descriptors)
+await device.ExploreServicesAsync(ServiceExplorationOptions.Full);
+
+// Force re-exploration (ignore cache)
+await device.ExploreServicesAsync(new ServiceExplorationOptions
+{
+    UseCache = false
+});
+
+// Filter by service UUID
+await device.ExploreServicesAsync(new ServiceExplorationOptions
+{
+    ServiceUuidFilter = uuid => uuid == myServiceUuid
+});
+```
+
+### Getting Services and Characteristics
+
+```csharp
+// Get a specific service by UUID
 var service = device.GetService(serviceGuid);
 
-// Get a specific characteristic
+// Or use a filter
+var service = device.GetService(s => s.Id == serviceGuid);
+
+// Explore characteristics (simple)
+await service.ExploreCharacteristicsAsync();
+
+// Explore characteristics AND descriptors
+await service.ExploreCharacteristicsAsync(CharacteristicExplorationOptions.Full);
+
+// Get a characteristic
 var characteristic = service.GetCharacteristic(characteristicGuid);
 ```
 
-### Reading and Writing Characteristics
+### Reading and Writing
 
 ```csharp
-// Read value
-var value = await characteristic.ReadAsync();
+// Read a characteristic value
+var value = await characteristic.ReadValueAsync();
 Console.WriteLine($"Value: {BitConverter.ToString(value.ToArray())}");
 
-// Write value
-byte[] data = { 0x01, 0x02, 0x03 };
-await characteristic.WriteAsync(data);
+// Write a value
+byte[] data = new byte[] { 0x01, 0x02, 0x03 };
+await characteristic.WriteValueAsync(data);
 
-// Write without response (faster)
-await characteristic.WriteAsync(data, withoutResponse: true);
+// Check capabilities
+if (characteristic.CanRead)
+{
+    // Safe to read
+}
+
+if (characteristic.CanWrite)
+{
+    // Safe to write
+}
 ```
 
 ### Subscribing to Notifications
 
 ```csharp
-// Subscribe to characteristic changes
+// Subscribe to value changes
 characteristic.ValueUpdated += (sender, args) =>
 {
-    Console.WriteLine($"New value: {BitConverter.ToString(args.Value.ToArray())}");
+    Console.WriteLine($"New value: {BitConverter.ToString(args.NewValue.ToArray())}");
+    Console.WriteLine($"Old value: {BitConverter.ToString(args.OldValue.ToArray())}");
 };
 
-await characteristic.SubscribeAsync();
+// Start listening
+await characteristic.StartListeningAsync();
 
-// Unsubscribe when done
-await characteristic.UnsubscribeAsync();
+// Check listening state
+Console.WriteLine($"Listening: {characteristic.IsListening}");
+
+// Stop listening when done
+await characteristic.StopListeningAsync();
 ```
 
-### Using Characteristic Access Services
-
-For strongly-typed characteristic access:
+### Working with Descriptors
 
 ```csharp
-// Define a characteristic access service
-var batteryService = CharacteristicAccessServiceFactory.CreateForByte(
-    characteristicId: Guid.Parse("00002A19-0000-1000-8000-00805F9B34FB"),
-    name: "Battery Level"
-);
+// Explore descriptors
+await characteristic.ExploreDescriptorsAsync();
 
-// Read the battery level
-var batteryLevel = await batteryService.ReadAsync(device);
-Console.WriteLine($"Battery: {batteryLevel}%");
+// Get a specific descriptor
+var descriptor = characteristic.GetDescriptor(descriptorGuid);
 
-// Subscribe to battery level changes
-await batteryService.SubscribeAsync(device, (value) =>
-{
-    Console.WriteLine($"Battery changed: {value}%");
-});
+// Read descriptor value
+var value = await descriptor.ReadValueAsync();
+
+// Write descriptor value
+await descriptor.WriteValueAsync(new byte[] { 0x01, 0x00 });
 ```
 
-### Broadcasting (Android Only)
+## Advanced Features
+
+### Connection Priority (Android)
+
+Optimize connection parameters for your use case:
 
 ```csharp
-var broadcaster = await BluetoothBroadcaster.GetOrCreateDefaultBroadcasterAsync();
+// High priority: Fast data transfer, low latency (11.25-15ms)
+await device.RequestConnectionPriorityAsync(BluetoothConnectionPriority.High);
 
-// Start broadcasting
-await broadcaster.StartAsync();
+// Balanced: Moderate performance and power (30-50ms)
+await device.RequestConnectionPriorityAsync(BluetoothConnectionPriority.Balanced);
 
-// Stop broadcasting
-await broadcaster.StopAsync();
+// Low power: Battery optimization, higher latency (100-125ms)
+await device.RequestConnectionPriorityAsync(BluetoothConnectionPriority.LowPower);
 ```
 
-## Advanced Configuration
+> **Note**: iOS, macOS, and Windows manage connection parameters automatically. This API is a no-op on those platforms.
 
-### Filtering Advertisements
+### Timeout and Cancellation
 
-```csharp
-scanner.AdvertisementFilter = advertisement =>
-{
-    // Only process connectable devices
-    if (!advertisement.IsConnectable) return false;
-
-    // Only devices with specific service
-    if (!advertisement.ServicesGuids.Contains(myServiceGuid)) return false;
-
-    // Only devices with good signal strength
-    if (advertisement.RawSignalStrengthInDBm < -80) return false;
-
-    return true;
-};
-```
-
-### Handling Timeouts and Cancellation
+All async operations support timeouts and cancellation:
 
 ```csharp
-using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+using var cts = new CancellationTokenSource();
 
 try
 {
     await device.ConnectAsync(
+        connectionOptions: new ConnectionOptions(),
         timeout: TimeSpan.FromSeconds(10),
         cancellationToken: cts.Token
     );
 }
+catch (TimeoutException)
+{
+    Console.WriteLine("Connection timed out");
+}
 catch (OperationCanceledException)
 {
-    Console.WriteLine("Connection timed out or was cancelled");
+    Console.WriteLine("Operation was cancelled");
 }
 ```
 
-### Device Cleanup
+### Event-Driven Architecture
+
+Subscribe to events for reactive programming:
 
 ```csharp
-// Clean up specific device
-await scanner.CleanAsync(device);
+// Scanner events
+_scanner.RunningStateChanged += (s, e) => Console.WriteLine($"Scanning: {_scanner.IsRunning}");
+_scanner.DeviceListChanged += OnDeviceListChanged;
 
-// Clean up all devices
-await scanner.CleanAsync();
+// Device events
+device.ConnectionStateChanged += (s, e) => Console.WriteLine($"State: {device.ConnectionState}");
+device.Connected += (s, e) => Console.WriteLine("Connected");
+device.Disconnected += (s, e) => Console.WriteLine("Disconnected");
+device.UnexpectedDisconnection += (s, e) => Console.WriteLine($"Lost connection: {e.Exception}");
 
-// Dispose device (disconnects and cleans up)
-await device.DisposeAsync();
+// Service events
+service.CharacteristicListChanged += OnCharacteristicsChanged;
+
+// Characteristic events
+characteristic.ValueUpdated += OnValueUpdated;
 ```
 
-## Platform-Specific Considerations
+### Caching and Performance
+
+The exploration APIs use intelligent caching by default:
+
+```csharp
+// First call: Queries the device
+await device.ExploreServicesAsync();  // UseCache = true (default)
+
+// Subsequent calls: Returns cached results instantly
+await device.ExploreServicesAsync();  // Cached, no device query
+
+// Force refresh: Ignore cache
+await device.ExploreServicesAsync(new ServiceExplorationOptions
+{
+    UseCache = false  // Forces device query
+});
+```
+
+### Cleanup and Disposal
+
+Proper cleanup ensures resources are released:
+
+```csharp
+// Clear services (stops notifications, clears cache)
+await device.ClearServicesAsync();
+
+// Clear specific service characteristics
+await service.ClearCharacteristicsAsync();
+
+// Clear characteristic descriptors
+await characteristic.ClearDescriptorsAsync();
+
+// Disconnect and dispose device
+await device.DisconnectAsync();
+await device.DisposeAsync();  // Implements IAsyncDisposable
+```
+
+## Platform-Specific Setup
 
 ### Android
 
-- Requires `BLUETOOTH_SCAN` and `BLUETOOTH_CONNECT` permissions (Android 12+)
-- Requires `ACCESS_FINE_LOCATION` permission for scanning
-- Broadcasting fully supported via `BluetoothGattServer`
+Add Bluetooth permissions to `AndroidManifest.xml`:
 
-### iOS
+```xml
+<uses-permission android:name="android.permission.BLUETOOTH" />
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+                 android:usesPermissionFlags="neverForLocation" />
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+```
 
-- Requires `NSBluetoothAlwaysUsageDescription` in Info.plist
-- Limited background scanning capabilities
-- Broadcasting not currently implemented (throws `NotImplementedException`)
+### iOS / MacCatalyst
+
+Add Bluetooth usage description to `Info.plist`:
+
+```xml
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>This app needs Bluetooth to scan for BLE devices</string>
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>This app needs Bluetooth to scan for BLE devices</string>
+```
 
 ### Windows
 
-- Requires Bluetooth capability in package manifest
-- Use `GattSession.MaintainConnection` for persistent connections
-- Broadcasting not currently implemented (throws `NotImplementedException`)
+Add Bluetooth capability to `Package.appxmanifest`:
+
+```xml
+<Capabilities>
+  <DeviceCapability Name="bluetooth" />
+</Capabilities>
+```
 
 ## Architecture
 
 ```text
-Plugin.Bluetooth
-├── Bluetooth.Core          # Platform-agnostic abstractions
-│   ├── Abstractions/       # Interfaces
-│   ├── BaseClasses/        # Base implementations
-│   ├── CharacteristicAccess/
-│   └── Exceptions/
-└── Bluetooth.Maui         # Platform-specific implementations
-    ├── Core/              # Fallback implementations
-    └── Platforms/
-        ├── Android/       # Android BLE
-        ├── iOS/           # CoreBluetooth
-        └── Windows/       # Windows.Devices.Bluetooth
+Plugin.Bluetooth/
+├── Bluetooth.Abstractions/              # Core interfaces (platform-agnostic)
+│   ├── Exceptions/
+│   ├── Extensions/
+│   └── Options/
+├── Bluetooth.Abstractions.Scanning/     # Scanning-specific interfaces
+│   ├── Events/
+│   ├── Exceptions/
+│   └── Options/
+├── Bluetooth.Abstractions.Broadcasting/ # Broadcasting interfaces
+│   ├── Events/
+│   ├── Exceptions/
+│   └── Options/
+├── Bluetooth.Core/                      # Base implementations
+│   ├── Base classes
+│   └── Infrastructure
+├── Bluetooth.Core.Scanning/             # Scanning base implementations
+├── Bluetooth.Core.Broadcasting/         # Broadcasting base implementations
+├── Bluetooth.Maui/                      # MAUI integration & DI
+└── Platform Implementations/
+    ├── Bluetooth.Maui.Platforms.Apple/     # iOS & MacCatalyst
+    ├── Bluetooth.Maui.Platforms.Droid/     # Android
+    ├── Bluetooth.Maui.Platforms.Windows/   # Windows
+    └── Bluetooth.Maui.Platforms.DotNetCore # Fallback (throws NotImplementedException)
 ```
 
-## API Overview
+## Core Interfaces
 
-### Core Interfaces
+### Scanning
 
-- **`IBluetoothScanner`** - Device discovery and scanning
-- **`IBluetoothDevice`** - Device representation and connection management
-- **`IBluetoothService`** - GATT service wrapper
-- **`IBluetoothCharacteristic`** - GATT characteristic operations
+- **`IBluetoothScanner`** - Device discovery and scanning control
+- **`IBluetoothRemoteDevice`** - Remote device representation and connection
+- **`IBluetoothRemoteService`** - GATT service on a remote device
+- **`IBluetoothRemoteCharacteristic`** - GATT characteristic with read/write/notify
+- **`IBluetoothRemoteDescriptor`** - GATT descriptor
+
+### Broadcasting (Android only)
+
 - **`IBluetoothBroadcaster`** - Peripheral/advertising mode
-- **`IBluetoothAdvertisement`** - Advertisement data
+- **`IBluetoothLocalService`** - Local GATT service
+- **`IBluetoothLocalCharacteristic`** - Local characteristic for broadcasting
+- **`IBluetoothConnectedDevice`** - Connected central device
 
 ## Exception Handling
 
-The library provides a comprehensive exception hierarchy:
+Comprehensive exception hierarchy for error handling:
 
 ```csharp
 try
 {
-    await device.ConnectAsync();
-}
-catch (DeviceNotFoundException ex)
-{
-    // Device not found during scan
-}
-catch (DeviceConnectionFailedException ex)
-{
-    // Connection attempt failed
+    await device.ConnectAsync(connectionOptions);
 }
 catch (DeviceNotConnectedException ex)
 {
-    // Attempted operation on disconnected device
+    // Device is not connected when operation requires it
+}
+catch (ServiceNotFoundException ex)
+{
+    // Requested service not found on device
+}
+catch (CharacteristicNotFoundException ex)
+{
+    // Requested characteristic not found in service
+}
+catch (TimeoutException ex)
+{
+    // Operation timed out
+}
+catch (OperationCanceledException ex)
+{
+    // Operation was cancelled
 }
 catch (BluetoothException ex)
 {
-    // Generic Bluetooth error
+    // Base exception for all Bluetooth errors
 }
 ```
+
+## API Design Principles
+
+1. **Async First** - All I/O operations are async with cancellation support
+2. **Options Pattern** - Flexible configuration via options objects
+3. **Caching** - Intelligent caching enabled by default for performance
+4. **Events** - Event-driven architecture for reactive patterns
+5. **IAsyncDisposable** - Proper resource cleanup with async disposal
+6. **Immutability** - ReadOnlyMemory<byte> for value types
+7. **Platform Parity** - Consistent API across all platforms
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Ensure all public APIs have XML documentation
+2. Follow the existing code style and patterns
+3. Add unit tests for new features
+4. Update the README for API changes
 
 ## Requirements
 
 - **.NET 10.0** or higher
-- **MAUI** application
+- **.NET MAUI** application
+- Platform-specific Bluetooth permissions (see setup section)
 
 ## License
 
@@ -359,10 +507,23 @@ MIT License - Copyright (c) 2025 Laerdal Medical
 
 See [LICENSE.md](LICENSE.md) for details.
 
-## Contributing
-
-Contributions are welcome! Please ensure all public APIs are documented with XML comments.
-
 ## Support
 
-For issues and feature requests, please use the GitHub issue tracker.
+For issues, feature requests, or questions:
+- 🐛 [GitHub Issues](https://github.com/laerdal/Plugin.Bluetooth/issues)
+- 💬 [Discussions](https://github.com/laerdal/Plugin.Bluetooth/discussions)
+
+## Changelog
+
+### Recent Changes
+
+**v1.0.0** (Current)
+- ✅ Windows platform implementation complete
+- ✅ Simplified exploration APIs (single method with options)
+- ✅ Modern DI registration with `AddBluetoothServices()`
+- ✅ Comprehensive XML documentation
+- ✅ Options pattern for all configuration
+
+---
+
+Built with ❤️ by Laerdal Medical
