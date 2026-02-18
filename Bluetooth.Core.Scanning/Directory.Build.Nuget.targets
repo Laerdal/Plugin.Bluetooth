@@ -63,17 +63,17 @@
   </Target>
 
   <!-- ==================== PACK : README ==================== -->
-  <PropertyGroup Condition=" '$(PackageReadMePath)' == '' ">
-    <PackageReadMePath>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `../README.md`))</PackageReadMePath>
+  <PropertyGroup Condition=" '$(PackageReadmePath)' == '' ">
+    <PackageReadmePath>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `../README.md`))</PackageReadmePath>
   </PropertyGroup>
-  <PropertyGroup Condition="Exists('$(PackageReadMePath)')">
-    <PackageReadmeFile Condition="Exists('$(PackageReadMePath)')">README.md</PackageReadmeFile>
+  <PropertyGroup Condition="Exists('$(PackageReadmePath)')">
+    <PackageReadmeFile Condition="Exists('$(PackageReadmePath)')">README.md</PackageReadmeFile>
   </PropertyGroup>
-  <ItemGroup Condition="Exists('$(PackageReadMePath)')">
-    <None Include="$(PackageReadMePath)" Pack="true" PackagePath="\" Condition="Exists('$(PackageReadMePath)')" />
+  <ItemGroup Condition="Exists('$(PackageReadmePath)')">
+    <None Include="$(PackageReadmePath)" Pack="true" PackagePath="\" Condition="Exists('$(PackageReadmePath)')" />
   </ItemGroup>
-  <Target Condition=" !Exists('$(PackageReadMePath)') " Name="WarnMissingPackageReadme" BeforeTargets="Pack">
-    <Message Importance="High" Text="WARNING: Package README file not found at '$(PackageReadMePath)'. Please add a README.md file to the project root to have a proper package README." />
+  <Target Condition=" !Exists('$(PackageReadmePath)') " Name="WarnMissingPackageReadme" BeforeTargets="Pack">
+    <Message Importance="High" Text="WARNING: Package README file not found at '$(PackageReadmePath)'. Please add a README.md file to the project root to have a proper package README." />
   </Target>
 
   <!-- ==================== PACK : DOCUMENTATION ======================= -->
