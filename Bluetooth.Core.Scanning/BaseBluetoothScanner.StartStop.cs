@@ -139,6 +139,8 @@ public abstract partial class BaseBluetoothScanner
     /// <inheritdoc/>
     public async Task StartScanningAsync(ScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(options);
+        
         // Ensure we are not already started
         if (IsRunning)
         {

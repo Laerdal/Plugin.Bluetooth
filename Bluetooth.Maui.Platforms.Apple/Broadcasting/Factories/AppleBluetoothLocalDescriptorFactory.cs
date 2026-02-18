@@ -9,6 +9,6 @@ public class AppleBluetoothLocalDescriptorFactory : BaseBluetoothLocalDescriptor
     /// <inheritdoc />
     public override Abstractions.Broadcasting.IBluetoothLocalDescriptor CreateDescriptor(Abstractions.Broadcasting.IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
     {
-        return new AppleBluetoothLocalDescriptor(localCharacteristic, request);
+        return new AppleBluetoothLocalDescriptor(localCharacteristic, spec);
     }
 }

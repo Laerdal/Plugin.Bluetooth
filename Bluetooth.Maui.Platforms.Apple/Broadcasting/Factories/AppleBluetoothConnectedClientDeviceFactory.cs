@@ -9,6 +9,6 @@ public class AppleBluetoothConnectedClientDeviceFactory : BaseBluetoothConnected
     /// <inheritdoc />
     public override IBluetoothConnectedDevice CreateConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec)
     {
-        return new AppleBluetoothConnectedDevice(broadcaster, request);
+        return new AppleBluetoothConnectedDevice(broadcaster, spec);
     }
 }
