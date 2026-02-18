@@ -1,9 +1,10 @@
+using Bluetooth.Abstractions.Exceptions;
+using Bluetooth.Abstractions.Scanning.Exceptions;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 using Exception = System.Exception;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
-
 
 /// <summary>
 /// Android Bluetooth GATT callback proxy that handles GATT events.
@@ -24,20 +25,22 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
     /// <summary>
     /// Gets the device instance that will receive the callback events.
     /// </summary>
-    private IDevice Device { get; }
+    private IBluetoothGattDelegate BluetoothGattDelegate { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BluetoothGattProxy"/> class.
     /// </summary>
-    /// <param name="device">The device instance that will receive callback events.</param>
+    /// <param name="bluetoothGattDelegate">The device instance that will receive callback events.</param>
     /// <param name="connectionOptions">The connection options for the GATT connection.</param>
     /// <param name="nativeDevice">The native Android Bluetooth device.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null or when GATT connection fails.</exception>
-    public BluetoothGattProxy(IDevice device, BluetoothDeviceConnectionOptions? connectionOptions, Android.Bluetooth.BluetoothDevice nativeDevice)
+    public BluetoothGattProxy(IBluetoothGattDelegate bluetoothGattDelegate, Options.ConnectionOptions? connectionOptions, Android.Bluetooth.BluetoothDevice nativeDevice)
     {
-        Device = device ?? throw new ArgumentNullException(nameof(device));
+        ArgumentNullException.ThrowIfNull(bluetoothGattDelegate);
         ArgumentNullException.ThrowIfNull(connectionOptions);
         ArgumentNullException.ThrowIfNull(nativeDevice);
+
+        BluetoothGattDelegate = bluetoothGattDelegate;
         BluetoothGatt = nativeDevice.ConnectGatt(connectionOptions, this) ?? throw new InvalidOperationException("Failed to create GATT connection");
     }
 
@@ -52,6 +55,9 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         base.Dispose(disposing);
     }
 
+    /*
+     TODO : Move this to into the Device class
+
     /// <summary>
     /// Attempts to reconnect to the remote device using the existing GATT connection.
     /// </summary>
@@ -61,9 +67,9 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         var result = BluetoothGatt.Connect();
         if (!result)
         {
-            throw new DeviceFailedToConnectException(Device, "BluetoothGatt.Connect() returned false");
+            throw new DeviceFailedToConnectException(BluetoothGattDelegate, "BluetoothGatt.Connect() returned false");
         }
-    }
+    }*/
 
     /// <summary>
     /// Attempts to refresh the GATT cache using Android's hidden refresh method.
@@ -88,6 +94,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
             return false;
         }
     }
+
     /// <param name="gatt">GATT client the characteristic is associated with</param>
     /// <param name="characteristic">Characteristic that has been updated as a result of a remote
     /// notification event.</param>
@@ -119,7 +126,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
             }
 
             // GET SERVICE
-            var sharedService = Device.GetService(characteristic?.Service);
+            var sharedService = BluetoothGattDelegate.GetService(characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -158,7 +165,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // GET SERVICE
-            var sharedService = Device.GetService(characteristic?.Service);
+            var sharedService = BluetoothGattDelegate.GetService(characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -228,7 +235,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
             }
 
             // GET SERVICE
-            var sharedService = Device.GetService(characteristic?.Service);
+            var sharedService = BluetoothGattDelegate.GetService(characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -296,7 +303,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // GET SERVICE
-            var sharedService = Device.GetService(characteristic?.Service);
+            var sharedService = BluetoothGattDelegate.GetService(characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -361,7 +368,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // GET SERVICE
-            var sharedService = Device.GetService(characteristic?.Service);
+            var sharedService = BluetoothGattDelegate.GetService(characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -432,7 +439,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
             }
 
             // GET SERVICE
-            var sharedService = Device.GetService(descriptor?.Characteristic?.Service);
+            var sharedService = BluetoothGattDelegate.GetService(descriptor?.Characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(descriptor?.Characteristic);
@@ -502,7 +509,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // GET SERVICE
-            var sharedService = Device.GetService(descriptor?.Characteristic?.Service);
+            var sharedService = BluetoothGattDelegate.GetService(descriptor?.Characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(descriptor?.Characteristic);
@@ -568,7 +575,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // GET SERVICE
-            var sharedService = Device.GetService(descriptor?.Characteristic?.Service);
+            var sharedService = BluetoothGattDelegate.GetService(descriptor?.Characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(descriptor?.Characteristic);
@@ -588,7 +595,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // ACTION
-            Device.OnServicesDiscovered(status);
+            BluetoothGattDelegate.OnServicesDiscovered(status);
         }
         catch (Exception e)
         {
@@ -602,7 +609,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // ACTION
-            Device.OnConnectionStateChange(status, newState);
+            BluetoothGattDelegate.OnConnectionStateChange(status, newState);
         }
         catch (Exception e)
         {
@@ -654,7 +661,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // ACTION
-            Device.OnReadRemoteRssi(status, rssi);
+            BluetoothGattDelegate.OnReadRemoteRssi(status, rssi);
         }
         catch (Exception e)
         {
@@ -704,7 +711,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // ACTION
-            Device.OnReliableWriteCompleted(status);
+            BluetoothGattDelegate.OnReliableWriteCompleted(status);
         }
         catch (Exception e)
         {
@@ -757,7 +764,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // ACTION
-            Device.OnMtuChanged(status, mtu);
+            BluetoothGattDelegate.OnMtuChanged(status, mtu);
         }
         catch (Exception e)
         {
@@ -836,7 +843,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // ACTION
-            Device.OnPhyRead(status, (Android.Bluetooth.BluetoothPhy) txPhy, (Android.Bluetooth.BluetoothPhy) rxPhy);
+            BluetoothGattDelegate.OnPhyRead(status, (Android.Bluetooth.BluetoothPhy) txPhy, (Android.Bluetooth.BluetoothPhy) rxPhy);
         }
         catch (Exception e)
         {
@@ -891,7 +898,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // ACTION
-            Device.OnPhyUpdate(status, (Android.Bluetooth.BluetoothPhy) txPhy, (Android.Bluetooth.BluetoothPhy) rxPhy);
+            BluetoothGattDelegate.OnPhyUpdate(status, (Android.Bluetooth.BluetoothPhy) txPhy, (Android.Bluetooth.BluetoothPhy) rxPhy);
         }
         catch (Exception e)
         {
@@ -925,7 +932,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // ACTION
-            Device.OnServiceChanged();
+            BluetoothGattDelegate.OnServiceChanged();
         }
         catch (Exception e)
         {
@@ -933,4 +940,3 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         }
     }
 }
-

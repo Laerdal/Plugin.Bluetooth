@@ -1,35 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <!-- Note : This is read BEFORE the initial project file -->
+    <!-- Note : This is read BEFORE the initial project file -->
 
-  <!-- ==================== SELF REFERENCE ==================== -->
-  <ItemGroup>
-    <None Include="$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), $(MSBuildThisFile)))" Pack="false" />
-  </ItemGroup>
+    <!-- ==================== SELF REFERENCE ==================== -->
+    <ItemGroup>
+        <None Include="$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), $(MSBuildThisFile)))" Pack="false" />
+    </ItemGroup>
 
-  <!-- ================== HOST MACHINE DETECTION ==================== -->
-  <PropertyGroup>
-    <IsHostMachineOSX>false</IsHostMachineOSX>
-    <IsHostMachineOSX Condition=" $([System.OperatingSystem]::IsMacOS()) ">true</IsHostMachineOSX>
+    <!-- ================== HOST MACHINE DETECTION ==================== -->
+    <PropertyGroup>
+        <IsHostMachineOSX>false</IsHostMachineOSX>
+        <IsHostMachineOSX Condition=" $([System.OperatingSystem]::IsMacOS()) ">true</IsHostMachineOSX>
 
-    <IsHostMachineLinux>false</IsHostMachineLinux>
-    <IsHostMachineLinux Condition=" $([System.OperatingSystem]::IsLinux()) ">true</IsHostMachineLinux>
+        <IsHostMachineLinux>false</IsHostMachineLinux>
+        <IsHostMachineLinux Condition=" $([System.OperatingSystem]::IsLinux()) ">true</IsHostMachineLinux>
 
-    <IsHostMachineWindows>false</IsHostMachineWindows>
-    <IsHostMachineWindows Condition=" $([System.OperatingSystem]::IsWindows()) ">true</IsHostMachineWindows>
+        <IsHostMachineWindows>false</IsHostMachineWindows>
+        <IsHostMachineWindows Condition=" $([System.OperatingSystem]::IsWindows()) ">true</IsHostMachineWindows>
 
-    <IsHostMachineUnix>false</IsHostMachineUnix>
-    <IsHostMachineUnix Condition=" $(IsHostMachineOSX) Or $(IsHostMachineLinux) ">true</IsHostMachineUnix>
-  </PropertyGroup>
+        <IsHostMachineUnix>false</IsHostMachineUnix>
+        <IsHostMachineUnix Condition=" $(IsHostMachineOSX) Or $(IsHostMachineLinux) ">true</IsHostMachineUnix>
 
-  <!-- ==================== CI/CD ==================== -->
-  <PropertyGroup>
-    <!-- see : https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#continuousintegrationbuild -->
-    <ContinuousIntegrationBuild Condition=" '$(TF_BUILD)'       == 'true' ">true</ContinuousIntegrationBuild>
-    <ContinuousIntegrationBuild Condition=" '$(GITLAB_CI)'      == 'true' ">true</ContinuousIntegrationBuild>
-    <ContinuousIntegrationBuild Condition=" '$(GITHUB_ACTIONS)' == 'true' ">true</ContinuousIntegrationBuild>
+        <HostMachine></HostMachine>
+        <HostMachine Condition=" '$(IsHostMachineWindows)' == 'true' ">$(HostMachine)Windows;</HostMachine>
+        <HostMachine Condition=" '$(IsHostMachineOSX)' == 'true' ">$(HostMachine)OSX;</HostMachine>
+        <HostMachine Condition=" '$(IsHostMachineLinux)' == 'true' ">$(HostMachine)Linux;</HostMachine>
+        <HostMachine Condition=" '$(IsHostMachineUnix)' == 'true' ">$(HostMachine)Unix;</HostMachine>
+    </PropertyGroup>
 
-    <!-- When building on CI, use Release configuration -->
-    <Configuration Condition=" '$(Configuration)' == '' AND '$(ContinuousIntegrationBuild)' == 'true' ">Release</Configuration>
-  </PropertyGroup>
+    <!-- ==================== CI/CD ==================== -->
+    <PropertyGroup>
+        <!-- see : https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#continuousintegrationbuild -->
+        <ContinuousIntegrationBuild Condition=" '$(TF_BUILD)'       == 'true' ">true</ContinuousIntegrationBuild>
+        <ContinuousIntegrationBuild Condition=" '$(GITLAB_CI)'      == 'true' ">true</ContinuousIntegrationBuild>
+        <ContinuousIntegrationBuild Condition=" '$(GITHUB_ACTIONS)' == 'true' ">true</ContinuousIntegrationBuild>
+
+        <!-- When building on CI, use Release configuration -->
+        <Configuration Condition=" '$(Configuration)' == '' AND '$(ContinuousIntegrationBuild)' == 'true' ">Release</Configuration>
+    </PropertyGroup>
 </Project>

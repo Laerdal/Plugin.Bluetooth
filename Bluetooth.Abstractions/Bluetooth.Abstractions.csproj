@@ -7,6 +7,18 @@
         <Project_Description>Bluetooth.Abstractions for .NET</Project_Description>
     </PropertyGroup>
 
+    <!-- ==================== NOWARNINGS ==================== -->
+    <PropertyGroup>
+        <!-- CA1034 : Nested types should not be externally visible-->
+        <NoWarn>$(NoWarn);CA1034</NoWarn>
+        <!-- CA1032 : Implement standard exception constructors -->
+        <NoWarn>$(NoWarn);CA1032</NoWarn>
+        <!-- CS1591 : Missing documentation for publicly visible type or member -->
+        <!-- <NoWarn>$(NoWarn);CS1591</NoWarn> -->
+        <!-- CA1816 : Call GC.SuppressFinalize correctly -->
+        <NoWarn>$(NoWarn);CA1816</NoWarn>
+    </PropertyGroup>
+
     <!-- ==================== TARGET FRAMEWORKS ==================== -->
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -17,5 +29,47 @@
         <PackageReference Include="Plugin.ByteArrays" />
         <PackageReference Include="Plugin.BaseTypeExtensions" />
         <PackageReference Include="Plugin.ExceptionListeners" />
+    </ItemGroup>
+
+    <!-- ==================== FILE DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <Compile Update="**\IBluetoothScanner.*.cs">
+            <DependentUpon>IBluetoothScanner.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothDevice.*.cs">
+            <DependentUpon>IBluetoothDevice.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothService.*.cs">
+            <DependentUpon>IBluetoothService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothCharacteristic.*.cs">
+            <DependentUpon>IBluetoothCharacteristic.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothDescriptor.*.cs">
+            <DependentUpon>IBluetoothDescriptor.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothAdvertisement.*.cs">
+            <DependentUpon>IBluetoothAdvertisement.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothPairingManager.*.cs">
+            <DependentUpon>IBluetoothPairingManager.cs</DependentUpon>
+        </Compile>
+
+
+        <Compile Update="**\IBluetoothBroadcaster.*.cs">
+            <DependentUpon>IBluetoothBroadcaster.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothBroadcastClientDevice.*.cs">
+            <DependentUpon>IBluetoothBroadcastClientDevice.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothBroadcastService.*.cs">
+            <DependentUpon>IBluetoothBroadcastService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothBroadcastCharacteristic.*.cs">
+            <DependentUpon>IBluetoothBroadcastCharacteristic.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothBroadcastDescriptor.*.cs">
+            <DependentUpon>IBluetoothBroadcastDescriptor.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 </Project>

@@ -1,6 +1,4 @@
-using Bluetooth.Abstractions.Broadcasting;
-using Bluetooth.Core.Broadcasting.Exceptions;
-using Bluetooth.Core.Exceptions;
+using Bluetooth.Abstractions.Broadcasting.Options;
 
 using Plugin.BaseTypeExtensions;
 
@@ -8,30 +6,17 @@ namespace Bluetooth.Core.Broadcasting;
 
 public abstract partial class BaseBluetoothBroadcaster
 {
-
     #region Configuration
 
-    /// <inheritdoc/>
-    public async Task UpdateBroadcasterOptionsAsync(IBluetoothBroadcasterStartBroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        var old = StartBroadcastingOptions;
-        try
-        {
-            if (IsRunning)
-            {
-                await StopBroadcastingAsync(timeout, cancellationToken).ConfigureAwait(false);
-                await StartBroadcastingAsync(options, timeout, cancellationToken).ConfigureAwait(false);
-            }
-        }
-        catch (Exception e)
-        {
-            StartBroadcastingOptions = old;
-            throw new BroadcasterConfigurationUpdateFailedException(this, innerException: e);
-        }
-    }
+    /// <inheritdoc />
+    public static BroadcastingOptions DefaultBroadcastingOptions { get; } = new BroadcastingOptions();
 
-    /// <inheritdoc/>
-    public IBluetoothBroadcasterStartBroadcastingOptions StartBroadcastingOptions { get; private set; } = new DefaultBluetoothBroadcasterStartBroadcastingOptions();
+    /// <inheritdoc />
+    public BroadcastingOptions CurrentBroadcastingOptions
+    {
+        get => GetValue(DefaultBroadcastingOptions);
+        private set => SetValue(value);
+    }
 
     #endregion
 
@@ -121,6 +106,7 @@ public abstract partial class BaseBluetoothBroadcaster
         }
 
         // Else throw an exception
+        LogUnexpectedStart();
         throw new BroadcasterUnexpectedStartException(this);
     }
 
@@ -131,6 +117,8 @@ public abstract partial class BaseBluetoothBroadcaster
     /// <param name="e">The exception that caused the start to fail.</param>
     protected void OnStartFailed(Exception e)
     {
+        LogBroadcasterStartFailed(e);
+
         // Attempt to dispatch exception to the TaskCompletionSource
         var success = StartTcs?.TrySetException(e) ?? false;
         if (success)
@@ -143,7 +131,7 @@ public abstract partial class BaseBluetoothBroadcaster
     }
 
     /// <inheritdoc/>
-    public async Task StartBroadcastingAsync(IBluetoothBroadcasterStartBroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask StartBroadcastingAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure we are not already started
         BroadcasterIsAlreadyStartedException.ThrowIfIsStarted(this);
@@ -151,6 +139,7 @@ public abstract partial class BaseBluetoothBroadcaster
         // Prevents multiple calls to StartAsync, if already starting, we merge the calls
         if (StartTcs is { Task.IsCompleted: false })
         {
+            LogMergingStartAttempts();
             await StartTcs.Task.ConfigureAwait(false);
             return;
         }
@@ -159,9 +148,11 @@ public abstract partial class BaseBluetoothBroadcaster
         IsStarting = true; // Set the starting state to true
         Starting?.Invoke(this, System.EventArgs.Empty);
 
+        LogBroadcasterStarting();
+
         try // try-catch to dispatch exceptions rising from start through OnStartFailed
         {
-            StartBroadcastingOptions = options; // Set the options
+            CurrentBroadcastingOptions = options; // Set the options
 
             await NativeStartAsync(options, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
         }
@@ -181,6 +172,8 @@ public abstract partial class BaseBluetoothBroadcaster
             {
                 throw new BroadcasterFailedToStartException(this);
             }
+
+            LogBroadcasterStarted();
         }
         finally
         {
@@ -191,16 +184,16 @@ public abstract partial class BaseBluetoothBroadcaster
     }
 
     /// <inheritdoc/>
-    public ValueTask StartBroadcastingIfNeededAsync(IBluetoothBroadcasterStartBroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask StartBroadcastingIfNeededAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return (IsRunning && options == StartBroadcastingOptions) ? ValueTask.CompletedTask : new ValueTask(StartBroadcastingAsync(options, timeout, cancellationToken));
+        return (IsRunning && options == CurrentBroadcastingOptions) ? ValueTask.CompletedTask : StartBroadcastingAsync(options, timeout, cancellationToken);
     }
 
     /// <summary>
-    /// Starts the native Bluetooth scanner with the specified options.
+    /// Starts the native Bluetooth broadcaster with the specified options.
     /// This method is called by <see cref="StartBroadcastingAsync"/> to perform platform-specific start operations.
     /// </summary>
-    protected abstract ValueTask NativeStartAsync(IBluetoothBroadcasterStartBroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    protected abstract ValueTask NativeStartAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -246,6 +239,7 @@ public abstract partial class BaseBluetoothBroadcaster
         }
 
         // Else throw an exception
+        LogUnexpectedStop();
         throw new BroadcasterUnexpectedStopException(this);
     }
 
@@ -256,6 +250,8 @@ public abstract partial class BaseBluetoothBroadcaster
     /// <param name="e">The exception that caused the stop to fail.</param>
     protected void OnStopFailed(Exception e)
     {
+        LogBroadcasterStopFailed(e);
+
         // Attempt to dispatch exception to the TaskCompletionSource
         var success = StopTcs?.TrySetException(e) ?? false;
         if (success)
@@ -268,7 +264,7 @@ public abstract partial class BaseBluetoothBroadcaster
     }
 
     /// <inheritdoc/>
-    public async Task StopBroadcastingAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask StopBroadcastingAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure we are not already stopped
         BroadcasterIsAlreadyStoppedException.ThrowIfIsStopped(this);
@@ -276,13 +272,16 @@ public abstract partial class BaseBluetoothBroadcaster
         // Prevents multiple calls to StopAsync, if already stopping, we merge the calls
         if (StopTcs is { Task.IsCompleted: false })
         {
+            LogMergingStopAttempts();
             await StopTcs.Task.ConfigureAwait(false);
             return;
         }
 
-        StopTcs = new TaskCompletionSource(); // Reset the TCS
+        StopTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); // Reset the TCS
         IsStopping = true; // Set the stopping state to true
         Stopping?.Invoke(this, System.EventArgs.Empty);
+
+        LogBroadcasterStopping();
 
         try // try-catch to dispatch exceptions rising from stop
         {
@@ -303,6 +302,8 @@ public abstract partial class BaseBluetoothBroadcaster
             {
                 throw new BroadcasterFailedToStopException(this);
             }
+
+            LogBroadcasterStopped();
         }
         finally
         {
@@ -315,19 +316,42 @@ public abstract partial class BaseBluetoothBroadcaster
     /// <inheritdoc/>
     public ValueTask StopBroadcastingIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        if (!IsRunning)
-        {
-            return ValueTask.CompletedTask;
-        }
-
-        return new ValueTask(StopBroadcastingAsync(timeout, cancellationToken));
+        return !IsRunning ? ValueTask.CompletedTask : StopBroadcastingAsync(timeout, cancellationToken);
     }
 
     /// <summary>
-    /// Stops the native Bluetooth scanner.
+    /// Stops the native Bluetooth broadcaster.
     /// This method is called by <see cref="StopBroadcastingAsync"/> to perform platform-specific stop operations.
     /// </summary>
     protected abstract ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+
+    #endregion
+
+    #region Configuration
+
+    /// <inheritdoc/>
+    public async ValueTask UpdateBroadcastingOptionsAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        LogUpdatingConfiguration();
+
+        var old = CurrentBroadcastingOptions;
+        try
+        {
+            if (IsRunning)
+            {
+                await StopBroadcastingAsync(timeout, cancellationToken).ConfigureAwait(false);
+                await StartBroadcastingAsync(options, timeout, cancellationToken).ConfigureAwait(false);
+            }
+
+            LogConfigurationUpdated();
+        }
+        catch (Exception e)
+        {
+            CurrentBroadcastingOptions = old;
+            LogConfigurationUpdateFailed(e);
+            throw new BroadcasterConfigurationUpdateFailedException(this, innerException: e);
+        }
+    }
 
     #endregion
 

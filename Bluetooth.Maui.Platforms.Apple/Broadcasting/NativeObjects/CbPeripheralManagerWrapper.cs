@@ -1,3 +1,9 @@
+using Bluetooth.Abstractions.Exceptions;
+using Bluetooth.Core.Infrastructure.Scheduling;
+using Bluetooth.Maui.Platforms.Apple.NativeObjects;
+
+using Microsoft.Extensions.Options;
+
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 
 /// <summary>
@@ -6,31 +12,76 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 /// </summary>
 public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
 {
+    private CBPeripheralManager? _cbPeripheralManager;
+    private readonly CbPeripheralManagerOptions _options;
+    private readonly IDispatchQueueProvider _dispatchQueueProvider;
+    private readonly CbPeripheralManagerWrapper.ICbPeripheralManagerDelegate _cbPeripheralManagerDelegate;
+    private readonly ITicker _ticker;
+    private IDisposable? _refreshSubscription;
+    
     /// <summary>
-    /// The underlying CBPeripheralManager instance.
+    /// The underlying CBCentralManager instance.
     /// </summary>
-    public CBPeripheralManager CbPeripheralManager { get; }
+    public CBPeripheralManager CbPeripheralManager
+    {
+        get
+        {
+            if (_cbPeripheralManager == null)
+            {
+                _cbPeripheralManager = new CBPeripheralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
+                {
+                    Delegate = this
+                };
+                _refreshSubscription = _ticker.Register("refresh_peripheral_manager_properties", TimeSpan.FromSeconds(1), RefreshIsAdvertising, true);
 
-    /// <summary>
-    /// The delegate proxy for handling peripheral manager events.
-    /// </summary>
-    private readonly CbPeripheralManagerWrapper.ICbPeripheralManagerDelegate _broadcaster;
+            }
+            return _cbPeripheralManager;
+        }
+    }
+
+
+    
 
     /// <summary>
     /// Initializes a new instance of the CbPeripheralManagerWrapper class.
     /// </summary>
-    /// <param name="broadcaster">The delegate proxy for handling peripheral manager events.</param>
-    /// <param name="queue">The dispatch queue for peripheral manager events.</param>
+    /// <param name="cbPeripheralManagerDelegate">The delegate proxy for handling peripheral manager events.</param>
     /// <param name="options">The initialization options for the peripheral manager.</param>
-    public CbPeripheralManagerWrapper(CbPeripheralManagerWrapper.ICbPeripheralManagerDelegate broadcaster, DispatchQueue queue, CbPeripheralManagerOptions options)
+    /// <param name="dispatchQueueProvider">The provider for dispatch queues.</param>
+    /// <param name="ticker">The ticker for scheduling periodic tasks.</param>
+    public CbPeripheralManagerWrapper(CbPeripheralManagerWrapper.ICbPeripheralManagerDelegate cbPeripheralManagerDelegate, 
+        IOptions<CbPeripheralManagerOptions> options, 
+        IDispatchQueueProvider dispatchQueueProvider,
+        ITicker ticker)
     {
-        _broadcaster = broadcaster;
-        CbPeripheralManager = new CBPeripheralManager(this, queue, options)
-        {
-            Delegate = this
-        };
+        ArgumentNullException.ThrowIfNull(cbPeripheralManagerDelegate);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(dispatchQueueProvider);
+        ArgumentNullException.ThrowIfNull(ticker);
+
+        _cbPeripheralManagerDelegate = cbPeripheralManagerDelegate;
+        _options = options.Value;
+        _dispatchQueueProvider = dispatchQueueProvider;
+        _ticker = ticker;
     }
 
+    private void RefreshIsAdvertising()
+    {
+        if(CbPeripheralManagerIsAdvertising != CbPeripheralManager.Advertising) // Advertising changed
+        {
+            CbPeripheralManagerIsAdvertising = CbPeripheralManager.Advertising;
+            if (!CbPeripheralManagerIsAdvertising) // Advertising stopped
+            {
+                AdvertisingStopped();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the Core Bluetooth peripheral manager is currently advertising.
+    /// </summary>
+    private bool CbPeripheralManagerIsAdvertising { get; set; }
+    
     /// <summary>
     /// Releases the unmanaged resources used by the CbCentralManagerWrapper and optionally releases the managed resources.
     /// </summary>
@@ -39,10 +90,26 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
     {
         if (disposing)
         {
+            _refreshSubscription?.Dispose();
+            _cbPeripheralManager?.StopAdvertising();
+            _cbPeripheralManager?.Dispose();
             CbPeripheralManager.Dispose();
         }
 
         base.Dispose(disposing);
+    }
+    
+    private void AdvertisingStopped()
+    {
+        try
+        {
+            // ACTION
+            _cbPeripheralManagerDelegate.AdvertisingStopped();
+        }
+        catch (Exception e)
+        {
+            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+        }
     }
 
     #region CBPeripheralManagerDelegate
@@ -53,7 +120,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
         try
         {
             ArgumentNullException.ThrowIfNull(peripheral);
-            _broadcaster.StateUpdated(peripheral.State);
+            _cbPeripheralManagerDelegate.StateUpdated(peripheral.State);
         }
         catch (Exception e)
         {
@@ -67,7 +134,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
         try
         {
             // ACTION
-            _broadcaster.AdvertisingStarted(error);
+            _cbPeripheralManagerDelegate.AdvertisingStarted(error);
         }
         catch (Exception e)
         {
@@ -84,7 +151,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
             ArgumentNullException.ThrowIfNull(characteristic.Service, nameof(characteristic.Service));
 
             // GET SERVICE
-            var sharedService = _broadcaster.GetService(characteristic.Service);
+            var sharedService = _cbPeripheralManagerDelegate.GetService(characteristic.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -107,7 +174,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
             ArgumentNullException.ThrowIfNull(characteristic.Service, nameof(characteristic.Service));
 
             // GET SERVICE
-            var sharedService = _broadcaster.GetService(characteristic.Service);
+            var sharedService = _cbPeripheralManagerDelegate.GetService(characteristic.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -127,7 +194,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
         try
         {
             // ACTION
-            _broadcaster.ServiceAdded(service);
+            _cbPeripheralManagerDelegate.ServiceAdded(service);
         }
         catch (Exception e)
         {
@@ -145,7 +212,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
             ArgumentNullException.ThrowIfNull(request.Characteristic.Service, nameof(request.Characteristic.Service));
 
             // GET SERVICE
-            var sharedService = _broadcaster.GetService(request.Characteristic.Service);
+            var sharedService = _cbPeripheralManagerDelegate.GetService(request.Characteristic.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(request.Characteristic);
@@ -165,7 +232,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
         try
         {
             // ACTION
-            _broadcaster.WillRestoreState(dict);
+            _cbPeripheralManagerDelegate.WillRestoreState(dict);
         }
         catch (Exception e)
         {
@@ -186,7 +253,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
                 ArgumentNullException.ThrowIfNull(request.Characteristic.Service, nameof(request.Characteristic.Service));
 
                 // GET SERVICE
-                var sharedService = _broadcaster.GetService(request.Characteristic.Service);
+                var sharedService = _cbPeripheralManagerDelegate.GetService(request.Characteristic.Service);
 
                 // GET CHARACTERISTIC
                 var sharedCharacteristic = sharedService.GetCharacteristic(request.Characteristic);
@@ -207,7 +274,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
         try
         {
             // ACTION
-            _broadcaster.DidOpenL2CapChannel(error, channel);
+            _cbPeripheralManagerDelegate.DidOpenL2CapChannel(error, channel);
         }
         catch (Exception e)
         {
@@ -221,7 +288,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
         try
         {
             // ACTION
-            _broadcaster.DidPublishL2CapChannel(error, psm);
+            _cbPeripheralManagerDelegate.DidPublishL2CapChannel(error, psm);
         }
         catch (Exception e)
         {
@@ -235,7 +302,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
         try
         {
             // ACTION
-            _broadcaster.DidUnpublishL2CapChannel(error, psm);
+            _cbPeripheralManagerDelegate.DidUnpublishL2CapChannel(error, psm);
         }
         catch (Exception e)
         {
@@ -244,5 +311,5 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
     }
 
     #endregion
-}
 
+}

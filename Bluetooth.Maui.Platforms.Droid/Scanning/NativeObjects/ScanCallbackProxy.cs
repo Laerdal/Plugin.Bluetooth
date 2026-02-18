@@ -1,3 +1,5 @@
+using Bluetooth.Abstractions.Exceptions;
+
 using Exception = System.Exception;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
@@ -16,23 +18,23 @@ public partial class ScanCallbackProxy : ScanCallback
     /// <summary>
     /// Initializes a new instance of the <see cref="ScanCallbackProxy"/> class.
     /// </summary>
-    /// <param name="scanner">The scanner instance that will receive the callback events.</param>
-    public ScanCallbackProxy(IScanner scanner)
+    /// <param name="scanCallbackProxyDelegate">The scanner instance that will receive the callback events.</param>
+    public ScanCallbackProxy(IScanCallbackProxyDelegate scanCallbackProxyDelegate)
     {
-        Scanner = scanner;
+        ScanCallbackProxyDelegate = scanCallbackProxyDelegate;
     }
 
     /// <summary>
     /// Gets the scanner instance that receives callback events.
     /// </summary>
-    private IScanner Scanner { get; }
+    private IScanCallbackProxyDelegate ScanCallbackProxyDelegate { get; }
 
     /// <inheritdoc cref="ScanCallback.OnScanFailed(ScanFailure)"/>
     public override void OnScanFailed(ScanFailure errorCode)
     {
         try
         {
-            Scanner.OnScanFailed(errorCode);
+            ScanCallbackProxyDelegate.OnScanFailed(errorCode);
         }
         catch (Exception e)
         {
@@ -50,7 +52,7 @@ public partial class ScanCallbackProxy : ScanCallback
                 return; // No results to process
             }
 
-            Scanner.OnScanResult(ScanCallbackType.AllMatches, results);
+            ScanCallbackProxyDelegate.OnScanResult(ScanCallbackType.AllMatches, results);
         }
         catch (Exception e)
         {
@@ -68,7 +70,7 @@ public partial class ScanCallbackProxy : ScanCallback
                 return; // No result to process
             }
 
-            Scanner.OnScanResult(callbackType, result);
+            ScanCallbackProxyDelegate.OnScanResult(callbackType, result);
         }
         catch (Exception e)
         {

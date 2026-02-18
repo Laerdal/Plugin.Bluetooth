@@ -8,7 +8,7 @@ namespace Bluetooth.Maui.Platforms.DotNetCore;
 public abstract class BluetoothAdapter : BaseBluetoothAdapter
 {
     /// <inheritdoc/>
-    protected BluetoothAdapter(ILogger? logger = null) : base(logger)
+    protected BluetoothAdapter(ILogger<IBluetoothAdapter>? logger = null) : base(logger)
     {
     }
 }

@@ -1,25 +1,40 @@
-using Bluetooth.Abstractions.Enums;
-using Bluetooth.Abstractions.Scanning;
-
 namespace Bluetooth.Core.Scanning;
 
 /// <inheritdoc cref="IBluetoothAdvertisement" />
-public abstract class BaseBluetoothAdvertisement : BaseBindableObject, IBluetoothAdvertisement
+/// <remarks>
+/// This is a readonly struct for memory efficiency. Advertisements are immutable snapshots
+/// that are created frequently (thousands per second), so using a value type reduces heap allocations
+/// and GC pressure significantly.
+/// </remarks>
+public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertisement
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothAdvertisement"/> class.
+    /// Initializes a new instance of the <see cref="BaseBluetoothAdvertisement"/> struct.
     /// </summary>
-    protected BaseBluetoothAdvertisement()
+    /// <param name="deviceName">The device name from the advertisement.</param>
+    /// <param name="servicesGuids">The collection of service GUIDs advertised.</param>
+    /// <param name="isConnectable">Whether the device is connectable.</param>
+    /// <param name="rawSignalStrengthInDBm">The raw signal strength (RSSI) in dBm.</param>
+    /// <param name="transmitPowerLevelInDBm">The transmit power level in dBm.</param>
+    /// <param name="bluetoothAddress">The Bluetooth address of the device.</param>
+    /// <param name="manufacturerData">The manufacturer-specific data.</param>
+    public BaseBluetoothAdvertisement(
+        string? deviceName,
+        IEnumerable<Guid>? servicesGuids,
+        bool isConnectable,
+        int rawSignalStrengthInDBm,
+        int transmitPowerLevelInDBm,
+        string? bluetoothAddress,
+        ReadOnlyMemory<byte> manufacturerData)
     {
+        DeviceName = deviceName ?? string.Empty;
+        ServicesGuids = servicesGuids ?? [];
+        IsConnectable = isConnectable;
+        RawSignalStrengthInDBm = rawSignalStrengthInDBm;
+        TransmitPowerLevelInDBm = transmitPowerLevelInDBm;
+        BluetoothAddress = bluetoothAddress ?? string.Empty;
+        ManufacturerData = manufacturerData;
         DateReceived = DateTimeOffset.UtcNow;
-        LazyDeviceName = new Lazy<string>(InitDeviceName);
-        LazyServicesGuids = new Lazy<IEnumerable<Guid>>(InitServicesGuids);
-        LazyIsConnectable = new Lazy<bool>(InitIsConnectable);
-        LazyRawSignalStrengthInDBm = new Lazy<int>(InitRawSignalStrengthInDBm);
-        LazyTransmitPowerLevelInDBm = new Lazy<int>(InitTransmitPowerLevelInDBm);
-        LazyManufacturerData = new Lazy<byte[]>(InitManufacturerData);
-        LazyManufacturer = new Lazy<Manufacturer>(InitManufacturer);
-        LazyManufacturerId = new Lazy<int>(InitManufacturerId);
     }
 
     #region IBluetoothAdvertisement Members
@@ -28,119 +43,43 @@ public abstract class BaseBluetoothAdvertisement : BaseBindableObject, IBluetoot
     public DateTimeOffset DateReceived { get; }
 
     /// <inheritdoc/>
-    public string DeviceName => LazyDeviceName.Value;
+    public string DeviceName { get; }
 
     /// <inheritdoc/>
-    public IEnumerable<Guid> ServicesGuids => LazyServicesGuids.Value;
+    public IEnumerable<Guid> ServicesGuids { get; }
 
     /// <inheritdoc/>
-    public bool IsConnectable => LazyIsConnectable.Value;
+    public bool IsConnectable { get; }
 
     /// <inheritdoc/>
-    public int RawSignalStrengthInDBm => LazyRawSignalStrengthInDBm.Value;
+    public int RawSignalStrengthInDBm { get; }
 
     /// <inheritdoc/>
-    public int TransmitPowerLevelInDBm => LazyTransmitPowerLevelInDBm.Value;
+    public int TransmitPowerLevelInDBm { get; }
 
     /// <inheritdoc/>
-    public string BluetoothAddress => field ??= InitBluetoothAddress();
+    public string BluetoothAddress { get; }
 
     /// <inheritdoc/>
-    public ReadOnlyMemory<byte> ManufacturerData => LazyManufacturerData.Value;
+    public ReadOnlyMemory<byte> ManufacturerData { get; }
 
     /// <inheritdoc/>
-    public Manufacturer Manufacturer => LazyManufacturer.Value;
+    public Manufacturer Manufacturer => ManufacturerData.Length >= 2
+        ? (Manufacturer)ManufacturerId
+        : (Manufacturer)(-1);
 
     /// <inheritdoc/>
-    public int ManufacturerId => LazyManufacturerId.Value;
-
-    #endregion
-
-    #region Lazy initializers
-
-    private Lazy<string> LazyDeviceName { get; }
-
-    private Lazy<IEnumerable<Guid>> LazyServicesGuids { get; }
-
-    private Lazy<bool> LazyIsConnectable { get; }
-
-    private Lazy<int> LazyRawSignalStrengthInDBm { get; }
-
-    private Lazy<int> LazyTransmitPowerLevelInDBm { get; }
-
-    private Lazy<byte[]> LazyManufacturerData { get; }
-
-    private Lazy<Manufacturer> LazyManufacturer { get; }
-
-    private Lazy<int> LazyManufacturerId { get; }
-
-    #endregion
-
-    #region Abstract init Methods
-
-    /// <summary>
-    /// Initializes and returns the device name from the advertisement data.
-    /// </summary>
-    /// <returns>The device name, or an empty string if not available.</returns>
-    protected abstract string InitDeviceName();
-
-    /// <summary>
-    /// Initializes and returns the collection of service GUIDs advertised by the device.
-    /// </summary>
-    /// <returns>An enumerable collection of service GUIDs.</returns>
-    protected abstract IEnumerable<Guid> InitServicesGuids();
-
-    /// <summary>
-    /// Initializes and returns whether the device is connectable based on the advertisement data.
-    /// </summary>
-    /// <returns><c>true</c> if the device is connectable; otherwise, <c>false</c>.</returns>
-    protected abstract bool InitIsConnectable();
-
-    /// <summary>
-    /// Initializes and returns the raw signal strength (RSSI) in dBm from the advertisement.
-    /// </summary>
-    /// <returns>The signal strength in dBm.</returns>
-    protected abstract int InitRawSignalStrengthInDBm();
-
-    /// <summary>
-    /// Initializes and returns the transmit power level in dBm from the advertisement data.
-    /// </summary>
-    /// <returns>The transmit power level in dBm.</returns>
-    protected abstract int InitTransmitPowerLevelInDBm();
-
-    /// <summary>
-    /// Initializes and returns the manufacturer-specific data from the advertisement.
-    /// </summary>
-    /// <returns>A byte array containing the manufacturer data.</returns>
-    protected abstract byte[] InitManufacturerData();
-
-    /// <summary>
-    /// Initializes and returns the Bluetooth address (MAC address) of the device.
-    /// </summary>
-    /// <returns>The Bluetooth address as a string.</returns>
-    protected abstract string InitBluetoothAddress();
-
-    /// <summary>
-    /// Initializes and returns the manufacturer by converting the manufacturer ID to the <see cref="Manufacturer"/> enum.
-    /// </summary>
-    /// <returns>The manufacturer enum value.</returns>
-    protected virtual Manufacturer InitManufacturer()
+    public int ManufacturerId
     {
-        return (Manufacturer)ManufacturerId;
-    }
-
-    /// <summary>
-    /// Initializes and returns the manufacturer ID from the first two bytes of the manufacturer data.
-    /// </summary>
-    /// <returns>The manufacturer ID, or -1 if the data is insufficient.</returns>
-    protected virtual int InitManufacturerId()
-    {
-        if (ManufacturerData.Length < 2)
+        get
         {
-            return -1;
-        }
+            if (ManufacturerData.Length < 2)
+            {
+                return -1;
+            }
 
-        return BitConverter.ToInt16(ManufacturerData[..2].Span);
+            return BitConverter.ToInt16(ManufacturerData[..2].Span);
+        }
     }
 
     #endregion

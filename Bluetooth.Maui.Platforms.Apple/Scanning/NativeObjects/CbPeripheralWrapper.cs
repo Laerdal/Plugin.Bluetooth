@@ -1,3 +1,5 @@
+using Bluetooth.Abstractions.Exceptions;
+
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
 
@@ -5,29 +7,30 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 /// Proxy class for CoreBluetooth peripheral delegate callbacks.
 /// https://developer.apple.com/documentation/corebluetooth/cbperipheraldelegate
 /// </summary>
-public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
+public partial class CbPeripheralWrapper : CBPeripheralDelegate
 {
-    /// <summary>
-    /// Initializes a new instance of the CbPeripheralManager class.
-    /// </summary>
-    /// <param name="cbPeripheralWrapperDelegate">The delegate to handle peripheral proxy callbacks.</param>
-    /// <param name="cbPeripheral">The CoreBluetooth peripheral to proxy.</param>
-    public CbPeripheralWrapper(ICbPeripheralDelegate cbPeripheralWrapperDelegate, CBPeripheral cbPeripheral)
-    {
-        CbPeripheralWrapperDelegate = cbPeripheralWrapperDelegate;
-        CbPeripheral = cbPeripheral;
-        CbPeripheral.Delegate = this;
-    }
-
-    /// <summary>
-    /// Gets the delegate that handles peripheral proxy callbacks.
-    /// </summary>
-    private ICbPeripheralDelegate CbPeripheralWrapperDelegate { get; }
-
     /// <summary>
     /// Gets the underlying CoreBluetooth peripheral.
     /// </summary>
     public CBPeripheral CbPeripheral { get; }
+
+    /// <summary>
+    /// Gets the delegate that handles peripheral proxy callbacks.
+    /// </summary>
+    private readonly CbPeripheralWrapper.ICbPeripheralDelegate _cbPeripheralDelegate;
+
+    /// <summary>
+    /// Initializes a new instance of the CbPeripheralManager class.
+    /// </summary>
+    /// <param name="cbPeripheralDelegate">The delegate to handle peripheral proxy callbacks.</param>
+    /// <param name="cbPeripheral">The CoreBluetooth peripheral to proxy.</param>
+    public CbPeripheralWrapper(ICbPeripheralDelegate cbPeripheralDelegate, CBPeripheral cbPeripheral)
+    {
+        _cbPeripheralDelegate = cbPeripheralDelegate;
+        CbPeripheral = cbPeripheral;
+        CbPeripheral.Delegate = this;
+    }
+
 
     /// <summary>
     /// Releases the unmanaged resources used by the CbCentralManagerWrapper and optionally releases the managed resources.
@@ -51,7 +54,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
         try
         {
             // ACTION
-            CbPeripheralWrapperDelegate.DiscoveredService(error);
+            _cbPeripheralDelegate.DiscoveredService(error);
         }
         catch (Exception e)
         {
@@ -65,7 +68,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
         try
         {
             // ACTION
-            CbPeripheralWrapperDelegate.RssiRead(error, rssi);
+            _cbPeripheralDelegate.RssiRead(error, rssi);
         }
         catch (Exception e)
         {
@@ -79,7 +82,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
         try
         {
             // ACTION
-            CbPeripheralWrapperDelegate.RssiUpdated(error);
+            _cbPeripheralDelegate.RssiUpdated(error);
         }
         catch (Exception e)
         {
@@ -93,7 +96,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
         try
         {
             // ACTION
-            CbPeripheralWrapperDelegate.UpdatedName();
+            _cbPeripheralDelegate.UpdatedName();
         }
         catch (Exception e)
         {
@@ -107,7 +110,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
         try
         {
             // ACTION
-            CbPeripheralWrapperDelegate.DidOpenL2CapChannel(error, channel);
+            _cbPeripheralDelegate.DidOpenL2CapChannel(error, channel);
         }
         catch (Exception e)
         {
@@ -121,7 +124,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
         try
         {
             // ACTION
-            CbPeripheralWrapperDelegate.IsReadyToSendWriteWithoutResponse();
+            _cbPeripheralDelegate.IsReadyToSendWriteWithoutResponse();
         }
         catch (Exception e)
         {
@@ -139,7 +142,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
         try
         {
             // GET SERVICE
-            var sharedService = CbPeripheralWrapperDelegate.GetService(service);
+            var sharedService = _cbPeripheralDelegate.GetService(service);
 
             // ACTION
             sharedService.DiscoveredCharacteristics(error, service);
@@ -156,7 +159,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
         try
         {
             // ACTION
-            CbPeripheralWrapperDelegate.ModifiedServices(services);
+            _cbPeripheralDelegate.ModifiedServices(services);
         }
         catch (Exception e)
         {
@@ -172,7 +175,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
             ArgumentNullException.ThrowIfNull(service);
 
             // GET SERVICE
-            var sharedService = CbPeripheralWrapperDelegate.GetService(service);
+            var sharedService = _cbPeripheralDelegate.GetService(service);
 
             // ACTION
             sharedService.DiscoveredIncludedService(error, service);
@@ -196,7 +199,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
             ArgumentNullException.ThrowIfNull(characteristic.Service, nameof(characteristic.Service));
 
             // GET SERVICE
-            var sharedService = CbPeripheralWrapperDelegate.GetService(characteristic.Service);
+            var sharedService = _cbPeripheralDelegate.GetService(characteristic.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -219,7 +222,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
             ArgumentNullException.ThrowIfNull(characteristic.Service, nameof(characteristic.Service));
 
             // GET SERVICE
-            var sharedService = CbPeripheralWrapperDelegate.GetService(characteristic.Service);
+            var sharedService = _cbPeripheralDelegate.GetService(characteristic.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -242,7 +245,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
             ArgumentNullException.ThrowIfNull(characteristic.Service, nameof(characteristic.Service));
 
             // GET SERVICE
-            var sharedService = CbPeripheralWrapperDelegate.GetService(characteristic.Service);
+            var sharedService = _cbPeripheralDelegate.GetService(characteristic.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -265,7 +268,7 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
             ArgumentNullException.ThrowIfNull(characteristic.Service, nameof(characteristic.Service));
 
             // GET SERVICE
-            var sharedService = CbPeripheralWrapperDelegate.GetService(characteristic.Service);
+            var sharedService = _cbPeripheralDelegate.GetService(characteristic.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -293,13 +296,16 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
             ArgumentNullException.ThrowIfNull(descriptor.Characteristic.Service, nameof(descriptor.Characteristic.Service));
 
             // GET SERVICE
-            var sharedService = CbPeripheralWrapperDelegate.GetService(descriptor.Characteristic.Service);
+            var sharedService = _cbPeripheralDelegate.GetService(descriptor.Characteristic.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(descriptor.Characteristic);
 
+            // GET DESCRIPTOR
+            var sharedDescriptor = sharedCharacteristic.GetDescriptor(descriptor);
+
             // ACTION
-            sharedCharacteristic.UpdatedValue(error, descriptor);
+            sharedDescriptor.UpdatedValue(error, descriptor);
         }
         catch (Exception e)
         {
@@ -317,13 +323,16 @@ public sealed partial class CbPeripheralWrapper : CBPeripheralDelegate
             ArgumentNullException.ThrowIfNull(descriptor.Characteristic.Service, nameof(descriptor.Characteristic.Service));
 
             // GET SERVICE
-            var sharedService = CbPeripheralWrapperDelegate.GetService(descriptor.Characteristic.Service);
+            var sharedService = _cbPeripheralDelegate.GetService(descriptor.Characteristic.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(descriptor.Characteristic);
 
+            // GET DESCRIPTOR
+            var sharedDescriptor = sharedCharacteristic.GetDescriptor(descriptor);
+
             // ACTION
-            sharedCharacteristic.WroteDescriptorValue(error, descriptor);
+            sharedDescriptor.WroteDescriptorValue(error, descriptor);
         }
 
         catch (Exception e)

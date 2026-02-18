@@ -1,3 +1,5 @@
+using Bluetooth.Abstractions.Exceptions;
+
 using Exception = System.Exception;
 
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
@@ -16,7 +18,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     /// <summary>
     /// Gets the delegate instance that receives callback events.
     /// </summary>
-    private IBroadcaster Broadcaster { get; }
+    private IBluetoothGattServerCallbackProxyDelegate BluetoothGattServerCallbackProxyDelegate { get; }
 
     /// <summary>
     /// Gets the Bluetooth GATT server instance for communication with remote devices.
@@ -26,15 +28,14 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     /// <summary>
     /// Initializes a new instance of the <see cref="BluetoothGattServerCallbackProxy"/> class.
     /// </summary>
-    /// <param name="broadcaster">The delegate instance that will receive callback events.</param>
+    /// <param name="bluetoothGattServerCallbackProxyDelegate">The delegate instance that will receive callback events.</param>
     /// <exception cref="InvalidOperationException">Thrown when the GATT server cannot be opened.</exception>
-    public BluetoothGattServerCallbackProxy(IBroadcaster broadcaster, BluetoothManager bluetoothManager)
+    public BluetoothGattServerCallbackProxy(IBluetoothGattServerCallbackProxyDelegate bluetoothGattServerCallbackProxyDelegate, BluetoothManager bluetoothManager)
     {
-        ArgumentNullException.ThrowIfNull(broadcaster);
+        ArgumentNullException.ThrowIfNull(bluetoothGattServerCallbackProxyDelegate);
         ArgumentNullException.ThrowIfNull(bluetoothManager);
-
-        Broadcaster = broadcaster;
-
+        
+        BluetoothGattServerCallbackProxyDelegate = bluetoothGattServerCallbackProxyDelegate;
         BluetoothGattServer = bluetoothManager.OpenGattServer(Android.App.Application.Context, this) ?? throw new InvalidOperationException("Failed to open GATT server");
     }
 
@@ -55,7 +56,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         try
         {
             // GET SERVICE
-            var sharedDevice = Broadcaster.GetDevice(device);
+            var sharedDevice = BluetoothGattServerCallbackProxyDelegate.GetDevice(device);
 
             // ACTION
             sharedDevice.OnMtuChanged(mtu);
@@ -72,7 +73,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         try
         {
             // GET SERVICE
-            var sharedDevice = Broadcaster.GetDevice(device);
+            var sharedDevice = BluetoothGattServerCallbackProxyDelegate.GetDevice(device);
 
             // ACTION
             sharedDevice.OnExecuteWrite(requestId, execute);
@@ -89,7 +90,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         try
         {
             // GET DEVICE
-            var sharedDevice = Broadcaster.GetDevice(device);
+            var sharedDevice = BluetoothGattServerCallbackProxyDelegate.GetDevice(device);
 
             // ACTION
             sharedDevice.OnNotificationSent(status);
@@ -135,7 +136,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         try
         {
             // GET DEVICE
-            var sharedDevice = Broadcaster.GetDevice(device);
+            var sharedDevice = BluetoothGattServerCallbackProxyDelegate.GetDevice(device);
 
             // ACTION
             sharedDevice.OnPhyRead(status, txPhy, rxPhy);
@@ -181,7 +182,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         try
         {
             // GET DEVICE
-            var sharedDevice = Broadcaster.GetDevice(device);
+            var sharedDevice = BluetoothGattServerCallbackProxyDelegate.GetDevice(device);
 
             // ACTION
             sharedDevice.OnPhyUpdate(status, txPhy, rxPhy);
@@ -232,7 +233,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         try
         {
             // GET SERVICE
-            var sharedService = Broadcaster.GetService(service);
+            var sharedService = BluetoothGattServerCallbackProxyDelegate.GetService(service);
 
             // ACTION
             sharedService.OnServiceAdded(status);
@@ -249,7 +250,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         try
         {
             // GET DEVICE
-            var sharedDevice = Broadcaster.GetDevice(device);
+            var sharedDevice = BluetoothGattServerCallbackProxyDelegate.GetDevice(device);
 
             // ACTION
             sharedDevice.OnConnectionStateChange(status, newState);
@@ -294,10 +295,10 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         try
         {
             // GET DEVICE
-            var sharedDevice = Broadcaster.GetDevice(device);
+            var sharedDevice = BluetoothGattServerCallbackProxyDelegate.GetDevice(device);
 
             // GET SERVICE
-            var sharedService = Broadcaster.GetService(characteristic?.Service);
+            var sharedService = BluetoothGattServerCallbackProxyDelegate.GetService(characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -360,10 +361,10 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         try
         {
             // GET DEVICE
-            var sharedDevice = Broadcaster.GetDevice(device);
+            var sharedDevice = BluetoothGattServerCallbackProxyDelegate.GetDevice(device);
 
             // GET SERVICE
-            var sharedService = Broadcaster.GetService(characteristic?.Service);
+            var sharedService = BluetoothGattServerCallbackProxyDelegate.GetService(characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(characteristic);
@@ -416,16 +417,19 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         try
         {
             // GET DEVICE
-            var sharedDevice = Broadcaster.GetDevice(device);
+            var sharedDevice = BluetoothGattServerCallbackProxyDelegate.GetDevice(device);
 
             // GET SERVICE
-            var sharedService = Broadcaster.GetService(descriptor?.Characteristic?.Service);
+            var sharedService = BluetoothGattServerCallbackProxyDelegate.GetService(descriptor?.Characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(descriptor?.Characteristic);
 
+            // GET DESCRIPTOR
+            var sharedDescriptor = sharedCharacteristic.GetDescriptor(descriptor);
+
             // ACTION
-            sharedCharacteristic.OnDescriptorReadRequest(sharedDevice, requestId, offset, descriptor);
+            sharedDescriptor.OnDescriptorReadRequest(sharedDevice, requestId, offset, descriptor);
         }
         catch (Exception e)
         {
@@ -482,22 +486,25 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         try
         {
             // GET DEVICE
-            var sharedDevice = Broadcaster.GetDevice(device);
+            var sharedDevice = BluetoothGattServerCallbackProxyDelegate.GetDevice(device);
 
             // GET SERVICE
-            var sharedService = Broadcaster.GetService(descriptor?.Characteristic?.Service);
+            var sharedService = BluetoothGattServerCallbackProxyDelegate.GetService(descriptor?.Characteristic?.Service);
 
             // GET CHARACTERISTIC
             var sharedCharacteristic = sharedService.GetCharacteristic(descriptor?.Characteristic);
 
+            // GET DESCRIPTOR
+            var sharedDescriptor = sharedCharacteristic.GetDescriptor(descriptor);
+
             // ACTION
-            sharedCharacteristic.OnDescriptorWriteRequest(sharedDevice,
-                                                          requestId,
-                                                          descriptor,
-                                                          preparedWrite,
-                                                          responseNeeded,
-                                                          offset,
-                                                          value ?? []);
+            sharedDescriptor.OnDescriptorWriteRequest(sharedDevice,
+                                                      requestId,
+                                                      descriptor,
+                                                      preparedWrite,
+                                                      responseNeeded,
+                                                      offset,
+                                                      value ?? []);
         }
         catch (Exception e)
         {

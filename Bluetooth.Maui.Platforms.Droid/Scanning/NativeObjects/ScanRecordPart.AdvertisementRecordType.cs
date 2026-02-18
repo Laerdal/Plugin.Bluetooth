@@ -1,6 +1,5 @@
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 
-#pragma warning disable CA1034 // Nested types should not be visible
 
 /// <summary>
 /// Represents a part of a Bluetooth LE advertisement scan record.
@@ -195,4 +194,3 @@ public partial class ScanRecordPart
     }
 }
 
-#pragma warning restore CA1034 // Nested types should not be visible

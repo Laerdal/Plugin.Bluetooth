@@ -8,13 +8,24 @@
         <Project_Description>Bluetooth.Maui for .NET Maui</Project_Description>
     </PropertyGroup>
 
+    <!-- ==================== NOWARNINGS ==================== -->
+    <PropertyGroup>
+        <!-- CA1034 : Nested types should not be externally visible-->
+        <NoWarn>$(NoWarn);CA1034</NoWarn>
+        <!-- CA1032 : Implement standard exception constructors -->
+        <NoWarn>$(NoWarn);CA1032</NoWarn>
+        <!-- CS1591 : Missing documentation for publicly visible type or member -->
+        <!-- <NoWarn>$(NoWarn);CS1591</NoWarn> -->
+        <!-- CA1816 : Call GC.SuppressFinalize correctly -->
+        <NoWarn>$(NoWarn);CA1816</NoWarn>
+    </PropertyGroup>
+
     <!-- ==================== TARGET FRAMEWORKS ==================== -->
     <PropertyGroup>
-        <TargetFrameworks>net10.0</TargetFrameworks>
-        <TargetFrameworks>$(TargetFrameworks);net10.0-android36.1</TargetFrameworks>
+        <TargetFrameworks>net10.0;net10.0-android36.1</TargetFrameworks>
         <TargetFrameworks>$(TargetFrameworks);net10.0-maccatalyst</TargetFrameworks>
         <TargetFrameworks>$(TargetFrameworks);net10.0-ios</TargetFrameworks>
-        <TargetFrameworks>$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-windows10.0.26100.0</TargetFrameworks>
     </PropertyGroup>
 
     <!-- ==================== MAUI ==================== -->
@@ -26,6 +37,8 @@
     <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
     <ItemGroup>
         <ProjectReference Include="../Bluetooth.Abstractions/Bluetooth.Abstractions.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="../Bluetooth.Abstractions.Scanning/Bluetooth.Abstractions.Scanning.csproj" PrivateAssets="all" />
+        <ProjectReference Include="../Bluetooth.Abstractions.Broadcasting/Bluetooth.Abstractions.Broadcasting.csproj" PrivateAssets="all" />
 
         <ProjectReference Include="../Bluetooth.Core/Bluetooth.Core.csproj" PrivateAssets="all"/>
         <ProjectReference Include="../Bluetooth.Core.Broadcasting/Bluetooth.Core.Broadcasting.csproj" PrivateAssets="all"/>

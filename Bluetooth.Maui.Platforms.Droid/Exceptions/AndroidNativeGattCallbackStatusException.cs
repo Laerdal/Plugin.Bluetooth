@@ -18,49 +18,12 @@ public class AndroidNativeGattCallbackStatusException : AndroidNativeBluetoothEx
     public GattCallbackStatus GattCallbackStatus { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusException"/> class.
-    /// </summary>
-    public AndroidNativeGattCallbackStatusException()
-    {
-        GattCallbackStatus = (GattCallbackStatus)1; // Default to first failure type
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusException"/> class with a specified error message.
-    /// </summary>
-    /// <param name="message">The message that describes the error.</param>
-    public AndroidNativeGattCallbackStatusException(string message) : base(message)
-    {
-        GattCallbackStatus = (GattCallbackStatus)1; // Default to first failure type
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusException"/> class with a specified error message and a reference to the inner exception that is the cause of this exception.
-    /// </summary>
-    /// <param name="message">The error message that explains the reason for the exception.</param>
-    /// <param name="innerException">The exception that is the cause of the current exception.</param>
-    public AndroidNativeGattCallbackStatusException(string message, Exception innerException) : base(message, innerException)
-    {
-        GattCallbackStatus = (GattCallbackStatus)1; // Default to first failure type
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusException"/> class with the specified GattCallbackStatus.
-    /// </summary>
-    /// <param name="status">The GattCallbackStatus that caused this exception.</param>
-    public AndroidNativeGattCallbackStatusException(GattCallbackStatus status)
-        : base($"Native GattCallbackStatus Exception: {status} ({(int)status}) (0x{status:X})")
-    {
-        GattCallbackStatus = status;
-    }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusException"/> class with the specified GattCallbackStatus and inner exception.
     /// </summary>
     /// <param name="status">The GattCallbackStatus that caused this exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception.</param>
-    public AndroidNativeGattCallbackStatusException(GattCallbackStatus status, Exception innerException)
-        : base($"Native GattCallbackStatus Exception: {status} ({(int)status}) (0x{status:X})", innerException)
+    public AndroidNativeGattCallbackStatusException(GattCallbackStatus status, Exception? innerException = null)
+        : base($"{GattCallbackStatusToDescription(status)} : {status}", innerException)
     {
         GattCallbackStatus = status;
     }
@@ -78,16 +41,52 @@ public class AndroidNativeGattCallbackStatusException : AndroidNativeBluetoothEx
         }
     }
 
-    /// <summary>
-    /// Throws an <see cref="AndroidNativeGattCallbackStatusException"/> if the GattStatus is not Success.
-    /// </summary>
-    /// <param name="status">The GattStatus to check.</param>
-    /// <exception cref="AndroidNativeGattCallbackStatusException">Thrown when the status is not Success.</exception>
-    public static void ThrowIfNotSuccess(GattStatus status)
+    private static string GattCallbackStatusToDescription(GattCallbackStatus status)
     {
-        if ((GattCallbackStatus)status != GattCallbackStatus.GATT_SUCCESS)
+        var statusCodeValue = (int)status;
+        return statusCodeValue switch
         {
-            throw new AndroidNativeGattCallbackStatusException((GattCallbackStatus)status);
-        }
+            0x00 => "Success: The GATT operation completed successfully.",
+            0x01 => "Error: Invalid GATT handle.",
+            0x02 => "Error: GATT read operation not permitted.",
+            0x03 => "Error: GATT write operation not permitted.",
+            0x04 => "Error: Invalid GATT PDU.",
+            0x05 => "Error: Insufficient authentication for GATT operation.",
+            0x06 => "Error: GATT request not supported.",
+            0x07 => "Error: Invalid offset in GATT request.",
+            0x08 => "Error: Insufficient authorization for GATT operation.",
+            0x09 => "Error: GATT prepare queue full.",
+            0x0a => "Error: GATT attribute not found.",
+            0x0b => "Error: GATT attribute not long.",
+            0x0c => "Error: Insufficient encryption key size for GATT operation.",
+            0x0d => "Error: Invalid GATT attribute length.",
+            0x0e => "Error: Unlikely GATT error.",
+            0x0f => "Error: Insufficient encryption for GATT operation.",
+            0x10 => "Error: Unsupported GATT group type.",
+            0x11 => "Error: Insufficient GATT resources.",
+            0x22 => "Error: GATT connection LMP timeout.",
+            0x3A => "Error: GATT controller busy.",
+            0x3B => "Error: Unacceptable GATT connection interval.",
+            0x80 => "Error: No GATT resources available.",
+            0x81 => "Error: Internal GATT error.",
+            0x82 => "Error: GATT wrong state.",
+            0x83 => "Error: GATT database full.",
+            0x84 => "Error: GATT busy.",
+            0x85 => "Error: Generic GATT error.",
+            0x86 => "Error: GATT command started.",
+            0x87 => "Error: Illegal GATT parameter.",
+            0x88 => "Error: GATT operation pending.",
+            0x89 => "Error: GATT authentication failed.",
+            0x8a => "Error: More GATT data available.",
+            0x8b => "Error: Invalid GATT configuration.",
+            0x8c => "Error: GATT service already started.",
+            0x8d => "Error: GATT encrypted but no MITM protection.",
+            0x8e => "Error: GATT not encrypted.",
+            0x8f => "Error: GATT congested.",
+            0xFD => "Error: GATT CCCD configuration error.",
+            0xFE => "Error: GATT procedure already in progress.",
+            0xFF => "Error: GATT value out of range.",
+            _ => "Unknown GATT callback status code."
+        };
     }
 }

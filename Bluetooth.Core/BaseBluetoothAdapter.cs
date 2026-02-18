@@ -1,6 +1,4 @@
 using Bluetooth.Abstractions;
-using Bluetooth.Abstractions.Scanning.EventArgs;
-using Bluetooth.Core.Exceptions;
 using Bluetooth.Core.Infrastructure.Scheduling;
 
 using Microsoft.Extensions.Logging;
@@ -15,9 +13,8 @@ public abstract class BaseBluetoothAdapter : BaseBindableObject, IBluetoothAdapt
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseBluetoothAdapter"/> class.
     /// </summary>
-    /// <param name="logger">Optional logger instance for tracking property changes.</param>
-    protected BaseBluetoothAdapter(ILogger? logger = null)
-        : base(logger)
+    /// <param name="logger">The logger instance for logging adapter operations.</param>
+    protected BaseBluetoothAdapter(ILogger<IBluetoothAdapter>? logger = null) : base(logger)
     {
     }
 }

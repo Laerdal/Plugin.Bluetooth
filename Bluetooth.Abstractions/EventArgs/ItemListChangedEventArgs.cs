@@ -12,7 +12,7 @@ public class ItemListChangedEventArgs<T> : System.EventArgs
     /// Initializes a new instance of the <see cref="ItemListChangedEventArgs{T}"/> class.
     /// </summary>
     /// <param name="args">The collection changed event arguments.</param>
-    protected ItemListChangedEventArgs(NotifyCollectionChangedEventArgs args)
+    public ItemListChangedEventArgs(NotifyCollectionChangedEventArgs args)
     {
         ArgumentNullException.ThrowIfNull(args);
 
@@ -25,7 +25,7 @@ public class ItemListChangedEventArgs<T> : System.EventArgs
     /// </summary>
     /// <param name="addedItems">The items that were added.</param>
     /// <param name="removedItems">The items that were removed.</param>
-    protected ItemListChangedEventArgs(IEnumerable<T>? addedItems, IEnumerable<T>? removedItems)
+    public ItemListChangedEventArgs(IEnumerable<T>? addedItems, IEnumerable<T>? removedItems)
     {
         AddedItems = addedItems;
         RemovedItems = removedItems;
@@ -41,3 +41,15 @@ public class ItemListChangedEventArgs<T> : System.EventArgs
     /// </summary>
     public IEnumerable<T>? RemovedItems { get; }
 }
+
+/// <summary>
+/// Provides data for the ItemsAdded event.
+/// </summary>
+/// <param name="items">The items that were added.</param>
+public class ItemsAddedEventArgs<T>(IEnumerable<T> items) : ItemsChangedEventArgs<T>(items);
+
+/// <summary>
+/// Provides data for the ItemsRemoved event.
+/// </summary>
+/// <param name="items">The items that were removed.</param>
+public class ItemsRemovedEventArgs<T>(IEnumerable<T> items) : ItemsChangedEventArgs<T>(items);

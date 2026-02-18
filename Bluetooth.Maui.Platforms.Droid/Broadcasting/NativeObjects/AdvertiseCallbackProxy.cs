@@ -1,3 +1,5 @@
+using Bluetooth.Abstractions.Exceptions;
+
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 
 /// <summary>
@@ -14,11 +16,15 @@ public partial class AdvertiseCallbackProxy : AdvertiseCallback
     /// <summary>
     /// Gets the broadcaster instance that receives callback events.
     /// </summary>
-    public IBroadcaster Broadcaster { get; internal set; }
+    private readonly IAdvertiseCallbackProxyDelegate _advertiseCallbackProxyDelegate;
 
-    public AdvertiseCallbackProxy(IBroadcaster broadcaster)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AdvertiseCallbackProxy"/> class.
+    /// </summary>
+    /// <param name="advertiseCallbackProxyDelegate">The broadcaster instance that will receive the callback events.</param>
+    public AdvertiseCallbackProxy(IAdvertiseCallbackProxyDelegate advertiseCallbackProxyDelegate)
     {
-        Broadcaster = broadcaster;
+        _advertiseCallbackProxyDelegate = advertiseCallbackProxyDelegate;
     }
 
     /// <inheritdoc cref="AdvertiseCallback.OnStartSuccess(AdvertiseSettings)"/>
@@ -26,7 +32,7 @@ public partial class AdvertiseCallbackProxy : AdvertiseCallback
     {
         try
         {
-            Broadcaster.OnStartSuccess(settingsInEffect);
+            _advertiseCallbackProxyDelegate.OnStartSuccess(settingsInEffect);
         }
         catch (Exception e)
         {
@@ -39,7 +45,7 @@ public partial class AdvertiseCallbackProxy : AdvertiseCallback
     {
         try
         {
-            Broadcaster.OnStartFailure(errorCode);
+            _advertiseCallbackProxyDelegate.OnStartFailure(errorCode);
         }
         catch (Exception e)
         {
@@ -47,4 +53,3 @@ public partial class AdvertiseCallbackProxy : AdvertiseCallback
         }
     }
 }
-

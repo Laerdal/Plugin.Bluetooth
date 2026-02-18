@@ -1,105 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <!-- Note : This is read AFTER the initial project file -->
+    <!-- Note : This is read AFTER the initial project file -->
 
-  <!-- ==================== SELF REF ==================== -->
-  <ItemGroup>
-    <None Include="$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), $(MSBuildThisFile)))" Pack="false" />
-  </ItemGroup>
+    <!-- ==================== SELF REF ==================== -->
+    <ItemGroup>
+        <None Include="$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), $(MSBuildThisFile)))" Pack="false"/>
+    </ItemGroup>
 
-  <!-- ==================== DEFAULT CONFIGURATION ==================== -->
-  <PropertyGroup>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <DebugSymbols>true</DebugSymbols>
-    <Deterministic>true</Deterministic>
-    <!-- Ignore CS1591 : Missing documentation for publicly visible type or member
-    <NoWarn>$(NoWarn);1591</NoWarn>-->
-    <!-- Ignore CA1816 : Call GC.SuppressFinalize correctly -->
-    <NoWarn>$(NoWarn);CA1816</NoWarn>
-  </PropertyGroup>
+    <!-- ==================== DEFAULT CONFIGURATION ==================== -->
+    <PropertyGroup>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DebugSymbols>true</DebugSymbols>
+        <Deterministic>true</Deterministic>
+    </PropertyGroup>
 
-  <!-- ==================== DEPENDENCIES ==================== -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Options" />
-  </ItemGroup>
+    <!-- ==================== DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
+        <PackageReference Include="Microsoft.Extensions.Diagnostics.Abstractions"/>
+        <PackageReference Include="Microsoft.Extensions.Options"/>
+    </ItemGroup>
 
-  <!-- ==================== LOGGING ==================== -->
-  <Target Name="PrintBuildInfo" BeforeTargets="CoreCompile">
-    <Message Importance="High" Text="Building : $(PackageId) - $(TargetFramework) - $(AssemblyFileVersion)" />
-    <Message Importance="High" Text="ArtifactsPath        : $(ArtifactsPath)" />
-    <Message Importance="High" Text="PackageOutputPath    : $(PackageOutputPath)" />
-    <Message Importance="High" Text="IsHostMachineWindows : $(IsHostMachineWindows)" />
-    <Message Importance="High" Text="IsHostMachineOSX     : $(IsHostMachineOSX)" />
-    <Message Importance="High" Text="IsHostMachineLinux   : $(IsHostMachineLinux)" />
-    <Message Importance="High" Text="IsHostMachineUnix    : $(IsHostMachineUnix)" />
-  </Target>
+    <!-- ==================== LOGGING ==================== -->
+    <Target Name="PrintBuildInfo" BeforeTargets="CoreCompile">
+        <Message Importance="High" Text="Building          : $(PackageId) - $(TargetFramework) - $(Version_Full) - $(Configuration) - $(Platform)" />
+        <Message Importance="High" Text="PackageOutputPath : $(PackageOutputPath)" />
+        <Message Importance="High" Text="HostMachine       : $(HostMachine)" />
+    </Target>
 
-  <!-- ==================== VERSION ==================== -->
-  <Import Project="$(Version_Props_Path)" Condition="Exists('$(Version_Props_Path)')" />
-  <PropertyGroup>
-    <!-- Default version, when building locally -->
-    <Version_Full Condition=" '$(Version_Full)' == '' ">1.0.0</Version_Full>
-    <Version_Assembly Condition=" '$(Version_Assembly)' == '' ">$(Version_Full).0</Version_Assembly>
+    <!-- ==================== VERSION ==================== -->
+    <Import Project="$(Version_Props_Path)" Condition="Exists('$(Version_Props_Path)')"/>
+    <PropertyGroup>
+        <!-- Default version, when building locally -->
+        <Version_Full Condition=" '$(Version_Full)' == '' ">1.0.0</Version_Full>
+        <Version_Assembly Condition=" '$(Version_Assembly)' == '' ">$(Version_Full).0</Version_Assembly>
 
-    <!-- Apply Version parts according to packaging standards -->
-    <Version>$(Version_Full)</Version>
-    <PackageVersion>$(Version_Full)</PackageVersion>
+        <!-- Apply Version parts according to packaging standards -->
+        <Version>$(Version_Full)</Version>
+        <PackageVersion>$(Version_Full)</PackageVersion>
 
-    <AssemblyInformationalVersion>$(Version_Full)</AssemblyInformationalVersion>
-    <AssemblyVersion>$(Version_Assembly)</AssemblyVersion>
-    <AssemblyFileVersion>$(Version_Assembly)</AssemblyFileVersion>
+        <AssemblyInformationalVersion>$(Version_Full)</AssemblyInformationalVersion>
+        <AssemblyVersion>$(Version_Assembly)</AssemblyVersion>
+        <AssemblyFileVersion>$(Version_Assembly)</AssemblyFileVersion>
 
-    <ApplicationDisplayVersion>$(Version_Full)</ApplicationDisplayVersion>
-    <ApplicationVersion>$(Version_Revision)</ApplicationVersion>
-  </PropertyGroup>
+        <ApplicationDisplayVersion>$(Version_Full)</ApplicationDisplayVersion>
+        <ApplicationVersion>$(Version_Revision)</ApplicationVersion>
+    </PropertyGroup>
 
-  <!-- ==================== GENERAL : VARIABLES ==================== -->
-  <PropertyGroup>
-    <!-- Project_Name -->
-    <RootNamespace>$(Project_Name)</RootNamespace>
-    <AssemblyName>$(Project_Name)</AssemblyName>
-    <Title>$(Project_Name)</Title>
+    <!-- ==================== GENERAL : VARIABLES ==================== -->
+    <PropertyGroup>
+        <!-- Project_Name -->
+        <RootNamespace>$(Project_Name)</RootNamespace>
+        <AssemblyName>$(Project_Name)</AssemblyName>
+        <Title>$(Project_Name)</Title>
 
-    <!-- Project_Copyright -->
-    <Owners>$(Project_Copyright)</Owners>
-    <Authors>$(Project_Copyright)</Authors>
-    <Copyright>$(Project_Copyright)</Copyright>
+        <!-- Project_Copyright -->
+        <Owners>$(Project_Copyright)</Owners>
+        <Authors>$(Project_Copyright)</Authors>
+        <Copyright>$(Project_Copyright)</Copyright>
 
-    <!-- Project_Description -->
-    <Summary>$(Project_Description)</Summary>
-    <Description>$(Project_Description)</Description>
-  </PropertyGroup>
+        <!-- Project_Description -->
+        <Summary>$(Project_Description)</Summary>
+        <Description>$(Project_Description)</Description>
+    </PropertyGroup>
 
-  <!-- ==================== ARCHIVED FILES ======================= -->
-  <ItemGroup>
-    <Compile Remove="**/Archive/**/*.*" />
-  </ItemGroup>
+    <!-- ==================== ARCHIVED FILES ======================= -->
+    <ItemGroup>
+        <Compile Remove="**/Archive/**/*.*"/>
+    </ItemGroup>
 
-  <!-- ==================== DOCUMENTATION ======================= -->
-  <ItemGroup>
-    <Compile Remove="**/Documentation/**/*.*" />
-  </ItemGroup>
+    <!-- ==================== DOCUMENTATION ======================= -->
+    <ItemGroup>
+        <Compile Remove="**/Documentation/**/*.*"/>
+    </ItemGroup>
 
-  <!-- ==================== MAUI INTEGRATION ==================== -->
-  <PropertyGroup>
-    <MauiTargetsFile Condition=" $(MauiTargetsFile) == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `Directory.Build.Maui.targets`))</MauiTargetsFile>
-  </PropertyGroup>
-  <Import Condition=" '$(UseMaui)' == 'true' AND Exists('$(MauiTargetsFile)')" Project="$(MauiTargetsFile)" />
+    <!-- ==================== MAUI INTEGRATION ==================== -->
+    <PropertyGroup>
+        <MauiTargetsFile Condition=" $(MauiTargetsFile) == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `Directory.Build.Maui.targets`))</MauiTargetsFile>
+    </PropertyGroup>
+    <Import Condition=" Exists('$(MauiTargetsFile)')" Project="$(MauiTargetsFile)"/>
 
-  <!-- ==================== MAUI INTEGRATION ==================== -->
-  <PropertyGroup>
-    <MauiAppTargetsFile Condition=" $(MauiAppTargetsFile) == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `Directory.Build.MauiApp.targets`))</MauiAppTargetsFile>
-  </PropertyGroup>
-  <Import Condition=" '$(UseMaui)' == 'true' AND Exists('$(MauiAppTargetsFile)')" Project="$(MauiAppTargetsFile)" />
+    <!-- ==================== MAUI INTEGRATION ==================== -->
+    <PropertyGroup>
+        <MauiAppTargetsFile Condition=" $(MauiAppTargetsFile) == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `Directory.Build.MauiApp.targets`))</MauiAppTargetsFile>
+    </PropertyGroup>
+    <Import Condition=" Exists('$(MauiAppTargetsFile)')" Project="$(MauiAppTargetsFile)"/>
 
-  <!-- ==================== NUGET INTEGRATION ==================== -->
-  <PropertyGroup>
-    <NugetTargetsFile Condition=" $(NugetTargetsFile) == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `Directory.Build.Nuget.targets`))</NugetTargetsFile>
-  </PropertyGroup>
-  <Import Condition=" Exists('$(NugetTargetsFile)')" Project="$(NugetTargetsFile)" />
+    <!-- ==================== NUGET INTEGRATION ==================== -->
+    <PropertyGroup>
+        <NugetTargetsFile Condition=" $(NugetTargetsFile) == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `Directory.Build.Nuget.targets`))</NugetTargetsFile>
+    </PropertyGroup>
+    <Import Condition=" Exists('$(NugetTargetsFile)')" Project="$(NugetTargetsFile)"/>
 </Project>

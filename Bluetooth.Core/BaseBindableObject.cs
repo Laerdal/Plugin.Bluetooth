@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using Bluetooth.Abstractions.Exceptions;
+
 using Microsoft.Extensions.Logging;
 
 using Plugin.BaseTypeExtensions;
@@ -38,17 +40,25 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
         return GetType().Name;
     }
 
-    // High-performance logging using LoggerMessage delegates
+    #region Logging
+
     [LoggerMessage(Level = LogLevel.Trace, Message = "{Sender}.{PropertyName} : {Value} (no change)")]
     private static partial void LogPropertyNotChanged(ILogger logger, string propertyName, object sender, object? value);
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "{Sender}.{PropertyName} : {OldValue} -> {NewValue}")]
-    private static partial void LogPropertyChanged(ILogger logger, string propertyName, object sender, object? oldValue, object? newValue);
+    private static partial void LogPropertyChanged(ILogger logger,
+        string propertyName,
+        object sender,
+        object? oldValue,
+        object? newValue);
+
     [LoggerMessage(Level = LogLevel.Debug, Message = "{Sender}.{PropertyName} : {OldValue} -> (cleared)")]
     private static partial void LogPropertyCleared(ILogger logger, string propertyName, object sender, object? oldValue);
 
     [LoggerMessage(Level = LogLevel.Trace, Message = "{Sender}.{PropertyName} : (already cleared)")]
     private static partial void LogPropertyClearAttempt(ILogger logger, string propertyName, object sender);
+
+    #endregion
 
     /// <summary>
     ///     Occurs when a property value changes.
@@ -140,7 +150,11 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
         _values.AddOrUpdate(propertyName, value, (_, _) => value);
         if (Logger?.IsEnabled(LogLevel.Debug) == true)
         {
-            LogPropertyChanged(Logger, propertyName, this, existingValue, value);
+            LogPropertyChanged(Logger,
+                               propertyName,
+                               this,
+                               existingValue,
+                               value);
         }
         OnPropertyChanged(propertyName);
         return true;
@@ -185,7 +199,6 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-
     /// <summary>
     ///     Waits asynchronously until the specified property equals the expected value, or until the timeout expires.
     /// </summary>
@@ -200,7 +213,6 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
         return WaitForPropertyToBe<T>(propertyName, arg => Equals(arg, expectedValue), timeout, cancellationToken);
     }
 
-
     /// <summary>
     ///     Waits asynchronously until the specified property does not equal the unwanted value, or until the timeout expires.
     /// </summary>
@@ -214,7 +226,6 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
     {
         return WaitForPropertyToBe<T>(propertyName, arg => !Equals(arg, unwantedValue), timeout, cancellationToken);
     }
-
 
     /// <summary>
     ///     Waits asynchronously until the specified property satisfies the given condition, or until the timeout expires.
@@ -285,12 +296,11 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
             return propertyInfo == null ? throw new ArgumentException($"Property '{propertyName}' not found on type '{obj.GetType().FullName}'") : propertyInfo;
         }
 
-        static Tp? GetPropertyValue<Tp>(object obj, PropertyInfo propertyInfo)
+        static TP? GetPropertyValue<TP>(object obj, PropertyInfo propertyInfo)
         {
-            return (Tp?)propertyInfo.GetValue(obj, null);
+            return (TP?) propertyInfo.GetValue(obj, null);
         }
     }
-
 
     /// <summary>
     ///     Waits asynchronously until the property value changes, or until the timeout expires.
@@ -348,7 +358,7 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
 
         static Tp? GetPropertyValue<Tp>(object obj, PropertyInfo propertyInfo)
         {
-            return (Tp?)propertyInfo.GetValue(obj, null);
+            return (Tp?) propertyInfo.GetValue(obj, null);
         }
     }
 
@@ -412,8 +422,7 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
 
         static Tp? GetPropertyValue<Tp>(object obj, PropertyInfo propertyInfo)
         {
-            return (Tp?)propertyInfo.GetValue(obj, null);
+            return (Tp?) propertyInfo.GetValue(obj, null);
         }
     }
-
 }

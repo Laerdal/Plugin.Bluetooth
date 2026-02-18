@@ -1,129 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <!-- Note : This is read AFTER the initial project file -->
+    <!-- Note : This is read AFTER the initial project file -->
 
-  <!-- ==================== SELF REF ==================== -->
-  <ItemGroup>
-    <None Include="$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), $(MSBuildThisFile)))" Pack="false" />
-  </ItemGroup>
-
-  <!-- =================== MAUI : BASE ===================== -->
-  <PropertyGroup Condition=" '$(UseMaui)' == 'true' ">
-    <EnableWindowsTargeting Condition=" '$(IsHostMachineUnix)' == 'true' ">true</EnableWindowsTargeting>
-  </PropertyGroup>
-  <ItemGroup Condition=" '$(UseMaui)' == 'true' ">
-    <PackageReference Include="Microsoft.Maui.Controls" />
-  </ItemGroup>
-
-  <!-- =================== MAUI : TARGET PLATFORM ===================== -->
-  <PropertyGroup Condition=" '$(UseMaui)' == 'true' ">
-    <!-- [MSBuild]::GetTargetPlatformIdentifier() Might be removed soon, alternative would be parsing $(TargetFramework) : -->
-    <!-- <TargetPlatformBeingBuiltNow>$([System.String]::Copy($(TargetFramework)).Substring($([System.String]::Copy($(TargetFramework)).IndexOf('-') + 1)))</TargetPlatformBeingBuiltNow> -->
-    <TargetPlatformBeingBuiltNow>$([MSBuild]::GetTargetPlatformIdentifier($(TargetFramework)))</TargetPlatformBeingBuiltNow>
-
-    <IsForIOS Condition=" '$(IsForIOS)' == '' ">false</IsForIOS>
-    <IsForIOS Condition=" '$(TargetPlatformBeingBuiltNow)' == 'ios' ">true</IsForIOS>
-
-    <IsForAndroid Condition=" '$(IsForAndroid)' == '' ">false</IsForAndroid>
-    <IsForAndroid Condition=" '$(TargetPlatformBeingBuiltNow)' == 'android' ">true</IsForAndroid>
-
-    <IsForWindows Condition=" '$(IsForWindows)' == '' ">false</IsForWindows>
-    <IsForWindows Condition=" '$(TargetPlatformBeingBuiltNow)' == 'windows' ">true</IsForWindows>
-
-    <IsForMacCatalyst Condition=" '$(IsForMacCatalyst)' == '' ">false</IsForMacCatalyst>
-    <IsForMacCatalyst Condition=" '$(TargetPlatformBeingBuiltNow)' == 'maccatalyst' ">true</IsForMacCatalyst>
-
-    <IsForAppleStuff Condition=" '$(IsForAppleStuff)' == '' ">false</IsForAppleStuff>
-    <IsForAppleStuff Condition=" $(IsForIOS) Or $(IsForMacCatalyst) ">true</IsForAppleStuff>
-
-    <IsForPlainNetX Condition=" '$(IsForPlainNetX)' == '' ">false</IsForPlainNetX>
-    <IsForPlainNetX Condition=" '$(TargetPlatformBeingBuiltNow)' == '' ">true</IsForPlainNetX>
-  </PropertyGroup>
-
-  <!-- ==================== MAUI : TARGET PLATFORM VERSION ==================== -->
-  <PropertyGroup Condition=" '$(UseMaui)' == 'true' ">
-    <!-- android -->
-    <TargetPlatformVersion Condition=" '$(IsForAndroid)' == 'true' ">36.1</TargetPlatformVersion>
-    <TargetPlatformMinVersion Condition=" '$(IsForAndroid)' == 'true' ">21.0</TargetPlatformMinVersion>
-    <SupportedOSPlatformVersion Condition=" '$(IsForAndroid)' == 'true' ">21.0</SupportedOSPlatformVersion>
-
-    <!-- ios -->
-    <TargetPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">26.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion Condition=" '$(IsForIOS)' == 'true' ">12.2</TargetPlatformMinVersion>
-    <SupportedOSPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">12.2</SupportedOSPlatformVersion>
-
-    <!-- mac-catalyst -->
-    <TargetPlatformVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">26.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">15.0</TargetPlatformMinVersion>
-    <SupportedOSPlatformVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">15.0</SupportedOSPlatformVersion>
-
-    <!-- windows -->
-    <TargetPlatformVersion Condition=" '$(IsForWindows)' == 'true' ">10.0.22621.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion Condition=" '$(IsForWindows)' == 'true' ">10.0.17763.0</TargetPlatformMinVersion>
-    <SupportedOSPlatformVersion Condition=" '$(IsForWindows)' == 'true' ">10.0.17763.0</SupportedOSPlatformVersion>
-  </PropertyGroup>
-
-  <!-- ==================== MAUI : INCLUDE CORE FILES UNDER CORE ==================== -->
-  <!-- we do this because otherwise the IDE (Visual Studio / Rider) will not see those files -->
-  <!-- and therefore will not be able to offer intellisense / compile them etc -->
-
-  <ItemGroup Condition=" '$(IsForPlainNetX)' != 'true' ">
-    <Compile Remove="Core/**/*.cs" />
-  </ItemGroup>
-
-  <!-- ==================== MAUI : Generate MACCATALYST from IOS SOURCE ==================== -->
-  <!-- Author : Kyriakos Sidiropoulos (@ksidirop-laerdal) -->
-  <!-- this is meant to be an automation automatically invoked by the IDE itself to make our lives a bit easier -->
-  <!-- Target GetAllRuntimeIdentifiers is called also in restore, should fix the issues when built from clean pull -->
-  <Target Condition=" $(IsForMacCatalyst) AND Exists('Platforms/iOS')  " Name="CloneIOSSourceCodeToMacCatalyst" BeforeTargets="PrepareForBuild;GetAllRuntimeIdentifiers">
-    <CallTarget Targets="CloneIOSSourceCodeToMacCatalyst_Impl" />
-  </Target>
-
-  <!-- we made this a separate target without conditions so that it will be directly invocable by our build script -->
-  <Target Name="CloneIOSSourceCodeToMacCatalyst_Impl">
-    <Message Importance="High" Text="**** [CloneIOSSourceCodeToMacCatalyst_Impl] Copying iOS *.cs -&gt; MacCatalyst" />
-
-    <!-- intelligently copy over only the files that changed from ios -->
+    <!-- ==================== SELF REF ==================== -->
     <ItemGroup>
-      <iOSFiles Include="Platforms\iOS\**\*.*" />
+        <None Include="$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), $(MSBuildThisFile)))" Pack="false" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(iOSFiles)" DestinationFolder="Platforms\MacCatalyst\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <!-- =================== MAUI : TARGET PLATFORM ===================== -->
+    <PropertyGroup>
+        <!-- [MSBuild]::GetTargetPlatformIdentifier() Might be removed soon, alternative would be parsing $(TargetFramework) : -->
+        <!-- <TargetPlatformBeingBuiltNow>$([System.String]::Copy($(TargetFramework)).Substring($([System.String]::Copy($(TargetFramework)).IndexOf('-') + 1)))</TargetPlatformBeingBuiltNow> -->
+        <TargetPlatformBeingBuiltNow>$([MSBuild]::GetTargetPlatformIdentifier($(TargetFramework)))</TargetPlatformBeingBuiltNow>
 
-    <!-- and now delete all those files under mac-catalyst that no longer have an equivalent sibling file under ios -->
-    <ItemGroup>
-      <MacCatalystSourceFiles Include="$([System.IO.Directory]::GetFiles('Platforms\MacCatalyst', '*.cs', SearchOption.AllDirectories))" />
+        <IsForIOS Condition=" '$(IsForIOS)' == '' ">false</IsForIOS>
+        <IsForIOS Condition=" '$(TargetPlatformBeingBuiltNow)' == 'ios' ">true</IsForIOS>
 
-      <MacCatalystSourceFiles>
-        <RespectiveIosFilePath>$([System.String]::Copy('%(Identity)').Replace('MacCatalyst', 'iOS'))</RespectiveIosFilePath>
-      </MacCatalystSourceFiles>
+        <IsForAndroid Condition=" '$(IsForAndroid)' == '' ">false</IsForAndroid>
+        <IsForAndroid Condition=" '$(TargetPlatformBeingBuiltNow)' == 'android' ">true</IsForAndroid>
 
-      <RespectiveIosFiles Include="@(MacCatalystSourceFiles->'%(RespectiveIosFilePath)')" />
-      <RespectiveIosFilesThatDontExist Include="@(RespectiveIosFiles)" Condition=" !Exists(%(RespectiveIosFiles.Identity)) " />
+        <IsForWindows Condition=" '$(IsForWindows)' == '' ">false</IsForWindows>
+        <IsForWindows Condition=" '$(TargetPlatformBeingBuiltNow)' == 'windows' ">true</IsForWindows>
 
-      <RespectiveIosFilesThatDontExist>
-        <RespectiveMacCatalystFilePath>$([System.String]::Copy('%(Identity)').Replace('iOS', 'MacCatalyst'))</RespectiveMacCatalystFilePath>
-      </RespectiveIosFilesThatDontExist>
+        <IsForMacCatalyst Condition=" '$(IsForMacCatalyst)' == '' ">false</IsForMacCatalyst>
+        <IsForMacCatalyst Condition=" '$(TargetPlatformBeingBuiltNow)' == 'maccatalyst' ">true</IsForMacCatalyst>
 
-      <MacCatalystStrayFilesToDelete Include="@(RespectiveIosFilesThatDontExist->'%(RespectiveMacCatalystFilePath)')" />
-    </ItemGroup>
+        <IsForAppleStuff Condition=" '$(IsForAppleStuff)' == '' ">false</IsForAppleStuff>
+        <IsForAppleStuff Condition=" $(IsForIOS) Or $(IsForMacCatalyst) ">true</IsForAppleStuff>
 
-    <Delete Files="@(MacCatalystStrayFilesToDelete)" />
+        <IsForPlainNetX Condition=" '$(IsForPlainNetX)' == '' ">false</IsForPlainNetX>
+        <IsForPlainNetX Condition=" '$(TargetPlatformBeingBuiltNow)' == '' ">true</IsForPlainNetX>
 
-    <Touch Files="Platforms\MacCatalyst\_DONT_EDIT_ANY_FILES_IN_HERE__ITS_POINTLESS_" AlwaysCreate="true" Condition=" !Exists('Platforms\MacCatalyst\_DONT_EDIT_ANY_FILES_IN_HERE__ITS_POINTLESS_') " />
-  </Target>
+        <IsFor></IsFor>
+        <IsFor Condition=" '$(IsForIOS)' == 'true' ">$(IsFor)iOS;</IsFor>
+        <IsFor Condition=" '$(IsForAndroid)' == 'true' ">$(IsFor)Android;</IsFor>
+        <IsFor Condition=" '$(IsForWindows)' == 'true' ">$(IsFor)Windows;</IsFor>
+        <IsFor Condition=" '$(IsForMacCatalyst)' == 'true' ">$(IsFor)MacCatalyst;</IsFor>
+        <IsFor Condition=" '$(IsForAppleStuff)' == 'true' ">$(IsFor)AppleStuff;</IsFor>
+        <IsFor Condition=" '$(IsForPlainNetX)' == 'true' ">$(IsFor)PlainNetX;</IsFor>
 
-  <!-- ==================== LOGGING ==================== -->
-  <Target Name="PrintMauiBuildInfo" BeforeTargets="CoreCompile" AfterTargets="PrintBuildInfo" Condition=" '$(UseMaui)' == 'true' ">
-    <Message Importance="High" Text="TargetPlatformBeingBuiltNow : $(TargetPlatformBeingBuiltNow)" />
-    <Message Importance="High" Text="IsForIOS                : $(IsForIOS)" />
-    <Message Importance="High" Text="IsForAndroid            : $(IsForAndroid)" />
-    <Message Importance="High" Text="IsForWindows            : $(IsForWindows)" />
-    <Message Importance="High" Text="IsForMacCatalyst        : $(IsForMacCatalyst)" />
-    <Message Importance="High" Text="IsForAppleStuff         : $(IsForAppleStuff)" />
-    <Message Importance="High" Text="IsForPlainNetX          : $(IsForPlainNetX)" />
-    <Message Importance="High" Text="TargetPlatformVersion   : $(TargetPlatformVersion)" />
-    <Message Importance="High" Text="TargetPlatformMinVersion: $(TargetPlatformMinVersion)" />
-    <Message Importance="High" Text="SupportedOSPlatformVersion: $(SupportedOSPlatformVersion)" />
-  </Target>
+        <EnableWindowsTargeting Condition=" '$(IsForWindows)' == 'true' ">true</EnableWindowsTargeting>
+        <RuntimeIdentifiers Condition=" '$(IsForAppleStuff)' == 'true' ">ios-arm64;iossimulator-arm64;iossimulator-x64</RuntimeIdentifiers>
+    </PropertyGroup>
+
+    <!-- ==================== MAUI : TARGET PLATFORM VERSION ==================== -->
+    <PropertyGroup>
+        <!-- android -->
+        <TargetPlatformVersion Condition=" '$(IsForAndroid)' == 'true' ">36.1</TargetPlatformVersion>
+        <TargetPlatformMinVersion Condition=" '$(IsForAndroid)' == 'true' ">21.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForAndroid)' == 'true' ">21.0</SupportedOSPlatformVersion>
+
+        <!-- ios -->
+        <TargetPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">26.0</TargetPlatformVersion>
+        <TargetPlatformMinVersion Condition=" '$(IsForIOS)' == 'true' ">12.2</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">12.2</SupportedOSPlatformVersion>
+
+        <!-- mac-catalyst -->
+        <TargetPlatformVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">26.0</TargetPlatformVersion>
+        <TargetPlatformMinVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">15.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">15.0</SupportedOSPlatformVersion>
+
+        <!-- windows -->
+        <TargetPlatformVersion Condition=" '$(IsForWindows)' == 'true' ">10.0.26100.0</TargetPlatformVersion>
+        <TargetPlatformMinVersion Condition=" '$(IsForWindows)' == 'true' ">10.0.17763.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForWindows)' == 'true' ">10.0.17763.0</SupportedOSPlatformVersion>
+    </PropertyGroup>
+
+    <!-- ==================== MAUI : Generate MACCATALYST from IOS SOURCE ==================== -->
+    <!-- Author : Kyriakos Sidiropoulos (@ksidirop-laerdal) -->
+    <!-- this is meant to be an automation automatically invoked by the IDE itself to make our lives a bit easier -->
+    <!-- Target GetAllRuntimeIdentifiers is called also in restore, should fix the issues when built from clean pull -->
+    <Target Condition=" $(IsForMacCatalyst) AND Exists('Platforms/iOS')  " Name="CloneIOSSourceCodeToMacCatalyst" BeforeTargets="PrepareForBuild;GetAllRuntimeIdentifiers">
+        <CallTarget Targets="CloneIOSSourceCodeToMacCatalyst_Impl" />
+    </Target>
+
+    <!-- we made this a separate target without conditions so that it will be directly invocable by our build script -->
+    <Target Name="CloneIOSSourceCodeToMacCatalyst_Impl">
+        <Message Importance="High" Text="**** [CloneIOSSourceCodeToMacCatalyst_Impl] Copying iOS *.cs -&gt; MacCatalyst" />
+
+        <!-- intelligently copy over only the files that changed from ios -->
+        <ItemGroup>
+            <iOSFiles Include="Platforms\iOS\**\*.*" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(iOSFiles)" DestinationFolder="Platforms\MacCatalyst\%(RecursiveDir)" SkipUnchangedFiles="true" />
+
+        <!-- and now delete all those files under mac-catalyst that no longer have an equivalent sibling file under ios -->
+        <ItemGroup>
+            <MacCatalystSourceFiles Include="$([System.IO.Directory]::GetFiles('Platforms\MacCatalyst', '*.cs', SearchOption.AllDirectories))" />
+
+            <MacCatalystSourceFiles>
+                <RespectiveIosFilePath>$([System.String]::Copy('%(Identity)').Replace('MacCatalyst', 'iOS'))</RespectiveIosFilePath>
+            </MacCatalystSourceFiles>
+
+            <RespectiveIosFiles Include="@(MacCatalystSourceFiles->'%(RespectiveIosFilePath)')" />
+            <RespectiveIosFilesThatDontExist Include="@(RespectiveIosFiles)" Condition=" !Exists(%(RespectiveIosFiles.Identity)) " />
+
+            <RespectiveIosFilesThatDontExist>
+                <RespectiveMacCatalystFilePath>$([System.String]::Copy('%(Identity)').Replace('iOS', 'MacCatalyst'))</RespectiveMacCatalystFilePath>
+            </RespectiveIosFilesThatDontExist>
+
+            <MacCatalystStrayFilesToDelete Include="@(RespectiveIosFilesThatDontExist->'%(RespectiveMacCatalystFilePath)')" />
+        </ItemGroup>
+
+        <Delete Files="@(MacCatalystStrayFilesToDelete)" />
+
+        <Touch Files="Platforms\MacCatalyst\_DONT_EDIT_ANY_FILES_IN_HERE__ITS_POINTLESS_" AlwaysCreate="true" Condition=" !Exists('Platforms\MacCatalyst\_DONT_EDIT_ANY_FILES_IN_HERE__ITS_POINTLESS_') " />
+    </Target>
+
+    <!-- ==================== LOGGING ==================== -->
+    <Target Name="PrintMauiBuildInfo" BeforeTargets="CoreCompile" AfterTargets="PrintBuildInfo">
+        <Message Importance="High" Text="TargetPlatform    : $(TargetPlatformBeingBuiltNow) (Min: $(TargetPlatformMinVersion); Target: $(TargetPlatformVersion); Supported: $(SupportedOSPlatformVersion))" />
+        <Message Importance="High" Text="Is for            : $(IsFor)" />
+        <Message Importance="High" Text="DefineConstants    : $(DefineConstants)" />
+    </Target>
 </Project>

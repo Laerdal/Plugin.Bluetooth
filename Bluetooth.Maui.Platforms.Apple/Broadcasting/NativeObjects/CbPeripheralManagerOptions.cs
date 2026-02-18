@@ -4,33 +4,33 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 /// Options for initializing a CBPeripheralManager.
 /// </summary>
 /// <see href="https://developer.apple.com/documentation/corebluetooth/peripheral-manager-initialization-options"/>
-public sealed record CbPeripheralManagerOptions
+public record CbPeripheralManagerOptions
 {
     /// <summary>
     /// Gets or sets the restore identifier key for state restoration.
     /// </summary>
     /// <see href="https://developer.apple.com/documentation/corebluetooth/cbperipheralmanageroptionrestoreidentifierkey"/>
-    public string? RestoreIdentifierKey { get; init; }
+    public string? RestoreIdentifierKey { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to show a power alert when Bluetooth is off.
     /// </summary>
     /// <see href="https://developer.apple.com/documentation/corebluetooth/cbperipheralmanageroptionshowpoweralertkey"/>
-    public bool ShowPowerAlert { get; init; } = true;
+    public bool ShowPowerAlert { get; set; } = true;
 
     /// <summary>
     /// Implicitly converts CbPeripheralManagerOptions to NSDictionary.
     /// </summary>
     /// <param name="options">The options to convert.</param>
     /// <returns>An NSDictionary containing the options.</returns>
-    public static implicit operator NSDictionary?(CbPeripheralManagerOptions? options)
+    public static implicit operator NSDictionary(CbPeripheralManagerOptions? options)
     {
-        if( options == null)
-        {
-            return null;
-        }
-
         var dict = new NSMutableDictionary();
+        
+        if (options == null)
+        {
+            return dict;
+        }
 
         // Show power alert
         dict[CBPeripheralManager.OptionShowPowerAlertKey] = NSNumber.FromBoolean(options.ShowPowerAlert);
@@ -48,7 +48,7 @@ public sealed record CbPeripheralManagerOptions
     /// </summary>
     /// <returns>An NSDictionary containing the options.</returns>
     // ReSharper disable once InconsistentNaming
-    public NSDictionary? ToNSDictionary()
+    public NSDictionary ToNSDictionary()
     {
         return this;
     }

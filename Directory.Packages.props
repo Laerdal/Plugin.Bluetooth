@@ -6,6 +6,8 @@
   </PropertyGroup>
   <!-- ==================== INTERNAL DEPENDENCIES ==================== -->
   <ItemGroup>
+    <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
     <PackageVersion Include="Plugin.ByteArrays" Version="1.0.30" />
     <PackageVersion Include="Plugin.ExceptionListeners" Version="1.0.5" />
     <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.23" />
@@ -23,6 +25,7 @@
     <PackageVersion Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
     <PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageVersion Include="Microsoft.Maui.Essentials" Version="$(MauiVersion)" />
+    <PackageVersion Include="Microsoft.Windows.SDK.Contracts" Version="10.0.26100.7705" />
   </ItemGroup>
   <!-- ==================== COMMUNITY DEPENDENCIES ==================== -->
   <ItemGroup>
@@ -39,7 +42,6 @@
     <PackageVersion Include="FluentAssertions" Version="7.2.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
-    <PackageVersion Include="JetBrains.Annotations" Version="2025.2.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
@@ -47,7 +49,7 @@
   <!-- ==================== BUILD & ANALYSIS DEPENDENCIES ==================== -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.101" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.103" />
   </ItemGroup>
   <!-- ==================== LOGGING DEPENDENCIES ==================== -->
   <ItemGroup>

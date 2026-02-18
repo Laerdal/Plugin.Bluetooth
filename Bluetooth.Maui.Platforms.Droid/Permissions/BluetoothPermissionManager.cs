@@ -1,7 +1,9 @@
 namespace Bluetooth.Maui.Platforms.Droid.Permissions;
 
+/// <inheritdoc/>
 public class BluetoothPermissionManager : IBluetoothPermissionManager
 {
+    /// <inheritdoc/>
     public async ValueTask<bool> HasBluetoothPermissionsAsync()
     {
         try
@@ -29,6 +31,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         }
     }
 
+    /// <inheritdoc/>
     public async ValueTask<bool> HasScannerPermissionsAsync()
     {
         try
@@ -61,6 +64,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         }
     }
 
+    /// <inheritdoc/>
     public async ValueTask<bool> HasBroadcasterPermissionsAsync()
     {
         try
@@ -83,6 +87,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         }
     }
 
+    /// <inheritdoc/>
     public async ValueTask<bool> RequestBluetoothPermissionsAsync()
     {
         try
@@ -112,6 +117,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         }
     }
 
+    /// <inheritdoc/>
     public async ValueTask<bool> RequestScannerPermissionsAsync()
     {
         try
@@ -152,6 +158,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         }
     }
 
+    /// <inheritdoc/>
     public async ValueTask<bool> RequestBroadcasterPermissionsAsync()
     {
         try

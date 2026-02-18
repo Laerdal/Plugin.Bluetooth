@@ -1,6 +1,4 @@
-using Bluetooth.Abstractions.Scanning;
-using Bluetooth.Core.Exceptions;
-using Bluetooth.Core.Scanning.Exceptions;
+using Bluetooth.Abstractions.Scanning.Options;
 
 using Plugin.BaseTypeExtensions;
 
@@ -8,30 +6,17 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothScanner
 {
-
     #region Configuration
 
-    /// <inheritdoc/>
-    public async Task UpdateScannerOptionsAsync(IBluetoothScannerStartScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        var old = StartScanningOptions;
-        try
-        {
-            if (IsRunning)
-            {
-                await StopScanningAsync(timeout, cancellationToken).ConfigureAwait(false);
-                await StartScanningAsync(options, timeout, cancellationToken).ConfigureAwait(false);
-            }
-        }
-        catch (Exception e)
-        {
-            StartScanningOptions = old;
-            throw new ScannerConfigurationUpdateFailedException(this, innerException: e);
-        }
-    }
+    /// <inheritdoc />
+    public static ScanningOptions DefaultScanningOptions { get; } = new ScanningOptions();
 
-    /// <inheritdoc/>
-    public IBluetoothScannerStartScanningOptions StartScanningOptions { get; private set; } = new DefaultBluetoothScannerStartScanningOptions();
+    /// <inheritdoc />
+    public ScanningOptions CurrentScanningOptions
+    {
+        get => GetValue(DefaultScanningOptions);
+        private set => SetValue(value);
+    }
 
     #endregion
 
@@ -121,16 +106,19 @@ public abstract partial class BaseBluetoothScanner
         }
 
         // Else throw an exception
+        LogScannerUnexpectedStart();
         throw new ScannerUnexpectedStartException(this);
     }
 
     /// <summary>
     /// Called when the start operation has failed.
-    /// Sets the TaskCompletionSource exception or dispatches to the unhandled exception listener.
+    /// Sets the Task Completion Source exception or dispatches to the unhandled exception listener.
     /// </summary>
     /// <param name="e">The exception that caused the start to fail.</param>
     protected void OnStartFailed(Exception e)
     {
+        LogScannerStartFailed(e);
+
         // Attempt to dispatch exception to the TaskCompletionSource
         var success = StartTcs?.TrySetException(e) ?? false;
         if (success)
@@ -143,20 +131,25 @@ public abstract partial class BaseBluetoothScanner
     }
 
     /// <inheritdoc/>
-    public ValueTask StartScanningIfNeededAsync(IBluetoothScannerStartScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask StartScanningIfNeededAsync(ScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return (IsRunning && options == StartScanningOptions) ? ValueTask.CompletedTask : new ValueTask(StartScanningAsync(options, timeout, cancellationToken));
+        return (IsRunning && options == CurrentScanningOptions) ? ValueTask.CompletedTask : new ValueTask(StartScanningAsync(options, timeout, cancellationToken));
     }
 
     /// <inheritdoc/>
-    public async Task StartScanningAsync(IBluetoothScannerStartScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async Task StartScanningAsync(ScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure we are not already started
-        ScannerIsAlreadyStartedException.ThrowIfIsStarted(this);
+        if (IsRunning)
+        {
+            LogScannerAlreadyStarted();
+            throw new ScannerIsAlreadyStartedException(this);
+        }
 
         // Prevents multiple calls to StartAsync, if already starting, we merge the calls
         if (StartTcs is { Task.IsCompleted: false })
         {
+            LogMergingStartOperation();
             await StartTcs.Task.ConfigureAwait(false);
             return;
         }
@@ -167,8 +160,9 @@ public abstract partial class BaseBluetoothScanner
 
         try // try-catch to dispatch exceptions rising from start through OnStartFailed
         {
-            StartScanningOptions = options; // Set the configuration
+            CurrentScanningOptions = options; // Set the configuration
 
+            LogScannerStarting(options.ServiceUuids?.Count ?? 0);
             await NativeStartAsync(options, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
         }
         catch (Exception e)
@@ -193,6 +187,10 @@ public abstract partial class BaseBluetoothScanner
             IsStarting = false; // Reset the starting state
             Started?.Invoke(this, System.EventArgs.Empty);
             StartTcs = null;
+            if (IsRunning)
+            {
+                LogScannerStarted();
+            }
         }
     }
 
@@ -203,7 +201,7 @@ public abstract partial class BaseBluetoothScanner
     /// <param name="scanningOptions">The scanning options to use when starting the scanner.</param>
     /// <param name="timeout">An optional timeout for the start operation.</param>
     /// <param name="cancellationToken">An optional cancellation token to cancel the start operation.</param>
-    protected abstract ValueTask NativeStartAsync(IBluetoothScannerStartScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    protected abstract ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -249,6 +247,7 @@ public abstract partial class BaseBluetoothScanner
         }
 
         // Else throw an exception
+        LogScannerUnexpectedStop();
         throw new ScannerUnexpectedStopException(this);
     }
 
@@ -259,6 +258,8 @@ public abstract partial class BaseBluetoothScanner
     /// <param name="e">The exception that caused the stop to fail.</param>
     protected void OnStopFailed(Exception e)
     {
+        LogScannerStopFailed(e);
+
         // Attempt to dispatch exception to the TaskCompletionSource
         var success = StopTcs?.TrySetException(e) ?? false;
         if (success)
@@ -285,11 +286,16 @@ public abstract partial class BaseBluetoothScanner
     public async virtual Task StopScanningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure we are not already stopped
-        ScannerIsAlreadyStoppedException.ThrowIfIsStopped(this);
+        if (!IsRunning)
+        {
+            LogScannerAlreadyStopped();
+            throw new ScannerIsAlreadyStoppedException(this);
+        }
 
         // Prevents multiple calls to StopAsync, if already stopping, we merge the calls
         if (StopTcs is { Task.IsCompleted: false })
         {
+            LogMergingStopOperation();
             await StopTcs.Task.ConfigureAwait(false);
             return;
         }
@@ -300,6 +306,7 @@ public abstract partial class BaseBluetoothScanner
 
         try // try-catch to dispatch exceptions rising from start
         {
+            LogScannerStopping();
             await NativeStopAsync(timeout, cancellationToken).ConfigureAwait(false); // actual stop native call
         }
         catch (Exception e)
@@ -323,6 +330,10 @@ public abstract partial class BaseBluetoothScanner
             IsStopping = false; // Reset the stopping state
             Stopped?.Invoke(this, System.EventArgs.Empty);
             StopTcs = null;
+            if (!IsRunning)
+            {
+                LogScannerStopped();
+            }
         }
     }
 
@@ -334,4 +345,28 @@ public abstract partial class BaseBluetoothScanner
 
     #endregion
 
+    #region Configuration
+
+    /// <inheritdoc />
+    public async ValueTask UpdateScannerOptionsAsync(ScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        var old = CurrentScanningOptions;
+        try
+        {
+            LogUpdatingScannerConfiguration();
+            if (IsRunning)
+            {
+                await StopScanningAsync(timeout, cancellationToken).ConfigureAwait(false);
+                await StartScanningAsync(options, timeout, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (Exception e)
+        {
+            CurrentScanningOptions = old;
+            LogScannerConfigurationUpdateFailed(e);
+            throw new ScannerConfigurationUpdateFailedException(this, innerException: e);
+        }
+    }
+
+    #endregion
 }

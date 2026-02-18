@@ -1,16 +1,15 @@
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
 // Mapping native APIs leads to unclean interfaces, ignoring warnings here
-#pragma warning disable CA1034 // Nested types should not be visible
 #pragma warning disable CA1711 // Identifiers should not have incorrect suffix
 #pragma warning disable CA1716 // Identifiers should not match keywords
 
-public sealed partial class CbPeripheralWrapper
+public partial class CbPeripheralWrapper
 {
     /// <summary>
     /// Delegate interface for CoreBluetooth characteristic callbacks, extending the base Bluetooth characteristic interface.
     /// </summary>
-    public interface ICbCharacteristicDelegate : IBluetoothCharacteristic
+    public interface ICbCharacteristicDelegate
     {
         /// <summary>
         /// Called when a descriptor is discovered for the characteristic.
@@ -41,20 +40,12 @@ public sealed partial class CbPeripheralWrapper
         void UpdatedNotificationState(NSError? error, CBCharacteristic characteristic);
 
         /// <summary>
-        /// Called when a descriptor value is updated.
+        /// Gets the delegate for a specific descriptor of this characteristic.
         /// </summary>
-        /// <param name="error">The error that occurred during the update, or null if successful.</param>
-        /// <param name="descriptor">The descriptor whose value was updated.</param>
-        void UpdatedValue(NSError? error, CBDescriptor descriptor);
-
-        /// <summary>
-        /// Called when a write operation to a descriptor value completes.
-        /// </summary>
-        /// <param name="error">The error that occurred during writing, or null if successful.</param>
-        /// <param name="descriptor">The descriptor that was written to.</param>
-        void WroteDescriptorValue(NSError? error, CBDescriptor descriptor);
+        /// <param name="native">The native CBDescriptor for which to get the delegate.</param>
+        /// <returns>The delegate instance for the specified descriptor.</returns>
+        ICbDescriptorDelegate GetDescriptor(CBDescriptor? native);
     }
 }
-#pragma warning restore CA1034 // Nested types should not be visible
 #pragma warning restore CA1711 // Identifiers should not have incorrect suffix
 #pragma warning restore CA1716 // Identifiers should not match keywords

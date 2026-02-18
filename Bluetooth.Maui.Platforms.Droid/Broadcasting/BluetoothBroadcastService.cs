@@ -1,54 +1,40 @@
 using Android.Bluetooth;
 
+using Bluetooth.Abstractions.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 
 /// <inheritdoc/>
-public partial class BluetoothBroadcastService : BaseBluetoothBroadcastService,
-    BluetoothGattServerCallbackProxy.IService
+public partial class BluetoothBroadcastService : BaseBluetoothLocalService, BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate
 {
     /// <summary>
     /// Gets the native Android Bluetooth GATT service.
     /// </summary>
-    public BluetoothGattService NativeService { get; }
+    public BluetoothGattService? NativeService { get; private set; }
 
     /// <inheritdoc/>
-    public BluetoothBroadcastService(IBluetoothBroadcaster broadcaster,
-        IBluetoothBroadcastServiceFactory.BluetoothBroadcastServiceFactoryRequest request,
-        IBluetoothBroadcastCharacteristicFactory characteristicFactory) : base(broadcaster, request, characteristicFactory)
+    public BluetoothBroadcastService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec request, IBluetoothLocalCharacteristicFactory characteristicFactory) :
+        base(broadcaster, request, characteristicFactory)
     {
-        // Create native GATT service
-        var serviceType = request.IsPrimary ? GattServiceType.Primary : GattServiceType.Secondary;
-        NativeService = new BluetoothGattService(
-            Java.Util.UUID.FromString(request.Id.ToString()),
-            serviceType
-        ) ?? throw new InvalidOperationException("Failed to create GATT service");
-
-        // Add characteristics to the native service
-        foreach (var characteristic in Characteristics.Values)
-        {
-            if (characteristic is BluetoothBroadcastCharacteristic droidCharacteristic)
-            {
-                NativeService.AddCharacteristic(droidCharacteristic.NativeCharacteristic);
-            }
-        }
+        throw new NotImplementedException("BluetoothBroadcastService is not yet implemented on Android.");
     }
 
     /// <inheritdoc/>
-    public override ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         return base.DisposeAsync();
     }
 
-    // BluetoothGattServerCallbackProxy.IService implementation
-    BluetoothGattServerCallbackProxy.ICharacteristic BluetoothGattServerCallbackProxy.IService.GetCharacteristic(BluetoothGattCharacteristic? native)
+    // BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate implementation
+    public BluetoothGattServerCallbackProxy.IBluetoothGattCharacteristicDelegate GetCharacteristic(BluetoothGattCharacteristic? native)
     {
         ArgumentNullException.ThrowIfNull(native);
 
         var uuid = Guid.Parse(native.Uuid?.ToString() ?? throw new InvalidOperationException("Characteristic UUID is null"));
 
-        if (!Characteristics.TryGetValue(uuid, out var characteristic))
+        var characteristic = GetCharacteristicOrDefault(uuid);
+        if (characteristic == null)
         {
             throw new InvalidOperationException($"Characteristic {uuid} not found");
         }
@@ -61,7 +47,7 @@ public partial class BluetoothBroadcastService : BaseBluetoothBroadcastService,
         return droidCharacteristic;
     }
 
-    void BluetoothGattServerCallbackProxy.IService.OnServiceAdded(GattStatus status)
+    void BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate.OnServiceAdded(GattStatus status)
     {
         // Service has been added to GATT server
         // Nothing specific to do here, just log if needed

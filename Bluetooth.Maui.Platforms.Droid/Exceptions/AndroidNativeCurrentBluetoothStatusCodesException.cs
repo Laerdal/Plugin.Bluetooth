@@ -1,4 +1,3 @@
-
 namespace Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 /// <summary>
@@ -17,49 +16,11 @@ public class AndroidNativeCurrentBluetoothStatusCodesException : AndroidNativeBl
     public CurrentBluetoothStatusCodes CurrentBluetoothStatusCodes { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeCurrentBluetoothStatusCodesException"/> class.
-    /// </summary>
-    public AndroidNativeCurrentBluetoothStatusCodesException()
-    {
-        CurrentBluetoothStatusCodes = (CurrentBluetoothStatusCodes)(-1); // Default to error state
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeCurrentBluetoothStatusCodesException"/> class with a specified error message.
-    /// </summary>
-    /// <param name="message">The message that describes the error.</param>
-    public AndroidNativeCurrentBluetoothStatusCodesException(string message) : base(message)
-    {
-        CurrentBluetoothStatusCodes = (CurrentBluetoothStatusCodes)(-1); // Default to error state
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeCurrentBluetoothStatusCodesException"/> class with a specified error message and a reference to the inner exception that is the cause of this exception.
-    /// </summary>
-    /// <param name="message">The error message that explains the reason for the exception.</param>
-    /// <param name="innerException">The exception that is the cause of the current exception.</param>
-    public AndroidNativeCurrentBluetoothStatusCodesException(string message, Exception innerException) : base(message, innerException)
-    {
-        CurrentBluetoothStatusCodes = (CurrentBluetoothStatusCodes)(-1); // Default to error state
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeCurrentBluetoothStatusCodesException"/> class with the specified CurrentBluetoothStatusCodes status.
-    /// </summary>
-    /// <param name="status">The CurrentBluetoothStatusCodes status that caused this exception.</param>
-    public AndroidNativeCurrentBluetoothStatusCodesException(CurrentBluetoothStatusCodes status)
-        : base($"Native CurrentBluetoothStatusCodes Exception: {status} ({(int)status}) (0x{status:X})")
-    {
-        CurrentBluetoothStatusCodes = status;
-    }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="AndroidNativeCurrentBluetoothStatusCodesException"/> class with the specified CurrentBluetoothStatusCodes status and inner exception.
     /// </summary>
     /// <param name="status">The CurrentBluetoothStatusCodes status that caused this exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception.</param>
-    public AndroidNativeCurrentBluetoothStatusCodesException(CurrentBluetoothStatusCodes status, Exception innerException)
-        : base($"Native CurrentBluetoothStatusCodes Exception: {status} ({(int)status}) (0x{status:X})", innerException)
+    public AndroidNativeCurrentBluetoothStatusCodesException(CurrentBluetoothStatusCodes status, Exception? innerException = null) : base($"{CurrentBluetoothStatusCodesToDescription(status)} : {status}", innerException)
     {
         CurrentBluetoothStatusCodes = status;
     }
@@ -75,5 +36,26 @@ public class AndroidNativeCurrentBluetoothStatusCodesException : AndroidNativeBl
         {
             throw new AndroidNativeCurrentBluetoothStatusCodesException(status);
         }
+    }
+
+    private static string CurrentBluetoothStatusCodesToDescription(CurrentBluetoothStatusCodes status)
+    {
+        var statusCodeValue = (int)status;
+        return statusCodeValue switch
+        {
+            0 => "Success: The operation completed successfully.",
+            1 => "Error: Bluetooth is not enabled on this device.",
+            2 => "Error: Bluetooth is not allowed for this application.",
+            3 => "Error: The device is not bonded.",
+            6 => "Error: Missing BLUETOOTH_CONNECT permission.",
+            9 => "Error: Profile service is not bound.",
+            10 => "Feature is supported.",
+            11 => "Feature is not supported.",
+            30 => "Feature is not configured.",
+            200 => "Error: GATT write is not allowed.",
+            201 => "Error: GATT write request is busy.",
+            2147483647 => "Error: Unknown error occurred.",
+            _ => "Unknown Bluetooth status code."
+        };
     }
 }

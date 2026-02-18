@@ -1,3 +1,6 @@
+using Bluetooth.Abstractions.Scanning.Factories;
+using Bluetooth.Abstractions.Scanning.Options;
+using Bluetooth.Core.Infrastructure.Scheduling;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
 using Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 
@@ -6,18 +9,17 @@ using Microsoft.Extensions.Logging;
 namespace Bluetooth.Maui.Platforms.Droid.Scanning;
 
 /// <inheritdoc/>
-public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.IScanner
+public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.IScanCallbackProxyDelegate
 {
     /// <inheritdoc/>
-    public BluetoothScanner(IBluetoothAdapter adapter,
+    public BluetoothScanner(
+        IBluetoothAdapter adapter,
         IBluetoothPermissionManager permissionManager,
         IBluetoothDeviceFactory deviceFactory,
-        IBluetoothCharacteristicAccessServicesRepository knownServicesAndCharacteristicsRepository,
-        ILogger? logger = null) : base(adapter,
-                                       permissionManager,
-                                       deviceFactory,
-                                       knownServicesAndCharacteristicsRepository,
-                                       logger)
+        ITicker ticker,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILogger<IBluetoothScanner>? logger = null)
+        : base(adapter, permissionManager, deviceFactory, rssiToSignalStrengthConverter, ticker, logger)
     {
         ScanCallbackProxy = new ScanCallbackProxy(this);
     }
@@ -68,7 +70,7 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
     /// <remarks>
     /// Starts BLE scanning using the Android BluetoothLeScanner.
     /// </remarks>
-    protected async override ValueTask NativeStartAsync(IBluetoothScannerStartScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected async override ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(BluetoothLeScanner);
 
@@ -88,7 +90,7 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
             // On Android, we only get feedback on "StartScanFailed" and on "AdvertisementReceived"
             // If no devices are around and scan started successfully, we don't receive anything
             // In timeout case, assume scan started successfully
-            IsRunning = true;
+            SetValue(true, nameof(IsRunning));
         }
     }
 
@@ -102,12 +104,12 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
         {
             ArgumentNullException.ThrowIfNull(BluetoothLeScanner);
             BluetoothLeScanner.StopScan(ScanCallbackProxy);
-            IsRunning = false;
+            SetValue(false, nameof(IsRunning));
         }
         catch (Exception e)
         {
             Logger?.LogError(e, "Error stopping Bluetooth scan");
-            IsRunning = false;
+            SetValue(false, nameof(IsRunning));
         }
 
         return ValueTask.CompletedTask;
@@ -116,7 +118,7 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
     /// <summary>
     /// Builds Android scan settings from the scanner options.
     /// </summary>
-    private ScanSettings BuildScanSettings(IBluetoothScannerStartScanningOptions options)
+    private ScanSettings BuildScanSettings(ScanningOptions options)
     {
         var builder = new ScanSettings.Builder();
 
@@ -139,14 +141,20 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
     /// <summary>
     /// Builds Android scan filters from the scanner options.
     /// </summary>
-    private IList<ScanFilter>? BuildScanFilters(IBluetoothScannerStartScanningOptions options)
+    private IList<ScanFilter>? BuildScanFilters(ScanningOptions options)
     {
         // No service UUID filtering in base interface, so return null for now
         // This can be extended if needed
         return null;
     }
 
-    #region ScanCallbackProxy.IScanner Implementation
+    /// <inheritdoc/>
+    protected override IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
+    {
+        return new Factories.BluetoothDeviceFactoryRequest(advertisement);
+    }
+
+    #region ScanCallbackProxy.IScanCallbackProxyDelegate Implementation
 
     /// <summary>
     /// Handles scan failures from the Android Bluetooth LE scanner.
@@ -155,7 +163,7 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
     {
         if (errorCode == ScanFailure.AlreadyStarted)
         {
-            IsRunning = true;
+            SetValue(true, nameof(IsRunning));
             InternalAndroidStartScanResultReceived.Set();
             return;
         }
@@ -166,7 +174,7 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
         }
         catch (Exception e)
         {
-            IsRunning = false;
+            SetValue(false, nameof(IsRunning));
             InternalAndroidStartScanResultReceived.Set();
             Logger?.LogError(e, "Bluetooth scan failed with error code: {ErrorCode}", errorCode);
         }
@@ -190,11 +198,10 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
     {
         // Signal that scan has started successfully
         InternalAndroidStartScanResultReceived.Set();
-        IsRunning = true;
+        SetValue(true, nameof(IsRunning));
 
         try
         {
-            // Create advertisement from scan result
             var nativeDevice = result.Device;
             if (nativeDevice == null)
             {
@@ -203,34 +210,8 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
 
             var advertisement = new BluetoothAdvertisement(result);
 
-            // Apply advertisement filter
-            if (!StartScanningOptions.AdvertisementFilter(advertisement))
-            {
-                return;
-            }
-
-            // Create or get device
-            var deviceId = nativeDevice.Address ?? throw new InvalidOperationException("Device address is null");
-            var device = GetDeviceOrDefault(deviceId);
-
-            if (device == null)
-            {
-                var request = new BluetoothDeviceFactoryRequest
-                {
-                    Id = deviceId,
-                    Manufacturer = advertisement.Manufacturer,
-                };
-                device = DeviceFactory.CreateDevice(this, request);
-            }
-
-            // Update device with advertisement
-            if (device is BluetoothDevice androidDevice)
-            {
-                androidDevice.UpdateAdvertisement(advertisement, result.Rssi);
-            }
-
-            // Notify advertisement received
-            OnAdvertisementReceived(device, advertisement);
+            // Use base class method to handle advertisement (filtering, device creation, etc.)
+            OnAdvertisementReceived(advertisement);
         }
         catch (Exception e)
         {

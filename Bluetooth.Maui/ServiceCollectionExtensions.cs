@@ -1,4 +1,3 @@
-using Bluetooth.Core.Scanning.CharacteristicAccess;
 
 namespace Bluetooth.Maui;
 
@@ -14,19 +13,20 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
     /// <returns>The updated service collection for method chaining.</returns>
-    public static void AddMauiBluetoothServices(this IServiceCollection services)
+    public static void AddBluetoothServices(this IServiceCollection services)
     {
-        services.AddSingleton<IBluetoothCharacteristicAccessServicesRepository, CharacteristicAccessServicesRepository>();
-        services.AddSingleton<IBluetoothAdapter, BluetoothAdapter>();
+        services.AddBluetoothCoreServices();
+        services.AddBluetoothCoreScanningServices();
+        services.AddBluetoothCoreBroadcastingServices();
 
-        services.AddSingleton<IBluetoothScanner, BluetoothScanner>();
-        services.AddSingleton<IBluetoothDeviceFactory, BluetoothDeviceFactory>();
-        services.AddSingleton<IBluetoothServiceFactory, BluetoothServiceFactory>();
-        services.AddSingleton<IBluetoothCharacteristicFactory, BluetoothCharacteristicFactory>();
-
-        services.AddSingleton<IBluetoothBroadcaster, BluetoothBroadcaster>();
-        services.AddSingleton<IBluetoothBroadcastClientDeviceFactory, BluetoothBroadcastClientDeviceFactory>();
-        services.AddSingleton<IBluetoothBroadcastServiceFactory, BluetoothBroadcastServiceFactory>();
-        services.AddSingleton<IBluetoothBroadcastCharacteristicFactory, BluetoothBroadcastCharacteristicFactory>();
+#if WINDOWS
+        services.AddBluetoothMauiWindowsServices();
+#elif ANDROID
+        services.AddBluetoothMauiAndroidServices();
+#elif IOS || MACCATALYST
+        services.AddBluetoothMauiAppleServices();
+#else
+        services.AddBluetoothMauiDotNetServices();
+#endif
     }
 }

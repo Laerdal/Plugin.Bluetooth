@@ -1,3 +1,9 @@
 {
-  "dotnet.defaultSolution": "Bluetooth.Sample.sln"
+    "dotnet.defaultSolution": "Bluetooth.sln",
+    "omnisharp.useModernNet": true,
+    "dotnet.server.useOmnisharp": false,
+    "files.exclude": {
+        "**/bin": true,
+        "**/obj": true
+    }
 }

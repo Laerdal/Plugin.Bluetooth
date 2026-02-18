@@ -1,41 +1,84 @@
 namespace Bluetooth.Maui.Platforms.Windows.Permissions;
 
-/// <inheritdoc/>
+/// <summary>
+/// Windows implementation of the Bluetooth permission manager.
+/// </summary>
+/// <remarks>
+/// Windows uses a capability-based permission model where Bluetooth permissions are declared
+/// in Package.appxmanifest and automatically granted at install time. No runtime permission
+/// prompts are shown to users.
+/// </remarks>
 public class BluetoothPermissionManager : IBluetoothPermissionManager
 {
     /// <inheritdoc/>
+    /// <remarks>
+    /// On Windows, Bluetooth permissions are capability-based and granted at install time
+    /// if the 'bluetooth' capability is declared in Package.appxmanifest.
+    /// This method always returns true.
+    /// </remarks>
     public ValueTask<bool> HasBluetoothPermissionsAsync()
     {
-        throw new NotImplementedException();
+        // On Windows, Bluetooth permissions are capability-based and granted at install time
+        return ValueTask.FromResult(true);
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// On Windows, Bluetooth permissions are capability-based and granted at install time
+    /// if the 'bluetooth' capability is declared in Package.appxmanifest.
+    /// This method always returns true.
+    /// </remarks>
     public ValueTask<bool> HasScannerPermissionsAsync()
     {
-        throw new NotImplementedException();
+        // On Windows, Bluetooth permissions are capability-based and granted at install time
+        return ValueTask.FromResult(true);
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// On Windows, Bluetooth permissions are capability-based and granted at install time
+    /// if the 'bluetooth' capability is declared in Package.appxmanifest.
+    /// This method always returns true.
+    /// </remarks>
     public ValueTask<bool> HasBroadcasterPermissionsAsync()
     {
-        throw new NotImplementedException();
+        // On Windows, Bluetooth permissions are capability-based and granted at install time
+        return ValueTask.FromResult(true);
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// On Windows, no runtime permission request is needed. Bluetooth permissions are
+    /// declared in Package.appxmanifest and granted at install time.
+    /// This method always returns true.
+    /// </remarks>
     public ValueTask<bool> RequestBluetoothPermissionsAsync()
     {
-        throw new NotImplementedException();
+        // No runtime request needed on Windows - permissions are declared at install time
+        return ValueTask.FromResult(true);
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// On Windows, no runtime permission request is needed. Bluetooth permissions are
+    /// declared in Package.appxmanifest and granted at install time.
+    /// This method always returns true.
+    /// </remarks>
     public ValueTask<bool> RequestScannerPermissionsAsync()
     {
-        throw new NotImplementedException();
+        // No runtime request needed on Windows - permissions are declared at install time
+        return ValueTask.FromResult(true);
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// On Windows, no runtime permission request is needed. Bluetooth permissions are
+    /// declared in Package.appxmanifest and granted at install time.
+    /// This method always returns true.
+    /// </remarks>
     public ValueTask<bool> RequestBroadcasterPermissionsAsync()
     {
-        throw new NotImplementedException();
+        // No runtime request needed on Windows - permissions are declared at install time
+        return ValueTask.FromResult(true);
     }
 }

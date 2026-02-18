@@ -1,3 +1,7 @@
+using Bluetooth.Abstractions.Exceptions;
+using Bluetooth.Core.Infrastructure.Scheduling;
+using Bluetooth.Maui.Platforms.Apple.NativeObjects;
+
 using Microsoft.Extensions.Options;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
@@ -8,30 +12,78 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 /// </summary>
 public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
 {
+    private CBCentralManager? _cbCentralManager;
+
+    private readonly CBCentralInitOptions _options;
+
+    private readonly IDispatchQueueProvider _dispatchQueueProvider;
+
+    private readonly CbCentralManagerWrapper.ICbCentralManagerDelegate _cbCentralManagerDelegate;
+
+    private readonly ITicker _ticker;
+
+    private IDisposable? _refreshSubscription;
+
     /// <summary>
     /// The underlying CBCentralManager instance.
     /// </summary>
-    public CBCentralManager CbCentralManager { get; }
-
-    /// <summary>
-    /// The delegate proxy for handling central manager events.
-    /// </summary>
-    private readonly CbCentralManagerWrapper.ICbCentralManagerProxyDelegate _scanner;
+    public CBCentralManager CbCentralManager
+    {
+        get
+        {
+            if (_cbCentralManager == null)
+            {
+                _cbCentralManager = new CBCentralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
+                {
+                    Delegate = this
+                };
+                _refreshSubscription = _ticker.Register("refresh_central_manager_properties", TimeSpan.FromSeconds(1), RefreshIsScanning, true);
+            }
+            return _cbCentralManager;
+        }
+    }
 
     /// <summary>
     /// Initializes a new instance of the CbCentralManagerWrapper class.
     /// </summary>
-    /// <param name="scanner"></param>
-    /// <param name="queue">The dispatch queue for central manager events.</param>
+    /// <param name="cbCentralManagerDelegate"></param>
     /// <param name="options">The initialization options for the central manager.</param>
-    public CbCentralManagerWrapper(CbCentralManagerWrapper.ICbCentralManagerProxyDelegate scanner, DispatchQueue queue, CBCentralInitOptions options)
+    /// <param name="dispatchQueueProvider">The provider for dispatch queues.</param>
+    /// <param name="ticker">The ticker for scheduling tasks.</param>
+    public CbCentralManagerWrapper(CbCentralManagerWrapper.ICbCentralManagerDelegate cbCentralManagerDelegate, IOptions<CBCentralInitOptions> options, IDispatchQueueProvider dispatchQueueProvider, ITicker ticker)
     {
-        _scanner = scanner;
-        CbCentralManager = new CBCentralManager(this, queue, options)
-        {
-            Delegate = this
-        };
+        ArgumentNullException.ThrowIfNull(cbCentralManagerDelegate);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(options.Value);
+        ArgumentNullException.ThrowIfNull(dispatchQueueProvider);
+        ArgumentNullException.ThrowIfNull(ticker);
+
+        _cbCentralManagerDelegate = cbCentralManagerDelegate;
+        _options = options.Value;
+        _dispatchQueueProvider = dispatchQueueProvider;
+        _ticker = ticker;
     }
+
+    private void RefreshIsScanning()
+    {
+        if (CbCentralManager.IsScanning != CbCentralManagerIsScanning)
+        {
+            CbCentralManagerIsScanning = CbCentralManager.IsScanning;
+            if (CbCentralManagerIsScanning)
+            {
+                ScanningStarted();
+            }
+            else
+            {
+                ScanningStopped();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the central manager is currently scanning for peripherals.
+    /// </summary>
+    private bool CbCentralManagerIsScanning { get; set; }
 
     /// <summary>
     /// Releases the unmanaged resources used by the CbCentralManagerWrapper and optionally releases the managed resources.
@@ -41,10 +93,37 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
     {
         if (disposing)
         {
-            CbCentralManager.Dispose();
+            _refreshSubscription?.Dispose();
+            _cbCentralManager?.StopScan();
+            _cbCentralManager?.Dispose();
         }
-
         base.Dispose(disposing);
+    }
+
+    private void ScanningStarted()
+    {
+        try
+        {
+            // ACTION
+            _cbCentralManagerDelegate.ScanningStarted();
+        }
+        catch (Exception e)
+        {
+            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+        }
+    }
+
+    private void ScanningStopped()
+    {
+        try
+        {
+            // ACTION
+            _cbCentralManagerDelegate.ScanningStopped();
+        }
+        catch (Exception e)
+        {
+            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+        }
     }
 
     #region CBCentralManager
@@ -56,7 +135,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
     {
         try
         {
-            _scanner.DiscoveredPeripheral(peripheral, advertisementData, RSSI);
+            _cbCentralManagerDelegate.DiscoveredPeripheral(peripheral, advertisementData, RSSI);
         }
         catch (Exception e)
         {
@@ -70,7 +149,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
         try
         {
             ArgumentNullException.ThrowIfNull(central);
-            _scanner.UpdatedState(central.State);
+            _cbCentralManagerDelegate.UpdatedState(central.State);
         }
         catch (Exception e)
         {
@@ -83,7 +162,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
     {
         try
         {
-            _scanner.WillRestoreState(dict);
+            _cbCentralManagerDelegate.WillRestoreState(dict);
         }
         catch (Exception e)
         {
@@ -103,7 +182,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
             ArgumentNullException.ThrowIfNull(peripheral);
 
             // GET DEVICE
-            var sharedDevice = _scanner.GetDevice(peripheral);
+            var sharedDevice = _cbCentralManagerDelegate.GetDevice(peripheral);
 
             // ACTION
             sharedDevice.FailedToConnectPeripheral(error);
@@ -126,7 +205,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
             ArgumentNullException.ThrowIfNull(peripheral);
 
             // GET DEVICE
-            var sharedDevice = _scanner.GetDevice(peripheral);
+            var sharedDevice = _cbCentralManagerDelegate.GetDevice(peripheral);
 
             // ACTION
             sharedDevice.DidDisconnectPeripheral(timestamp, isReconnecting, error);
@@ -145,7 +224,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
             ArgumentNullException.ThrowIfNull(peripheral);
 
             // GET DEVICE
-            var sharedDevice = _scanner.GetDevice(peripheral);
+            var sharedDevice = _cbCentralManagerDelegate.GetDevice(peripheral);
 
             // ACTION
             sharedDevice.DisconnectedPeripheral(error);
@@ -164,7 +243,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
             ArgumentNullException.ThrowIfNull(peripheral);
 
             // GET DEVICE
-            var sharedDevice = _scanner.GetDevice(peripheral);
+            var sharedDevice = _cbCentralManagerDelegate.GetDevice(peripheral);
 
             // ACTION
             sharedDevice.ConnectedPeripheral();
@@ -183,7 +262,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
             ArgumentNullException.ThrowIfNull(peripheral);
 
             // GET DEVICE
-            var sharedDevice = _scanner.GetDevice(peripheral);
+            var sharedDevice = _cbCentralManagerDelegate.GetDevice(peripheral);
 
             // ACTION
             sharedDevice.ConnectionEventDidOccur(connectionEvent);
@@ -202,7 +281,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
             ArgumentNullException.ThrowIfNull(peripheral);
 
             // GET DEVICE
-            var sharedDevice = _scanner.GetDevice(peripheral);
+            var sharedDevice = _cbCentralManagerDelegate.GetDevice(peripheral);
 
             // ACTION
             sharedDevice.DidUpdateAncsAuthorization();

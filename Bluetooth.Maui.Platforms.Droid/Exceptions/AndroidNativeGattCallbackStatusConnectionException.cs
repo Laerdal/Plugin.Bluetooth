@@ -18,49 +18,11 @@ public class AndroidNativeGattCallbackStatusConnectionException : AndroidNativeB
     public GattCallbackStatusConnection GattCallbackStatusConnection { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusConnectionException"/> class.
-    /// </summary>
-    public AndroidNativeGattCallbackStatusConnectionException()
-    {
-        GattCallbackStatusConnection = (GattCallbackStatusConnection)1; // Default to first failure type
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusConnectionException"/> class with a specified error message.
-    /// </summary>
-    /// <param name="message">The message that describes the error.</param>
-    public AndroidNativeGattCallbackStatusConnectionException(string message) : base(message)
-    {
-        GattCallbackStatusConnection = (GattCallbackStatusConnection)1; // Default to first failure type
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusConnectionException"/> class with a specified error message and a reference to the inner exception that is the cause of this exception.
-    /// </summary>
-    /// <param name="message">The error message that explains the reason for the exception.</param>
-    /// <param name="innerException">The exception that is the cause of the current exception.</param>
-    public AndroidNativeGattCallbackStatusConnectionException(string message, Exception innerException) : base(message, innerException)
-    {
-        GattCallbackStatusConnection = (GattCallbackStatusConnection)1; // Default to first failure type
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusConnectionException"/> class with the specified GattCallbackStatusConnection.
-    /// </summary>
-    /// <param name="status">The GattCallbackStatusConnection that caused this exception.</param>
-    public AndroidNativeGattCallbackStatusConnectionException(GattCallbackStatusConnection status)
-        : base($"Native GattCallbackStatusConnection Exception: {status} ({(int)status}) (0x{status:X})")
-    {
-        GattCallbackStatusConnection = status;
-    }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusConnectionException"/> class with the specified GattCallbackStatusConnection and inner exception.
     /// </summary>
     /// <param name="status">The GattCallbackStatusConnection that caused this exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception.</param>
-    public AndroidNativeGattCallbackStatusConnectionException(GattCallbackStatusConnection status, Exception innerException)
-        : base($"Native GattCallbackStatusConnection Exception: {status} ({(int)status}) (0x{status:X})", innerException)
+    public AndroidNativeGattCallbackStatusConnectionException(GattCallbackStatusConnection status, Exception? innerException = null) : base($"{GattCallbackStatusConnectionToDescription(status)} : {status}", innerException)
     {
         GattCallbackStatusConnection = status;
     }
@@ -78,16 +40,23 @@ public class AndroidNativeGattCallbackStatusConnectionException : AndroidNativeB
         }
     }
 
-    /// <summary>
-    /// Throws an <see cref="AndroidNativeGattCallbackStatusConnectionException"/> if the GattStatus is not Success.
-    /// </summary>
-    /// <param name="status">The GattStatus to check.</param>
-    /// <exception cref="AndroidNativeGattCallbackStatusConnectionException">Thrown when the status is not Success.</exception>
-    public static void ThrowIfNotSuccess(GattStatus status)
+    private static string GattCallbackStatusConnectionToDescription(GattCallbackStatusConnection status)
     {
-        if ((GattCallbackStatusConnection)status != GattCallbackStatusConnection.GATT_SUCCESS)
+        var statusCodeValue = (int) status;
+        return statusCodeValue switch
         {
-            throw new AndroidNativeGattCallbackStatusConnectionException((GattCallbackStatusConnection)status);
-        }
+            0x00 => "Success: The GATT connection operation completed successfully.",
+            0x01 => "Error: GATT connection L2CAP failure.",
+            0x08 => "Error: GATT connection timeout.",
+            0x13 => "Error: GATT connection terminated by peer user.",
+            0x16 => "Error: GATT connection terminated by local host.",
+            0x22 => "Error: GATT connection LMP timeout.",
+            0x3E => "Error: GATT connection failed to establish.",
+            0x85 => "Error: Generic GATT error.",
+            0x0100 => "Error: GATT connection cancelled.",
+            0x0101 => "Error: Too many open GATT connections.",
+            _ => "Unknown GATT connection status code."
+        };
     }
+
 }

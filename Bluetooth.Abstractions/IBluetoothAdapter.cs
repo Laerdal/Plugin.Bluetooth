@@ -1,7 +1,4 @@
-
 using System.ComponentModel;
-
-using Bluetooth.Abstractions.Scanning.EventArgs;
 
 namespace Bluetooth.Abstractions;
 

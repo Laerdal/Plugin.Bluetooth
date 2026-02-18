@@ -1,3 +1,8 @@
+using Bluetooth.Abstractions.Scanning;
+using Bluetooth.Abstractions.Scanning.Factories;
+using Bluetooth.Abstractions.Scanning.Options;
+using Bluetooth.Core.Infrastructure.Scheduling;
+
 using Microsoft.Extensions.Logging;
 
 namespace Bluetooth.Maui.Platforms.DotNetCore.Scanning;
@@ -6,33 +11,47 @@ namespace Bluetooth.Maui.Platforms.DotNetCore.Scanning;
 public class BluetoothScanner : BaseBluetoothScanner
 {
     /// <inheritdoc/>
+    /// <exception cref="PlatformNotSupportedException"></exception>
     public BluetoothScanner(IBluetoothAdapter adapter,
         IBluetoothPermissionManager permissionManager,
         IBluetoothDeviceFactory deviceFactory,
-        IBluetoothCharacteristicAccessServicesRepository knownServicesAndCharacteristicsRepository,
-        ILogger? logger = null) : base(adapter,
+        ITicker ticker,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILogger<IBluetoothScanner>? logger = null) : base(adapter,
                                        permissionManager,
                                        deviceFactory,
-                                       knownServicesAndCharacteristicsRepository,
+                                       rssiToSignalStrengthConverter,
+                                       ticker,
                                        logger)
     {
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
+    /// <exception cref="PlatformNotSupportedException"></exception>
     protected override void NativeRefreshIsRunning()
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
-    protected override ValueTask NativeStartAsync(IBluetoothScannerStartScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    /// <exception cref="PlatformNotSupportedException"></exception>
+    protected override ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc/>
+    /// <exception cref="PlatformNotSupportedException"></exception>
     protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+    }
+
+    /// <inheritdoc/>
+    /// <exception cref="PlatformNotSupportedException"></exception>
+    protected override IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
+    {
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 }

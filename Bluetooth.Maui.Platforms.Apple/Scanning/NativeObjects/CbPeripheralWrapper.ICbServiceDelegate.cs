@@ -1,16 +1,15 @@
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
 // Mapping native APIs leads to unclean interfaces, ignoring warnings here
-#pragma warning disable CA1034 // Nested types should not be visible
 #pragma warning disable CA1711 // Identifiers should not have incorrect suffix
 #pragma warning disable CA1716 // Identifiers should not match keywords
 
-public sealed partial class CbPeripheralWrapper
+public partial class CbPeripheralWrapper
 {
     /// <summary>
     /// Delegate interface for CoreBluetooth service callbacks, extending the base Bluetooth service interface.
     /// </summary>
-    public interface ICbServiceDelegate : IBluetoothService
+    public interface ICbServiceDelegate
     {
         /// <summary>
         /// Called when an included service is discovered within this service.
@@ -35,6 +34,5 @@ public sealed partial class CbPeripheralWrapper
     }
 }
 
-#pragma warning restore CA1034 // Nested types should not be visible
 #pragma warning restore CA1711 // Identifiers should not have incorrect suffix
 #pragma warning restore CA1716 // Identifiers should not match keywords

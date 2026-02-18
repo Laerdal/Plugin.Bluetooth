@@ -1,72 +1,180 @@
-using System.Collections.ObjectModel;
-
-using Bluetooth.Abstractions.Broadcasting;
-using Bluetooth.Core.Broadcasting.Exceptions;
+using Plugin.BaseTypeExtensions;
 
 namespace Bluetooth.Core.Broadcasting;
 
 public abstract partial class BaseBluetoothBroadcaster
 {
-    /// <inheritdoc/>
-    public ReadOnlyDictionary<Guid, IBluetoothBroadcastService> Services { get; }
-
-    private Dictionary<Guid, IBluetoothBroadcastService> WritableServiceList { get; } = new Dictionary<Guid, IBluetoothBroadcastService>();
-
-    /// <inheritdoc/>
-    public async Task<IBluetoothBroadcastService> AddServiceAsync(Guid id,
-        string name,
-        bool isPrimary = true,
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+    private ObservableCollection<IBluetoothLocalService> Services
     {
-        if (WritableServiceList.ContainsKey(id))
+        get
         {
-            throw new BroadcasterServiceAlreadyExistsException(this, id);
+            if (field == null)
+            {
+                field = [];
+                field.CollectionChanged += ServicesOnCollectionChanged;
+            }
+            return field;
         }
-        var newServiceRequest = new IBluetoothBroadcastServiceFactory.BluetoothBroadcastServiceFactoryRequest()
+    }
+
+    #region Services - Events
+
+    private void ServicesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs ea)
+    {
+        var listChangedEventArgs = new ServiceListChangedEventArgs(ea);
+        if (listChangedEventArgs.AddedItems != null)
         {
-            Id = id,
-            Name = name,
-            IsPrimary = isPrimary,
-        };
-        var newService = ServiceFactory.CreateBroadcastService(this, newServiceRequest);
-        lock (WritableServiceList)
-        {
-            WritableServiceList.Add(id, newService);
+            ServicesAdded?.Invoke(this, new ServicesAddedEventArgs(listChangedEventArgs.AddedItems));
         }
-        return newService;
+        if (listChangedEventArgs.RemovedItems != null)
+        {
+            ServicesRemoved?.Invoke(this, new ServicesRemovedEventArgs(listChangedEventArgs.RemovedItems));
+        }
+        ServiceListChanged?.Invoke(this, listChangedEventArgs);
     }
 
     /// <inheritdoc/>
-    public Task RemoveServiceAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public event EventHandler<ServicesAddedEventArgs>? ServicesAdded;
+
+    /// <inheritdoc/>
+    public event EventHandler<ServicesRemovedEventArgs>? ServicesRemoved;
+
+    /// <inheritdoc/>
+    public event EventHandler<ServiceListChangedEventArgs>? ServiceListChanged;
+
+    #endregion
+
+    #region Services - Add
+
+    /// <inheritdoc/>
+    public ValueTask<IBluetoothLocalService> CreateServiceAsync(IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec request, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        if (!WritableServiceList.TryGetValue(id, out var characteristic))
+        ArgumentNullException.ThrowIfNull(request);
+
+        var existingService = GetServiceOrDefault(request.Id);
+        if (existingService != null)
         {
-            throw new BroadcasterServiceNotFoundException(this, id);
+            LogServiceAlreadyExists(request.Id);
+            throw new ServiceAlreadyExistsException(this, request.Id, existingService);
         }
-        return RemoveServiceAsync(characteristic, timeout, cancellationToken);
+
+        LogAddingService(request.Id);
+        var newService = LocalServiceFactory.CreateService(this, request);
+        Services.Add(newService);
+        LogServiceAdded(request.Id);
+
+        return new ValueTask<IBluetoothLocalService>(newService);
+    }
+
+    #endregion
+
+    #region Services - Get
+
+    /// <inheritdoc/>
+    public IBluetoothLocalService GetService(Func<IBluetoothLocalService, bool> filter)
+    {
+        return GetServiceOrDefault(filter) ?? throw new ServiceNotFoundException(this);
     }
 
     /// <inheritdoc/>
-    public async Task RemoveServiceAsync(IBluetoothBroadcastService service, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public IBluetoothLocalService GetService(Guid id)
     {
-        ArgumentNullException.ThrowIfNull(service);
-        var id = service.Id;
-        if (!WritableServiceList.ContainsKey(id))
+        var service = GetServiceOrDefault(id);
+        if (service == null)
         {
-            throw new BroadcasterServiceNotFoundException(this, id);
+            LogServiceNotFound(id);
+            throw new ServiceNotFoundException(this, id);
         }
-        await service.DisposeAsync().ConfigureAwait(false);
-        WritableServiceList.Remove(service.Id);
+        return service;
     }
 
     /// <inheritdoc/>
-    public async Task RemoveAllServicesAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public IBluetoothLocalService? GetServiceOrDefault(Func<IBluetoothLocalService, bool> filter)
     {
-        foreach (var characteristic in WritableServiceList.Values.ToList())
+        try
         {
-            await RemoveServiceAsync(characteristic, timeout, cancellationToken).ConfigureAwait(false);
+            return Services.SingleOrDefault(filter);
+        }
+        catch (InvalidOperationException e)
+        {
+            throw new MultipleServicesFoundException(this, Services.Where(filter).ToArray(), e);
         }
     }
+
+    /// <inheritdoc/>
+    public IBluetoothLocalService? GetServiceOrDefault(Guid id)
+    {
+        try
+        {
+            return Services.SingleOrDefault(service => service.Id == id);
+        }
+        catch (InvalidOperationException e)
+        {
+            throw new MultipleServicesFoundException(this, id, Services.Where(service => service.Id == id).ToArray(), e);
+        }
+    }
+
+    /// <inheritdoc/>
+    public IEnumerable<IBluetoothLocalService> GetServices(Func<IBluetoothLocalService, bool>? filter = null)
+    {
+        filter ??= _ => true;
+        return Services.Where(filter).ToArray();
+    }
+
+    #endregion
+
+    #region Services - Remove
+
+    /// <inheritdoc/>
+    public ValueTask RemoveServiceAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        var service = GetService(id);
+        return RemoveServiceAsync(service, timeout, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask RemoveServiceAsync(IBluetoothLocalService localService, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(localService);
+
+        LogRemovingService(localService.Id);
+        Services.Remove(localService);
+        await localService.DisposeAsync().ConfigureAwait(false);
+        LogServiceRemoved(localService.Id);
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask RemoveAllServicesAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        var serviceList = Services.ToList();
+        var serviceCount = serviceList.Count;
+
+        LogClearingServices();
+
+        foreach (var service in serviceList)
+        {
+            await RemoveServiceAsync(service, timeout, cancellationToken).ConfigureAwait(false);
+        }
+
+        LogServicesCleared(serviceCount);
+    }
+
+    #endregion
+
+    #region Services - Has
+
+    /// <inheritdoc/>
+    public bool HasService(Func<IBluetoothLocalService, bool> filter)
+    {
+        return Services.Any(filter);
+    }
+
+    /// <inheritdoc/>
+    public bool HasService(Guid id)
+    {
+        return HasService(service => service.Id == id);
+    }
+
+    #endregion
 
 }

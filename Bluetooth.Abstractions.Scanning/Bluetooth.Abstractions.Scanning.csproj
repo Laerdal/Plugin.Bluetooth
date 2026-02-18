@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <!-- ==================== CORE VARIABLES ==================== -->
+    <PropertyGroup>
+        <Project_Name>Bluetooth.Abstractions.Scanning</Project_Name>
+        <Project_Tags>Bluetooth;Abstractions;Scanning;Tools;Toolkit</Project_Tags>
+        <Project_Copyright>Francois Raminosona</Project_Copyright>
+        <Project_Description>Bluetooth.Abstractions.Scanning for .NET</Project_Description>
+    </PropertyGroup>
+
+    <!-- ==================== NOWARNINGS ==================== -->
+    <PropertyGroup>
+        <!-- CA1034 : Nested types should not be externally visible-->
+        <NoWarn>$(NoWarn);CA1034</NoWarn>
+        <!-- CA1032 : Implement standard exception constructors -->
+        <NoWarn>$(NoWarn);CA1032</NoWarn>
+        <!-- CS1591 : Missing documentation for publicly visible type or member -->
+        <!-- <NoWarn>$(NoWarn);CS1591</NoWarn> -->
+        <!-- CA1816 : Call GC.SuppressFinalize correctly -->
+        <NoWarn>$(NoWarn);CA1816</NoWarn>
+    </PropertyGroup>
+
+    <!-- ==================== TARGET FRAMEWORKS ==================== -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+
+    <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <PackageReference Include="Plugin.ByteArrays" />
+        <PackageReference Include="Plugin.BaseTypeExtensions" />
+        <PackageReference Include="Plugin.ExceptionListeners" />
+    </ItemGroup>
+
+    <!-- ==================== PROJECT REFERENCES / DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <ProjectReference Include="..\Bluetooth.Abstractions\Bluetooth.Abstractions.csproj" PrivateAssets="all" />
+    </ItemGroup>
+
+    <!-- ==================== FILE DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <Compile Update="**\IBluetoothScanner.*.cs">
+            <DependentUpon>IBluetoothScanner.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothRemoteDevice.*.cs">
+            <DependentUpon>IBluetoothRemoteDevice.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothRemoteService.*.cs">
+            <DependentUpon>IBluetoothRemoteService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothRemoteCharacteristic.*.cs">
+            <DependentUpon>IBluetoothRemoteCharacteristic.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothRemoteDescriptor.*.cs">
+            <DependentUpon>IBluetoothRemoteDescriptor.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothAdvertisement.*.cs">
+            <DependentUpon>IBluetoothAdvertisement.cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\IBluetoothPairingManager.*.cs">
+            <DependentUpon>IBluetoothPairingManager.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+</Project>

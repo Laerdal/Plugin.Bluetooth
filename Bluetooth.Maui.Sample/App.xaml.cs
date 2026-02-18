@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net.Sockets;
 
-using Bluetooth.Core.Exceptions;
+using Bluetooth.Abstractions.Exceptions;
 using Bluetooth.Maui.Sample.Services;
 using Bluetooth.Maui.Sample.Views;
 

@@ -18,49 +18,12 @@ public class AndroidNativeGattStatusException : AndroidNativeBluetoothException
     public GattStatus GattStatus { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattStatusException"/> class.
-    /// </summary>
-    public AndroidNativeGattStatusException()
-    {
-        GattStatus = GattStatus.Failure;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattStatusException"/> class with a specified error message.
-    /// </summary>
-    /// <param name="message">The message that describes the error.</param>
-    public AndroidNativeGattStatusException(string message) : base(message)
-    {
-        GattStatus = GattStatus.Failure;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattStatusException"/> class with a specified error message and a reference to the inner exception that is the cause of this exception.
-    /// </summary>
-    /// <param name="message">The error message that explains the reason for the exception.</param>
-    /// <param name="innerException">The exception that is the cause of the current exception.</param>
-    public AndroidNativeGattStatusException(string message, Exception innerException) : base(message, innerException)
-    {
-        GattStatus = GattStatus.Failure;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattStatusException"/> class with the specified GattStatus.
-    /// </summary>
-    /// <param name="status">The GattStatus that caused this exception.</param>
-    public AndroidNativeGattStatusException(GattStatus status)
-        : base($"Native GattStatus Exception: {status} ({(int)status}) (0x{status:X})")
-    {
-        GattStatus = status;
-    }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="AndroidNativeGattStatusException"/> class with the specified GattStatus and inner exception.
     /// </summary>
     /// <param name="status">The GattStatus that caused this exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception.</param>
-    public AndroidNativeGattStatusException(GattStatus status, Exception innerException)
-        : base($"Native GattStatus Exception: {status} ({(int)status}) (0x{status:X})", innerException)
+    public AndroidNativeGattStatusException(GattStatus status, Exception? innerException = null)
+        : base($"{GattStatusToDescription(status)} : {status}", innerException)
     {
         GattStatus = status;
     }
@@ -76,5 +39,31 @@ public class AndroidNativeGattStatusException : AndroidNativeBluetoothException
         {
             throw new AndroidNativeGattStatusException(status);
         }
+    }
+
+    private static string GattStatusToDescription(GattStatus status)
+    {
+        var statusCodeValue = (int)status;
+        return statusCodeValue switch
+        {
+            0 => "Success: The GATT operation completed successfully.",
+            1 => "Error: Invalid GATT handle.",
+            2 => "Error: Read operation is not permitted.",
+            3 => "Error: Write operation is not permitted.",
+            5 => "Error: Insufficient authentication for the operation.",
+            6 => "Error: The request is not supported.",
+            7 => "Error: Invalid offset specified in the request.",
+            8 => "Error: Insufficient authorization for the operation.",
+            13 => "Error: Invalid attribute length.",
+            15 => "Error: Insufficient encryption for the operation.",
+            128 => "Error: No resources available.",
+            129 => "Error: Internal error occurred.",
+            133 => "Error: GATT error.",
+            135 => "Error: Attribute not found.",
+            137 => "Error: Connection timeout.",
+            143 => "Error: Insufficient resources.",
+            257 => "Error: Connection failed to establish.",
+            _ => "Unknown GATT status."
+        };
     }
 }

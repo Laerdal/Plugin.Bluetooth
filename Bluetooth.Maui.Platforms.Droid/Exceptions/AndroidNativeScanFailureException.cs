@@ -18,50 +18,28 @@ public class AndroidNativeScanFailureException : AndroidNativeBluetoothException
     public ScanFailure ScanFailure { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeScanFailureException"/> class.
-    /// </summary>
-    public AndroidNativeScanFailureException()
-    {
-        ScanFailure = (ScanFailure)1; // Default to first failure type
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeScanFailureException"/> class with a specified error message.
-    /// </summary>
-    /// <param name="message">The message that describes the error.</param>
-    public AndroidNativeScanFailureException(string message) : base(message)
-    {
-        ScanFailure = (ScanFailure)1; // Default to first failure type
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeScanFailureException"/> class with a specified error message and a reference to the inner exception that is the cause of this exception.
-    /// </summary>
-    /// <param name="message">The error message that explains the reason for the exception.</param>
-    /// <param name="innerException">The exception that is the cause of the current exception.</param>
-    public AndroidNativeScanFailureException(string message, Exception innerException) : base(message, innerException)
-    {
-        ScanFailure = (ScanFailure)1; // Default to first failure type
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeScanFailureException"/> class with the specified ScanFailure status.
-    /// </summary>
-    /// <param name="status">The ScanFailure status that caused this exception.</param>
-    public AndroidNativeScanFailureException(ScanFailure status)
-        : base($"Native ScanFailure Exception: {status} ({(int)status}) (0x{status:X})")
-    {
-        ScanFailure = status;
-    }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="AndroidNativeScanFailureException"/> class with the specified ScanFailure status and inner exception.
     /// </summary>
     /// <param name="status">The ScanFailure status that caused this exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception.</param>
-    public AndroidNativeScanFailureException(ScanFailure status, Exception innerException)
-        : base($"Native ScanFailure Exception: {status} ({(int)status}) (0x{status:X})", innerException)
+    public AndroidNativeScanFailureException(ScanFailure status, Exception? innerException = null)
+        : base($"{ScanFailureToDescription(status)} : {status}", innerException)
     {
         ScanFailure = status;
+    }
+
+    private static string ScanFailureToDescription(ScanFailure status)
+    {
+        var statusCodeValue = (int)status;
+        return statusCodeValue switch
+        {
+            1 => "Error: Scanning has already been started.",
+            2 => "Error: Failed to register the application for scanning.",
+            3 => "Error: An internal error occurred during scanning.",
+            4 => "Error: Scanning is not supported on this device.",
+            5 => "Error: Scanning is being started too frequently.",
+            6 => "Error: Scanning is out of hardware resources.",
+            _ => "Unknown scan failure."
+        };
     }
 }

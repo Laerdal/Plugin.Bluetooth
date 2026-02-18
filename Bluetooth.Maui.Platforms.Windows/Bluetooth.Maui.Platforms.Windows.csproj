@@ -8,20 +8,29 @@
         <Project_Description>Windows platform implementation for Bluetooth.Maui</Project_Description>
     </PropertyGroup>
 
-    <!-- ==================== TARGET FRAMEWORKS ==================== -->
+    <!-- ==================== NOWARNINGS ==================== -->
     <PropertyGroup>
-        <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+        <!-- CA1034 : Nested types should not be externally visible-->
+        <NoWarn>$(NoWarn);CA1034</NoWarn>
+        <!-- CA1032 : Implement standard exception constructors -->
+        <NoWarn>$(NoWarn);CA1032</NoWarn>
+        <!-- CS1591 : Missing documentation for publicly visible type or member -->
+        <!-- <NoWarn>$(NoWarn);CS1591</NoWarn> -->
+        <!-- CA1816 : Call GC.SuppressFinalize correctly -->
+        <NoWarn>$(NoWarn);CA1816</NoWarn>
     </PropertyGroup>
 
-    <!-- ==================== MAUI ==================== -->
+    <!-- ==================== TARGET FRAMEWORKS ==================== -->
     <PropertyGroup>
-        <UseMaui>true</UseMaui>
-        <SingleProject>true</SingleProject>
+        <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     </PropertyGroup>
 
     <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
     <ItemGroup>
         <ProjectReference Include="../Bluetooth.Abstractions/Bluetooth.Abstractions.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="../Bluetooth.Abstractions.Scanning/Bluetooth.Abstractions.Scanning.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="../Bluetooth.Abstractions.Broadcasting/Bluetooth.Abstractions.Broadcasting.csproj" PrivateAssets="all"/>
+
         <ProjectReference Include="../Bluetooth.Core/Bluetooth.Core.csproj" PrivateAssets="all"/>
         <ProjectReference Include="../Bluetooth.Core.Broadcasting/Bluetooth.Core.Broadcasting.csproj" PrivateAssets="all"/>
         <ProjectReference Include="../Bluetooth.Core.Scanning/Bluetooth.Core.Scanning.csproj" PrivateAssets="all"/>
@@ -32,30 +41,5 @@
         <PackageReference Include="Plugin.BaseTypeExtensions"/>
         <PackageReference Include="Plugin.ExceptionListeners"/>
         <PackageReference Include="Plugin.ExceptionListeners.Maui"/>
-    </ItemGroup>
-
-    <!-- ==================== NESTED FILES ======================= -->
-    <ItemGroup>
-        <Compile Update="**\BluetoothActivity.*.cs">
-            <DependentUpon>BluetoothActivity.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothAdvertisement.*.cs">
-            <DependentUpon>BluetoothAdvertisement.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothBroadcaster.*.cs">
-            <DependentUpon>BluetoothBroadcaster.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothCharacteristic.*.cs">
-            <DependentUpon>BluetoothCharacteristic.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothDevice.*.cs">
-            <DependentUpon>BluetoothDevice.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothScanner.*.cs">
-            <DependentUpon>BluetoothScanner.cs</DependentUpon>
-        </Compile>
-        <Compile Update="**\BluetoothService.*.cs">
-            <DependentUpon>BluetoothService.cs</DependentUpon>
-        </Compile>
     </ItemGroup>
 </Project>
