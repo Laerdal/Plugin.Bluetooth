@@ -5,9 +5,9 @@ using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 
-/// <inheritdoc/>
+/// <inheritdoc cref="BaseBluetoothLocalCharacteristic" />
 public class BluetoothBroadcastCharacteristic : BaseBluetoothLocalCharacteristic,
-    BluetoothGattServerCallbackProxy.IBluetoothGattCharacteristicDelegate
+                                                BluetoothGattServerCallbackProxy.IBluetoothGattCharacteristicDelegate
 {
     /// <inheritdoc/>
     public BluetoothBroadcastCharacteristic(IBluetoothLocalService service, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request, IBluetoothLocalDescriptorFactory descriptorFactory) : base(service, request, descriptorFactory)
@@ -16,28 +16,23 @@ public class BluetoothBroadcastCharacteristic : BaseBluetoothLocalCharacteristic
     }
 
     /// <inheritdoc/>
-    public ValueTask DisposeAsync()
-    {
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc/>
-    protected override ValueTask NativeUpdateValueAsync(ReadOnlyMemory<byte> value, bool notify, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeUpdateValueAsync(ReadOnlyMemory<byte> value, bool notifyClients, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("Characteristic value updates are not yet implemented on Android.");
     }
 
-    // BluetoothGattServerCallbackProxy.IBluetoothGattCharacteristicDelegate implementation
+    /// <inheritdoc/>
     public void OnCharacteristicReadRequest(
-        BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate sharedDevice,
+        BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate sharedBluetoothDeviceDelegate,
         int requestId,
         int offset)
     {
         throw new NotImplementedException("Characteristic read requests are not yet implemented on Android.");
     }
 
+    /// <inheritdoc/>
     public void OnCharacteristicWriteRequest(
-        BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate sharedDevice,
+        BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate sharedBluetoothDeviceDelegate,
         int requestId,
         bool preparedWrite,
         bool responseNeeded,
@@ -47,8 +42,10 @@ public class BluetoothBroadcastCharacteristic : BaseBluetoothLocalCharacteristic
         throw new NotImplementedException("Characteristic write requests are not yet implemented on Android.");
     }
 
-    public BluetoothGattServerCallbackProxy.IBluetoothGattDescriptorDelegate GetDescriptor(BluetoothGattDescriptor? descriptor)
+    /// <inheritdoc/>
+    public BluetoothGattServerCallbackProxy.IBluetoothGattDescriptorDelegate GetDescriptor(BluetoothGattDescriptor? native)
     {
         throw new NotImplementedException("Descriptors are not yet implemented on Android.");
     }
+
 }

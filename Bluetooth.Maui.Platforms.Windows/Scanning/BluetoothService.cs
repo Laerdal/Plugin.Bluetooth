@@ -50,7 +50,7 @@ public class BluetoothService : BaseBluetoothRemoteService, GattDeviceServicePro
     #region Characteristic Exploration
 
     /// <inheritdoc/>
-    protected override async ValueTask NativeCharacteristicsExplorationAsync(
+    protected async override ValueTask NativeCharacteristicsExplorationAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {

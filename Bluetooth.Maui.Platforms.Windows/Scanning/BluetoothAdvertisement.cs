@@ -142,7 +142,7 @@ public readonly record struct BluetoothAdvertisement : IBluetoothAdvertisement
         }
 
         // Take only the last 6 bytes (MAC address is 48 bits)
-        return string.Join(":", bytes.Skip(2).Select(b => b.ToString("X2")));
+        return string.Join(":", bytes.Skip(2).Select(b => b.ToString("X2", CultureInfo.InvariantCulture)));
     }
 
     #endregion

@@ -5,7 +5,7 @@ using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 
-/// <inheritdoc/>
+/// <inheritdoc cref="BaseBluetoothLocalService" />
 public partial class BluetoothBroadcastService : BaseBluetoothLocalService, BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate
 {
     /// <summary>
@@ -21,12 +21,6 @@ public partial class BluetoothBroadcastService : BaseBluetoothLocalService, Blue
     }
 
     /// <inheritdoc/>
-    public ValueTask DisposeAsync()
-    {
-        return base.DisposeAsync();
-    }
-
-    // BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate implementation
     public BluetoothGattServerCallbackProxy.IBluetoothGattCharacteristicDelegate GetCharacteristic(BluetoothGattCharacteristic? native)
     {
         ArgumentNullException.ThrowIfNull(native);

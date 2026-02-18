@@ -81,7 +81,7 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <inheritdoc/>
-    protected override async ValueTask NativeConnectAsync(
+    protected async override ValueTask NativeConnectAsync(
         ConnectionOptions connectionOptions,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
@@ -146,7 +146,7 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <inheritdoc/>
-    protected override async ValueTask NativeDisconnectAsync(
+    protected async override ValueTask NativeDisconnectAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
@@ -185,7 +185,7 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
     #region Service Discovery
 
     /// <inheritdoc/>
-    protected override async ValueTask NativeServicesExplorationAsync(
+    protected async override ValueTask NativeServicesExplorationAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {

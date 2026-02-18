@@ -7,7 +7,7 @@ namespace Bluetooth.Maui.Platforms.Windows.Broadcasting.Factories;
 public class BluetoothConnectedClientDeviceFactory : BaseBluetoothConnectedClientDeviceFactory
 {
     /// <inheritdoc />
-    public override IBluetoothConnectedDevice CreateConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec request)
+    public override IBluetoothConnectedDevice CreateConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec)
     {
         throw new NotImplementedException();
     }

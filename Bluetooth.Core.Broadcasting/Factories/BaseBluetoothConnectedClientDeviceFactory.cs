@@ -5,6 +5,6 @@ public abstract class BaseBluetoothConnectedClientDeviceFactory : IBluetoothConn
 {
 
     /// <inheritdoc />
-    public abstract IBluetoothConnectedDevice CreateConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec request);
+    public abstract IBluetoothConnectedDevice CreateConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec);
 
 }

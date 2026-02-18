@@ -15,7 +15,7 @@ public class BluetoothLocalDescriptorFactory : BaseBluetoothLocalDescriptorFacto
 
     /// <inheritdoc/>
     /// <exception cref="PlatformNotSupportedException"></exception>
-    public override IBluetoothLocalDescriptor CreateDescriptor(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec request)
+    public override IBluetoothLocalDescriptor CreateDescriptor(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

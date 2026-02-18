@@ -64,7 +64,7 @@ public class ScannerViewModel : BaseViewModel
     /// <summary>
     /// Starts BLE scanning when the page appears.
     /// </summary>
-    public override async ValueTask OnAppearingAsync()
+    public async override ValueTask OnAppearingAsync()
     {
         await base.OnAppearingAsync();
 
@@ -78,7 +78,7 @@ public class ScannerViewModel : BaseViewModel
     /// <summary>
     /// Stops BLE scanning when the page disappears.
     /// </summary>
-    public override async ValueTask OnDisappearingAsync()
+    public async override ValueTask OnDisappearingAsync()
     {
         await base.OnDisappearingAsync();
 

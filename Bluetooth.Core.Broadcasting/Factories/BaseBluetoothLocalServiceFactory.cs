@@ -18,6 +18,6 @@ public abstract class BaseBluetoothLocalServiceFactory : IBluetoothLocalServiceF
     protected IBluetoothLocalCharacteristicFactory LocalCharacteristicFactory { get; }
 
     /// <inheritdoc />
-    public abstract IBluetoothLocalService CreateService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec request);
+    public abstract IBluetoothLocalService CreateService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec);
 
 }

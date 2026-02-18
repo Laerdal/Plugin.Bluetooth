@@ -12,7 +12,7 @@ public class BluetoothLocalCharacteristicFactory : BaseBluetoothLocalCharacteris
     }
 
     /// <inheritdoc />
-    public override Abstractions.Broadcasting.IBluetoothLocalCharacteristic CreateCharacteristic(Abstractions.Broadcasting.IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request)
+    public override Abstractions.Broadcasting.IBluetoothLocalCharacteristic CreateCharacteristic(Abstractions.Broadcasting.IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec)
     {
         throw new NotImplementedException();
     }

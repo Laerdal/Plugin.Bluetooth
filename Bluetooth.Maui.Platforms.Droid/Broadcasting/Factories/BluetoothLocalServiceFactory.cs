@@ -12,7 +12,7 @@ public class BluetoothLocalServiceFactory : BaseBluetoothLocalServiceFactory
     }
 
     /// <inheritdoc />
-    public override Abstractions.Broadcasting.IBluetoothLocalService CreateService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec request)
+    public override Abstractions.Broadcasting.IBluetoothLocalService CreateService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec)
     {
         throw new NotImplementedException();
     }

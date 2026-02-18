@@ -15,7 +15,7 @@ public class BluetoothConnectedClientDeviceFactory : BaseBluetoothConnectedClien
 
     /// <inheritdoc/>
     /// <exception cref="PlatformNotSupportedException"></exception>
-    public override IBluetoothConnectedDevice CreateConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec request)
+    public override IBluetoothConnectedDevice CreateConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

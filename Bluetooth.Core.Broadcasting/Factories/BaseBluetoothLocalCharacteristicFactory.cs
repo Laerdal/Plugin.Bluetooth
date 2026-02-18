@@ -18,5 +18,5 @@ public abstract class BaseBluetoothLocalCharacteristicFactory : IBluetoothLocalC
     protected IBluetoothLocalDescriptorFactory LocalDescriptorFactory { get; }
 
     /// <inheritdoc />
-    public abstract IBluetoothLocalCharacteristic CreateCharacteristic(IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request);
+    public abstract IBluetoothLocalCharacteristic CreateCharacteristic(IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec);
 }

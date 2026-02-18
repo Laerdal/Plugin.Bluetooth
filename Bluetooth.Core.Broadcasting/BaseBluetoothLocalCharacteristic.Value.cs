@@ -27,5 +27,5 @@ public abstract partial class BaseBluetoothLocalCharacteristic
     /// <param name="timeout">An optional timeout for the operation.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous update operation.</returns>
-    protected abstract ValueTask NativeUpdateValueAsync(ReadOnlyMemory<byte> value, bool notifyClients, TimeSpan? timeout, CancellationToken cancellationToken);
+    protected abstract ValueTask NativeUpdateValueAsync(ReadOnlyMemory<byte> value, bool notifyClients, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 }

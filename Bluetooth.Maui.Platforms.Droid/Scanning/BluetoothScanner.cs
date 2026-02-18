@@ -73,6 +73,7 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
     protected async override ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(BluetoothLeScanner);
+        ArgumentNullException.ThrowIfNull(scanningOptions);
 
         // Build scan settings and filters
         var settings = BuildScanSettings(scanningOptions);
@@ -118,19 +119,14 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
     /// <summary>
     /// Builds Android scan settings from the scanner options.
     /// </summary>
-    private ScanSettings BuildScanSettings(ScanningOptions options)
+    private static ScanSettings BuildScanSettings(ScanningOptions options)
     {
-        var builder = new ScanSettings.Builder();
+        using var builder = new ScanSettings.Builder();
 
         // Set scan mode for balanced power/performance
         builder.SetScanMode(Android.Bluetooth.LE.ScanMode.Balanced);
 
-        // Set callback type
-        if (options.IgnoreDuplicateAdvertisements)
-        {
-            builder.SetCallbackType(ScanCallbackType.AllMatches);
-        }
-        else
+        if(OperatingSystem.IsAndroidVersionAtLeast(23))
         {
             builder.SetCallbackType(ScanCallbackType.AllMatches);
         }
@@ -185,6 +181,7 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
     /// </summary>
     public void OnScanResult(ScanCallbackType callbackType, IEnumerable<ScanResult> results)
     {
+        ArgumentNullException.ThrowIfNull(results);
         foreach (var result in results)
         {
             OnScanResult(callbackType, result);
@@ -202,6 +199,7 @@ public partial class BluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.
 
         try
         {
+            ArgumentNullException.ThrowIfNull(result);
             var nativeDevice = result.Device;
             if (nativeDevice == null)
             {

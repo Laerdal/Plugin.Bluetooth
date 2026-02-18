@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Bluetooth.Abstractions.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
@@ -16,7 +18,7 @@ public record BluetoothServiceFactoryRequest : IBluetoothServiceFactory.Bluetoot
     /// Initializes a new instance of the <see cref="BluetoothServiceFactoryRequest"/> record.
     /// </summary>
     /// <param name="nativeService">The native Windows GATT device service.</param>
-    public BluetoothServiceFactoryRequest(GattDeviceService nativeService)
+    public BluetoothServiceFactoryRequest([NotNull]GattDeviceService nativeService)
         : base(nativeService.Uuid)
     {
         ArgumentNullException.ThrowIfNull(nativeService);

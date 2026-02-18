@@ -7,7 +7,7 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 public class AppleBluetoothConnectedClientDeviceFactory : BaseBluetoothConnectedClientDeviceFactory
 {
     /// <inheritdoc />
-    public override IBluetoothConnectedDevice CreateConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec request)
+    public override IBluetoothConnectedDevice CreateConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec)
     {
         return new AppleBluetoothConnectedDevice(broadcaster, request);
     }

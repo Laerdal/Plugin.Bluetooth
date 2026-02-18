@@ -18,11 +18,12 @@ public class BluetoothBroadcastClientDevice : BaseBluetoothConnectedDevice,
     }
 
     /// <inheritdoc/>
-    public ValueTask DisposeAsync()
+    protected override ValueTask DisposeAsyncCore()
     {
         NativeDevice = null;
-        return ValueTask.CompletedTask;
+        return base.DisposeAsyncCore();
     }
+
 
     /// <inheritdoc/>
     protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)

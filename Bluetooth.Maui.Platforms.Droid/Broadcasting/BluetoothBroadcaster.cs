@@ -164,20 +164,23 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackP
         OnStartSucceeded();
     }
 
+
+    /// <inheritdoc/>
     public void OnStartFailure(AdvertiseFailure errorCode)
     {
         OnStartFailed(new AndroidNativeAdvertiseFailureException(errorCode));
     }
 
-    public BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate GetDevice(Android.Bluetooth.BluetoothDevice? nativeDevice)
+    /// <inheritdoc/>
+    public BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate GetDevice(Android.Bluetooth.BluetoothDevice? native)
     {
-        ArgumentNullException.ThrowIfNull(nativeDevice);
-        ArgumentNullException.ThrowIfNull(nativeDevice.Address);
+        ArgumentNullException.ThrowIfNull(native);
+        ArgumentNullException.ThrowIfNull(native.Address);
 
-        var device = GetClientDeviceOrDefault(nativeDevice.Address);
+        var device = GetClientDeviceOrDefault(native.Address);
         if (device == null)
         {
-            throw new ClientDeviceNotFoundException(this, nativeDevice.Address);
+            throw new ClientDeviceNotFoundException(this, native.Address);
         }
         if (device is not BluetoothBroadcastClientDevice droidDevice)
         {

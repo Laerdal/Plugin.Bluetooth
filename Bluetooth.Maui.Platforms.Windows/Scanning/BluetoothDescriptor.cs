@@ -1,3 +1,5 @@
+using Windows.Storage.Streams;
+
 using Bluetooth.Abstractions.Scanning;
 using Bluetooth.Abstractions.Scanning.Factories;
 using Bluetooth.Core.Scanning;
@@ -23,16 +25,12 @@ public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
     /// </summary>
     /// <param name="characteristic">The Bluetooth characteristic that contains this descriptor.</param>
     /// <param name="request">The descriptor factory request containing descriptor information.</param>
-    public BluetoothDescriptor(
-        IBluetoothRemoteCharacteristic characteristic,
-        IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest request)
-        : base(characteristic, request)
+    public BluetoothDescriptor(IBluetoothRemoteCharacteristic characteristic, IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest request) : base(characteristic, request)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request is not BluetoothDescriptorFactoryRequest windowsRequest)
         {
-            throw new ArgumentException(
-                $"Expected request of type {typeof(BluetoothDescriptorFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected request of type {typeof(BluetoothDescriptorFactoryRequest)}, but got {request.GetType()}");
         }
 
         NativeDescriptor = windowsRequest.NativeDescriptor;
@@ -41,14 +39,11 @@ public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
     #region Read
 
     /// <inheritdoc/>
-    protected override async ValueTask NativeReadValueAsync()
+    protected async override ValueTask NativeReadValueAsync()
     {
         try
         {
-            var result = await NativeDescriptor
-                .ReadValueAsync(BluetoothCacheMode.Uncached)
-                .AsTask()
-                .ConfigureAwait(false);
+            var result = await NativeDescriptor.ReadValueAsync(BluetoothCacheMode.Uncached).AsTask().ConfigureAwait(false);
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
@@ -83,20 +78,21 @@ public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
     #region Write
 
     /// <inheritdoc/>
-    protected override async ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
+    protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
         try
         {
             // Create buffer
-            var writer = new global::Windows.Storage.Streams.DataWriter();
-            writer.WriteBytes(value.ToArray());
-            var buffer = writer.DetachBuffer();
+            IBuffer buffer;
+
+            using (var writer = new global::Windows.Storage.Streams.DataWriter())
+            {
+                writer.WriteBytes(value.ToArray());
+                buffer = writer.DetachBuffer();
+            }
 
             // Write with result check
-            var result = await NativeDescriptor
-                .WriteValueWithResultAsync(buffer)
-                .AsTask()
-                .ConfigureAwait(false);
+            var result = await NativeDescriptor.WriteValueWithResultAsync(buffer).AsTask().ConfigureAwait(false);
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
@@ -117,4 +113,5 @@ public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
     }
 
     #endregion
+
 }

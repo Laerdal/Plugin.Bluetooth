@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Bluetooth.Abstractions.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
@@ -16,7 +18,7 @@ public record BluetoothDescriptorFactoryRequest : IBluetoothDescriptorFactory.Bl
     /// Initializes a new instance of the <see cref="BluetoothDescriptorFactoryRequest"/> record.
     /// </summary>
     /// <param name="nativeDescriptor">The native Windows GATT descriptor.</param>
-    public BluetoothDescriptorFactoryRequest(GattDescriptor nativeDescriptor)
+    public BluetoothDescriptorFactoryRequest([NotNull]GattDescriptor nativeDescriptor)
         : base(nativeDescriptor.Uuid)
     {
         ArgumentNullException.ThrowIfNull(nativeDescriptor);

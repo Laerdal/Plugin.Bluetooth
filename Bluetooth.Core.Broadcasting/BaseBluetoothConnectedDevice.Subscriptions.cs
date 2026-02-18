@@ -14,6 +14,7 @@ public abstract partial class BaseBluetoothConnectedDevice
     /// <inheritdoc />
     public void AddCharacteristicSubscription(IBluetoothLocalCharacteristic localCharacteristic)
     {
+        ArgumentNullException.ThrowIfNull(localCharacteristic);
         _subscribedCharacteristics.Add(localCharacteristic);
         LogCharacteristicSubscriptionAdded(Id, localCharacteristic.Id, localCharacteristic.LocalService.Id);
     }
@@ -21,6 +22,7 @@ public abstract partial class BaseBluetoothConnectedDevice
     /// <inheritdoc />
     public void RemoveCharacteristicSubscription(IBluetoothLocalCharacteristic localCharacteristic)
     {
+        ArgumentNullException.ThrowIfNull(localCharacteristic);
         _subscribedCharacteristics.Remove(localCharacteristic);
         LogCharacteristicSubscriptionRemoved(Id, localCharacteristic.Id, localCharacteristic.LocalService.Id);
     }

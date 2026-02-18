@@ -1,3 +1,5 @@
+using Windows.Storage.Streams;
+
 using Bluetooth.Abstractions.Scanning;
 using Bluetooth.Abstractions.Scanning.Factories;
 using Bluetooth.Core.Scanning;
@@ -45,7 +47,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
     #region Read
 
     /// <inheritdoc/>
-    protected override async ValueTask NativeReadValueAsync()
+    protected async override ValueTask NativeReadValueAsync()
     {
         try
         {
@@ -86,14 +88,14 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
     #region Write
 
     /// <inheritdoc/>
-    protected override async ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
+    protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
         try
         {
             // Choose write option based on characteristic properties
             var properties = NativeCharacteristicProxy.GattCharacteristic.CharacteristicProperties;
-            bool supportsWriteWithResponse = properties.HasFlag(GattCharacteristicProperties.Write);
-            bool supportsWriteWithoutResponse = properties.HasFlag(GattCharacteristicProperties.WriteWithoutResponse);
+            var supportsWriteWithResponse = properties.HasFlag(GattCharacteristicProperties.Write);
+            var supportsWriteWithoutResponse = properties.HasFlag(GattCharacteristicProperties.WriteWithoutResponse);
 
             if (!supportsWriteWithResponse && !supportsWriteWithoutResponse)
             {
@@ -108,9 +110,12 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
                 : GattWriteOption.WriteWithoutResponse;
 
             // Create buffer
-            var writer = new global::Windows.Storage.Streams.DataWriter();
-            writer.WriteBytes(value.ToArray());
-            var buffer = writer.DetachBuffer();
+            IBuffer buffer;
+            using (var writer = new global::Windows.Storage.Streams.DataWriter())
+            {
+                writer.WriteBytes(value.ToArray());
+                buffer = writer.DetachBuffer();
+            }
 
             // Write with result check
             var result = await NativeCharacteristicProxy.GattCharacteristic
@@ -141,7 +146,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
     #region Listen (Notify/Indicate)
 
     /// <inheritdoc/>
-    protected override async ValueTask NativeReadIsListeningAsync()
+    protected async override ValueTask NativeReadIsListeningAsync()
     {
         try
         {
@@ -163,7 +168,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
     }
 
     /// <inheritdoc/>
-    protected override async ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
+    protected async override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
         try
         {
@@ -173,8 +178,8 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
             {
                 // Check properties to choose between Notify and Indicate
                 var properties = NativeCharacteristicProxy.GattCharacteristic.CharacteristicProperties;
-                bool supportsNotify = properties.HasFlag(GattCharacteristicProperties.Notify);
-                bool supportsIndicate = properties.HasFlag(GattCharacteristicProperties.Indicate);
+                var supportsNotify = properties.HasFlag(GattCharacteristicProperties.Notify);
+                var supportsIndicate = properties.HasFlag(GattCharacteristicProperties.Indicate);
 
                 if (!supportsNotify && !supportsIndicate)
                 {
@@ -247,7 +252,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
     #region Descriptor Discovery
 
     /// <inheritdoc/>
-    protected override async ValueTask NativeDescriptorsExplorationAsync(
+    protected async override ValueTask NativeDescriptorsExplorationAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {

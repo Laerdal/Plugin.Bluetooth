@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Bluetooth.Abstractions.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
@@ -16,7 +18,7 @@ public record BluetoothCharacteristicFactoryRequest : IBluetoothCharacteristicFa
     /// Initializes a new instance of the <see cref="BluetoothCharacteristicFactoryRequest"/> record.
     /// </summary>
     /// <param name="nativeCharacteristic">The native Windows GATT characteristic.</param>
-    public BluetoothCharacteristicFactoryRequest(GattCharacteristic nativeCharacteristic)
+    public BluetoothCharacteristicFactoryRequest([NotNull]GattCharacteristic nativeCharacteristic)
         : base(nativeCharacteristic.Uuid)
     {
         ArgumentNullException.ThrowIfNull(nativeCharacteristic);

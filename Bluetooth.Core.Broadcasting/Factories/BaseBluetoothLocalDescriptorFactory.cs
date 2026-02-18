@@ -5,6 +5,6 @@ public abstract class BaseBluetoothLocalDescriptorFactory : IBluetoothLocalDescr
 {
 
     /// <inheritdoc />
-    public abstract IBluetoothLocalDescriptor CreateDescriptor(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec request);
+    public abstract IBluetoothLocalDescriptor CreateDescriptor(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec);
 
 }
