@@ -96,10 +96,10 @@ public class ScannerViewModel : BaseViewModel
     {
         try
         {
+            // Create scanning options (cross-platform)
             var options = new Bluetooth.Abstractions.Scanning.Options.ScanningOptions
             {
-                // Optional: Configure scanning options here
-                // For now, using defaults
+                // Using defaults - scans for all devices
             };
 
             await _scanner.StartScanningAsync(options);

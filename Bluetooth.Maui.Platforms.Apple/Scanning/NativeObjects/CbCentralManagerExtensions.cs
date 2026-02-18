@@ -17,6 +17,8 @@ public static class CbCentralManagerExtensions
     public static void ScanForPeripherals(this CBCentralManager cbCentralManager, Abstractions.Scanning.Options.ScanningOptions scanningOptions)
     {
         ArgumentNullException.ThrowIfNull(cbCentralManager);
+        ArgumentNullException.ThrowIfNull(scanningOptions);
+
         if (scanningOptions is ScanningOptionsWithServiceUuid scannerStartScanningOptionsWithServiceUuid)
         {
             cbCentralManager.ScanForPeripherals(scannerStartScanningOptionsWithServiceUuid.PeripheralScanningServiceUuid, scannerStartScanningOptionsWithServiceUuid.PeripheralScanningOptions?.Dictionary);
@@ -31,8 +33,8 @@ public static class CbCentralManagerExtensions
         }
         else
         {
-            throw new ArgumentException($"Scanning options must be of type {nameof(ScanningOptionsWithServiceUuid)} or of type {nameof(ScanningOptionsWithPeripheralUuids)} for iOS platform.",
-                                        nameof(scanningOptions));
+            // For base ScanningOptions type, scan for all devices (no UUID filtering)
+            cbCentralManager.ScanForPeripherals((CBUUID[]?)null, (PeripheralScanningOptions?)null);
         }
     }
 
