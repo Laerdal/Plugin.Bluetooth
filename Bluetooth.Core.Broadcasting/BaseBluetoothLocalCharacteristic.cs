@@ -1,8 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting.Enums;
-
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
@@ -56,10 +51,10 @@ public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObj
     /// <inheritdoc />
     public BluetoothCharacteristicPermissions Permissions { get; init; }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public override string ToString()
     {
-        return $"{Name} ({Id})";
+        return $"[{Id}] {Name}";
     }
 
     /// <summary>

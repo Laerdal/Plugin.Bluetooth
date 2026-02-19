@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteDevice

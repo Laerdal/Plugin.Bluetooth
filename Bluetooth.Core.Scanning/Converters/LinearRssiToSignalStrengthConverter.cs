@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Scanning.Converters;
-
 namespace Bluetooth.Core.Scanning.Converters;
 
 /// <summary>
@@ -7,7 +5,7 @@ namespace Bluetooth.Core.Scanning.Converters;
 /// </summary>
 public class LinearRssiToSignalStrengthConverter : IBluetoothRssiToSignalStrengthConverter
 {
-    private readonly object _lock = new();
+    private readonly Lock _lock = new Lock();
     private double _closeRssiValue = -50;
     private double _farRssiValue = -100;
 

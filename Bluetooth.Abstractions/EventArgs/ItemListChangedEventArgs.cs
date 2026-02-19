@@ -1,5 +1,3 @@
-using System.Collections.Specialized;
-
 namespace Bluetooth.Abstractions.EventArgs;
 
 /// <summary>

@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Enums;
-using Bluetooth.Abstractions.Scanning;
 using Bluetooth.Maui.Platforms.Droid.Tools;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning;

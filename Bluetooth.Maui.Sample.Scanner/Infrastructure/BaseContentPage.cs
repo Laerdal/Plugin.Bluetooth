@@ -1,3 +1,5 @@
+using Microsoft.Maui.Controls;
+
 namespace Bluetooth.Maui.Sample.Scanner.Infrastructure;
 
 /// <summary>

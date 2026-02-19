@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Scanning.Options;
-
 namespace Bluetooth.Abstractions.Scanning;
 
 /// <summary>

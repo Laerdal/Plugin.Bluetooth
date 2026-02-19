@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Scanning.Options;
-
 using Bluetooth.Maui.Platforms.Apple.Scanning.Options;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;

@@ -1,10 +1,3 @@
-using Bluetooth.Abstractions.Scanning.Converters;
-using Bluetooth.Abstractions.Scanning.Options;
-using Bluetooth.Core.Infrastructure.Scheduling;
-
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 namespace Bluetooth.Core.Scanning;
 
 /// <inheritdoc cref="IBluetoothScanner" />
@@ -97,7 +90,10 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     /// <inheritdoc />
     public override string ToString()
     {
-        return $"Scanner ({Devices.Count}D)";
+        lock (Devices)
+        {
+            return $"Scanner ({Devices.Count}D)";
+        }
     }
 
     #region Dispose

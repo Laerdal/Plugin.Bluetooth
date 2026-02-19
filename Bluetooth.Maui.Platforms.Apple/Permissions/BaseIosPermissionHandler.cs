@@ -1,3 +1,7 @@
+using System.Collections.Generic;
+
+using Microsoft.Maui.ApplicationModel;
+
 namespace Bluetooth.Maui.Platforms.Apple.Permissions;
 
 /// <summary>

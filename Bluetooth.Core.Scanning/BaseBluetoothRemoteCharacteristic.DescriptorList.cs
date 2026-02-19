@@ -1,7 +1,3 @@
-using System.Collections.Specialized;
-
-using Plugin.BaseTypeExtensions;
-
 namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteCharacteristic

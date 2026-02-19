@@ -1,9 +1,5 @@
-using Bluetooth.Abstractions.Scanning.Exceptions;
-using Bluetooth.Abstractions.Scanning.Factories;
-using Bluetooth.Maui.Platforms.Apple.Exceptions;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
-using Bluetooth.Maui.Platforms.Apple.Tools;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
@@ -229,12 +225,12 @@ public class AppleBluetoothRemoteCharacteristic : Core.Scanning.BaseBluetoothRem
         try
         {
             var match = GetDescriptorOrDefault(descriptor => AreRepresentingTheSameObject(native, descriptor));
-            return match as CbPeripheralWrapper.ICbDescriptorDelegate ?? throw new DescriptorNotFoundException(this, native.UUID.ToGuid());
+            return match as CbPeripheralWrapper.ICbDescriptorDelegate ?? throw new Abstractions.Scanning.Exceptions.DescriptorNotFoundException(this, native.UUID.ToGuid());
         }
         catch (InvalidOperationException e)
         {
             var matches = GetDescriptors(descriptor => AreRepresentingTheSameObject(native, descriptor)).ToArray();
-            throw new MultipleDescriptorsFoundException(this, matches, e);
+            throw new Abstractions.Scanning.Exceptions.MultipleDescriptorsFoundException(this, matches, e);
         }
     }
 

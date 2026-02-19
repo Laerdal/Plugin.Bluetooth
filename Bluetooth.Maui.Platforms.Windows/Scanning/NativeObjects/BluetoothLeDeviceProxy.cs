@@ -1,4 +1,3 @@
-using Bluetooth.Abstractions.Exceptions;
 using Bluetooth.Maui.Platforms.Windows.Exceptions;
 
 namespace Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;

@@ -9,6 +9,11 @@ public record ScanningOptions
     /// Gets a value indicating whether duplicate advertisements should be ignored.
     /// </summary>
     public bool IgnoreDuplicateAdvertisements { get; init; }
+    
+    /// <summary>
+    /// Gets a value indicating whether advertisements without a local name should be ignored.
+    /// </summary>
+    public bool IgnoreNamelessAdvertisements { get; init; }
 
     /// <summary>
     /// Advertisement filter. If set, only advertisements that pass the filter will be processed.

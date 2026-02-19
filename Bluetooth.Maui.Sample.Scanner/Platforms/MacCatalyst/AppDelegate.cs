@@ -1,4 +1,5 @@
-using Foundation;
+using Microsoft.Maui;
+using Microsoft.Maui.Hosting;
 
 namespace Bluetooth.Maui.Sample.Scanner;
 

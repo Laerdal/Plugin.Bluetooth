@@ -1,4 +1,7 @@
-using Plugin.BaseTypeExtensions;
+using System.Collections.Generic;
+
+using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Controls;
 
 namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 
@@ -44,7 +47,7 @@ public class CharacteristicsViewModel : BaseViewModel
     /// <summary>
     /// Gets the collection of discovered characteristics.
     /// </summary>
-    public ObservableCollection<IBluetoothRemoteCharacteristic> Characteristics { get; } = new();
+    public ObservableCollection<IBluetoothRemoteCharacteristic> Characteristics { get; } = new ObservableCollection<IBluetoothRemoteCharacteristic>();
 
     /// <summary>
     /// Gets the number of discovered characteristics.
@@ -86,7 +89,10 @@ public class CharacteristicsViewModel : BaseViewModel
     /// </summary>
     private async Task ExploreCharacteristicsAsync()
     {
-        if (Service == null) return;
+        if (Service == null)
+        {
+            return;
+        }
 
         try
         {
@@ -96,7 +102,7 @@ public class CharacteristicsViewModel : BaseViewModel
             // Update the characteristics collection on the UI thread
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                Characteristics.UpdateFrom(Service.GetCharacteristics());
+                Characteristics.UpdateFrom([.. Service.GetCharacteristics()]);
                 OnPropertyChanged(nameof(CharacteristicCount));
             });
         }
@@ -118,17 +124,29 @@ public class CharacteristicsViewModel : BaseViewModel
     /// </summary>
     private async Task SelectCharacteristicAsync(IBluetoothRemoteCharacteristic? characteristic)
     {
-        if (characteristic == null) return;
+        if (characteristic == null)
+        {
+            return;
+        }
 
         // Display characteristic details
         var properties = new List<string>();
-        if (characteristic.CanRead) properties.Add("Read");
-        if (characteristic.CanWrite) properties.Add("Write");
-        if (characteristic.CanListen) properties.Add("Listen/Notify");
+        if (characteristic.CanRead)
+        {
+            properties.Add("Read");
+        }
+        if (characteristic.CanWrite)
+        {
+            properties.Add("Write");
+        }
+        if (characteristic.CanListen)
+        {
+            properties.Add("Listen/Notify");
+        }
 
         var propertiesText = properties.Any()
-            ? string.Join(", ", properties)
-            : "None";
+                                 ? string.Join(", ", properties)
+                                 : "None";
 
         var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
         if (mainPage != null)
@@ -147,7 +165,8 @@ public class CharacteristicsViewModel : BaseViewModel
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            Characteristics.UpdateFrom(Service?.GetCharacteristics() ?? Enumerable.Empty<IBluetoothRemoteCharacteristic>());
+            var newList = Service?.GetCharacteristics() ?? [];
+            Characteristics.UpdateFrom([.. newList]);
             OnPropertyChanged(nameof(CharacteristicCount));
         });
     }

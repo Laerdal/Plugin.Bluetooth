@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Exceptions;
-
 using Exception = System.Exception;
 
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;

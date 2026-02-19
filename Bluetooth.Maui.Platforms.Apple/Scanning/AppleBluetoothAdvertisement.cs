@@ -1,4 +1,4 @@
-using Bluetooth.Maui.Platforms.Apple.Tools;
+using System.Collections.Generic;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 

@@ -1,11 +1,4 @@
-using Bluetooth.Core.Infrastructure.Scheduling;
-using Bluetooth.Maui.Platforms.Apple.Broadcasting;
-using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
-using Bluetooth.Maui.Platforms.Apple.Scanning;
-using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Bluetooth.Maui.Platforms.Apple;
 

@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Bluetooth.Maui.Sample.Scanner.Infrastructure;
 
 /// <summary>
@@ -6,7 +8,7 @@ namespace Bluetooth.Maui.Sample.Scanner.Infrastructure;
 /// </summary>
 public abstract class BaseViewModel : INotifyPropertyChanged
 {
-    private readonly ConcurrentDictionary<string, object?> _values = new();
+    private readonly ConcurrentDictionary<string, object?> _values = new ConcurrentDictionary<string, object?>();
 
     /// <inheritdoc/>
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -19,7 +21,10 @@ public abstract class BaseViewModel : INotifyPropertyChanged
     /// <returns>The property value, or default if not found.</returns>
     protected T? GetValue<T>([CallerMemberName] string? propertyName = null)
     {
-        if (propertyName == null) return default;
+        if (propertyName == null)
+        {
+            return default;
+        }
         return _values.TryGetValue(propertyName, out var value) ? (T?)value : default;
     }
 
@@ -31,7 +36,10 @@ public abstract class BaseViewModel : INotifyPropertyChanged
     /// <param name="propertyName">Name of the property (auto-populated by compiler).</param>
     protected void SetValue<T>(T value, [CallerMemberName] string? propertyName = null)
     {
-        if (propertyName == null) return;
+        if (propertyName == null)
+        {
+            return;
+        }
         _values[propertyName] = value;
         OnPropertyChanged(propertyName);
     }

@@ -1,7 +1,3 @@
-using Bluetooth.Abstractions.Scanning.Options;
-
-using Microsoft.Extensions.Logging;
-
 namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteDevice

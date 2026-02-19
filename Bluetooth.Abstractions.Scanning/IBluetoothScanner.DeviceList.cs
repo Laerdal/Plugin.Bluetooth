@@ -89,8 +89,12 @@ public partial interface IBluetoothScanner
     /// Returns all Bluetooth devices that match the specified filter.
     /// </summary>
     /// <param name="filter">An optional function to filter devices. Defaults to null for all devices.</param>
-    /// <returns>A collection of <see cref="IBluetoothRemoteDevice" /> that match the filter.</returns>
-    IEnumerable<IBluetoothRemoteDevice> GetDevices(Func<IBluetoothRemoteDevice, bool>? filter = null);
+    /// <returns>
+    /// A read-only snapshot of devices at the time of the call. This collection is immutable
+    /// and will not be modified if devices are added or removed after the call returns.
+    /// To get updated results, call this method again or subscribe to <see cref="DeviceListChanged"/> event.
+    /// </returns>
+    IReadOnlyList<IBluetoothRemoteDevice> GetDevices(Func<IBluetoothRemoteDevice, bool>? filter = null);
 
     /// <summary>
     /// Waits for a Bluetooth device with the specified ID to appear or returns it if already available.

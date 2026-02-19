@@ -1,4 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 

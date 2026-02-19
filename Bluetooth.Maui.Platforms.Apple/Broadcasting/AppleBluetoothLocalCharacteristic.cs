@@ -1,9 +1,5 @@
-using Bluetooth.Abstractions.Broadcasting.Factories;
-using Bluetooth.Abstractions.Exceptions;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
-using Bluetooth.Maui.Platforms.Apple.Exceptions;
-using Bluetooth.Maui.Platforms.Apple.Tools;
 
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 

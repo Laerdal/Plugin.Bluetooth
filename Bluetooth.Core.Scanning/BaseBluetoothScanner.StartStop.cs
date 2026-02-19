@@ -1,14 +1,12 @@
-using Bluetooth.Abstractions.Scanning.Options;
-
-using Plugin.BaseTypeExtensions;
-
 namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothScanner
 {
     #region Configuration
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the default scanning options used when starting the scanner without specifying options.
+    /// </summary>
     public static ScanningOptions DefaultScanningOptions { get; } = new ScanningOptions();
 
     /// <inheritdoc />

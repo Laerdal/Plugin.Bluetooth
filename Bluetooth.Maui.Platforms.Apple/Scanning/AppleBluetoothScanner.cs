@@ -1,13 +1,5 @@
-using Bluetooth.Abstractions.Scanning.Exceptions;
-using Bluetooth.Abstractions.Scanning.Factories;
-using Bluetooth.Abstractions.Scanning.Options;
-using Bluetooth.Core.Infrastructure.Scheduling;
-using Bluetooth.Maui.Platforms.Apple.NativeObjects;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
-
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
@@ -167,7 +159,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     private static bool AreRepresentingTheSameObject(CBPeripheral peripheral, IBluetoothRemoteDevice device)
     {
         return device is AppleBluetoothRemoteDevice sharedDevice
-            && sharedDevice.CbPeripheralWrapper.CbPeripheral.Identifier.ToString() == peripheral.Identifier.ToString()
+            && sharedDevice.CbPeripheralWrapper.CbPeripheral.Identifier.Equals(peripheral.Identifier)
             && sharedDevice.CbPeripheralWrapper.CbPeripheral.Handle.Handle == peripheral.Handle.Handle;
     }
 

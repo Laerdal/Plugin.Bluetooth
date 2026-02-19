@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting.Enums;
-
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
@@ -89,10 +87,10 @@ public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject,
 
     #endregion
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public override string ToString()
     {
-        return $"{Name} ({Id})";
+        return $"[{Id}] {Name}";
     }
 
     /// <summary>

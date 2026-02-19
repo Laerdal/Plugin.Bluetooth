@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting.Enums;
-
 namespace Bluetooth.Maui.Platforms.Windows.Tools;
 
 /// <summary>

@@ -1,6 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting;
-using Bluetooth.Abstractions.Scanning;
-using Bluetooth.Core.Infrastructure.Scheduling;
 using Bluetooth.Maui.Platforms.Windows.Broadcasting;
 using Bluetooth.Maui.Platforms.Windows.Permissions;
 using Bluetooth.Maui.Platforms.Windows.Scanning;

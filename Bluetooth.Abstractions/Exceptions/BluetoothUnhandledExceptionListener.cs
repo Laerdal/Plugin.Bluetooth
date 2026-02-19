@@ -1,5 +1,3 @@
-using Plugin.ExceptionListeners;
-
 namespace Bluetooth.Abstractions.Exceptions;
 
 /// <summary>

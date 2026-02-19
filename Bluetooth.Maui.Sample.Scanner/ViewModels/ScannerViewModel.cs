@@ -1,4 +1,7 @@
-using Plugin.BaseTypeExtensions;
+using System.Collections.Generic;
+
+using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Controls;
 
 namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 
@@ -14,7 +17,7 @@ public class ScannerViewModel : BaseViewModel
     /// Collection of discovered Bluetooth devices.
     /// Automatically updated when devices are discovered or removed.
     /// </summary>
-    public ObservableCollection<IBluetoothRemoteDevice> Devices { get; } = new();
+    public ObservableCollection<IBluetoothRemoteDevice> Devices { get; } = new ObservableCollection<IBluetoothRemoteDevice>();
 
     /// <summary>
     /// Gets a value indicating whether scanning is currently active.
@@ -67,12 +70,6 @@ public class ScannerViewModel : BaseViewModel
     public async override ValueTask OnAppearingAsync()
     {
         await base.OnAppearingAsync();
-
-        // Auto-start scanning when page appears (if not already scanning)
-        if (!_scanner.IsRunning)
-        {
-            await StartScanAsync();
-        }
     }
 
     /// <summary>
@@ -81,12 +78,6 @@ public class ScannerViewModel : BaseViewModel
     public async override ValueTask OnDisappearingAsync()
     {
         await base.OnDisappearingAsync();
-
-        // Stop scanning when page disappears to save battery
-        if (_scanner.IsRunning)
-        {
-            await StopScanAsync();
-        }
     }
 
     /// <summary>
@@ -99,6 +90,7 @@ public class ScannerViewModel : BaseViewModel
             // Create scanning options (cross-platform)
             var options = new Bluetooth.Abstractions.Scanning.Options.ScanningOptions
             {
+                IgnoreNamelessAdvertisements =  true,
                 // Using defaults - scans for all devices
             };
 
@@ -146,7 +138,10 @@ public class ScannerViewModel : BaseViewModel
     /// <param name="device">The selected device.</param>
     private async Task SelectDeviceAsync(IBluetoothRemoteDevice? device)
     {
-        if (device == null) return;
+        if (device == null)
+        {
+            return;
+        }
 
         // Navigate to DevicePage with the selected device
         await _navigation.NavigateToAsync<DevicePage>(new Dictionary<string, object>

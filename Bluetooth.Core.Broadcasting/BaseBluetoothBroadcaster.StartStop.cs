@@ -1,6 +1,4 @@
-using Bluetooth.Abstractions.Broadcasting.Options;
 
-using Plugin.BaseTypeExtensions;
 
 namespace Bluetooth.Core.Broadcasting;
 

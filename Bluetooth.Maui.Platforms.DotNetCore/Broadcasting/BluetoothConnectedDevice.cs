@@ -1,7 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting.Factories;
-
-using Microsoft.Extensions.Logging;
-
 namespace Bluetooth.Maui.Platforms.DotNetCore.Broadcasting;
 
 /// <inheritdoc/>

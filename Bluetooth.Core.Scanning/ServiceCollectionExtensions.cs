@@ -1,7 +1,4 @@
-using Bluetooth.Abstractions.Scanning.Converters;
-using Bluetooth.Core.Scanning.Converters;
 
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bluetooth.Core.Scanning;
 

@@ -1,4 +1,3 @@
-using Bluetooth.Abstractions.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.Windows.Scanning;

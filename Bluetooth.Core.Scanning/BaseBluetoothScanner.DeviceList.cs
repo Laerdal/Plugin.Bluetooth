@@ -1,5 +1,3 @@
-using Plugin.BaseTypeExtensions;
-
 namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothScanner
@@ -62,7 +60,7 @@ public abstract partial class BaseBluetoothScanner
     /// <inheritdoc/>
     public async ValueTask ClearDevicesAsync(IEnumerable<IBluetoothRemoteDevice>? devices = null)
     {
-        devices ??= GetDevices().ToList();
+        devices ??= GetDevices();
         foreach (var device in devices)
         {
             await ClearDeviceAsync(device).ConfigureAwait(false);
@@ -115,45 +113,47 @@ public abstract partial class BaseBluetoothScanner
     /// <inheritdoc/>
     public IBluetoothRemoteDevice? GetDeviceOrDefault(Func<IBluetoothRemoteDevice, bool> filter)
     {
-        try
+        lock (Devices)
         {
-            return Devices.SingleOrDefault(filter);
-        }
-        catch (InvalidOperationException e)
-        {
-            throw new MultipleDevicesFoundException(this, Devices.Where(filter).ToList(), e);
+            try
+            {
+                return Devices.SingleOrDefault(filter);
+            }
+            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            {
+                throw new MultipleDevicesFoundException(this, Devices.Where(filter).ToList(), e);
+            }
+            // Let collection-modified exceptions propagate (indicates bug)
         }
     }
 
     /// <inheritdoc/>
     public IBluetoothRemoteDevice? GetDeviceOrDefault(string id)
     {
-        try
+        lock (Devices)
         {
-            return Devices.SingleOrDefault(d => d.Id == id);
-        }
-        catch (InvalidOperationException e)
-        {
-            throw new MultipleDevicesFoundException(this, id, Devices.Where(d => d.Id == id).ToList(), e);
+            try
+            {
+                return Devices.SingleOrDefault(d => d.Id == id);
+            }
+            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            {
+                throw new MultipleDevicesFoundException(this, id, Devices.Where(d => d.Id == id).ToList(), e);
+            }
         }
     }
 
     private readonly static Func<IBluetoothRemoteDevice, bool> _defaultAcceptAllFilter = _ => true;
 
     /// <inheritdoc/>
-    public IEnumerable<IBluetoothRemoteDevice> GetDevices(Func<IBluetoothRemoteDevice, bool>? filter = null)
+    public IReadOnlyList<IBluetoothRemoteDevice> GetDevices(Func<IBluetoothRemoteDevice, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
 
         lock (Devices)
         {
-            foreach (var device in Devices)
-            {
-                if (filter.Invoke(device))
-                {
-                    yield return device;
-                }
-            }
+            // Materialize immediately while holding lock
+            return Devices.Where(filter).ToList();
         }
     }
 
@@ -212,7 +212,10 @@ public abstract partial class BaseBluetoothScanner
     /// <inheritdoc/>
     public bool HasDevice(Func<IBluetoothRemoteDevice, bool> filter)
     {
-        return Devices.Any(filter);
+        lock (Devices)
+        {
+            return Devices.Any(filter);
+        }
     }
 
     /// <inheritdoc/>

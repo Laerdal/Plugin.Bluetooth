@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Bluetooth.Maui.Sample.Scanner.Services;
 
 /// <summary>

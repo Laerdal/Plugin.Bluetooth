@@ -1,8 +1,5 @@
-using Bluetooth.Abstractions.Scanning.Factories;
-using Bluetooth.Maui.Platforms.Apple.Exceptions;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
-using Bluetooth.Maui.Platforms.Apple.Tools;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 

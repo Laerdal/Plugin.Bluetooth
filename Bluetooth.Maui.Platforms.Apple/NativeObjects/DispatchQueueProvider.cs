@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Options;
-
 namespace Bluetooth.Maui.Platforms.Apple.NativeObjects;
 
 /// <summary>

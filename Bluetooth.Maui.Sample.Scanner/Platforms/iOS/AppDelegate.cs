@@ -1,5 +1,3 @@
-using Foundation;
-
 namespace Bluetooth.Maui.Sample.Scanner;
 
 [Register("AppDelegate")]

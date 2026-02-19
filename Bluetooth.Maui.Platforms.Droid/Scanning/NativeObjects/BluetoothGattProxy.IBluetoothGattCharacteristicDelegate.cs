@@ -1,4 +1,3 @@
-using Bluetooth.Abstractions.Scanning.Exceptions;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;

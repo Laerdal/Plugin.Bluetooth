@@ -1,8 +1,4 @@
 using Bluetooth.Abstractions.Options;
-using Bluetooth.Core.Infrastructure.Scheduling;
-
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace Bluetooth.Core;
 

@@ -1,8 +1,3 @@
-using System.Text;
-using Bluetooth.Abstractions.Enums;
-using Bluetooth.Abstractions.Scanning;
-using Windows.Devices.Bluetooth.Advertisement;
-
 namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 
 /// <summary>

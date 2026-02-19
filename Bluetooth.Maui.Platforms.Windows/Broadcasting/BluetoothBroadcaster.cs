@@ -1,9 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting.Factories;
-using Bluetooth.Abstractions.Broadcasting.Options;
-using Bluetooth.Core.Infrastructure.Scheduling;
-
-using Microsoft.Extensions.Logging;
-
 namespace Bluetooth.Maui.Platforms.Windows.Broadcasting;
 
 /// <inheritdoc/>

@@ -1,4 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;

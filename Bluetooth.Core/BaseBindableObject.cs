@@ -1,13 +1,4 @@
-using System.Collections.Concurrent;
-using System.ComponentModel;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-
-using Bluetooth.Abstractions.Exceptions;
-
-using Microsoft.Extensions.Logging;
-
-using Plugin.BaseTypeExtensions;
 
 namespace Bluetooth.Core;
 

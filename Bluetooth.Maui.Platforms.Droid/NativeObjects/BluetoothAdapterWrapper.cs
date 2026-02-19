@@ -1,7 +1,3 @@
-using Bluetooth.Core.Infrastructure.Scheduling;
-
-using Microsoft.Extensions.Logging;
-
 namespace Bluetooth.Maui.Platforms.Droid.NativeObjects;
 
 /// <summary>

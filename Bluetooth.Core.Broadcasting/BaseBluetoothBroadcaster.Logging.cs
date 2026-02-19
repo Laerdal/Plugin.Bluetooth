@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace Bluetooth.Core.Broadcasting;
 
 public abstract partial class BaseBluetoothBroadcaster

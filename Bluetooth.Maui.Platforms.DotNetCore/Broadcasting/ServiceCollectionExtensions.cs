@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting;
-using Bluetooth.Abstractions.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.DotNetCore.Broadcasting.Factories;
 
 namespace Bluetooth.Maui.Platforms.DotNetCore.Broadcasting;

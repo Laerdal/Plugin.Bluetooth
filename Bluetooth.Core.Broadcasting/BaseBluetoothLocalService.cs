@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
@@ -53,10 +50,10 @@ public abstract partial class BaseBluetoothLocalService : BaseBindableObject, IB
     /// <inheritdoc/>
     public bool IsPrimary { get; }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public override string ToString()
     {
-        return $"{Name} ({Id})";
+        return $"[{Id}] {Name}";
     }
 
     /// <summary>

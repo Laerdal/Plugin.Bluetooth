@@ -9,7 +9,7 @@
         <RootNamespace>Bluetooth.Maui.Sample.Scanner</RootNamespace>
         <AssemblyName>Bluetooth.Maui.Sample.Scanner</AssemblyName>
         <ProductName>Bluetooth.Maui.Sample.Scanner</ProductName>
-        <ApplicationTitle>Bluetooth Scanner</ApplicationTitle>
+        <ApplicationTitle>Bluetooth.Maui.Sample.Scanner</ApplicationTitle>
         <ApplicationId>com.bluetooth.sample.scanner</ApplicationId>
     </PropertyGroup>
 

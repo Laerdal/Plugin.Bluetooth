@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
@@ -40,10 +37,10 @@ public abstract partial class BaseBluetoothConnectedDevice : BaseBindableObject,
     /// <inheritdoc />
     public string Name { get; } = "Unknown Client Device";
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public override string ToString()
     {
-        return $"{Name} ({Id})";
+        return $"[{Id}] {Name}";
     }
 
     /// <summary>

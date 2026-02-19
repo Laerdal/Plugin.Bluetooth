@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace Bluetooth.Maui.Platforms.Apple.Permissions;
 
 /// <summary>

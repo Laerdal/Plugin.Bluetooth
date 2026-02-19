@@ -2,8 +2,6 @@
 // ReSharper disable CommentTypo
 // ReSharper disable IdentifierTypo
 
-using System.ComponentModel;
-
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning disable CA1707 // Identifiers should not contain underscores
 #pragma warning disable CA1028 // Enum Storage should be Int32

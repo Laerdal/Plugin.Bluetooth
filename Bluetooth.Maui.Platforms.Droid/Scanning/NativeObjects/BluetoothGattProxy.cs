@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Exceptions;
-using Bluetooth.Abstractions.Scanning.Exceptions;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 using Exception = System.Exception;

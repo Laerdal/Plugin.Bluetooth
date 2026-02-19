@@ -1,7 +1,4 @@
-using Bluetooth.Maui.Platforms.Windows.Broadcasting.NativeObjects;
 using Bluetooth.Maui.Platforms.Windows.NativeObjects;
-
-using Bluetooth_BluetoothAdapter = Windows.Devices.Bluetooth.BluetoothAdapter;
 
 namespace Bluetooth.Maui.Platforms.Windows;
 

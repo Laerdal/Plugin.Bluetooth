@@ -1,16 +1,10 @@
-using Bluetooth.Abstractions.Broadcasting.Exceptions;
-using Bluetooth.Abstractions.Broadcasting.Factories;
-using Bluetooth.Abstractions.Broadcasting.Options;
-using Bluetooth.Core.Infrastructure.Scheduling;
 using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
 using Bluetooth.Maui.Platforms.Droid.Tools;
 
-using Microsoft.Extensions.Logging;
-
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 
-/// <inheritdoc/>
+/// <inheritdoc cref="BaseBluetoothBroadcaster" />
 public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackProxy.IAdvertiseCallbackProxyDelegate, BluetoothGattServerCallbackProxy.IBluetoothGattServerCallbackProxyDelegate, IAsyncDisposable
 {
     private BluetoothGattServerCallbackProxy? _gattServerProxy;
@@ -19,6 +13,9 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackP
 
     private BluetoothLeAdvertiser? _advertiser;
 
+    /// <summary>
+    /// The settings that are currently in effect for the advertiser. This is set when advertising starts successfully, and is null when not advertising.
+    /// </summary>
     public AdvertiseSettings? SettingsInEffect { get; private set; }
 
     private Android.Bluetooth.BluetoothManager BluetoothManager =>
@@ -157,7 +154,7 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackP
         return ValueTask.CompletedTask;*/
     }
 
-    // AdvertiseCallbackProxy.IBroadcaster implementation
+    /// <inheritdoc/>
     public void OnStartSuccess(AdvertiseSettings? settingsInEffect)
     {
         SettingsInEffect = settingsInEffect;
@@ -189,6 +186,7 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackP
         return droidDevice;
     }
 
+    /// <inheritdoc/>
     public BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate GetService(Android.Bluetooth.BluetoothGattService? native)
     {
         ArgumentNullException.ThrowIfNull(native);
@@ -197,7 +195,7 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackP
         var service = GetServiceOrDefault(guid);
         if (service == null)
         {
-            throw new ServiceNotFoundException(this, guid);
+            throw new Abstractions.Broadcasting.Exceptions.ServiceNotFoundException(this, guid);
         }
         if (service is not BluetoothBroadcastService droidService)
         {
@@ -207,6 +205,7 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackP
         return droidService;
     }
 
+    /// <inheritdoc/>
     public new async ValueTask DisposeAsync()
     {
         if (_gattServerProxy != null)

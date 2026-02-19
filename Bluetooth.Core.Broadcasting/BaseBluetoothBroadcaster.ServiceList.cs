@@ -1,5 +1,3 @@
-using Plugin.BaseTypeExtensions;
-
 namespace Bluetooth.Core.Broadcasting;
 
 public abstract partial class BaseBluetoothBroadcaster
@@ -91,34 +89,44 @@ public abstract partial class BaseBluetoothBroadcaster
     /// <inheritdoc/>
     public IBluetoothLocalService? GetServiceOrDefault(Func<IBluetoothLocalService, bool> filter)
     {
-        try
+        lock (Services)
         {
-            return Services.SingleOrDefault(filter);
-        }
-        catch (InvalidOperationException e)
-        {
-            throw new MultipleServicesFoundException(this, Services.Where(filter).ToArray(), e);
+            try
+            {
+                return Services.SingleOrDefault(filter);
+            }
+            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            {
+                throw new MultipleServicesFoundException(this, Services.Where(filter).ToArray(), e);
+            }
         }
     }
 
     /// <inheritdoc/>
     public IBluetoothLocalService? GetServiceOrDefault(Guid id)
     {
-        try
+        lock (Services)
         {
-            return Services.SingleOrDefault(service => service.Id == id);
-        }
-        catch (InvalidOperationException e)
-        {
-            throw new MultipleServicesFoundException(this, id, Services.Where(service => service.Id == id).ToArray(), e);
+            try
+            {
+                return Services.SingleOrDefault(service => service.Id == id);
+            }
+            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            {
+                throw new MultipleServicesFoundException(this, id, Services.Where(service => service.Id == id).ToArray(), e);
+            }
         }
     }
 
     /// <inheritdoc/>
-    public IEnumerable<IBluetoothLocalService> GetServices(Func<IBluetoothLocalService, bool>? filter = null)
+    public IReadOnlyList<IBluetoothLocalService> GetServices(Func<IBluetoothLocalService, bool>? filter = null)
     {
         filter ??= _ => true;
-        return Services.Where(filter).ToArray();
+
+        lock (Services)
+        {
+            return Services.Where(filter).ToList();
+        }
     }
 
     #endregion
@@ -166,7 +174,10 @@ public abstract partial class BaseBluetoothBroadcaster
     /// <inheritdoc/>
     public bool HasService(Func<IBluetoothLocalService, bool> filter)
     {
-        return Services.Any(filter);
+        lock (Services)
+        {
+            return Services.Any(filter);
+        }
     }
 
     /// <inheritdoc/>

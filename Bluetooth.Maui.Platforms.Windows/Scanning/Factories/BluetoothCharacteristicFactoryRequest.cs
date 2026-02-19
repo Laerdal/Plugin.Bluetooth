@@ -1,7 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 
-using Bluetooth.Abstractions.Scanning.Factories;
-
 namespace Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
 
 /// <summary>

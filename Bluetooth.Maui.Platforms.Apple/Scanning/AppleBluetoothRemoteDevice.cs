@@ -1,10 +1,5 @@
-using Bluetooth.Abstractions.Scanning.Exceptions;
-using Bluetooth.Abstractions.Scanning.Factories;
-using Bluetooth.Maui.Platforms.Apple.Exceptions;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
-using Bluetooth.Maui.Platforms.Apple.Scanning.Options;
-using Bluetooth.Maui.Platforms.Apple.Tools;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
@@ -270,12 +265,12 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         try
         {
             var match = GetServiceOrDefault(service => AreRepresentingTheSameObject(native, service));
-            return match as CbPeripheralWrapper.ICbServiceDelegate ?? throw new ServiceNotFoundException(this, native.UUID.ToGuid());
+            return match as CbPeripheralWrapper.ICbServiceDelegate ?? throw new Abstractions.Scanning.Exceptions.ServiceNotFoundException(this, native.UUID.ToGuid());
         }
         catch (InvalidOperationException e)
         {
             var matches = GetServices(service => AreRepresentingTheSameObject(native, service)).ToArray();
-            throw new MultipleServicesFoundException(this, matches, e);
+            throw new Abstractions.Scanning.Exceptions.MultipleServicesFoundException(this, matches, e);
         }
     }
 

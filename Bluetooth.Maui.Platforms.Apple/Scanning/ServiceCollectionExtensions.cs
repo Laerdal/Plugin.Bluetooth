@@ -1,4 +1,3 @@
-using Bluetooth.Abstractions.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 

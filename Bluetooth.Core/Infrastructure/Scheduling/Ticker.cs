@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace Bluetooth.Core.Infrastructure.Scheduling;
 
 /// <summary>
@@ -10,8 +8,8 @@ public sealed partial class Ticker : ITicker, IDisposable
     private readonly ILogger<Ticker> _logger;
     private readonly TimeSpan _resolution;
 
-    private readonly object _gate = new();
-    private readonly Dictionary<Guid, Registration> _registrations = new();
+    private readonly object _gate = new object();
+    private readonly Dictionary<Guid, Registration> _registrations = new Dictionary<Guid, Registration>();
 
     private PeriodicTimer? _timer;
     private CancellationTokenSource? _cts;

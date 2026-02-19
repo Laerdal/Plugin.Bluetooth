@@ -1,9 +1,3 @@
-using System.Collections.Specialized;
-
-using Microsoft.Extensions.Logging;
-
-using Plugin.BaseTypeExtensions;
-
 namespace Bluetooth.Core.Scanning;
 
 /// <inheritdoc cref="IBluetoothPairingManager" />

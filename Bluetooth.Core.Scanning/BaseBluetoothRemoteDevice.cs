@@ -1,8 +1,3 @@
-using Bluetooth.Abstractions.Scanning.Converters;
-
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 namespace Bluetooth.Core.Scanning;
 
 /// <inheritdoc cref="IBluetoothRemoteDevice" />
@@ -115,5 +110,11 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
     public async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore().ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return $"[{Id}] {Name} by {Manufacturer}";
     }
 }

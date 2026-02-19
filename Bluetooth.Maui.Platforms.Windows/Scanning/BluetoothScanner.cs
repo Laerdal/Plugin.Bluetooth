@@ -1,10 +1,5 @@
-using Bluetooth.Abstractions.Scanning;
-using Bluetooth.Abstractions.Scanning.Factories;
-using Bluetooth.Abstractions.Scanning.Options;
-using Bluetooth.Core.Infrastructure.Scheduling;
 using Bluetooth.Maui.Platforms.Windows.Exceptions;
 using Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;
-using Microsoft.Extensions.Logging;
 
 namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 

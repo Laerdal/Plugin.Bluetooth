@@ -1,8 +1,4 @@
-using Bluetooth.Abstractions.Broadcasting.Options;
-using Bluetooth.Core.Infrastructure.Scheduling;
 
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Bluetooth.Core.Broadcasting;
 

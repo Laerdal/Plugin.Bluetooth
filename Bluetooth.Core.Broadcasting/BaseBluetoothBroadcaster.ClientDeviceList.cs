@@ -1,5 +1,3 @@
-using System.Collections.Specialized;
-
 namespace Bluetooth.Core.Broadcasting;
 
 public abstract partial class BaseBluetoothBroadcaster
@@ -106,34 +104,45 @@ public abstract partial class BaseBluetoothBroadcaster
     /// <inheritdoc/>
     public IBluetoothConnectedDevice? GetClientDeviceOrDefault(Func<IBluetoothConnectedDevice, bool> filter)
     {
-        try
+        lock (ClientDevices)
         {
-            return ClientDevices.SingleOrDefault(filter);
-        }
-        catch (InvalidOperationException e)
-        {
-            throw new MultipleClientDevicesFoundException(this, ClientDevices.Where(filter).ToList(), e);
+            try
+            {
+                return ClientDevices.SingleOrDefault(filter);
+            }
+            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            {
+                throw new MultipleClientDevicesFoundException(this, ClientDevices.Where(filter).ToList(), e);
+            }
+            // Let collection-modified exceptions propagate (indicates bug)
         }
     }
 
     /// <inheritdoc/>
     public IBluetoothConnectedDevice? GetClientDeviceOrDefault(string id)
     {
-        try
+        lock (ClientDevices)
         {
-            return ClientDevices.SingleOrDefault(device => device.Id == id);
-        }
-        catch (InvalidOperationException e)
-        {
-            throw new MultipleClientDevicesFoundException(this, id, ClientDevices.Where(device => device.Id == id).ToList(), e);
+            try
+            {
+                return ClientDevices.SingleOrDefault(device => device.Id == id);
+            }
+            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            {
+                throw new MultipleClientDevicesFoundException(this, id, ClientDevices.Where(device => device.Id == id).ToList(), e);
+            }
         }
     }
 
     /// <inheritdoc/>
-    public IEnumerable<IBluetoothConnectedDevice> GetClientDevices(Func<IBluetoothConnectedDevice, bool>? filter = null)
+    public IReadOnlyList<IBluetoothConnectedDevice> GetClientDevices(Func<IBluetoothConnectedDevice, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
-        return ClientDevices.Where(filter).ToArray();
+
+        lock (ClientDevices)
+        {
+            return ClientDevices.Where(filter).ToList();
+        }
     }
 
     #endregion
@@ -143,7 +152,10 @@ public abstract partial class BaseBluetoothBroadcaster
     /// <inheritdoc/>
     public bool HasClientDevice(Func<IBluetoothConnectedDevice, bool> filter)
     {
-        return ClientDevices.Any(filter);
+        lock (ClientDevices)
+        {
+            return ClientDevices.Any(filter);
+        }
     }
 
     /// <inheritdoc/>

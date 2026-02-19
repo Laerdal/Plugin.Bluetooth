@@ -1,9 +1,5 @@
-using Bluetooth.Abstractions.Scanning.Exceptions;
-using Bluetooth.Abstractions.Scanning.Factories;
-using Bluetooth.Maui.Platforms.Apple.Exceptions;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
-using Bluetooth.Maui.Platforms.Apple.Tools;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
@@ -76,18 +72,18 @@ public class AppleBluetoothRemoteService : Core.Scanning.BaseBluetoothRemoteServ
     {
         if (characteristic == null)
         {
-            throw new CharacteristicNotFoundException(this);
+            throw new Abstractions.Scanning.Exceptions.CharacteristicNotFoundException(this);
         }
 
         try
         {
             var match = GetCharacteristic(sharedCharacteristic => AreRepresentingTheSameObject(characteristic, sharedCharacteristic));
-            return match as CbPeripheralWrapper.ICbCharacteristicDelegate ?? throw new CharacteristicNotFoundException(this, characteristic.UUID.ToGuid());
+            return match as CbPeripheralWrapper.ICbCharacteristicDelegate ?? throw new Abstractions.Scanning.Exceptions.CharacteristicNotFoundException(this, characteristic.UUID.ToGuid());
         }
         catch (InvalidOperationException e)
         {
             var matches = GetCharacteristics(sharedCharacteristic => AreRepresentingTheSameObject(characteristic, sharedCharacteristic)).ToArray();
-            throw new MultipleCharacteristicsFoundException(this, matches, e);
+            throw new Abstractions.Scanning.Exceptions.MultipleCharacteristicsFoundException(this, matches, e);
         }
     }
 

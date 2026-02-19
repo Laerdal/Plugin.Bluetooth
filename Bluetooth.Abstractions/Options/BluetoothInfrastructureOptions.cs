@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Exceptions;
-
 namespace Bluetooth.Abstractions.Options;
 
 /// <summary>

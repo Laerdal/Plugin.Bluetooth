@@ -10,7 +10,7 @@
     <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705" />
     <PackageVersion Include="Plugin.ByteArrays" Version="1.0.30" />
     <PackageVersion Include="Plugin.ExceptionListeners" Version="1.0.5" />
-    <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.23" />
+    <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.25" />
     <PackageVersion Include="Plugin.ExceptionListeners.Maui" Version="1.0.5" />
   </ItemGroup>
   <!-- ==================== CORE DEPENDENCIES ==================== -->

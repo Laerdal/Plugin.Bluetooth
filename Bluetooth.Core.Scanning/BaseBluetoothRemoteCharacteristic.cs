@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 namespace Bluetooth.Core.Scanning;
 
 /// <inheritdoc cref="IBluetoothRemoteCharacteristic" />
@@ -143,7 +140,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
             ToWriteString(),
             ToListenString()
         };
-        return $"{Name} ({Id}) ({string.Join("/", access.Where(s => !string.IsNullOrEmpty(s)))})";
+        return $"[{Id}] {Name} ({string.Join("/", access.Where(s => !string.IsNullOrEmpty(s)))})";
     }
 
     /// <summary>

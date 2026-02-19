@@ -26,7 +26,7 @@ public class BluetoothScannerService
             if (_includeUnnamedDevices != value)
             {
                 _includeUnnamedDevices = value;
-                Devices.UpdateFrom(Scanner.GetDevices(Filter).ToList());
+                Devices.UpdateFrom(Scanner.GetDevices(Filter));
             }
         }
     }
@@ -40,7 +40,7 @@ public class BluetoothScannerService
 
     private void OnScannerDeviceListChanged(object? sender, DeviceListChangedEventArgs e)
     {
-        Devices.UpdateFrom(Scanner.GetDevices(Filter).ToList());
+        Devices.UpdateFrom(Scanner.GetDevices(Filter));
     }
 
     private Func<IBluetoothDevice, bool> Filter => device =>

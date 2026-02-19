@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting.Options;
-
 namespace Bluetooth.Abstractions.Broadcasting;
 
 /// <summary>

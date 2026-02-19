@@ -1,9 +1,3 @@
-using Bluetooth.Abstractions.Exceptions;
-using Bluetooth.Core.Infrastructure.Scheduling;
-using Bluetooth.Maui.Platforms.Apple.NativeObjects;
-
-using Microsoft.Extensions.Options;
-
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
 /// <summary>

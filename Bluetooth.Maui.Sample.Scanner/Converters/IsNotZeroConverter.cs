@@ -1,4 +1,4 @@
-using System.Globalization;
+using Microsoft.Maui.Controls;
 
 namespace Bluetooth.Maui.Sample.Scanner.Converters;
 

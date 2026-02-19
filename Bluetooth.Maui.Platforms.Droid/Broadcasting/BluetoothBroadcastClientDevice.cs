@@ -1,4 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;

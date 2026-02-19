@@ -78,17 +78,17 @@ public record ServiceExplorationOptions
     /// <summary>
     /// Creates exploration options for discovering only services (no characteristics or descriptors).
     /// </summary>
-    public static ServiceExplorationOptions ServicesOnly => new() { Depth = ExplorationDepth.ServicesOnly };
+    public static ServiceExplorationOptions ServicesOnly => new ServiceExplorationOptions { Depth = ExplorationDepth.ServicesOnly };
 
     /// <summary>
     /// Creates exploration options for discovering services and characteristics (no descriptors).
     /// </summary>
-    public static ServiceExplorationOptions WithCharacteristics => new() { Depth = ExplorationDepth.Characteristics };
+    public static ServiceExplorationOptions WithCharacteristics => new ServiceExplorationOptions { Depth = ExplorationDepth.Characteristics };
 
     /// <summary>
     /// Creates exploration options for full discovery (services, characteristics, and descriptors).
     /// </summary>
-    public static ServiceExplorationOptions Full => new() { Depth = ExplorationDepth.Descriptors };
+    public static ServiceExplorationOptions Full => new ServiceExplorationOptions { Depth = ExplorationDepth.Descriptors };
 }
 
 /// <summary>
@@ -130,12 +130,12 @@ public record CharacteristicExplorationOptions
     /// <summary>
     /// Creates exploration options for discovering only characteristics (no descriptors).
     /// </summary>
-    public static CharacteristicExplorationOptions CharacteristicsOnly => new() { ExploreDescriptors = false };
+    public static CharacteristicExplorationOptions CharacteristicsOnly => new CharacteristicExplorationOptions { ExploreDescriptors = false };
 
     /// <summary>
     /// Creates exploration options for full discovery (characteristics and descriptors).
     /// </summary>
-    public static CharacteristicExplorationOptions Full => new() { ExploreDescriptors = true };
+    public static CharacteristicExplorationOptions Full => new CharacteristicExplorationOptions { ExploreDescriptors = true };
 }
 
 /// <summary>
@@ -169,7 +169,7 @@ public record DescriptorExplorationOptions
     /// <summary>
     /// Gets the default descriptor exploration options.
     /// </summary>
-    public static DescriptorExplorationOptions Default => new();
+    public static DescriptorExplorationOptions Default => new DescriptorExplorationOptions();
 }
 
 /// <summary>

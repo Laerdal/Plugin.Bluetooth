@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Exceptions;
-
 namespace Bluetooth.Maui.Platforms.Windows.Exceptions;
 
 /// <summary>

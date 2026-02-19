@@ -1,4 +1,7 @@
-using Plugin.BaseTypeExtensions;
+using System.Collections.Generic;
+
+using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Controls;
 
 namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 
@@ -58,7 +61,7 @@ public class DeviceViewModel : BaseViewModel
     /// <summary>
     /// Gets the collection of discovered services.
     /// </summary>
-    public ObservableCollection<IBluetoothRemoteService> Services { get; } = new();
+    public ObservableCollection<IBluetoothRemoteService> Services { get; } = new ObservableCollection<IBluetoothRemoteService>();
 
     /// <summary>
     /// Gets the number of discovered services.
@@ -112,7 +115,10 @@ public class DeviceViewModel : BaseViewModel
     /// </summary>
     private async Task ConnectAsync()
     {
-        if (Device == null) return;
+        if (Device == null)
+        {
+            return;
+        }
 
         try
         {
@@ -138,7 +144,10 @@ public class DeviceViewModel : BaseViewModel
     /// </summary>
     private async Task DisconnectAsync()
     {
-        if (Device == null) return;
+        if (Device == null)
+        {
+            return;
+        }
 
         try
         {
@@ -164,7 +173,10 @@ public class DeviceViewModel : BaseViewModel
     /// </summary>
     private async Task ExploreServicesAsync()
     {
-        if (Device == null) return;
+        if (Device == null)
+        {
+            return;
+        }
 
         try
         {
@@ -172,9 +184,8 @@ public class DeviceViewModel : BaseViewModel
             await Device.ExploreServicesAsync();
 
             // Update the services collection on the UI thread
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                Services.UpdateFrom(Device.GetServices());
+            MainThread.BeginInvokeOnMainThread(() => {
+                Services.UpdateFrom([.. Device.GetServices()]);
                 OnPropertyChanged(nameof(ServiceCount));
             });
         }
@@ -196,7 +207,10 @@ public class DeviceViewModel : BaseViewModel
     /// </summary>
     private async Task SelectServiceAsync(IBluetoothRemoteService? service)
     {
-        if (service == null) return;
+        if (service == null)
+        {
+            return;
+        }
 
         // Navigate to CharacteristicsPage with the selected service
         var parameters = new Dictionary<string, object>
@@ -222,7 +236,8 @@ public class DeviceViewModel : BaseViewModel
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            Services.UpdateFrom(Device?.GetServices() ?? Enumerable.Empty<IBluetoothRemoteService>());
+            var newList = Device?.GetServices() ?? [];
+            Services.UpdateFrom([.. newList]);
             OnPropertyChanged(nameof(ServiceCount));
         });
     }

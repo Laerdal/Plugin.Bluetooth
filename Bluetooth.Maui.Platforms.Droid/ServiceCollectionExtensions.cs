@@ -1,6 +1,3 @@
-using Bluetooth.Abstractions.Broadcasting;
-using Bluetooth.Abstractions.Scanning;
-using Bluetooth.Core.Infrastructure.Scheduling;
 using Bluetooth.Maui.Platforms.Droid.Broadcasting;
 using Bluetooth.Maui.Platforms.Droid.NativeObjects;
 using Bluetooth.Maui.Platforms.Droid.Permissions;

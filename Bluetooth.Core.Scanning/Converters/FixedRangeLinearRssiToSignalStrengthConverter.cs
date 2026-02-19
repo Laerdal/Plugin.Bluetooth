@@ -1,4 +1,4 @@
-using Bluetooth.Abstractions.Scanning.Converters;
+
 
 namespace Bluetooth.Core.Scanning.Converters;
 

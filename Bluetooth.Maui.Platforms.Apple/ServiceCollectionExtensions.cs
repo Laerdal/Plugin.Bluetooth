@@ -1,7 +1,4 @@
-using Bluetooth.Abstractions.Broadcasting;
-using Bluetooth.Abstractions.Scanning;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting;
-using Bluetooth.Maui.Platforms.Apple.NativeObjects;
 using Bluetooth.Maui.Platforms.Apple.Permissions;
 using Bluetooth.Maui.Platforms.Apple.Scanning;
 

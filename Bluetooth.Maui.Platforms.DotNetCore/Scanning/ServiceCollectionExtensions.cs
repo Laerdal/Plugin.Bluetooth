@@ -1,5 +1,3 @@
-using Bluetooth.Abstractions.Scanning;
-using Bluetooth.Abstractions.Scanning.Factories;
 using Bluetooth.Maui.Platforms.DotNetCore.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.DotNetCore.Scanning;

@@ -1,7 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 
-using Bluetooth.Abstractions.Broadcasting.Factories;
-
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 
 /// <summary>

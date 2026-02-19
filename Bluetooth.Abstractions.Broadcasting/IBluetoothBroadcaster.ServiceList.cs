@@ -76,8 +76,12 @@ public partial interface IBluetoothBroadcaster
     /// Gets all hosted GATT services.
     /// </summary>
     /// <param name="filter">An optional filter to apply to the services.</param>
-    /// <returns>A collection of all hosted services.</returns>
-    IEnumerable<IBluetoothLocalService> GetServices(Func<IBluetoothLocalService, bool>? filter = null);
+    /// <returns>
+    /// A read-only snapshot of services at the time of the call. This collection is immutable
+    /// and will not be modified if services are added or removed after the call returns.
+    /// To get updated results, call this method again or subscribe to <see cref="ServiceListChanged"/> event.
+    /// </returns>
+    IReadOnlyList<IBluetoothLocalService> GetServices(Func<IBluetoothLocalService, bool>? filter = null);
 
     #endregion
 

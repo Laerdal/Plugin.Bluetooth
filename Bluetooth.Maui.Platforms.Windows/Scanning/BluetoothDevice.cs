@@ -1,8 +1,3 @@
-using Bluetooth.Abstractions.Scanning.Converters;
-using Bluetooth.Abstractions.Scanning.Exceptions;
-using Bluetooth.Abstractions.Scanning.Factories;
-using Bluetooth.Abstractions.Scanning.Options;
-using Bluetooth.Core.Scanning;
 using Bluetooth.Maui.Platforms.Windows.Exceptions;
 using Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;

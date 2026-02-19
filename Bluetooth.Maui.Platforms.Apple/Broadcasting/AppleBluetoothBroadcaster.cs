@@ -1,14 +1,5 @@
-using Bluetooth.Abstractions.Broadcasting.Exceptions;
-using Bluetooth.Abstractions.Broadcasting.Factories;
-using Bluetooth.Abstractions.Broadcasting.Options;
-using Bluetooth.Abstractions.Exceptions;
-using Bluetooth.Core.Infrastructure.Scheduling;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
-using Bluetooth.Maui.Platforms.Apple.Exceptions;
-using Bluetooth.Maui.Platforms.Apple.Tools;
-
-using Microsoft.Extensions.Logging;
 
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 
@@ -182,20 +173,20 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     {
         if (characteristicService == null)
         {
-            throw new ServiceNotFoundException(this);
+            throw new Abstractions.Broadcasting.Exceptions.ServiceNotFoundException(this);
         }
 
         try
         {
             var serviceGuid = characteristicService.UUID.ToGuid();
             var match = GetServiceOrDefault(serviceGuid);
-            return match as CbPeripheralManagerWrapper.ICbServiceDelegate ?? throw new ServiceNotFoundException(this, serviceGuid);
+            return match as CbPeripheralManagerWrapper.ICbServiceDelegate ?? throw new Abstractions.Broadcasting.Exceptions.ServiceNotFoundException(this, serviceGuid);
         }
         catch (InvalidOperationException e)
         {
             var serviceGuid = characteristicService.UUID.ToGuid();
             var matches = GetServices(service => service.Id == serviceGuid).ToArray();
-            throw new MultipleServicesFoundException(this, matches, e);
+            throw new Abstractions.Broadcasting.Exceptions.MultipleServicesFoundException(this, matches, e);
         }
     }
 

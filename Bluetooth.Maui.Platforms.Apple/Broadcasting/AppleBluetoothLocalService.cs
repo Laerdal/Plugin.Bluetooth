@@ -1,8 +1,5 @@
-using Bluetooth.Abstractions.Broadcasting.Exceptions;
-using Bluetooth.Abstractions.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
-using Bluetooth.Maui.Platforms.Apple.Tools;
 
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 
@@ -40,18 +37,18 @@ public class AppleBluetoothLocalService : Core.Broadcasting.BaseBluetoothLocalSe
     {
         if (characteristic == null)
         {
-            throw new CharacteristicNotFoundException(this);
+            throw new Abstractions.Broadcasting.Exceptions.CharacteristicNotFoundException(this);
         }
 
         try
         {
             var match = GetCharacteristic(sharedCharacteristic => AreRepresentingTheSameObject(characteristic, sharedCharacteristic));
-            return match as CbPeripheralManagerWrapper.ICbCharacteristicDelegate ?? throw new CharacteristicNotFoundException(this, characteristic.UUID.ToGuid());
+            return match as CbPeripheralManagerWrapper.ICbCharacteristicDelegate ?? throw new Abstractions.Broadcasting.Exceptions.CharacteristicNotFoundException(this, characteristic.UUID.ToGuid());
         }
         catch (InvalidOperationException e)
         {
             var matches = GetCharacteristics(sharedCharacteristic => AreRepresentingTheSameObject(characteristic, sharedCharacteristic)).ToArray();
-            throw new MultipleCharacteristicsFoundException(this, matches, e);
+            throw new Abstractions.Broadcasting.Exceptions.MultipleCharacteristicsFoundException(this, matches, e);
         }
     }
 

@@ -45,6 +45,11 @@ public abstract partial class BaseBluetoothScanner
     protected void OnAdvertisementReceived<TAdvertisement>(TAdvertisement advertisement)
         where TAdvertisement : struct, IBluetoothAdvertisement
     {
+        if (CurrentScanningOptions.IgnoreNamelessAdvertisements && string.IsNullOrEmpty(advertisement.DeviceName))
+        {
+            return;
+        }
+        
         // Filter
         if (!CurrentScanningOptions.AdvertisementFilter.Invoke(advertisement))
         {

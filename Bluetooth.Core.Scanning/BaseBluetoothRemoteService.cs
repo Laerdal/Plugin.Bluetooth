@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 namespace Bluetooth.Core.Scanning;
 
 /// <inheritdoc cref="IBluetoothRemoteService" />
@@ -72,5 +69,11 @@ public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, I
     public async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore().ConfigureAwait(false);
+    }
+    
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return $"[{Id}] {Name}";
     }
 }

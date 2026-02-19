@@ -56,4 +56,9 @@ public abstract partial class BaseBluetoothRemoteDescriptor : BaseBindableObject
 
     #endregion
 
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return $"[{Id}] {Name}";
+    }
 }

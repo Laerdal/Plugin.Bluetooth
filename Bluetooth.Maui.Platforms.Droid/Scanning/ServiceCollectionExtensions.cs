@@ -1,4 +1,3 @@
-using Bluetooth.Abstractions.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning;
