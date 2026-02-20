@@ -13,7 +13,7 @@ namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 public class WindowsBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
 {
     /// <summary>
-    ///     Initializes a new instance of the Windows <see cref="BluetoothDescriptor" /> class.
+    ///     Initializes a new instance of the Windows <see cref="WindowsBluetoothRemoteDescriptor" /> class.
     /// </summary>
     /// <param name="characteristic">The Bluetooth characteristic that contains this descriptor.</param>
     /// <param name="request">The descriptor factory request containing descriptor information.</param>

@@ -10,7 +10,7 @@ namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDeviceServiceProxy.IBluetoothServiceProxyDelegate
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="BluetoothService" /> class.
+    ///     Initializes a new instance of the <see cref="WindowsBluetoothRemoteService" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with this service.</param>
     /// <param name="request">The factory request containing service information.</param>

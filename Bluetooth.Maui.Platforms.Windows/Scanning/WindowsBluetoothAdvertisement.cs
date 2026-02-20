@@ -11,7 +11,7 @@ namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertisement
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="BluetoothAdvertisement" /> struct from Windows Bluetooth LE event arguments.
+    ///     Initializes a new instance of the <see cref="WindowsBluetoothAdvertisement" /> struct from Windows Bluetooth LE event arguments.
     ///     For more information, see <see href="https://docs.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs" />.
     /// </summary>
     /// <param name="args">The Windows Bluetooth LE advertisement received event arguments.</param>

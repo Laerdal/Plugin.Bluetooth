@@ -14,7 +14,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     GattCharacteristicProxy.IBluetoothCharacteristicProxyDelegate
 {
     /// <summary>
-    ///     Initializes a new instance of the Windows <see cref="BluetoothCharacteristic" /> class.
+    ///     Initializes a new instance of the Windows <see cref="WindowsBluetoothRemoteCharacteristic" /> class.
     /// </summary>
     /// <param name="service">The Bluetooth service that contains this characteristic.</param>
     /// <param name="request">The characteristic factory request containing characteristic information.</param>

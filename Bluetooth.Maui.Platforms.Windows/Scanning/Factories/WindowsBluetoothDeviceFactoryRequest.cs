@@ -6,7 +6,7 @@ namespace Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
 public record WindowsBluetoothDeviceFactoryRequest : IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="BluetoothDeviceFactoryRequest" /> record from a Windows Bluetooth advertisement.
+    ///     Initializes a new instance of the <see cref="WindowsBluetoothDeviceFactoryRequest" /> record from a Windows Bluetooth advertisement.
     /// </summary>
     /// <param name="advertisement">The Windows Bluetooth advertisement containing the device information.</param>
     public WindowsBluetoothDeviceFactoryRequest(WindowsBluetoothAdvertisement advertisement)
@@ -15,7 +15,7 @@ public record WindowsBluetoothDeviceFactoryRequest : IBluetoothDeviceFactory.Blu
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="BluetoothDeviceFactoryRequest" /> record with device ID and manufacturer.
+    ///     Initializes a new instance of the <see cref="WindowsBluetoothDeviceFactoryRequest" /> record with device ID and manufacturer.
     /// </summary>
     /// <param name="deviceId">The unique identifier of the Bluetooth device (Bluetooth address).</param>
     /// <param name="manufacturer">The manufacturer information of the Bluetooth device.</param>
