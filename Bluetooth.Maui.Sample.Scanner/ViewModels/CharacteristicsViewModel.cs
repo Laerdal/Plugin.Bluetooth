@@ -1,8 +1,3 @@
-using System.Collections.Generic;
-
-using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Controls;
-
 namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 
 /// <summary>

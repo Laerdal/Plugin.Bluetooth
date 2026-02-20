@@ -33,12 +33,14 @@ global using Bluetooth.Maui.Sample.Scanner.ViewModels;
 global using Bluetooth.Maui.Sample.Scanner.Views;
 
 global using CommunityToolkit.Mvvm.Input;
+global using CommunityToolkit.Maui;
 
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Logging.Abstractions;
 global using Microsoft.Extensions.Options;
 global using Microsoft.Maui.Controls;
+global using Microsoft.Maui.ApplicationModel;
 
 global using Plugin.BaseTypeExtensions;
 global using Plugin.ByteArrays;

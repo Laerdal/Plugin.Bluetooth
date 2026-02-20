@@ -19,7 +19,6 @@ global using Bluetooth.Abstractions;
 global using Bluetooth.Abstractions.Broadcasting;
 global using Bluetooth.Abstractions.Broadcasting.Enums;
 global using Bluetooth.Abstractions.Broadcasting.EventArgs;
-global using Bluetooth.Abstractions.Broadcasting.EventArgs;
 global using Bluetooth.Abstractions.Broadcasting.Exceptions;
 global using Bluetooth.Abstractions.Broadcasting.Factories;
 global using Bluetooth.Abstractions.Broadcasting.Options;

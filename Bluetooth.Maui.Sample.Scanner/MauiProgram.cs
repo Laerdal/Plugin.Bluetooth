@@ -1,8 +1,3 @@
-using CommunityToolkit.Maui;
-
-using Microsoft.Maui.Controls.Hosting;
-using Microsoft.Maui.Hosting;
-
 namespace Bluetooth.Maui.Sample.Scanner;
 
 /// <summary>

@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace Bluetooth.Maui.Sample.Scanner.Infrastructure;
 
 /// <summary>

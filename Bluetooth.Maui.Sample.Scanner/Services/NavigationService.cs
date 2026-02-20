@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-
-using Microsoft.Maui.Controls;
-
 namespace Bluetooth.Maui.Sample.Scanner.Services;
 
 /// <summary>

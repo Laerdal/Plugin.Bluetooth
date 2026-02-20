@@ -35,7 +35,7 @@
 
     <!-- MAUI essential items -->
     <ItemGroup>
-        <!-- Temporarily disabled due to MAUI 10.0.20 resizetizer SVG bug -->
+        <!-- Temporarily disabled due to MAUI resizetizer SVG bug (still present in 10.0.30) -->
         <!-- <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" /> -->
         <!-- <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" /> -->
         <MauiImage Include="Resources\Images\*" />

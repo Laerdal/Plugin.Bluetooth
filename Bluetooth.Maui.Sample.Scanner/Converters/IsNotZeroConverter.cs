@@ -1,5 +1,3 @@
-using Microsoft.Maui.Controls;
-
 namespace Bluetooth.Maui.Sample.Scanner.Converters;
 
 /// <summary>
