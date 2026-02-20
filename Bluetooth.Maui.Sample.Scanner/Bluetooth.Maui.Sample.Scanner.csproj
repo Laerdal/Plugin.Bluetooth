@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
-        <TargetFrameworks Condition=" '$(IncludeWindowsPlatform)' == 'true' ">$(TargetFrameworks);net10.0-windows10.0.26100.0</TargetFrameworks>
+        <TargetFrameworks Condition=" '$(IsHostMachineWindows)' == 'true' ">$(TargetFrameworks);net10.0-windows10.0.26100.0</TargetFrameworks>
     </PropertyGroup>
 
     <PropertyGroup>
