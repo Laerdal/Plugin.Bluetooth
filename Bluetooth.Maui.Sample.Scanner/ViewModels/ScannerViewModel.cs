@@ -13,11 +13,17 @@ public class ScannerViewModel : BaseViewModel
     /// Automatically updated when devices are discovered or removed.
     /// </summary>
     public ObservableCollection<IBluetoothRemoteDevice> Devices { get; } = new ObservableCollection<IBluetoothRemoteDevice>();
+    
+    public IBluetoothRemoteDevice? SelectedDevice
+    {
+        get => GetValue<IBluetoothRemoteDevice?>(null);
+        set => SetValue(value);
+    }
 
     /// <summary>
     /// Gets a value indicating whether scanning is currently active.
     /// </summary>
-    public bool IsScanning => GetValue<bool>();
+    public bool IsScanning => GetValue(false);
 
     /// <summary>
     /// Gets the number of discovered devices.
@@ -137,6 +143,8 @@ public class ScannerViewModel : BaseViewModel
         {
             return;
         }
+        
+        SelectedDevice = device;
 
         // Navigate to DevicePage with the selected device
         await _navigation.NavigateToAsync<DevicePage>(new Dictionary<string, object>
