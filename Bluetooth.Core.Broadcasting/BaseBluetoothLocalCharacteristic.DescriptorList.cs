@@ -3,7 +3,7 @@ namespace Bluetooth.Core.Broadcasting;
 public abstract partial class BaseBluetoothLocalCharacteristic
 {
     /// <summary>
-    /// Gets the collection of descriptors for this characteristic.
+    ///     Gets the collection of descriptors for this characteristic.
     /// </summary>
     private ObservableCollection<IBluetoothLocalDescriptor> Descriptors
     {
@@ -16,7 +16,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
 
     #region Descriptors - Add
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ValueTask<IBluetoothLocalDescriptor> AddDescriptorAsync(IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec request, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -37,7 +37,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
 
     private readonly static Func<IBluetoothLocalDescriptor, bool> _defaultAcceptAllFilter = _ => true;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothLocalDescriptor GetDescriptor(Guid id)
     {
         try
@@ -50,7 +50,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothLocalDescriptor GetDescriptor(Func<IBluetoothLocalDescriptor, bool> filter)
     {
         ArgumentNullException.ThrowIfNull(filter);
@@ -64,7 +64,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothLocalDescriptor? GetDescriptorOrDefault(Guid id)
     {
         try
@@ -77,7 +77,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothLocalDescriptor? GetDescriptorOrDefault(Func<IBluetoothLocalDescriptor, bool> filter)
     {
         try
@@ -90,7 +90,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IEnumerable<IBluetoothLocalDescriptor> GetDescriptors(Func<IBluetoothLocalDescriptor, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
@@ -101,14 +101,14 @@ public abstract partial class BaseBluetoothLocalCharacteristic
 
     #region Descriptors - Remove
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ValueTask RemoveDescriptorAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         var descriptor = GetDescriptor(id);
         return RemoveDescriptorAsync(descriptor, timeout, cancellationToken);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask RemoveDescriptorAsync(IBluetoothLocalDescriptor localDescriptor, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(localDescriptor);
@@ -116,7 +116,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
         await localDescriptor.DisposeAsync().ConfigureAwait(false);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask RemoveAllDescriptorsAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         foreach (var descriptor in Descriptors.ToList())
@@ -129,14 +129,14 @@ public abstract partial class BaseBluetoothLocalCharacteristic
 
     #region Descriptors - Has
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool HasDescriptor(Func<IBluetoothLocalDescriptor, bool> filter)
     {
         ArgumentNullException.ThrowIfNull(filter);
         return Descriptors.Any(filter);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool HasDescriptor(Guid id)
     {
         return HasDescriptor(d => d.Id == id);

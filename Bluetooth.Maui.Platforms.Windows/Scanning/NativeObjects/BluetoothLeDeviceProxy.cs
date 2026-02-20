@@ -3,13 +3,13 @@ using Bluetooth.Maui.Platforms.Windows.Exceptions;
 namespace Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;
 
 /// <summary>
-/// Proxy class for Windows Bluetooth LE device that provides event handling, lifecycle management,
-/// and GATT service operations.
+///     Proxy class for Windows Bluetooth LE device that provides event handling, lifecycle management,
+///     and GATT service operations.
 /// </summary>
 public sealed partial class BluetoothLeDeviceProxy : IDisposable
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothLeDeviceProxy"/> class.
+    ///     Initializes a new instance of the <see cref="BluetoothLeDeviceProxy" /> class.
     /// </summary>
     /// <param name="bluetoothLeDevice">The native Windows Bluetooth LE device instance.</param>
     /// <param name="bluetoothLeDeviceProxyDelegate">The delegate for handling Bluetooth LE device events.</param>
@@ -25,17 +25,17 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     }
 
     /// <summary>
-    /// Gets the delegate responsible for handling Bluetooth LE device events.
+    ///     Gets the delegate responsible for handling Bluetooth LE device events.
     /// </summary>
     private IBluetoothLeDeviceProxyDelegate BluetoothLeDeviceProxyDelegate { get; }
 
     /// <summary>
-    /// Gets the native Windows Bluetooth LE device instance.
+    ///     Gets the native Windows Bluetooth LE device instance.
     /// </summary>
     public BluetoothLEDevice BluetoothLeDevice { get; }
 
     /// <summary>
-    /// Releases all resources used by the <see cref="BluetoothLeDeviceProxy"/> instance.
+    ///     Releases all resources used by the <see cref="BluetoothLeDeviceProxy" /> instance.
     /// </summary>
     public void Dispose()
     {
@@ -48,7 +48,7 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     }
 
     /// <summary>
-    /// Creates a new <see cref="BluetoothLeDeviceProxy"/> instance for the specified Bluetooth address.
+    ///     Creates a new <see cref="BluetoothLeDeviceProxy" /> instance for the specified Bluetooth address.
     /// </summary>
     /// <param name="bluetoothAddress">The Bluetooth address of the device to connect to.</param>
     /// <param name="bluetoothLeDeviceProxyDelegate">The delegate for handling Bluetooth LE device events.</param>
@@ -68,7 +68,7 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     }
 
     /// <summary>
-    /// Reads GATT services from the device with retry logic for improved reliability.
+    ///     Reads GATT services from the device with retry logic for improved reliability.
     /// </summary>
     /// <param name="bluetoothCacheMode">The cache mode to use when reading services.</param>
     /// <param name="maxNumberOfAttempts">The maximum number of retry attempts (default: 3).</param>
@@ -111,7 +111,7 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     }
 
     /// <summary>
-    /// Handles GATT services change events and forwards them to the delegate.
+    ///     Handles GATT services change events and forwards them to the delegate.
     /// </summary>
     /// <param name="sender">The Bluetooth LE device whose GATT services changed.</param>
     /// <param name="args">The event arguments (not used).</param>
@@ -128,7 +128,7 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     }
 
     /// <summary>
-    /// Handles connection status change events and forwards them to the delegate.
+    ///     Handles connection status change events and forwards them to the delegate.
     /// </summary>
     /// <param name="sender">The Bluetooth LE device whose connection status changed.</param>
     /// <param name="args">The event arguments (not used).</param>
@@ -145,7 +145,7 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     }
 
     /// <summary>
-    /// Handles device name change events and forwards them to the delegate.
+    ///     Handles device name change events and forwards them to the delegate.
     /// </summary>
     /// <param name="sender">The Bluetooth LE device whose name changed.</param>
     /// <param name="args">The event arguments (not used).</param>
@@ -162,7 +162,7 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     }
 
     /// <summary>
-    /// Handles custom pairing request events and forwards them to the delegate.
+    ///     Handles custom pairing request events and forwards them to the delegate.
     /// </summary>
     /// <param name="sender">The custom pairing object that requested pairing.</param>
     /// <param name="args">The pairing request event arguments.</param>
@@ -179,7 +179,7 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     }
 
     /// <summary>
-    /// Handles device access change events and forwards them to the delegate.
+    ///     Handles device access change events and forwards them to the delegate.
     /// </summary>
     /// <param name="sender">The device access information that changed.</param>
     /// <param name="args">The access change event arguments.</param>

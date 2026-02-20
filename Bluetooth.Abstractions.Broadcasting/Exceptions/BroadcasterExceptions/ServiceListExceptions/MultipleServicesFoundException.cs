@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 public class MultipleServicesFoundException : BroadcasterException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleServicesFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleServicesFoundException" /> class.
     /// </summary>
     public MultipleServicesFoundException(IBluetoothBroadcaster broadcaster,
         IEnumerable<IBluetoothLocalService> services,
@@ -19,7 +19,7 @@ public class MultipleServicesFoundException : BroadcasterException
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleServicesFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleServicesFoundException" /> class.
     /// </summary>
     public MultipleServicesFoundException(IBluetoothBroadcaster broadcaster,
         Guid id,
@@ -36,4 +36,3 @@ public class MultipleServicesFoundException : BroadcasterException
     /// </summary>
     public IEnumerable<IBluetoothLocalService> Services { get; }
 }
-

@@ -1,12 +1,12 @@
 namespace Bluetooth.Maui.Sample.Scanner.Views;
 
 /// <summary>
-/// Device detail page displaying connection controls and GATT services.
+///     Device detail page displaying connection controls and GATT services.
 /// </summary>
 public partial class DevicePage : BaseContentPage<DeviceViewModel>, IQueryAttributable
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="DevicePage"/> class.
+    ///     Initializes a new instance of the <see cref="DevicePage" /> class.
     /// </summary>
     /// <param name="viewModel">The device view model.</param>
     public DevicePage(DeviceViewModel viewModel) : base(viewModel)
@@ -15,7 +15,7 @@ public partial class DevicePage : BaseContentPage<DeviceViewModel>, IQueryAttrib
     }
 
     /// <summary>
-    /// Applies query attributes (navigation parameters) to the page.
+    ///     Applies query attributes (navigation parameters) to the page.
     /// </summary>
     /// <param name="query">The query parameters.</param>
     public void ApplyQueryAttributes(IDictionary<string, object> query)

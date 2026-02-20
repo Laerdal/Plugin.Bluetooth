@@ -1,7 +1,7 @@
 namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 
 /// <summary>
-/// ViewModel for the device detail page, handling device connection and service exploration.
+///     ViewModel for the device detail page, handling device connection and service exploration.
 /// </summary>
 public class DeviceViewModel : BaseViewModel
 {
@@ -9,7 +9,20 @@ public class DeviceViewModel : BaseViewModel
     private IBluetoothRemoteDevice? _device;
 
     /// <summary>
-    /// Gets or sets the current Bluetooth device.
+    ///     Initializes a new instance of the <see cref="DeviceViewModel" /> class.
+    /// </summary>
+    public DeviceViewModel(INavigationService navigation)
+    {
+        _navigation = navigation;
+
+        ConnectCommand = new AsyncRelayCommand(ConnectAsync, () => !IsConnected);
+        DisconnectCommand = new AsyncRelayCommand(DisconnectAsync, () => IsConnected);
+        ExploreServicesCommand = new AsyncRelayCommand(ExploreServicesAsync, () => IsConnected);
+        SelectServiceCommand = new AsyncRelayCommand<IBluetoothRemoteService>(SelectServiceAsync);
+    }
+
+    /// <summary>
+    ///     Gets or sets the current Bluetooth device.
     /// </summary>
     public IBluetoothRemoteDevice? Device
     {
@@ -39,65 +52,52 @@ public class DeviceViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Gets the device name for display.
+    ///     Gets the device name for display.
     /// </summary>
     public string DeviceName => Device?.Name ?? "Unknown Device";
 
     /// <summary>
-    /// Gets the device ID for display.
+    ///     Gets the device ID for display.
     /// </summary>
     public string DeviceId => Device?.Id ?? "N/A";
 
     /// <summary>
-    /// Gets whether the device is currently connected.
+    ///     Gets whether the device is currently connected.
     /// </summary>
     public bool IsConnected => Device?.IsConnected ?? false;
 
     /// <summary>
-    /// Gets the collection of discovered services.
+    ///     Gets the collection of discovered services.
     /// </summary>
-    public ObservableCollection<IBluetoothRemoteService> Services { get; } = new ObservableCollection<IBluetoothRemoteService>();
+    public ObservableCollection<IBluetoothRemoteService> Services { get; } = new();
 
     /// <summary>
-    /// Gets the number of discovered services.
+    ///     Gets the number of discovered services.
     /// </summary>
     public int ServiceCount => Services.Count;
 
     /// <summary>
-    /// Gets the command to connect to the device.
+    ///     Gets the command to connect to the device.
     /// </summary>
     public IAsyncRelayCommand ConnectCommand { get; }
 
     /// <summary>
-    /// Gets the command to disconnect from the device.
+    ///     Gets the command to disconnect from the device.
     /// </summary>
     public IAsyncRelayCommand DisconnectCommand { get; }
 
     /// <summary>
-    /// Gets the command to explore services on the connected device.
+    ///     Gets the command to explore services on the connected device.
     /// </summary>
     public IAsyncRelayCommand ExploreServicesCommand { get; }
 
     /// <summary>
-    /// Gets the command to select and navigate to a service.
+    ///     Gets the command to select and navigate to a service.
     /// </summary>
     public IAsyncRelayCommand<IBluetoothRemoteService> SelectServiceCommand { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DeviceViewModel"/> class.
-    /// </summary>
-    public DeviceViewModel(INavigationService navigation)
-    {
-        _navigation = navigation;
-
-        ConnectCommand = new AsyncRelayCommand(ConnectAsync, () => !IsConnected);
-        DisconnectCommand = new AsyncRelayCommand(DisconnectAsync, () => IsConnected);
-        ExploreServicesCommand = new AsyncRelayCommand(ExploreServicesAsync, () => IsConnected);
-        SelectServiceCommand = new AsyncRelayCommand<IBluetoothRemoteService>(SelectServiceAsync);
-    }
-
-    /// <summary>
-    /// Sets the device to display and manage.
+    ///     Sets the device to display and manage.
     /// </summary>
     /// <param name="device">The Bluetooth device.</param>
     public void SetDevice(IBluetoothRemoteDevice device)
@@ -106,7 +106,7 @@ public class DeviceViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Connects to the device.
+    ///     Connects to the device.
     /// </summary>
     private async Task ConnectAsync()
     {
@@ -118,7 +118,7 @@ public class DeviceViewModel : BaseViewModel
         try
         {
             // Create default connection options
-            var connectionOptions = new Bluetooth.Abstractions.Scanning.Options.ConnectionOptions();
+            var connectionOptions = new ConnectionOptions();
             await Device.ConnectAsync(connectionOptions);
         }
         catch (Exception ex)
@@ -135,7 +135,7 @@ public class DeviceViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Disconnects from the device.
+    ///     Disconnects from the device.
     /// </summary>
     private async Task DisconnectAsync()
     {
@@ -164,7 +164,7 @@ public class DeviceViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Explores and discovers services on the connected device.
+    ///     Explores and discovers services on the connected device.
     /// </summary>
     private async Task ExploreServicesAsync()
     {
@@ -198,7 +198,7 @@ public class DeviceViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Navigates to the characteristics page for the selected service.
+    ///     Navigates to the characteristics page for the selected service.
     /// </summary>
     private async Task SelectServiceAsync(IBluetoothRemoteService? service)
     {
@@ -216,7 +216,7 @@ public class DeviceViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Handles connection state changes.
+    ///     Handles connection state changes.
     /// </summary>
     private void OnConnectionStateChanged(object? sender, EventArgs e)
     {
@@ -225,12 +225,11 @@ public class DeviceViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Handles service list changes.
+    ///     Handles service list changes.
     /// </summary>
     private void OnServiceListChanged(object? sender, ServiceListChangedEventArgs e)
     {
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
+        MainThread.BeginInvokeOnMainThread(() => {
             var newList = Device?.GetServices() ?? [];
             Services.UpdateFrom([.. newList]);
             OnPropertyChanged(nameof(ServiceCount));
@@ -238,7 +237,7 @@ public class DeviceViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Updates the command can-execute states.
+    ///     Updates the command can-execute states.
     /// </summary>
     private void UpdateCommands()
     {

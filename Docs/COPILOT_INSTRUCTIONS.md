@@ -8,7 +8,7 @@
 
 - **License**: MIT (Copyright 2025 Laerdal Medical)
 - **Target Framework**: .NET 10.0
-- **Supported Platforms**: Android 36.1, iOS, macOS Catalyst, Windows 10.0.19041.0
+- **Supported Platforms**: Android 36.1, iOS, macOS Catalyst, Windows 10.0.22621.0
 - **Primary Author**: Francois Raminosona
 - **Organization**: Laerdal Medical
 

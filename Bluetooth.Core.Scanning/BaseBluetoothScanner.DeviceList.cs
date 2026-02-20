@@ -3,11 +3,11 @@ namespace Bluetooth.Core.Scanning;
 public abstract partial class BaseBluetoothScanner
 {
     /// <summary>
-    /// Gets the collection of Bluetooth devices managed by this scanner.
+    ///     Gets the collection of Bluetooth devices managed by this scanner.
     /// </summary>
     /// <remarks>
-    /// This collection is lazily initialized and automatically hooks up collection change notifications
-    /// to raise the appropriate events (<see cref="DevicesAdded"/>, <see cref="DevicesRemoved"/>, <see cref="DeviceListChanged"/>).
+    ///     This collection is lazily initialized and automatically hooks up collection change notifications
+    ///     to raise the appropriate events (<see cref="DevicesAdded" />, <see cref="DevicesRemoved" />, <see cref="DeviceListChanged" />).
     /// </remarks>
     private ObservableCollection<IBluetoothRemoteDevice> Devices
     {
@@ -23,10 +23,25 @@ public abstract partial class BaseBluetoothScanner
         }
     }
 
+    /// <inheritdoc />
+    public bool HasDevice(Func<IBluetoothRemoteDevice, bool> filter)
+    {
+        lock (Devices)
+        {
+            return Devices.Any(filter);
+        }
+    }
+
+    /// <inheritdoc />
+    public bool HasDevice(string id)
+    {
+        return HasDevice(d => d.Id == id);
+    }
+
     #region Devices - Events
 
     /// <summary>
-    /// Handles collection change notifications for the <see cref="Devices"/> collection.
+    ///     Handles collection change notifications for the <see cref="Devices" /> collection.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="ea">Event arguments containing the collection change details.</param>
@@ -37,27 +52,29 @@ public abstract partial class BaseBluetoothScanner
         {
             DevicesAdded?.Invoke(this, new DevicesAddedEventArgs(listChangedEventArgs.AddedItems));
         }
+
         if (listChangedEventArgs.RemovedItems != null)
         {
             DevicesRemoved?.Invoke(this, new DevicesRemovedEventArgs(listChangedEventArgs.RemovedItems));
         }
+
         DeviceListChanged?.Invoke(this, listChangedEventArgs);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<DeviceListChangedEventArgs>? DeviceListChanged;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<DevicesAddedEventArgs>? DevicesAdded;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<DevicesRemovedEventArgs>? DevicesRemoved;
 
     #endregion
 
     #region Devices - Clear
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask ClearDevicesAsync(IEnumerable<IBluetoothRemoteDevice>? devices = null)
     {
         devices ??= GetDevices();
@@ -67,7 +84,7 @@ public abstract partial class BaseBluetoothScanner
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask ClearDeviceAsync(IBluetoothRemoteDevice? device)
     {
         if (device == null)
@@ -88,7 +105,7 @@ public abstract partial class BaseBluetoothScanner
         await device.DisposeAsync().ConfigureAwait(false);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ValueTask ClearDeviceAsync(string deviceId)
     {
         return ClearDeviceAsync(GetDeviceOrDefault(deviceId));
@@ -98,19 +115,19 @@ public abstract partial class BaseBluetoothScanner
 
     #region Devices - Get
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteDevice GetDevice(Func<IBluetoothRemoteDevice, bool> filter)
     {
         return GetDeviceOrDefault(filter) ?? throw new DeviceNotFoundException(this);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteDevice GetDevice(string id)
     {
         return GetDeviceOrDefault(id) ?? throw new DeviceNotFoundException(this);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteDevice? GetDeviceOrDefault(Func<IBluetoothRemoteDevice, bool> filter)
     {
         lock (Devices)
@@ -127,7 +144,7 @@ public abstract partial class BaseBluetoothScanner
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteDevice? GetDeviceOrDefault(string id)
     {
         lock (Devices)
@@ -145,7 +162,7 @@ public abstract partial class BaseBluetoothScanner
 
     private readonly static Func<IBluetoothRemoteDevice, bool> _defaultAcceptAllFilter = _ => true;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IReadOnlyList<IBluetoothRemoteDevice> GetDevices(Func<IBluetoothRemoteDevice, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
@@ -161,13 +178,13 @@ public abstract partial class BaseBluetoothScanner
 
     #region Devices - Extras
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ValueTask<IBluetoothRemoteDevice> WaitForDeviceToAppearAsync(string id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         return WaitForDeviceToAppearAsync(device => device.Id == id, timeout, cancellationToken);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<IBluetoothRemoteDevice> WaitForDeviceToAppearAsync(Func<IBluetoothRemoteDevice, bool>? filter = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         filter ??= _defaultAcceptAllFilter;
@@ -196,7 +213,7 @@ public abstract partial class BaseBluetoothScanner
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteDevice? GetClosestDeviceOrDefault(Func<IBluetoothRemoteDevice, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
@@ -208,20 +225,4 @@ public abstract partial class BaseBluetoothScanner
     }
 
     #endregion
-
-    /// <inheritdoc/>
-    public bool HasDevice(Func<IBluetoothRemoteDevice, bool> filter)
-    {
-        lock (Devices)
-        {
-            return Devices.Any(filter);
-        }
-    }
-
-    /// <inheritdoc/>
-    public bool HasDevice(string id)
-    {
-        return HasDevice(d => d.Id == id);
-    }
-
 }

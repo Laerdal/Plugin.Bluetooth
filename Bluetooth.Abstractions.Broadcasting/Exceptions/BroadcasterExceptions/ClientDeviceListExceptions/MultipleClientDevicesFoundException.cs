@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 public class MultipleClientDevicesFoundException : BroadcasterException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleClientDevicesFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleClientDevicesFoundException" /> class.
     /// </summary>
     public MultipleClientDevicesFoundException(IBluetoothBroadcaster broadcaster,
         IEnumerable<IBluetoothConnectedDevice> devices,
@@ -19,7 +19,7 @@ public class MultipleClientDevicesFoundException : BroadcasterException
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleClientDevicesFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleClientDevicesFoundException" /> class.
     /// </summary>
     public MultipleClientDevicesFoundException(IBluetoothBroadcaster broadcaster,
         string id,
@@ -35,6 +35,4 @@ public class MultipleClientDevicesFoundException : BroadcasterException
     ///     Gets the devices that were found matching the criteria.
     /// </summary>
     public IEnumerable<IBluetoothConnectedDevice> ClientDevices { get; }
-
 }
-

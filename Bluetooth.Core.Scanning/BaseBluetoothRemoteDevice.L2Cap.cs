@@ -8,7 +8,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         set => SetValue(value);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<IBluetoothL2CapChannel> OpenL2CapChannelAsync(int psm, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Prevents multiple calls for the same PSM
@@ -39,12 +39,12 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Platform-specific implementation to open an L2CAP channel.
+    ///     Platform-specific implementation to open an L2CAP channel.
     /// </summary>
     protected abstract ValueTask NativeOpenL2CapChannelAsync(int psm);
 
     /// <summary>
-    /// Called when L2CAP channel is opened successfully.
+    ///     Called when L2CAP channel is opened successfully.
     /// </summary>
     protected void OnL2CapChannelOpened(IBluetoothL2CapChannel channel)
     {
@@ -53,7 +53,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Called when L2CAP channel open fails.
+    ///     Called when L2CAP channel open fails.
     /// </summary>
     protected void OnOpenL2CapChannelFailed(Exception e)
     {

@@ -7,17 +7,17 @@ public partial interface IBluetoothBroadcaster
     #region ClientDevices - Events
 
     /// <summary>
-    /// Event triggered when the list of connected client devices changes.
+    ///     Event triggered when the list of connected client devices changes.
     /// </summary>
     event EventHandler<ClientDeviceListChangedEventArgs>? ClientDeviceListChanged;
 
     /// <summary>
-    /// Event triggered when client devices connect.
+    ///     Event triggered when client devices connect.
     /// </summary>
     event EventHandler<ClientDevicesAddedEventArgs>? ClientDevicesAdded;
 
     /// <summary>
-    /// Event triggered when client devices disconnect.
+    ///     Event triggered when client devices disconnect.
     /// </summary>
     event EventHandler<ClientDevicesRemovedEventArgs>? ClientDevicesRemoved;
 
@@ -26,7 +26,7 @@ public partial interface IBluetoothBroadcaster
     #region ClientDevices - Get
 
     /// <summary>
-    /// Returns the first Bluetooth device that matches the specified filter.
+    ///     Returns the first Bluetooth device that matches the specified filter.
     /// </summary>
     /// <param name="filter">A function to filter devices. Should return true for matching devices.</param>
     /// <returns>The matching <see cref="IBluetoothConnectedDevice" />.</returns>
@@ -35,7 +35,7 @@ public partial interface IBluetoothBroadcaster
     IBluetoothConnectedDevice GetClientDevice(Func<IBluetoothConnectedDevice, bool> filter);
 
     /// <summary>
-    /// Returns a Bluetooth device with the specified ID.
+    ///     Returns a Bluetooth device with the specified ID.
     /// </summary>
     /// <param name="id">The ID of the device to retrieve.</param>
     /// <returns>The matching <see cref="IBluetoothConnectedDevice" />.</returns>
@@ -44,7 +44,7 @@ public partial interface IBluetoothBroadcaster
     IBluetoothConnectedDevice GetClientDevice(string id);
 
     /// <summary>
-    /// Returns the first Bluetooth device that matches the specified filter.
+    ///     Returns the first Bluetooth device that matches the specified filter.
     /// </summary>
     /// <param name="filter">A function to filter devices. Should return true for matching devices.</param>
     /// <returns>The matching <see cref="IBluetoothConnectedDevice" />, or null if none are found.</returns>
@@ -52,7 +52,7 @@ public partial interface IBluetoothBroadcaster
     IBluetoothConnectedDevice? GetClientDeviceOrDefault(Func<IBluetoothConnectedDevice, bool> filter);
 
     /// <summary>
-    /// Returns a Bluetooth device with the specified ID.
+    ///     Returns a Bluetooth device with the specified ID.
     /// </summary>
     /// <param name="id">The ID of the device to retrieve.</param>
     /// <returns>The matching <see cref="IBluetoothConnectedDevice" />, or null if none are found.</returns>
@@ -60,13 +60,13 @@ public partial interface IBluetoothBroadcaster
     IBluetoothConnectedDevice? GetClientDeviceOrDefault(string id);
 
     /// <summary>
-    /// Returns all Bluetooth devices that match the specified filter.
+    ///     Returns all Bluetooth devices that match the specified filter.
     /// </summary>
     /// <param name="filter">An optional function to filter devices. Defaults to null for all devices.</param>
     /// <returns>
-    /// A read-only snapshot of connected client devices at the time of the call. This collection is immutable
-    /// and will not be modified if devices connect or disconnect after the call returns.
-    /// To get updated results, call this method again or subscribe to <see cref="ClientDeviceListChanged"/> event.
+    ///     A read-only snapshot of connected client devices at the time of the call. This collection is immutable
+    ///     and will not be modified if devices connect or disconnect after the call returns.
+    ///     To get updated results, call this method again or subscribe to <see cref="ClientDeviceListChanged" /> event.
     /// </returns>
     IReadOnlyList<IBluetoothConnectedDevice> GetClientDevices(Func<IBluetoothConnectedDevice, bool>? filter = null);
 
@@ -75,19 +75,18 @@ public partial interface IBluetoothBroadcaster
     #region ClientDevices - Has
 
     /// <summary>
-    /// Determines if there is at least one connected client device that matches the specified filter.
+    ///     Determines if there is at least one connected client device that matches the specified filter.
     /// </summary>
     /// <param name="filter">A function to filter devices. Should return true for matching devices.</param>
     /// <returns>True if at least one matching device is found; otherwise, false.</returns>
     bool HasClientDevice(Func<IBluetoothConnectedDevice, bool> filter);
 
     /// <summary>
-    /// Determines if there is a connected client device with the specified ID.
+    ///     Determines if there is a connected client device with the specified ID.
     /// </summary>
     /// <param name="id">The ID of the device to check for.</param>
     /// <returns>True if a device with the specified ID is found; otherwise, false.</returns>
     bool HasClientDevice(string id);
 
     #endregion
-
 }

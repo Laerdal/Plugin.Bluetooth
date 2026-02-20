@@ -4,27 +4,20 @@ namespace Bluetooth.Core.Scanning;
 public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableObject, IBluetoothRemoteCharacteristic
 {
     /// <summary>
-    /// The logger instance used for logging characteristic operations.
+    ///     The logger instance used for logging characteristic operations.
     /// </summary>
     private readonly ILogger<IBluetoothRemoteCharacteristic> _logger;
 
-    /// <inheritdoc/>
-    public IBluetoothRemoteService RemoteService { get; }
-
     /// <summary>
-    /// The factory responsible for creating descriptors associated with this characteristic.
-    /// </summary>
-    protected IBluetoothDescriptorFactory DescriptorFactory { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothRemoteCharacteristic"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteCharacteristic" /> class.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service associated with this characteristic.</param>
     /// <param name="request">The factory request containing characteristic information.</param>
     /// <param name="descriptorFactory">The factory for creating descriptors for this characteristic.</param>
     /// <param name="logger">The logger instance to use for logging (optional).</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="remoteService"/> is null.</exception>
-    protected BaseBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request, IBluetoothDescriptorFactory descriptorFactory, ILogger<IBluetoothRemoteCharacteristic>? logger = null)
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="remoteService" /> is null.</exception>
+    protected BaseBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request, IBluetoothDescriptorFactory descriptorFactory,
+        ILogger<IBluetoothRemoteCharacteristic>? logger = null)
     {
         ArgumentNullException.ThrowIfNull(remoteService);
         ArgumentNullException.ThrowIfNull(descriptorFactory);
@@ -40,22 +33,30 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
         LazyCanListen = new Lazy<bool>(NativeCanListen);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///     The factory responsible for creating descriptors associated with this characteristic.
+    /// </summary>
+    protected IBluetoothDescriptorFactory DescriptorFactory { get; }
+
+    /// <inheritdoc />
+    public IBluetoothRemoteService RemoteService { get; }
+
+    /// <inheritdoc />
     public Guid Id { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string Name { get; } = "Unknown Characteristic";
 
     #region Dispose
 
     /// <summary>
-    /// Performs the core disposal logic for the characteristic, including stopping listening and cleaning up resources.
-    /// This method is called during disposal to ensure proper cleanup of the characteristic's resources.
+    ///     Performs the core disposal logic for the characteristic, including stopping listening and cleaning up resources.
+    ///     This method is called during disposal to ensure proper cleanup of the characteristic's resources.
     /// </summary>
     /// <returns>A task that represents the asynchronous disposal operation.</returns>
     /// <remarks>
-    /// This method will attempt to stop listening if the characteristic is currently listening for notifications.
-    /// Any exceptions during the stop listening process will be handled by the unhandled exception listener.
+    ///     This method will attempt to stop listening if the characteristic is currently listening for notifications.
+    ///     Any exceptions during the stop listening process will be handled by the unhandled exception listener.
     /// </remarks>
     protected async virtual ValueTask DisposeAsyncCore()
     {
@@ -144,7 +145,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
     }
 
     /// <summary>
-    /// Gets the read capability string representation for the characteristic.
+    ///     Gets the read capability string representation for the characteristic.
     /// </summary>
     /// <returns>Returns "R" if the characteristic can be read, otherwise an empty string.</returns>
     protected virtual string ToReadString()
@@ -153,7 +154,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
     }
 
     /// <summary>
-    /// Gets the write capability string representation for the characteristic.
+    ///     Gets the write capability string representation for the characteristic.
     /// </summary>
     /// <returns>Returns "W" if the characteristic can be written to, otherwise an empty string.</returns>
     protected virtual string ToWriteString()
@@ -162,7 +163,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
     }
 
     /// <summary>
-    /// Gets the notification capability string representation for the characteristic.
+    ///     Gets the notification capability string representation for the characteristic.
     /// </summary>
     /// <returns>Returns "N*" if listening, "N" if notifications are supported but not listening, otherwise an empty string.</returns>
     protected virtual string ToListenString()
@@ -171,5 +172,4 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
     }
 
     #endregion
-
 }

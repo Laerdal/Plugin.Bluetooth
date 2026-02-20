@@ -1,14 +1,13 @@
 namespace Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;
 
-
 /// <summary>
-/// Proxy class for Windows Bluetooth LE advertisement watcher that provides event handling
-/// for advertisement scanning operations.
+///     Proxy class for Windows Bluetooth LE advertisement watcher that provides event handling
+///     for advertisement scanning operations.
 /// </summary>
 public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindableObject, IDisposable
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothLeAdvertisementWatcherWrapper"/> class.
+    ///     Initializes a new instance of the <see cref="BluetoothLeAdvertisementWatcherWrapper" /> class.
     /// </summary>
     /// <param name="scanner">The delegate for handling advertisement watcher events.</param>
     public BluetoothLeAdvertisementWatcherWrapper(IBluetoothLeAdvertisementWatcherProxyDelegate scanner)
@@ -20,7 +19,17 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Disposes the advertisement watcher and unsubscribes from events.
+    ///     Gets the delegate responsible for handling advertisement watcher events.
+    /// </summary>
+    private IBluetoothLeAdvertisementWatcherProxyDelegate BluetoothLeAdvertisementWatcherProxyDelegate { get; }
+
+    /// <summary>
+    ///     Gets the native Windows Bluetooth LE advertisement watcher instance.
+    /// </summary>
+    public BluetoothLEAdvertisementWatcher BluetoothLeAdvertisementWatcher { get; }
+
+    /// <summary>
+    ///     Disposes the advertisement watcher and unsubscribes from events.
     /// </summary>
     public void Dispose()
     {
@@ -30,17 +39,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Gets the delegate responsible for handling advertisement watcher events.
-    /// </summary>
-    private IBluetoothLeAdvertisementWatcherProxyDelegate BluetoothLeAdvertisementWatcherProxyDelegate { get; }
-
-    /// <summary>
-    /// Gets the native Windows Bluetooth LE advertisement watcher instance.
-    /// </summary>
-    public BluetoothLEAdvertisementWatcher BluetoothLeAdvertisementWatcher { get; }
-
-    /// <summary>
-    /// Handles advertisement watcher stopped events and forwards them to the delegate.
+    ///     Handles advertisement watcher stopped events and forwards them to the delegate.
     /// </summary>
     /// <param name="sender">The advertisement watcher that stopped.</param>
     /// <param name="args">The stopped event arguments.</param>
@@ -57,7 +56,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Handles advertisement received events and forwards them to the delegate.
+    ///     Handles advertisement received events and forwards them to the delegate.
     /// </summary>
     /// <param name="sender">The advertisement watcher that received the advertisement.</param>
     /// <param name="args">The advertisement received event arguments.</param>
@@ -76,7 +75,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     #region Values
 
     /// <summary>
-    /// Refreshes the properties of the Bluetooth LE advertisement watcher.
+    ///     Refreshes the properties of the Bluetooth LE advertisement watcher.
     /// </summary>
     public void RefreshValues()
     {
@@ -93,16 +92,15 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
         BluetoothLeAdvertisementWatcherSignalStrengthFilterSamplingInterval = BluetoothLeAdvertisementWatcher.SignalStrengthFilter?.SamplingInterval;
         BluetoothLeAdvertisementWatcherSignalStrengthFilterOutOfRangeTimeout = BluetoothLeAdvertisementWatcher.SignalStrengthFilter?.OutOfRangeTimeout;
 
-        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22621))
         {
             BluetoothLeAdvertisementWatcherAllowExtendedAdvertisements = BluetoothLeAdvertisementWatcher.AllowExtendedAdvertisements;
         }
-
     }
 
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth LE advertisement watcher allows extended advertisements.
+    ///     Gets a value indicating whether the Bluetooth LE advertisement watcher allows extended advertisements.
     /// </summary>
     public bool BluetoothLeAdvertisementWatcherAllowExtendedAdvertisements
     {
@@ -111,7 +109,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Gets the maximum timeout for considering a device out of range.
+    ///     Gets the maximum timeout for considering a device out of range.
     /// </summary>
     public TimeSpan BluetoothLeAdvertisementWatcherMaxOutOfRangeTimeout
     {
@@ -120,7 +118,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Gets the minimum timeout for considering a device out of range.
+    ///     Gets the minimum timeout for considering a device out of range.
     /// </summary>
     public TimeSpan BluetoothLeAdvertisementWatcherMinOutOfRangeTimeout
     {
@@ -129,7 +127,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Gets the maximum sampling interval for the Bluetooth LE advertisement watcher.
+    ///     Gets the maximum sampling interval for the Bluetooth LE advertisement watcher.
     /// </summary>
     public TimeSpan BluetoothLeAdvertisementWatcherMaxSamplingInterval
     {
@@ -138,7 +136,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Gets the minimum sampling interval for the Bluetooth LE advertisement watcher.
+    ///     Gets the minimum sampling interval for the Bluetooth LE advertisement watcher.
     /// </summary>
     public TimeSpan BluetoothLeAdvertisementWatcherMinSamplingInterval
     {
@@ -147,7 +145,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Gets the current status of the Bluetooth LE advertisement watcher.
+    ///     Gets the current status of the Bluetooth LE advertisement watcher.
     /// </summary>
     public BluetoothLEAdvertisementWatcherStatus BluetoothLeAdvertisementWatcherStatus
     {
@@ -156,7 +154,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Gets the scanning mode used by the Bluetooth LE advertisement watcher.
+    ///     Gets the scanning mode used by the Bluetooth LE advertisement watcher.
     /// </summary>
     public BluetoothLEScanningMode BluetoothLeAdvertisementWatcherScanningMode
     {
@@ -165,7 +163,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Gets the in-range threshold for the signal strength filter of the Bluetooth LE advertisement watcher.
+    ///     Gets the in-range threshold for the signal strength filter of the Bluetooth LE advertisement watcher.
     /// </summary>
     public short? BluetoothLeAdvertisementWatcherSignalStrengthFilterInRangeThresholdInDBm
     {
@@ -174,7 +172,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Gets the out-of-range threshold for the signal strength filter of the Bluetooth LE advertisement watcher.
+    ///     Gets the out-of-range threshold for the signal strength filter of the Bluetooth LE advertisement watcher.
     /// </summary>
     public short? BluetoothLeAdvertisementWatcherSignalStrengthFilterOutOfRangeThresholdInDBm
     {
@@ -183,7 +181,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Gets the sampling interval for the signal strength filter of the Bluetooth LE advertisement watcher.
+    ///     Gets the sampling interval for the signal strength filter of the Bluetooth LE advertisement watcher.
     /// </summary>
     public TimeSpan? BluetoothLeAdvertisementWatcherSignalStrengthFilterSamplingInterval
     {
@@ -192,7 +190,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     /// <summary>
-    /// Gets the out-of-range timeout for the signal strength filter of the Bluetooth LE advertisement watcher.
+    ///     Gets the out-of-range timeout for the signal strength filter of the Bluetooth LE advertisement watcher.
     /// </summary>
     public TimeSpan? BluetoothLeAdvertisementWatcherSignalStrengthFilterOutOfRangeTimeout
     {
@@ -202,4 +200,3 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
 
     #endregion
 }
-

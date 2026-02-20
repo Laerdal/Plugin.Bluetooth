@@ -1,7 +1,7 @@
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
-/// Base class for Bluetooth broadcaster devices.
+///     Base class for Bluetooth broadcaster devices.
 /// </summary>
 public abstract partial class BaseBluetoothConnectedDevice
 {
@@ -23,12 +23,12 @@ public abstract partial class BaseBluetoothConnectedDevice
 
 
     /// <summary>
-    /// Performs the native disconnection logic for the client device.
+    ///     Performs the native disconnection logic for the client device.
     /// </summary>
     protected abstract ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Called when the connection status of the client device changes.
+    ///     Called when the connection status of the client device changes.
     /// </summary>
     protected void OnConnectionStatusChanged(bool isConnected)
     {
@@ -49,5 +49,4 @@ public abstract partial class BaseBluetoothConnectedDevice
             }
         }
     }
-
 }

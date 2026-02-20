@@ -8,7 +8,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class CharacteristicNotFoundException : CharacteristicExplorationException
 {
     /// <summary>
-    ///    Initializes a new instance of the <see cref="CharacteristicNotFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="CharacteristicNotFoundException" /> class.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service associated with the exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception, if any.</param>
@@ -17,7 +17,7 @@ public class CharacteristicNotFoundException : CharacteristicExplorationExceptio
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="CharacteristicNotFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="CharacteristicNotFoundException" /> class.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service associated with the exception.</param>
     /// <param name="id">The id of the characteristic that was not found.</param>

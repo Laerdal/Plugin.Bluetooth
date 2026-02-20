@@ -2,8 +2,14 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteDescriptor
 {
+    private TaskCompletionSource? WriteValueTcs
+    {
+        get => GetValue<TaskCompletionSource?>(null);
+        set => SetValue(value);
+    }
+
     /// <summary>
-    /// Gets a value indicating whether a write value operation is currently in progress.
+    ///     Gets a value indicating whether a write value operation is currently in progress.
     /// </summary>
     public bool IsWritingValue
     {
@@ -11,15 +17,9 @@ public abstract partial class BaseBluetoothRemoteDescriptor
         private set => SetValue(value);
     }
 
-    private TaskCompletionSource? WriteValueTcs
-    {
-        get => GetValue<TaskCompletionSource?>(null);
-        set => SetValue(value);
-    }
-
     #region IBluetoothDescriptor Members
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask WriteValueAsync(ReadOnlyMemory<byte> value, bool skipIfOldValueMatchesNewValue = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
@@ -70,12 +70,12 @@ public abstract partial class BaseBluetoothRemoteDescriptor
     #endregion
 
     /// <summary>
-    /// Platform-specific implementation to write the descriptor's value.
+    ///     Platform-specific implementation to write the descriptor's value.
     /// </summary>
     protected abstract ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value);
 
     /// <summary>
-    /// Called when writing the descriptor's value succeeds.
+    ///     Called when writing the descriptor's value succeeds.
     /// </summary>
     protected void OnWriteValueSucceeded()
     {
@@ -83,7 +83,7 @@ public abstract partial class BaseBluetoothRemoteDescriptor
     }
 
     /// <summary>
-    /// Called when writing the descriptor's value fails.
+    ///     Called when writing the descriptor's value fails.
     /// </summary>
     protected void OnWriteValueFailed(Exception e)
     {
@@ -100,11 +100,11 @@ public abstract partial class BaseBluetoothRemoteDescriptor
 
     private Lazy<bool> LazyCanWrite { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool CanWrite => LazyCanWrite.Value;
 
     /// <summary>
-    /// Platform-specific implementation to determine if the descriptor can be written.
+    ///     Platform-specific implementation to determine if the descriptor can be written.
     /// </summary>
     protected abstract bool NativeCanWrite();
 

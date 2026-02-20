@@ -8,7 +8,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class MultipleCharacteristicsFoundException : CharacteristicExplorationException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleCharacteristicsFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleCharacteristicsFoundException" /> class.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service associated with the exception.</param>
     /// <param name="characteristics">The characteristics that were found matching the criteria.</param>
@@ -22,7 +22,7 @@ public class MultipleCharacteristicsFoundException : CharacteristicExplorationEx
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleCharacteristicsFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleCharacteristicsFoundException" /> class.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service associated with the exception.</param>
     /// <param name="id">The id of the characteristics that were found matching the criteria.</param>
@@ -40,5 +40,4 @@ public class MultipleCharacteristicsFoundException : CharacteristicExplorationEx
     ///     Gets the characteristics that were found matching the criteria.
     /// </summary>
     public IEnumerable<IBluetoothRemoteCharacteristic> Characteristics { get; }
-
 }

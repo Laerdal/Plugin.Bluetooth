@@ -1,18 +1,17 @@
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
-/// Base class for Bluetooth broadcast descriptors.
+///     Base class for Bluetooth broadcast descriptors.
 /// </summary>
 public abstract partial class BaseBluetoothLocalDescriptor
 {
-
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ReadOnlySpan<byte> ValueSpan => Value.Span;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ReadOnlyMemory<byte> Value { get; private set; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ValueTask UpdateValueAsync(ReadOnlyMemory<byte> value, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Value = value;

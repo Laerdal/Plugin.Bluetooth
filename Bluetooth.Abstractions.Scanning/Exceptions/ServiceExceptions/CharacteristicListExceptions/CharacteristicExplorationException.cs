@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class CharacteristicExplorationException : ServiceException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="CharacteristicExplorationException"/> class.
+    ///     Initializes a new instance of the <see cref="CharacteristicExplorationException" /> class.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 public class ClientDeviceNotFoundException : BroadcasterException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ClientDeviceNotFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="ClientDeviceNotFoundException" /> class.
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster associated with the exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception, if any.</param>
@@ -17,7 +17,7 @@ public class ClientDeviceNotFoundException : BroadcasterException
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ClientDeviceNotFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="ClientDeviceNotFoundException" /> class.
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster associated with the exception.</param>
     /// <param name="id">The UUID of the ClientDevice that was not found.</param>

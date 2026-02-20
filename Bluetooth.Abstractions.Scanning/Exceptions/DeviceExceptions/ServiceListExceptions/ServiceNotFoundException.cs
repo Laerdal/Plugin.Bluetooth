@@ -8,7 +8,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class ServiceNotFoundException : ServiceExplorationException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ServiceNotFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="ServiceNotFoundException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception, if any.</param>
@@ -17,7 +17,7 @@ public class ServiceNotFoundException : ServiceExplorationException
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ServiceNotFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="ServiceNotFoundException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="id">The id of the service that was not found.</param>

@@ -2,8 +2,14 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteDescriptor
 {
+    private TaskCompletionSource<ReadOnlyMemory<byte>>? ReadValueTcs
+    {
+        get => GetValue<TaskCompletionSource<ReadOnlyMemory<byte>>?>(null);
+        set => SetValue(value);
+    }
+
     /// <summary>
-    /// Gets a value indicating whether a read value operation is currently in progress.
+    ///     Gets a value indicating whether a read value operation is currently in progress.
     /// </summary>
     public bool IsReadingValue
     {
@@ -11,13 +17,7 @@ public abstract partial class BaseBluetoothRemoteDescriptor
         private set => SetValue(value);
     }
 
-    private TaskCompletionSource<ReadOnlyMemory<byte>>? ReadValueTcs
-    {
-        get => GetValue<TaskCompletionSource<ReadOnlyMemory<byte>>?>(null);
-        set => SetValue(value);
-    }
-
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<ReadOnlyMemory<byte>> ReadValueAsync(bool skipIfPreviouslyRead = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
@@ -65,12 +65,12 @@ public abstract partial class BaseBluetoothRemoteDescriptor
     }
 
     /// <summary>
-    /// Platform-specific implementation to read the descriptor's value.
+    ///     Platform-specific implementation to read the descriptor's value.
     /// </summary>
     protected abstract ValueTask NativeReadValueAsync();
 
     /// <summary>
-    /// Called when reading the descriptor's value succeeds.
+    ///     Called when reading the descriptor's value succeeds.
     /// </summary>
     protected void OnReadValueSucceeded(ReadOnlyMemory<byte> value)
     {
@@ -86,7 +86,7 @@ public abstract partial class BaseBluetoothRemoteDescriptor
     }
 
     /// <summary>
-    /// Called when reading the descriptor's value fails.
+    ///     Called when reading the descriptor's value fails.
     /// </summary>
     protected void OnReadValueFailed(Exception e)
     {
@@ -103,11 +103,11 @@ public abstract partial class BaseBluetoothRemoteDescriptor
 
     private Lazy<bool> LazyCanRead { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool CanRead => LazyCanRead.Value;
 
     /// <summary>
-    /// Platform-specific implementation to determine if the descriptor can be read.
+    ///     Platform-specific implementation to determine if the descriptor can be read.
     /// </summary>
     protected abstract bool NativeCanRead();
 

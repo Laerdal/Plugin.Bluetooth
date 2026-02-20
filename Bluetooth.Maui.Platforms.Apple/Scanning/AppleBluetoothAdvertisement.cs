@@ -1,25 +1,18 @@
-using System.Collections.Generic;
-
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
 /// <summary>
-/// Represents a Bluetooth Low Energy advertisement packet received from an iOS device.
-/// This readonly struct wraps iOS's CBPeripheral and advertisement data, providing access to
-/// device information, services, signal strength, and manufacturer-specific data.
+///     Represents a Bluetooth Low Energy advertisement packet received from an iOS device.
+///     This readonly struct wraps iOS's CBPeripheral and advertisement data, providing access to
+///     device information, services, signal strength, and manufacturer-specific data.
 /// </summary>
 /// <remarks>
-/// This is a readonly struct for memory efficiency. Since advertisements arrive by the thousands,
-/// using a value type eliminates heap allocations and reduces GC pressure.
+///     This is a readonly struct for memory efficiency. Since advertisements arrive by the thousands,
+///     using a value type eliminates heap allocations and reduces GC pressure.
 /// </remarks>
 public readonly record struct AppleBluetoothAdvertisement : IBluetoothAdvertisement
 {
     /// <summary>
-    /// Gets the iOS Core Bluetooth peripheral that sent this advertisement.
-    /// </summary>
-    public CBPeripheral CbPeripheral { get; }
-    
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AppleBluetoothAdvertisement"/> struct from iOS Core Bluetooth objects.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothAdvertisement" /> struct from iOS Core Bluetooth objects.
     /// </summary>
     /// <param name="cbPeripheral">The Core Bluetooth peripheral that sent the advertisement.</param>
     /// <param name="advertisementData">The native iOS advertisement data dictionary.</param>
@@ -28,9 +21,9 @@ public readonly record struct AppleBluetoothAdvertisement : IBluetoothAdvertisem
     {
         ArgumentNullException.ThrowIfNull(rssi);
         ArgumentNullException.ThrowIfNull(cbPeripheral);
-        
+
         CbPeripheral = cbPeripheral;
-        
+
         var adData = new AdvertisementData(advertisementData);
 
         DeviceName = adData.LocalName ?? string.Empty;
@@ -46,38 +39,43 @@ public readonly record struct AppleBluetoothAdvertisement : IBluetoothAdvertisem
         DateReceived = DateTimeOffset.UtcNow;
     }
 
+    /// <summary>
+    ///     Gets the iOS Core Bluetooth peripheral that sent this advertisement.
+    /// </summary>
+    public CBPeripheral CbPeripheral { get; }
+
     #region IBluetoothAdvertisement Members
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public DateTimeOffset DateReceived { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string DeviceName { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IEnumerable<Guid> ServicesGuids { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool IsConnectable { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int RawSignalStrengthInDBm { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int TransmitPowerLevelInDBm { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string BluetoothAddress { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ReadOnlyMemory<byte> ManufacturerData { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public Manufacturer Manufacturer => ManufacturerData.Length >= 2
-        ? (Manufacturer)ManufacturerId
-        : (Manufacturer)(-1);
+        ? (Manufacturer) ManufacturerId
+        : (Manufacturer) (-1);
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int ManufacturerId
     {
         get

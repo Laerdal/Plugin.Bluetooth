@@ -3,11 +3,11 @@ namespace Bluetooth.Core.Scanning;
 public abstract partial class BaseBluetoothRemoteService
 {
     /// <summary>
-    /// Gets the collection of characteristics associated with this Bluetooth service.
+    ///     Gets the collection of characteristics associated with this Bluetooth service.
     /// </summary>
     /// <remarks>
-    /// This collection is lazily initialized and automatically hooks up collection change notifications
-    /// to raise the appropriate events (<see cref="CharacteristicsAdded"/>, <see cref="CharacteristicsRemoved"/>, <see cref="CharacteristicListChanged"/>).
+    ///     This collection is lazily initialized and automatically hooks up collection change notifications
+    ///     to raise the appropriate events (<see cref="CharacteristicsAdded" />, <see cref="CharacteristicsRemoved" />, <see cref="CharacteristicListChanged" />).
     /// </remarks>
     private ObservableCollection<IBluetoothRemoteCharacteristic> Characteristics
     {
@@ -23,10 +23,32 @@ public abstract partial class BaseBluetoothRemoteService
         }
     }
 
+    #region Characteristics - Clear
+
+    /// <inheritdoc />
+    public async ValueTask ClearCharacteristicsAsync()
+    {
+        var characteristicCount = Characteristics.Count;
+
+        foreach (var characteristic in Characteristics)
+        {
+            await characteristic.DisposeAsync().ConfigureAwait(false);
+        }
+
+        lock (Characteristics)
+        {
+            Characteristics.Clear();
+        }
+
+        LogCharacteristicsCleared(Id, Device.Id, characteristicCount);
+    }
+
+    #endregion
+
     #region Characteristics - Events
 
     /// <summary>
-    /// Handles collection change notifications for the <see cref="Characteristics"/> collection.
+    ///     Handles collection change notifications for the <see cref="Characteristics" /> collection.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="ea">Event arguments containing the collection change details.</param>
@@ -37,20 +59,22 @@ public abstract partial class BaseBluetoothRemoteService
         {
             CharacteristicsAdded?.Invoke(this, new CharacteristicsAddedEventArgs(listChangedEventArgs.AddedItems));
         }
+
         if (listChangedEventArgs.RemovedItems != null)
         {
             CharacteristicsRemoved?.Invoke(this, new CharacteristicsRemovedEventArgs(listChangedEventArgs.RemovedItems));
         }
+
         CharacteristicListChanged?.Invoke(this, listChangedEventArgs);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<CharacteristicsAddedEventArgs>? CharacteristicsAdded;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<CharacteristicsRemovedEventArgs>? CharacteristicsRemoved;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<CharacteristicListChangedEventArgs>? CharacteristicListChanged;
 
     #endregion
@@ -58,7 +82,7 @@ public abstract partial class BaseBluetoothRemoteService
     #region Characteristics - Exploration
 
     /// <summary>
-    /// Gets a value indicating whether characteristic exploration is currently in progress.
+    ///     Gets a value indicating whether characteristic exploration is currently in progress.
     /// </summary>
     public bool IsExploringCharacteristics
     {
@@ -67,10 +91,10 @@ public abstract partial class BaseBluetoothRemoteService
     }
 
     /// <summary>
-    /// Gets or sets the task completion source for characteristic exploration operations.
+    ///     Gets or sets the task completion source for characteristic exploration operations.
     /// </summary>
     /// <remarks>
-    /// This is used to coordinate asynchronous characteristic exploration and ensure only one exploration occurs at a time.
+    ///     This is used to coordinate asynchronous characteristic exploration and ensure only one exploration occurs at a time.
     /// </remarks>
     private TaskCompletionSource? CharacteristicsExplorationTcs
     {
@@ -79,7 +103,7 @@ public abstract partial class BaseBluetoothRemoteService
     }
 
     /// <summary>
-    /// Called when characteristic exploration succeeds. Updates the Characteristics collection and completes the exploration task.
+    ///     Called when characteristic exploration succeeds. Updates the Characteristics collection and completes the exploration task.
     /// </summary>
     /// <typeparam name="TNativeCharacteristicType">The platform-specific characteristic type.</typeparam>
     /// <param name="characteristics">The list of native characteristics discovered.</param>
@@ -107,12 +131,12 @@ public abstract partial class BaseBluetoothRemoteService
     }
 
     /// <summary>
-    /// Called when characteristic exploration fails. Completes the exploration task with an exception or dispatches to the unhandled exception listener.
+    ///     Called when characteristic exploration fails. Completes the exploration task with an exception or dispatches to the unhandled exception listener.
     /// </summary>
     /// <param name="e">The exception that occurred during characteristic exploration.</param>
     /// <remarks>
-    /// If the task completion source accepts the exception, it is propagated to waiting tasks.
-    /// Otherwise, the exception is dispatched to the <see cref="BluetoothUnhandledExceptionListener"/>.
+    ///     If the task completion source accepts the exception, it is propagated to waiting tasks.
+    ///     Otherwise, the exception is dispatched to the <see cref="BluetoothUnhandledExceptionListener" />.
     /// </remarks>
     protected void OnCharacteristicsExplorationFailed(Exception e)
     {
@@ -130,23 +154,23 @@ public abstract partial class BaseBluetoothRemoteService
     }
 
     /// <summary>
-    /// Platform-specific implementation to explore characteristics.
+    ///     Platform-specific implementation to explore characteristics.
     /// </summary>
     /// <param name="timeout">Optional timeout for the operation.</param>
     /// <param name="cancellationToken">Optional cancellation token for the operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     protected abstract ValueTask NativeCharacteristicsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <remarks>
-    /// This method ensures the device is connected, prevents concurrent explorations,
-    /// and optionally clears existing characteristics before exploring.
+    ///     This method ensures the device is connected, prevents concurrent explorations,
+    ///     and optionally clears existing characteristics before exploring.
     /// </remarks>
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
-    public async ValueTask ExploreCharacteristicsAsync(Bluetooth.Abstractions.Scanning.Options.CharacteristicExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask ExploreCharacteristicsAsync(CharacteristicExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Use default options if none provided
-        options ??= new Bluetooth.Abstractions.Scanning.Options.CharacteristicExplorationOptions();
+        options ??= new CharacteristicExplorationOptions();
 
         // If caching enabled and characteristics already exist, handle cascading exploration only
         if (options.UseCache && Characteristics.Any())
@@ -155,7 +179,7 @@ public abstract partial class BaseBluetoothRemoteService
             // Characteristics already explored, but may need to explore descriptors
             if (options.ExploreDescriptors)
             {
-                var descriptorOptions = new Bluetooth.Abstractions.Scanning.Options.DescriptorExplorationOptions
+                var descriptorOptions = new DescriptorExplorationOptions
                 {
                     UseCache = options.UseCache
                 };
@@ -177,6 +201,7 @@ public abstract partial class BaseBluetoothRemoteService
                     await characteristic.ExploreDescriptorsAsync(descriptorOptions, timeout, cancellationToken).ConfigureAwait(false);
                 }
             }
+
             return;
         }
 
@@ -194,7 +219,7 @@ public abstract partial class BaseBluetoothRemoteService
         try
         {
             // Ensure device is connected
-            DeviceNotConnectedException.ThrowIfNotConnected(this.Device);
+            DeviceNotConnectedException.ThrowIfNotConnected(Device);
 
             LogExploringCharacteristics(Id, Device.Id);
             await NativeCharacteristicsExplorationAsync(timeout, cancellationToken).ConfigureAwait(false);
@@ -212,7 +237,7 @@ public abstract partial class BaseBluetoothRemoteService
             // Cascade to descriptors if requested
             if (options.ExploreDescriptors)
             {
-                var descriptorOptions = new Bluetooth.Abstractions.Scanning.Options.DescriptorExplorationOptions
+                var descriptorOptions = new DescriptorExplorationOptions
                 {
                     UseCache = options.UseCache
                 };
@@ -244,45 +269,23 @@ public abstract partial class BaseBluetoothRemoteService
 
     #endregion
 
-    #region Characteristics - Clear
-
-    /// <inheritdoc/>
-    public async ValueTask ClearCharacteristicsAsync()
-    {
-        var characteristicCount = Characteristics.Count;
-
-        foreach (var characteristic in Characteristics)
-        {
-            await characteristic.DisposeAsync().ConfigureAwait(false);
-        }
-
-        lock (Characteristics)
-        {
-            Characteristics.Clear();
-        }
-
-        LogCharacteristicsCleared(Id, Device.Id, characteristicCount);
-    }
-
-    #endregion
-
     #region Characteristics - Get
 
     private readonly static Func<IBluetoothRemoteCharacteristic, bool> _defaultAcceptAllFilter = _ => true;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteCharacteristic GetCharacteristic(Func<IBluetoothRemoteCharacteristic, bool> filter)
     {
         return GetCharacteristicOrDefault(filter) ?? throw new CharacteristicNotFoundException(this);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteCharacteristic GetCharacteristic(Guid id)
     {
         return GetCharacteristicOrDefault(id) ?? throw new CharacteristicNotFoundException(this, id);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteCharacteristic? GetCharacteristicOrDefault(Func<IBluetoothRemoteCharacteristic, bool> filter)
     {
         try
@@ -295,7 +298,7 @@ public abstract partial class BaseBluetoothRemoteService
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteCharacteristic? GetCharacteristicOrDefault(Guid id)
     {
         try
@@ -308,7 +311,7 @@ public abstract partial class BaseBluetoothRemoteService
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IEnumerable<IBluetoothRemoteCharacteristic> GetCharacteristics(Func<IBluetoothRemoteCharacteristic, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
@@ -329,18 +332,17 @@ public abstract partial class BaseBluetoothRemoteService
 
     #region Characteristics - Has
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool HasCharacteristic(Func<IBluetoothRemoteCharacteristic, bool> filter)
     {
         return Characteristics.Any(filter);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool HasCharacteristic(Guid id)
     {
         return HasCharacteristic(characteristic => characteristic.Id == id);
     }
 
     #endregion
-
 }

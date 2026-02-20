@@ -64,6 +64,7 @@ global using Java.Lang.Reflect;
 global using Java.Util;
 
 global using Bluetooth.Maui.Platforms.Droid;
+
 #elif WINDOWS
 global using System.Runtime.InteropServices.WindowsRuntime;
 global using Windows.Devices.Bluetooth;

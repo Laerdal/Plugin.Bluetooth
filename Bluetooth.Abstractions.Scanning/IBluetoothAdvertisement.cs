@@ -1,14 +1,14 @@
 namespace Bluetooth.Abstractions.Scanning;
 
 /// <summary>
-/// Interface representing a Bluetooth advertisement, providing properties for accessing advertisement data received from a Bluetooth device.
+///     Interface representing a Bluetooth advertisement, providing properties for accessing advertisement data received from a Bluetooth device.
 /// </summary>
 public interface IBluetoothAdvertisement
 {
     /// <summary>
     ///     A timestamp for the point in time in which each Advertisement was received.
     /// </summary>
-    public DateTimeOffset DateReceived { get; }
+    DateTimeOffset DateReceived { get; }
 
     /// <summary>
     ///     Name of the device sending that advertisement.

@@ -1,23 +1,17 @@
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
+using MultipleServicesFoundException = Bluetooth.Abstractions.Scanning.Exceptions.MultipleServicesFoundException;
+using ServiceNotFoundException = Bluetooth.Abstractions.Scanning.Exceptions.ServiceNotFoundException;
+
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
 /// <inheritdoc cref="BaseBluetoothRemoteDevice" />
 public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeripheralWrapper.ICbPeripheralDelegate, CbCentralManagerWrapper.ICbPeripheralDelegate
 {
-    /// <summary>
-    /// Gets the iOS Core Bluetooth peripheral delegate proxy used for peripheral operations.
-    /// </summary>
-    public CbPeripheralWrapper CbPeripheralWrapper { get; }
-
-    /// <summary>
-    /// Gets the Bluetooth scanner that discovered this device, cast to the Apple-specific implementation.
-    /// </summary>
-    public AppleBluetoothScanner AppleBluetoothScanner => (AppleBluetoothScanner) Scanner;
-
     /// <inheritdoc />
-    public AppleBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request, IBluetoothServiceFactory serviceFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) :
+    public AppleBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request, IBluetoothServiceFactory serviceFactory,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) :
         base(scanner, request, serviceFactory, rssiToSignalStrengthConverter)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -25,7 +19,48 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         {
             throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothDeviceFactoryRequest)}, but got {request.GetType()}");
         }
+
         CbPeripheralWrapper = new CbPeripheralWrapper(this, appleRequest.CbPeripheral);
+    }
+
+    /// <summary>
+    ///     Gets the iOS Core Bluetooth peripheral delegate proxy used for peripheral operations.
+    /// </summary>
+    public CbPeripheralWrapper CbPeripheralWrapper { get; }
+
+    /// <summary>
+    ///     Gets the Bluetooth scanner that discovered this device, cast to the Apple-specific implementation.
+    /// </summary>
+    public AppleBluetoothScanner AppleBluetoothScanner => (AppleBluetoothScanner) Scanner;
+
+    /// <inheritdoc />
+    public void UpdatedName()
+    {
+        if (CbPeripheralWrapper.CbPeripheral.Name != null)
+        {
+            CachedName = CbPeripheralWrapper.CbPeripheral.Name;
+        }
+    }
+
+    /// <inheritdoc />
+    public void DidUpdateAncsAuthorization()
+    {
+        // TODO : Implement if needed. This method is called when the ANCS (Apple Notification Center Service) authorization status changes. If your application needs to interact with ANCS, you may want to handle this event to update your application's state accordingly.
+        // Placeholder for future implementation if needed
+    }
+
+    /// <inheritdoc />
+    protected override ValueTask NativeSetPreferredPhyAsync(PhyMode txPhy, PhyMode rxPhy)
+    {
+        // iOS does not allow setting preferred PHY, it is determined by the system and the connected peripheral. The current PHY can be read after a successful connection.
+        return ValueTask.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    protected override ValueTask NativeRequestMtuAsync(int requestedMtu)
+    {
+        // iOS does not allow requesting a specific MTU, it is determined by the system and the connected peripheral. The MTU can be read after a successful connection.
+        return ValueTask.CompletedTask;
     }
 
     #region L2Cap
@@ -33,14 +68,13 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     protected override ValueTask NativeOpenL2CapChannelAsync(int psm)
     {
-        CbPeripheralWrapper.CbPeripheral.OpenL2CapChannel((ushort)psm);
+        CbPeripheralWrapper.CbPeripheral.OpenL2CapChannel((ushort) psm);
         return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />
     public void DidOpenL2CapChannel(NSError? error, CBL2CapChannel? channel)
     {
-
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
@@ -73,14 +107,15 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     #region Connect
 
     /// <inheritdoc />
-    protected override ValueTask NativeConnectAsync(Abstractions.Scanning.Options.ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
         }
-        if (connectionOptions is not Bluetooth.Maui.Platforms.Apple.Scanning.Options.ConnectionOptions iosConnectionOptions)
+
+        if (connectionOptions is not Options.ConnectionOptions iosConnectionOptions)
         {
             throw new ArgumentException($"Connection options must be of type {nameof(PeripheralConnectionOptions)} for iOS platform.", nameof(connectionOptions));
         }
@@ -123,6 +158,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
         }
+
         scanner.CbCentralManagerWrapper.CbCentralManager.CancelPeripheralConnection(CbPeripheralWrapper.CbPeripheral);
         return ValueTask.CompletedTask;
     }
@@ -170,8 +206,8 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
     /// <inheritdoc />
     /// <remarks>
-    /// On iOS/macOS, connection priority is automatically managed by the system.
-    /// This method is a no-op and immediately completes successfully.
+    ///     On iOS/macOS, connection priority is automatically managed by the system.
+    ///     This method is a no-op and immediately completes successfully.
     /// </remarks>
     protected override ValueTask NativeRequestConnectionPriorityAsync(BluetoothConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
@@ -241,6 +277,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         {
             OnServicesExplorationFailed(e);
         }
+
         return;
 
         IBluetoothRemoteService FromInputTypeToOutputTypeConversion(CBService native)
@@ -265,12 +302,12 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         try
         {
             var match = GetServiceOrDefault(service => AreRepresentingTheSameObject(native, service));
-            return match as CbPeripheralWrapper.ICbServiceDelegate ?? throw new Abstractions.Scanning.Exceptions.ServiceNotFoundException(this, native.UUID.ToGuid());
+            return match as CbPeripheralWrapper.ICbServiceDelegate ?? throw new ServiceNotFoundException(this, native.UUID.ToGuid());
         }
         catch (InvalidOperationException e)
         {
             var matches = GetServices(service => AreRepresentingTheSameObject(native, service)).ToArray();
-            throw new Abstractions.Scanning.Exceptions.MultipleServicesFoundException(this, matches, e);
+            throw new MultipleServicesFoundException(this, matches, e);
         }
     }
 
@@ -284,12 +321,12 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     #region Ready to Send Write Without Response
 
     /// <summary>
-    /// Gets the auto-reset event used to signal when the peripheral is ready to send write-without-response commands.
+    ///     Gets the auto-reset event used to signal when the peripheral is ready to send write-without-response commands.
     /// </summary>
-    private AutoResetEvent ReadyToSendWriteWithoutResponse { get; } = new AutoResetEvent(false);
+    private AutoResetEvent ReadyToSendWriteWithoutResponse { get; } = new(false);
 
     /// <summary>
-    /// Called when the peripheral is ready to send more write-without-response commands on the iOS platform.
+    ///     Called when the peripheral is ready to send more write-without-response commands on the iOS platform.
     /// </summary>
     public void IsReadyToSendWriteWithoutResponse()
     {
@@ -297,7 +334,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     }
 
     /// <summary>
-    /// Waits for the peripheral to be ready to send write-without-response commands.
+    ///     Waits for the peripheral to be ready to send write-without-response commands.
     /// </summary>
     /// <param name="timeout">The timeout for the operation.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
@@ -308,34 +345,4 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     }
 
     #endregion
-
-    /// <inheritdoc />
-    public void UpdatedName()
-    {
-        if (CbPeripheralWrapper.CbPeripheral.Name != null)
-        {
-            CachedName = CbPeripheralWrapper.CbPeripheral.Name;
-        }
-    }
-
-    /// <inheritdoc />
-    public void DidUpdateAncsAuthorization()
-    {
-        // TODO : Implement if needed. This method is called when the ANCS (Apple Notification Center Service) authorization status changes. If your application needs to interact with ANCS, you may want to handle this event to update your application's state accordingly.
-        // Placeholder for future implementation if needed
-    }
-
-    /// <inheritdoc />
-    protected override ValueTask NativeSetPreferredPhyAsync(PhyMode txPhy, PhyMode rxPhy)
-    {
-        // iOS does not allow setting preferred PHY, it is determined by the system and the connected peripheral. The current PHY can be read after a successful connection.
-        return ValueTask.CompletedTask;
-    }
-
-    /// <inheritdoc />
-    protected override ValueTask NativeRequestMtuAsync(int requestedMtu)
-    {
-        // iOS does not allow requesting a specific MTU, it is determined by the system and the connected peripheral. The MTU can be read after a successful connection.
-        return ValueTask.CompletedTask;
-    }
 }

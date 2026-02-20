@@ -1,12 +1,12 @@
 namespace Bluetooth.Abstractions.Broadcasting.EventArgs;
 
 /// <summary>
-/// Event arguments for when a client requests to write a value to a characteristic.
+///     Event arguments for when a client requests to write a value to a characteristic.
 /// </summary>
 public class CharacteristicWriteRequestEventArgs : System.EventArgs
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="CharacteristicWriteRequestEventArgs" /> class.
+    ///     Initializes a new instance of the <see cref="CharacteristicWriteRequestEventArgs" /> class.
     /// </summary>
     /// <param name="clientId">The unique identifier of the requesting client.</param>
     /// <param name="serviceId">The service identifier containing the characteristic.</param>
@@ -21,22 +21,22 @@ public class CharacteristicWriteRequestEventArgs : System.EventArgs
     }
 
     /// <summary>
-    /// Gets the unique identifier of the requesting client.
+    ///     Gets the unique identifier of the requesting client.
     /// </summary>
     public string ClientId { get; }
 
     /// <summary>
-    /// Gets the service identifier containing the characteristic.
+    ///     Gets the service identifier containing the characteristic.
     /// </summary>
     public Guid ServiceId { get; }
 
     /// <summary>
-    /// Gets the characteristic identifier being written to.
+    ///     Gets the characteristic identifier being written to.
     /// </summary>
     public Guid CharacteristicId { get; }
 
     /// <summary>
-    /// Gets the value being written.
+    ///     Gets the value being written.
     /// </summary>
     public ReadOnlyMemory<byte> Value { get; }
 }

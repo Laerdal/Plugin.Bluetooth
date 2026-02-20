@@ -3,7 +3,7 @@ namespace Bluetooth.Core.Scanning;
 public abstract partial class BaseBluetoothRemoteCharacteristic
 {
     /// <summary>
-    /// Gets the collection of descriptors associated with this characteristic.
+    ///     Gets the collection of descriptors associated with this characteristic.
     /// </summary>
     private ObservableCollection<IBluetoothRemoteDescriptor> Descriptors
     {
@@ -19,10 +19,36 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         }
     }
 
+    /// <inheritdoc />
+    public async ValueTask ClearDescriptorsAsync()
+    {
+        foreach (var descriptor in Descriptors)
+        {
+            await descriptor.DisposeAsync().ConfigureAwait(false);
+        }
+
+        lock (Descriptors)
+        {
+            Descriptors.Clear();
+        }
+    }
+
+    /// <inheritdoc />
+    public bool HasDescriptor(Func<IBluetoothRemoteDescriptor, bool> filter)
+    {
+        return Descriptors.Any(filter);
+    }
+
+    /// <inheritdoc />
+    public bool HasDescriptor(Guid id)
+    {
+        return Descriptors.Any(d => d.Id == id);
+    }
+
     #region Descriptors - Events
 
     /// <summary>
-    /// Handles collection change notifications for the <see cref="Descriptors"/> collection.
+    ///     Handles collection change notifications for the <see cref="Descriptors" /> collection.
     /// </summary>
     private void DescriptorsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs ea)
     {
@@ -31,20 +57,22 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         {
             DescriptorsAdded?.Invoke(this, new DescriptorsAddedEventArgs(listChangedEventArgs.AddedItems));
         }
+
         if (listChangedEventArgs.RemovedItems != null)
         {
             DescriptorsRemoved?.Invoke(this, new DescriptorsRemovedEventArgs(listChangedEventArgs.RemovedItems));
         }
+
         DescriptorListChanged?.Invoke(this, listChangedEventArgs);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<DescriptorListChangedEventArgs>? DescriptorListChanged;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<DescriptorsAddedEventArgs>? DescriptorsAdded;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<DescriptorsRemovedEventArgs>? DescriptorsRemoved;
 
     #endregion
@@ -52,7 +80,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     #region Descriptors - Exploration
 
     /// <summary>
-    /// Gets a value indicating whether a descriptor exploration operation is currently in progress.
+    ///     Gets a value indicating whether a descriptor exploration operation is currently in progress.
     /// </summary>
     public bool IsExploringDescriptors
     {
@@ -66,11 +94,11 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         set => SetValue(value);
     }
 
-    /// <inheritdoc/>
-    public async Task ExploreDescriptorsAsync(Bluetooth.Abstractions.Scanning.Options.DescriptorExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public async Task ExploreDescriptorsAsync(DescriptorExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Use default options if none provided
-        options ??= new Bluetooth.Abstractions.Scanning.Options.DescriptorExplorationOptions();
+        options ??= new DescriptorExplorationOptions();
 
         // If caching enabled and descriptors already exist, skip exploration
         if (options.UseCache && Descriptors.Any())
@@ -124,12 +152,12 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Platform-specific implementation to explore (discover) descriptors.
+    ///     Platform-specific implementation to explore (discover) descriptors.
     /// </summary>
     protected abstract ValueTask NativeDescriptorsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Called when descriptor exploration succeeds.
+    ///     Called when descriptor exploration succeeds.
     /// </summary>
     protected void OnDescriptorsExplorationSucceeded<TNativeDescriptorType>(IList<TNativeDescriptorType> descriptors,
         Func<TNativeDescriptorType, IBluetoothRemoteDescriptor> fromInputTypeToOutputTypeConversion,
@@ -149,7 +177,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Called when descriptor exploration fails.
+    ///     Called when descriptor exploration fails.
     /// </summary>
     protected void OnDescriptorsExplorationFailed(Exception e)
     {
@@ -168,7 +196,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
 
     private readonly static Func<IBluetoothRemoteDescriptor, bool> _defaultAcceptAllFilter = _ => true;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteDescriptor GetDescriptor(Func<IBluetoothRemoteDescriptor, bool> filter)
     {
         try
@@ -181,7 +209,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteDescriptor GetDescriptor(Guid id)
     {
         try
@@ -194,7 +222,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteDescriptor? GetDescriptorOrDefault(Guid id)
     {
         try
@@ -207,7 +235,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteDescriptor? GetDescriptorOrDefault(Func<IBluetoothRemoteDescriptor, bool> filter)
     {
         try
@@ -220,7 +248,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IEnumerable<IBluetoothRemoteDescriptor> GetDescriptors(Func<IBluetoothRemoteDescriptor, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
@@ -228,31 +256,4 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     #endregion
-
-    /// <inheritdoc/>
-    public async ValueTask ClearDescriptorsAsync()
-    {
-        foreach (var descriptor in Descriptors)
-        {
-            await descriptor.DisposeAsync().ConfigureAwait(false);
-        }
-
-        lock (Descriptors)
-        {
-            Descriptors.Clear();
-        }
-    }
-
-    /// <inheritdoc/>
-    public bool HasDescriptor(Func<IBluetoothRemoteDescriptor, bool> filter)
-    {
-        return Descriptors.Any(filter);
-    }
-
-    /// <inheritdoc/>
-    public bool HasDescriptor(Guid id)
-    {
-        return Descriptors.Any(d => d.Id == id);
-    }
-
 }

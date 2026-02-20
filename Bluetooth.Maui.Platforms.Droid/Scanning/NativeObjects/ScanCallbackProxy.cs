@@ -3,18 +3,18 @@ using Exception = System.Exception;
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 
 /// <summary>
-/// Android Bluetooth LE scan callback proxy that handles scan events.
-/// Implements <see cref="ScanCallback"/> to redirect events to the scanner instance.
+///     Android Bluetooth LE scan callback proxy that handles scan events.
+///     Implements <see cref="ScanCallback" /> to redirect events to the scanner instance.
 /// </summary>
 /// <remarks>
-/// This class wraps the Android ScanCallback and provides exception handling
-/// for all callback methods. See Android documentation:
-/// https://developer.android.com/reference/android/bluetooth/le/ScanCallback
+///     This class wraps the Android ScanCallback and provides exception handling
+///     for all callback methods. See Android documentation:
+///     https://developer.android.com/reference/android/bluetooth/le/ScanCallback
 /// </remarks>
 public partial class ScanCallbackProxy : ScanCallback
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ScanCallbackProxy"/> class.
+    ///     Initializes a new instance of the <see cref="ScanCallbackProxy" /> class.
     /// </summary>
     /// <param name="scanCallbackProxyDelegate">The scanner instance that will receive the callback events.</param>
     public ScanCallbackProxy(IScanCallbackProxyDelegate scanCallbackProxyDelegate)
@@ -23,11 +23,11 @@ public partial class ScanCallbackProxy : ScanCallback
     }
 
     /// <summary>
-    /// Gets the scanner instance that receives callback events.
+    ///     Gets the scanner instance that receives callback events.
     /// </summary>
     private IScanCallbackProxyDelegate ScanCallbackProxyDelegate { get; }
 
-    /// <inheritdoc cref="ScanCallback.OnScanFailed(ScanFailure)"/>
+    /// <inheritdoc cref="ScanCallback.OnScanFailed(ScanFailure)" />
     public override void OnScanFailed(ScanFailure errorCode)
     {
         try
@@ -40,7 +40,7 @@ public partial class ScanCallbackProxy : ScanCallback
         }
     }
 
-    /// <inheritdoc cref="ScanCallback.OnBatchScanResults(IList{ScanResult})"/>
+    /// <inheritdoc cref="ScanCallback.OnBatchScanResults(IList{ScanResult})" />
     public override void OnBatchScanResults(IList<ScanResult>? results)
     {
         try
@@ -58,7 +58,7 @@ public partial class ScanCallbackProxy : ScanCallback
         }
     }
 
-    /// <inheritdoc cref="ScanCallback.OnScanResult(ScanCallbackType, ScanResult)"/>
+    /// <inheritdoc cref="ScanCallback.OnScanResult(ScanCallbackType, ScanResult)" />
     public override void OnScanResult(ScanCallbackType callbackType, ScanResult? result)
     {
         try

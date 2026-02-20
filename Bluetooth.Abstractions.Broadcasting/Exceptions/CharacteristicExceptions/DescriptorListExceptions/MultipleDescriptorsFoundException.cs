@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 public class MultipleDescriptorsFoundException : CharacteristicException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleDescriptorsFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleDescriptorsFoundException" /> class.
     /// </summary>
     /// <param name="localCharacteristic">The Bluetooth characteristic associated with the exception.</param>
     /// <param name="descriptors">The Descriptors that were found matching the criteria.</param>
@@ -21,7 +21,7 @@ public class MultipleDescriptorsFoundException : CharacteristicException
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleDescriptorsFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleDescriptorsFoundException" /> class.
     /// </summary>
     /// <param name="localCharacteristic">The Bluetooth characteristic associated with the exception.</param>
     /// <param name="id">The id of the Descriptors that were found matching the criteria.</param>

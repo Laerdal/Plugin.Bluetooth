@@ -6,9 +6,8 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 /// <seealso cref="DeviceException" />
 public class DeviceIsAlreadyConnectedException : DeviceException
 {
-
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DeviceIsAlreadyConnectedException"/> class.
+    ///     Initializes a new instance of the <see cref="DeviceIsAlreadyConnectedException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>
@@ -22,10 +21,10 @@ public class DeviceIsAlreadyConnectedException : DeviceException
     }
 
     /// <summary>
-    ///     Throws a <see cref="DeviceIsAlreadyConnectedException"/> if the device is already connected.
+    ///     Throws a <see cref="DeviceIsAlreadyConnectedException" /> if the device is already connected.
     /// </summary>
     /// <param name="device">The Bluetooth device to check.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="device"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="device" /> is null.</exception>
     /// <exception cref="DeviceIsAlreadyConnectedException">Thrown when the device is already connected.</exception>
     public static void ThrowIfAlreadyConnected(IBluetoothRemoteDevice device)
     {

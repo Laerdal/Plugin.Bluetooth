@@ -8,7 +8,7 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 public class DescriptorAlreadyExistsException : CharacteristicException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DescriptorAlreadyExistsException"/> class.
+    ///     Initializes a new instance of the <see cref="DescriptorAlreadyExistsException" /> class.
     /// </summary>
     /// <param name="localCharacteristic">The Bluetooth broadcast characteristic associated with the exception.</param>
     /// <param name="descriptorId">The UUID of the descriptor that already exists.</param>
@@ -34,5 +34,4 @@ public class DescriptorAlreadyExistsException : CharacteristicException
     ///     Gets the existing descriptor that caused the exception.
     /// </summary>
     public IBluetoothLocalDescriptor ExistingLocalDescriptor { get; }
-
 }

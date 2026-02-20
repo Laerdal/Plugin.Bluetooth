@@ -8,7 +8,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class UnexpectedDeviceExplorationException : DeviceExplorationException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="UnexpectedDeviceExplorationException"/> class.
+    ///     Initializes a new instance of the <see cref="UnexpectedDeviceExplorationException" /> class.
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

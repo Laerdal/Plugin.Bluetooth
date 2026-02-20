@@ -2,45 +2,14 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteCharacteristic
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool IsListening
     {
         get => GetValue(false);
         protected set => SetValue(value);
     }
 
-
-    /// <summary>
-    /// Invokes the ValueUpdated event when the characteristic's value changes.
-    /// </summary>
-    /// <param name="newValue">The new value of the characteristic.</param>
-    /// <param name="oldValue">The old value of the characteristic.</param>
-    private void OnValueUpdated(ReadOnlyMemory<byte> newValue, ReadOnlyMemory<byte> oldValue)
-    {
-        LogValueUpdated(Id, RemoteService.Device.Id, newValue.Length);
-        ValueUpdated?.Invoke(this, new ValueUpdatedEventArgs(newValue, oldValue));
-    }
-
-    #region Listen - Capabilities
-
-    /// <summary>
-    /// Platform-specific implementation to determine if the characteristic can listen for notifications.
-    /// </summary>
-    /// <returns>True if the characteristic supports listening for notifications; otherwise, false.</returns>
-    protected abstract bool NativeCanListen();
-
-    /// <summary>
-    /// Gets a value that determines if the characteristic supports notifications or indications based on platform-specific properties.
-    /// This property is computed once and cached using Lazy initialization.
-    /// </summary>
-    private Lazy<bool> LazyCanListen { get; }
-
-    /// <inheritdoc/>
-    public bool CanListen => LazyCanListen.Value;
-
-    #endregion
-
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
     /// <exception cref="CharacteristicCantListenException">Thrown when the characteristic does not support notifications or indications.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
@@ -62,7 +31,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         LogNotificationsStarted(Id, RemoteService.Device.Id);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
     /// <exception cref="CharacteristicCantListenException">Thrown when the characteristic does not support notifications or indications.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
@@ -85,21 +54,52 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
 
+    /// <summary>
+    ///     Invokes the ValueUpdated event when the characteristic's value changes.
+    /// </summary>
+    /// <param name="newValue">The new value of the characteristic.</param>
+    /// <param name="oldValue">The old value of the characteristic.</param>
+    private void OnValueUpdated(ReadOnlyMemory<byte> newValue, ReadOnlyMemory<byte> oldValue)
+    {
+        LogValueUpdated(Id, RemoteService.Device.Id, newValue.Length);
+        ValueUpdated?.Invoke(this, new ValueUpdatedEventArgs(newValue, oldValue));
+    }
+
+    #region Listen - Capabilities
+
+    /// <summary>
+    ///     Platform-specific implementation to determine if the characteristic can listen for notifications.
+    /// </summary>
+    /// <returns>True if the characteristic supports listening for notifications; otherwise, false.</returns>
+    protected abstract bool NativeCanListen();
+
+    /// <summary>
+    ///     Gets a value that determines if the characteristic supports notifications or indications based on platform-specific properties.
+    ///     This property is computed once and cached using Lazy initialization.
+    /// </summary>
+    private Lazy<bool> LazyCanListen { get; }
+
+    /// <inheritdoc />
+    public bool CanListen => LazyCanListen.Value;
+
+    #endregion
+
+
     #region ReadIsListening
 
     /// <summary>
-    /// Platform-specific implementation to read the current listening state of the characteristic.
-    /// This method should initiate the platform-specific operation to query whether notifications/indications are enabled.
+    ///     Platform-specific implementation to read the current listening state of the characteristic.
+    ///     This method should initiate the platform-specific operation to query whether notifications/indications are enabled.
     /// </summary>
     /// <returns>A task that completes when the native read operation is initiated.</returns>
     /// <remarks>
-    /// Implementations should call <see cref="OnReadIsListeningSucceeded"/> when the operation succeeds
-    /// or <see cref="OnReadIsListeningFailed"/> when it fails.
+    ///     Implementations should call <see cref="OnReadIsListeningSucceeded" /> when the operation succeeds
+    ///     or <see cref="OnReadIsListeningFailed" /> when it fails.
     /// </remarks>
     protected abstract ValueTask NativeReadIsListeningAsync();
 
     /// <summary>
-    /// Called when reading the listening state succeeds. Updates the IsListening property and completes the task.
+    ///     Called when reading the listening state succeeds. Updates the IsListening property and completes the task.
     /// </summary>
     /// <param name="isListening">The current listening state returned from the native platform.</param>
     /// <exception cref="CharacteristicUnexpectedReadNotifyException">Thrown when no pending read operation is found to complete.</exception>
@@ -119,12 +119,12 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Called when reading the listening state fails. Completes the task with an exception or dispatches to the unhandled exception listener.
+    ///     Called when reading the listening state fails. Completes the task with an exception or dispatches to the unhandled exception listener.
     /// </summary>
     /// <param name="e">The exception that occurred during the read operation.</param>
     /// <remarks>
-    /// If there's a pending read operation, the exception will be delivered to it. Otherwise, the exception
-    /// will be dispatched to the unhandled exception listener.
+    ///     If there's a pending read operation, the exception will be delivered to it. Otherwise, the exception
+    ///     will be dispatched to the unhandled exception listener.
     /// </remarks>
     protected void OnReadIsListeningFailed(Exception e)
     {
@@ -142,8 +142,8 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether a read listening operation is currently in progress.
-    /// This flag helps prevent concurrent read operations and tracks the operation state.
+    ///     Gets or sets a value indicating whether a read listening operation is currently in progress.
+    ///     This flag helps prevent concurrent read operations and tracks the operation state.
     /// </summary>
     public bool IsReadingIsListening
     {
@@ -152,8 +152,8 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Gets or sets the task completion source for the current read listening operation.
-    /// Used to signal completion of asynchronous read listening operations.
+    ///     Gets or sets the task completion source for the current read listening operation.
+    ///     Used to signal completion of asynchronous read listening operations.
     /// </summary>
     private TaskCompletionSource<bool>? ReadIsListeningTcs
     {
@@ -161,7 +161,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         set => SetValue(value);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
     /// <exception cref="CharacteristicCantListenException">Thrown when the characteristic does not support notifications or indications.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
@@ -199,7 +199,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         try
         {
             // Wait for OnReadValueSuccess to be called
-            IsListening = await ReadIsListeningTcs.Task.WaitBetterAsync(timeout, cancellationToken: cancellationToken).ConfigureAwait(false);
+            IsListening = await ReadIsListeningTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             return IsListening;
         }
         finally
@@ -215,19 +215,19 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     #region WriteIsListening
 
     /// <summary>
-    /// Platform-specific implementation to write (set) the listening state of the characteristic.
-    /// This method should initiate the platform-specific operation to enable or disable notifications/indications.
+    ///     Platform-specific implementation to write (set) the listening state of the characteristic.
+    ///     This method should initiate the platform-specific operation to enable or disable notifications/indications.
     /// </summary>
     /// <param name="shouldBeListening">True to enable notifications/indications, false to disable them.</param>
     /// <returns>A task that completes when the native write operation is initiated.</returns>
     /// <remarks>
-    /// Implementations should call <see cref="OnWriteIsListeningSucceeded"/> when the operation succeeds
-    /// or <see cref="OnWriteIsListeningFailed"/> when it fails.
+    ///     Implementations should call <see cref="OnWriteIsListeningSucceeded" /> when the operation succeeds
+    ///     or <see cref="OnWriteIsListeningFailed" /> when it fails.
     /// </remarks>
     protected abstract ValueTask NativeWriteIsListeningAsync(bool shouldBeListening);
 
     /// <summary>
-    /// Called when writing the listening state succeeds. Completes the task successfully.
+    ///     Called when writing the listening state succeeds. Completes the task successfully.
     /// </summary>
     /// <exception cref="CharacteristicUnexpectedWriteNotifyException">Thrown when no pending write operation is found to complete.</exception>
     protected void OnWriteIsListeningSucceeded()
@@ -244,12 +244,12 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Called when writing the listening state fails. Completes the task with an exception or dispatches to the unhandled exception listener.
+    ///     Called when writing the listening state fails. Completes the task with an exception or dispatches to the unhandled exception listener.
     /// </summary>
     /// <param name="e">The exception that occurred during the write operation.</param>
     /// <remarks>
-    /// If there's a pending write operation, the exception will be delivered to it. Otherwise, the exception
-    /// will be dispatched to the unhandled exception listener.
+    ///     If there's a pending write operation, the exception will be delivered to it. Otherwise, the exception
+    ///     will be dispatched to the unhandled exception listener.
     /// </remarks>
     protected void OnWriteIsListeningFailed(Exception e)
     {
@@ -267,14 +267,14 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Semaphore used to ensure only one write listening operation can occur at a time.
-    /// This prevents concurrent write operations that could interfere with each other.
+    ///     Semaphore used to ensure only one write listening operation can occur at a time.
+    ///     This prevents concurrent write operations that could interfere with each other.
     /// </summary>
-    private SemaphoreSlim WriteIsListeningSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
+    private SemaphoreSlim WriteIsListeningSemaphoreSlim { get; } = new(1, 1);
 
     /// <summary>
-    /// Gets or sets a value indicating whether a write listening operation is currently in progress.
-    /// This flag helps prevent concurrent write operations and tracks the operation state.
+    ///     Gets or sets a value indicating whether a write listening operation is currently in progress.
+    ///     This flag helps prevent concurrent write operations and tracks the operation state.
     /// </summary>
     public bool IsWritingIsListening
     {
@@ -283,8 +283,8 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Gets or sets the task completion source for the current write listening operation.
-    /// Used to signal completion of asynchronous write listening operations.
+    ///     Gets or sets the task completion source for the current write listening operation.
+    ///     Used to signal completion of asynchronous write listening operations.
     /// </summary>
     private TaskCompletionSource? WriteIsListeningTcs
     {
@@ -292,7 +292,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         set => SetValue(value);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
     /// <exception cref="CharacteristicCantListenException">Thrown when the characteristic does not support notifications or indications.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
@@ -344,7 +344,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         try
         {
             // Wait for OnWriteIsListeningSuccess to be called
-            await WriteIsListeningTcs.Task.WaitBetterAsync(timeout, cancellationToken: cancellationToken).ConfigureAwait(false);
+            await WriteIsListeningTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
         }
         finally
         {

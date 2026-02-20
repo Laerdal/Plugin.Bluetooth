@@ -2,26 +2,19 @@ using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
 using Bluetooth.Maui.Platforms.Droid.Tools;
 
+using ServiceNotFoundException = Bluetooth.Abstractions.Broadcasting.Exceptions.ServiceNotFoundException;
+
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 
 /// <inheritdoc cref="BaseBluetoothBroadcaster" />
 public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackProxy.IAdvertiseCallbackProxyDelegate, BluetoothGattServerCallbackProxy.IBluetoothGattServerCallbackProxyDelegate, IAsyncDisposable
 {
-    private BluetoothGattServerCallbackProxy? _gattServerProxy;
-
     private AdvertiseCallbackProxy? _advertiseProxy;
 
     private BluetoothLeAdvertiser? _advertiser;
+    private BluetoothGattServerCallbackProxy? _gattServerProxy;
 
-    /// <summary>
-    /// The settings that are currently in effect for the advertiser. This is set when advertising starts successfully, and is null when not advertising.
-    /// </summary>
-    public AdvertiseSettings? SettingsInEffect { get; private set; }
-
-    private Android.Bluetooth.BluetoothManager BluetoothManager =>
-        ((BluetoothAdapter) Adapter).NativeBluetoothManager;
-
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public BluetoothBroadcaster(
         IBluetoothAdapter adapter,
         IBluetoothLocalServiceFactory localServiceFactory,
@@ -33,18 +26,113 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackP
     {
     }
 
+    /// <summary>
+    ///     The settings that are currently in effect for the advertiser. This is set when advertising starts successfully, and is null when not advertising.
+    /// </summary>
+    public AdvertiseSettings? SettingsInEffect { get; private set; }
+
+    private BluetoothManager BluetoothManager =>
+        ((BluetoothAdapter) Adapter).NativeBluetoothManager;
+
+    /// <inheritdoc />
+    public void OnStartSuccess(AdvertiseSettings? settingsInEffect)
+    {
+        SettingsInEffect = settingsInEffect;
+        OnStartSucceeded();
+    }
+
+
+    /// <inheritdoc />
+    public void OnStartFailure(AdvertiseFailure errorCode)
+    {
+        OnStartFailed(new AndroidNativeAdvertiseFailureException(errorCode));
+    }
+
+    /// <inheritdoc />
+    public new async ValueTask DisposeAsync()
+    {
+        if (_gattServerProxy != null)
+        {
+            await CastAndDispose(_gattServerProxy).ConfigureAwait(false);
+        }
+
+        if (_advertiseProxy != null)
+        {
+            await CastAndDispose(_advertiseProxy).ConfigureAwait(false);
+        }
+
+        if (_advertiser != null)
+        {
+            await CastAndDispose(_advertiser).ConfigureAwait(false);
+        }
+
+        return;
+
+        async static ValueTask CastAndDispose(IDisposable resource)
+        {
+            if (resource is IAsyncDisposable resourceAsyncDisposable)
+            {
+                await resourceAsyncDisposable.DisposeAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                resource.Dispose();
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate GetDevice(BluetoothDevice? native)
+    {
+        ArgumentNullException.ThrowIfNull(native);
+        ArgumentNullException.ThrowIfNull(native.Address);
+
+        var device = GetClientDeviceOrDefault(native.Address);
+        if (device == null)
+        {
+            throw new ClientDeviceNotFoundException(this, native.Address);
+        }
+
+        if (device is not BluetoothBroadcastClientDevice droidDevice)
+        {
+            throw new InvalidOperationException("ConnectedDevice is not Android BluetoothBroadcastClientDevice");
+        }
+
+        return droidDevice;
+    }
+
+    /// <inheritdoc />
+    public BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate GetService(BluetoothGattService? native)
+    {
+        ArgumentNullException.ThrowIfNull(native);
+        ArgumentNullException.ThrowIfNull(native.Uuid);
+        var guid = native.Uuid.ToGuid();
+        var service = GetServiceOrDefault(guid);
+        if (service == null)
+        {
+            throw new ServiceNotFoundException(this, guid);
+        }
+
+        if (service is not BluetoothBroadcastService droidService)
+        {
+            throw new InvalidOperationException("Service is not Android BluetoothBroadcastService");
+        }
+
+        return droidService;
+    }
+
     protected override void NativeRefreshIsRunning()
     {
         // On Android, there is no direct way to check if advertising is running.
         // We rely on the IsRunning flag being set correctly during start/stop operations.
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeStartAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(BluetoothManager.Adapter);
         _advertiser ??= BluetoothManager.Adapter.BluetoothLeAdvertiser
-            ?? throw new InvalidOperationException("Bluetooth LE Advertiser not available");
+                        ?? throw new InvalidOperationException("Bluetooth LE Advertiser not available");
 
         _advertiseProxy ??= new AdvertiseCallbackProxy(this);
 
@@ -121,7 +209,7 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackP
         SetValue(true, nameof(IsRunning));*/
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("BluetoothBroadcaster is not yet implemented on Android.");
@@ -152,87 +240,5 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackP
         }
 
         return ValueTask.CompletedTask;*/
-    }
-
-    /// <inheritdoc/>
-    public void OnStartSuccess(AdvertiseSettings? settingsInEffect)
-    {
-        SettingsInEffect = settingsInEffect;
-        OnStartSucceeded();
-    }
-
-
-    /// <inheritdoc/>
-    public void OnStartFailure(AdvertiseFailure errorCode)
-    {
-        OnStartFailed(new AndroidNativeAdvertiseFailureException(errorCode));
-    }
-
-    /// <inheritdoc/>
-    public BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate GetDevice(Android.Bluetooth.BluetoothDevice? native)
-    {
-        ArgumentNullException.ThrowIfNull(native);
-        ArgumentNullException.ThrowIfNull(native.Address);
-
-        var device = GetClientDeviceOrDefault(native.Address);
-        if (device == null)
-        {
-            throw new ClientDeviceNotFoundException(this, native.Address);
-        }
-        if (device is not BluetoothBroadcastClientDevice droidDevice)
-        {
-            throw new InvalidOperationException("ConnectedDevice is not Android BluetoothBroadcastClientDevice");
-        }
-        return droidDevice;
-    }
-
-    /// <inheritdoc/>
-    public BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate GetService(Android.Bluetooth.BluetoothGattService? native)
-    {
-        ArgumentNullException.ThrowIfNull(native);
-        ArgumentNullException.ThrowIfNull(native.Uuid);
-        var guid = native.Uuid.ToGuid();
-        var service = GetServiceOrDefault(guid);
-        if (service == null)
-        {
-            throw new Abstractions.Broadcasting.Exceptions.ServiceNotFoundException(this, guid);
-        }
-        if (service is not BluetoothBroadcastService droidService)
-        {
-            throw new InvalidOperationException("Service is not Android BluetoothBroadcastService");
-        }
-
-        return droidService;
-    }
-
-    /// <inheritdoc/>
-    public new async ValueTask DisposeAsync()
-    {
-        if (_gattServerProxy != null)
-        {
-            await CastAndDispose(_gattServerProxy).ConfigureAwait(false);
-        }
-        if (_advertiseProxy != null)
-        {
-            await CastAndDispose(_advertiseProxy).ConfigureAwait(false);
-        }
-        if (_advertiser != null)
-        {
-            await CastAndDispose(_advertiser).ConfigureAwait(false);
-        }
-
-        return;
-
-        async static ValueTask CastAndDispose(IDisposable resource)
-        {
-            if (resource is IAsyncDisposable resourceAsyncDisposable)
-            {
-                await resourceAsyncDisposable.DisposeAsync().ConfigureAwait(false);
-            }
-            else
-            {
-                resource.Dispose();
-            }
-        }
     }
 }

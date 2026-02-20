@@ -4,18 +4,13 @@ using Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
 namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 
 /// <summary>
-/// Windows implementation of the Bluetooth service using Windows.Devices.Bluetooth APIs.
-/// This implementation wraps Windows's GattDeviceService to provide access to GATT characteristics.
+///     Windows implementation of the Bluetooth service using Windows.Devices.Bluetooth APIs.
+///     This implementation wraps Windows's GattDeviceService to provide access to GATT characteristics.
 /// </summary>
 public class BluetoothService : BaseBluetoothRemoteService, GattDeviceServiceProxy.IBluetoothServiceProxyDelegate
 {
     /// <summary>
-    /// Gets the native Windows GATT device service proxy.
-    /// </summary>
-    public GattDeviceServiceProxy NativeServiceProxy { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothService"/> class.
+    ///     Initializes a new instance of the <see cref="BluetoothService" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with this service.</param>
     /// <param name="request">The factory request containing service information.</param>
@@ -36,7 +31,27 @@ public class BluetoothService : BaseBluetoothRemoteService, GattDeviceServicePro
         NativeServiceProxy = new GattDeviceServiceProxy(windowsRequest.NativeService, this);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///     Gets the native Windows GATT device service proxy.
+    /// </summary>
+    public GattDeviceServiceProxy NativeServiceProxy { get; }
+
+    #region Delegate Callbacks - GattDeviceServiceProxy
+
+    /// <summary>
+    ///     Called when the access status of the GATT device service changes.
+    /// </summary>
+    /// <param name="argsId">The device ID.</param>
+    /// <param name="argsStatus">The new access status.</param>
+    public void OnAccessChanged(string argsId, DeviceAccessStatus argsStatus)
+    {
+        // Handle permission changes if needed
+        // Currently just a placeholder
+    }
+
+    #endregion
+
+    /// <inheritdoc />
     protected override ValueTask DisposeAsyncCore()
     {
         NativeServiceProxy.Dispose();
@@ -45,7 +60,7 @@ public class BluetoothService : BaseBluetoothRemoteService, GattDeviceServicePro
 
     #region Characteristic Exploration
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeCharacteristicsExplorationAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
@@ -81,21 +96,6 @@ public class BluetoothService : BaseBluetoothRemoteService, GattDeviceServicePro
     {
         // Compare by UUID - more detailed comparison can be done once BluetoothCharacteristic is implemented
         return native.Uuid.Equals(shared.Id);
-    }
-
-    #endregion
-
-    #region Delegate Callbacks - GattDeviceServiceProxy
-
-    /// <summary>
-    /// Called when the access status of the GATT device service changes.
-    /// </summary>
-    /// <param name="argsId">The device ID.</param>
-    /// <param name="argsStatus">The new access status.</param>
-    public void OnAccessChanged(string argsId, DeviceAccessStatus argsStatus)
-    {
-        // Handle permission changes if needed
-        // Currently just a placeholder
     }
 
     #endregion

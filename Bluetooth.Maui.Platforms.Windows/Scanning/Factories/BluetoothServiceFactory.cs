@@ -2,17 +2,17 @@ using Bluetooth.Core.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
 
-/// <inheritdoc/>
-public class BluetoothServiceFactory : BaseBluetoothServiceFactory, Abstractions.Scanning.Factories.IBluetoothServiceFactory
+/// <inheritdoc />
+public class BluetoothServiceFactory : BaseBluetoothServiceFactory, IBluetoothServiceFactory
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public BluetoothServiceFactory(IBluetoothCharacteristicFactory characteristicFactory)
         : base(characteristicFactory)
     {
     }
 
-    /// <inheritdoc/>
-    public override Abstractions.Scanning.IBluetoothRemoteService CreateService(
+    /// <inheritdoc />
+    public override IBluetoothRemoteService CreateService(
         IBluetoothRemoteDevice device,
         IBluetoothServiceFactory.BluetoothServiceFactoryRequest request)
     {

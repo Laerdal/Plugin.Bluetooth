@@ -6,17 +6,7 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 public class AppleBluetoothConnectedDevice : BaseBluetoothConnectedDevice
 {
     /// <summary>
-    /// Gets the native iOS Core Bluetooth central device.
-    /// </summary>
-    public CBCentral CbCentral { get; }
-
-    /// <summary>
-    /// Gets the Bluetooth broadcaster to which this client device is connected, cast to the Apple-specific implementation.
-    /// </summary>
-    public AppleBluetoothBroadcaster AppleBluetoothBroadcaster => (AppleBluetoothBroadcaster) Broadcaster;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AppleBluetoothConnectedDevice"/> class with the specified broadcaster and factory request.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothConnectedDevice" /> class with the specified broadcaster and factory request.
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster to which this client device is connected.</param>
     /// <param name="request">The factory request containing the information needed to create this client device.</param>
@@ -27,8 +17,19 @@ public class AppleBluetoothConnectedDevice : BaseBluetoothConnectedDevice
         {
             throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothConnectedDeviceSpec)}, but got {request.GetType()}");
         }
+
         CbCentral = appleRequest.CbCentral;
     }
+
+    /// <summary>
+    ///     Gets the native iOS Core Bluetooth central device.
+    /// </summary>
+    public CBCentral CbCentral { get; }
+
+    /// <summary>
+    ///     Gets the Bluetooth broadcaster to which this client device is connected, cast to the Apple-specific implementation.
+    /// </summary>
+    public AppleBluetoothBroadcaster AppleBluetoothBroadcaster => (AppleBluetoothBroadcaster) Broadcaster;
 
     /// <inheritdoc />
     protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)

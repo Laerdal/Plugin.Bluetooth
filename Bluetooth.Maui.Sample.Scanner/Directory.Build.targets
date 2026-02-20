@@ -9,8 +9,13 @@
 
     <!-- ==================== APP PROJECT SETTINGS ==================== -->
     <PropertyGroup>
-        <!-- OutputType is set in .csproj (must be early for MAUI SDK) -->
-
+        <!-- Enable XAML source generation for faster build times and improved performance.
+		     This generates C# code from XAML at compile time instead of runtime inflation.
+		     To disable, remove this line.
+		     For individual files, you can override by setting Inflator metadata:
+		       <MauiXaml Update="MyPage.xaml" Inflator="Default" /> (reverts to defaults: Runtime for Debug, XamlC for Release)
+		       <MauiXaml Update="MyPage.xaml" Inflator="Runtime" /> (force runtime inflation) -->
+        <MauiXamlInflator>SourceGen</MauiXamlInflator>
         <!-- Don't create NuGet packages for the sample app -->
         <IsPackable>false</IsPackable>
     </PropertyGroup>
@@ -23,12 +28,6 @@
         <DebugSymbols>true</DebugSymbols>
         <Deterministic>true</Deterministic>
     </PropertyGroup>
-
-    <!-- ==================== DEPENDENCIES ==================== -->
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-        <PackageReference Include="NLog.Extensions.Logging" />
-    </ItemGroup>
 
     <!-- ==================== VERSION ==================== -->
     <PropertyGroup>

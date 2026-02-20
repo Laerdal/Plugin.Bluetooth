@@ -6,11 +6,6 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 /// <inheritdoc cref="BaseBluetoothScanner" />
 public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapper.ICbCentralManagerDelegate, IDisposable
 {
-    /// <summary>
-    /// Gets the CbCentralManagerWrapper instance used for managing Core Bluetooth central manager interactions.
-    /// </summary>
-    public CbCentralManagerWrapper CbCentralManagerWrapper { get; }
-
     /// <inheritdoc />
     public AppleBluetoothScanner(IBluetoothAdapter adapter,
         IBluetoothPermissionManager permissionManager,
@@ -20,17 +15,29 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         IDispatchQueueProvider dispatchQueueProvider,
         ITicker ticker,
         ILogger<IBluetoothScanner>? logger = null) : base(adapter,
-                                       permissionManager,
-                                       deviceFactory,
-                                       rssiToSignalStrengthConverter,
-                                       ticker,
-                                       logger)
+        permissionManager,
+        deviceFactory,
+        rssiToSignalStrengthConverter,
+        ticker,
+        logger)
     {
         CbCentralManagerWrapper = new CbCentralManagerWrapper(this, options, dispatchQueueProvider, ticker);
     }
 
     /// <summary>
-    /// Disposes the instance and releases any unmanaged resources.
+    ///     Gets the CbCentralManagerWrapper instance used for managing Core Bluetooth central manager interactions.
+    /// </summary>
+    public CbCentralManagerWrapper CbCentralManagerWrapper { get; }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    ///     Disposes the instance and releases any unmanaged resources.
     /// </summary>
     /// <param name="disposing">Indicates whether the method is being called from the Dispose method (true) or from a finalizer (false).</param>
     protected virtual void Dispose(bool disposing)
@@ -39,13 +46,6 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         {
             CbCentralManagerWrapper.Dispose();
         }
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     /// <inheritdoc />
@@ -105,10 +105,10 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     #region State
 
     /// <summary>
-    /// Gets or sets the current state of the Core Bluetooth central manager.
+    ///     Gets or sets the current state of the Core Bluetooth central manager.
     /// </summary>
     /// <remarks>
-    /// The state indicates whether Bluetooth is powered on, off, unauthorized, unsupported, etc.
+    ///     The state indicates whether Bluetooth is powered on, off, unauthorized, unsupported, etc.
     /// </remarks>
     public CBManagerState State
     {
@@ -159,10 +159,9 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     private static bool AreRepresentingTheSameObject(CBPeripheral peripheral, IBluetoothRemoteDevice device)
     {
         return device is AppleBluetoothRemoteDevice sharedDevice
-            && sharedDevice.CbPeripheralWrapper.CbPeripheral.Identifier.Equals(peripheral.Identifier)
-            && sharedDevice.CbPeripheralWrapper.CbPeripheral.Handle.Handle == peripheral.Handle.Handle;
+               && sharedDevice.CbPeripheralWrapper.CbPeripheral.Identifier.Equals(peripheral.Identifier)
+               && sharedDevice.CbPeripheralWrapper.CbPeripheral.Handle.Handle == peripheral.Handle.Handle;
     }
 
     #endregion
-
 }

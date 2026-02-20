@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class CharacteristicNotifyException : CharacteristicException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="CharacteristicNotifyException"/> class.
+    ///     Initializes a new instance of the <see cref="CharacteristicNotifyException" /> class.
     /// </summary>
     /// <param name="remoteCharacteristic">The Bluetooth characteristic associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

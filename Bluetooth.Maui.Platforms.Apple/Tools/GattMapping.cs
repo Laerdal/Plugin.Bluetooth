@@ -1,15 +1,15 @@
 namespace Bluetooth.Maui.Platforms.Apple.Tools;
 
 /// <summary>
-/// Extension methods for converting between Bluetooth characteristic properties and permissions to their iOS CoreBluetooth equivalents.
+///     Extension methods for converting between Bluetooth characteristic properties and permissions to their iOS CoreBluetooth equivalents.
 /// </summary>
 public static class GattMapping
 {
     /// <summary>
-    /// Converts the specified <see cref="BluetoothCharacteristicProperties"/> to the corresponding iOS <see cref="CBCharacteristicProperties"/> flags.
+    ///     Converts the specified <see cref="BluetoothCharacteristicProperties" /> to the corresponding iOS <see cref="CBCharacteristicProperties" /> flags.
     /// </summary>
     /// <param name="props">The Bluetooth characteristic properties to convert.</param>
-    /// <returns>A <see cref="CBCharacteristicProperties"/> value representing the specified properties.</returns>
+    /// <returns>A <see cref="CBCharacteristicProperties" /> value representing the specified properties.</returns>
     public static CBCharacteristicProperties ToNative(this BluetoothCharacteristicProperties props)
     {
         CBCharacteristicProperties result = 0;
@@ -18,26 +18,32 @@ public static class GattMapping
         {
             result |= CBCharacteristicProperties.Broadcast;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.Read))
         {
             result |= CBCharacteristicProperties.Read;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.WriteWithoutResponse))
         {
             result |= CBCharacteristicProperties.WriteWithoutResponse;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.Write))
         {
             result |= CBCharacteristicProperties.Write;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.Notify))
         {
             result |= CBCharacteristicProperties.Notify;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.Indicate))
         {
             result |= CBCharacteristicProperties.Indicate;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.ExtendedProperties))
         {
             result |= CBCharacteristicProperties.ExtendedProperties;
@@ -50,10 +56,10 @@ public static class GattMapping
     }
 
     /// <summary>
-    /// Converts the specified <see cref="BluetoothCharacteristicPermissions"/> to the corresponding iOS <see cref="CBAttributePermissions"/> flags.
+    ///     Converts the specified <see cref="BluetoothCharacteristicPermissions" /> to the corresponding iOS <see cref="CBAttributePermissions" /> flags.
     /// </summary>
     /// <param name="perms">The Bluetooth characteristic permissions to convert.</param>
-    /// <returns>A <see cref="CBAttributePermissions"/> value representing the specified permissions.</returns>
+    /// <returns>A <see cref="CBAttributePermissions" /> value representing the specified permissions.</returns>
     public static CBAttributePermissions ToNative(this BluetoothCharacteristicPermissions perms)
     {
         CBAttributePermissions result = 0;
@@ -97,12 +103,12 @@ public static class GattMapping
 
         return result;
     }
-    
+
     /// <summary>
-    /// Converts the specified <see cref="BluetoothDescriptorPermissions"/> to the corresponding iOS <see cref="CBAttributePermissions"/> flags.
+    ///     Converts the specified <see cref="BluetoothDescriptorPermissions" /> to the corresponding iOS <see cref="CBAttributePermissions" /> flags.
     /// </summary>
     /// <param name="perms">The Bluetooth descriptor permissions to convert.</param>
-    /// <returns>A <see cref="CBAttributePermissions"/> value representing the specified permissions.</returns>
+    /// <returns>A <see cref="CBAttributePermissions" /> value representing the specified permissions.</returns>
     public static CBAttributePermissions ToNative(this BluetoothDescriptorPermissions perms)
     {
         CBAttributePermissions result = 0;

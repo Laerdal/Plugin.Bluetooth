@@ -6,7 +6,7 @@ namespace Bluetooth.Abstractions.Scanning.EventArgs;
 public class DeviceUnexpectedDisconnectionEventArgs : System.EventArgs
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DeviceUnexpectedDisconnectionEventArgs"/> class.
+    ///     Initializes a new instance of the <see cref="DeviceUnexpectedDisconnectionEventArgs" /> class.
     /// </summary>
     /// <param name="exception">The exception associated with the unexpected disconnection, if any.</param>
     public DeviceUnexpectedDisconnectionEventArgs(Exception? exception)

@@ -1,21 +1,10 @@
 namespace Bluetooth.Maui.Platforms.Apple.Permissions;
 
 /// <summary>
-/// iOS implementation of the Bluetooth permission manager.
+///     iOS implementation of the Bluetooth permission manager.
 /// </summary>
 public class BluetoothPermissionManager : IBluetoothPermissionManager
 {
-    private readonly ILogger? _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothPermissionManager"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    public BluetoothPermissionManager(ILogger? logger = null)
-    {
-        _logger = logger;
-    }
-
     // High-performance logging using LoggerMessage delegates
     private readonly static Action<ILogger, Exception> _logErrorCheckingBluetoothPermissions =
         LoggerMessage.Define(
@@ -41,7 +30,18 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
             new EventId(4, nameof(RequestBroadcasterPermissionsAsync)),
             "Error requesting Broadcaster permissions");
 
-    /// <inheritdoc/>
+    private readonly ILogger? _logger;
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="BluetoothPermissionManager" /> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    public BluetoothPermissionManager(ILogger? logger = null)
+    {
+        _logger = logger;
+    }
+
+    /// <inheritdoc />
     public async ValueTask<bool> HasBluetoothPermissionsAsync()
     {
         try
@@ -49,8 +49,9 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
             if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(10, 15))
             {
                 var status = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<IosPermissionForBluetoothAlways>().ConfigureAwait(false);
-                return status == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+                return status == PermissionStatus.Granted;
             }
+
             // On older iOS versions, Bluetooth permissions are automatically granted
             return true;
         }
@@ -60,18 +61,19 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
             {
                 _logErrorCheckingBluetoothPermissions(_logger, ex);
             }
+
             return false;
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> HasScannerPermissionsAsync()
     {
         // On iOS, scanner and broadcaster use the same Bluetooth permission
         return await HasBluetoothPermissionsAsync().ConfigureAwait(false);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> HasBroadcasterPermissionsAsync()
     {
         try
@@ -81,9 +83,10 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
                 // Check both Bluetooth Always and Peripheral permissions
                 var bluetoothStatus = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<IosPermissionForBluetoothAlways>().ConfigureAwait(false);
                 var peripheralStatus = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<IosPermissionForBluetoothPeripheral>().ConfigureAwait(false);
-                return bluetoothStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted &&
-                       peripheralStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+                return bluetoothStatus == PermissionStatus.Granted &&
+                       peripheralStatus == PermissionStatus.Granted;
             }
+
             // On older iOS versions, Bluetooth permissions are automatically granted
             return true;
         }
@@ -93,11 +96,12 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
             {
                 _logErrorCheckingBroadcasterPermissions(_logger, ex);
             }
+
             return false;
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> RequestBluetoothPermissionsAsync()
     {
         try
@@ -105,8 +109,9 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
             if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(10, 15))
             {
                 var status = await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<IosPermissionForBluetoothAlways>().ConfigureAwait(false);
-                return status == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+                return status == PermissionStatus.Granted;
             }
+
             // On older iOS versions, Bluetooth permissions are automatically granted
             return true;
         }
@@ -116,18 +121,19 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
             {
                 _logErrorRequestingBluetoothPermissions(_logger, ex);
             }
+
             return false;
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> RequestScannerPermissionsAsync()
     {
         // On iOS, scanner and broadcaster use the same Bluetooth permission
         return await RequestBluetoothPermissionsAsync().ConfigureAwait(false);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> RequestBroadcasterPermissionsAsync()
     {
         try
@@ -137,9 +143,10 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
                 // Request both Bluetooth Always and Peripheral permissions
                 var bluetoothStatus = await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<IosPermissionForBluetoothAlways>().ConfigureAwait(false);
                 var peripheralStatus = await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<IosPermissionForBluetoothPeripheral>().ConfigureAwait(false);
-                return bluetoothStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted &&
-                       peripheralStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+                return bluetoothStatus == PermissionStatus.Granted &&
+                       peripheralStatus == PermissionStatus.Granted;
             }
+
             // On older iOS versions, Bluetooth permissions are automatically granted
             return true;
         }
@@ -149,6 +156,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
             {
                 _logErrorRequestingBroadcasterPermissions(_logger, ex);
             }
+
             return false;
         }
     }

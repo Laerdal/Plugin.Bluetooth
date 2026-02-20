@@ -2,36 +2,36 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteDevice
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothAdvertisement? LastAdvertisement
     {
         get => GetValue<IBluetoothAdvertisement?>(null);
         private set => SetValue(value);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public TimeSpan IntervalBetweenAdvertisement
     {
         get => GetValue(TimeSpan.Zero);
         private set => SetValue(value);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<AdvertisementReceivedEventArgs>? AdvertisementReceived;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ValueTask<IBluetoothAdvertisement> WaitForAdvertisementAsync(Func<IBluetoothAdvertisement?, bool> filter, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         return WaitForPropertyToBe(nameof(LastAdvertisement), filter, timeout, cancellationToken);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ValueTask<IBluetoothAdvertisement> WaitForAdvertisementAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         return WaitForPropertyToChangeNotNull<IBluetoothAdvertisement>(nameof(LastAdvertisement), timeout, cancellationToken);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public void OnAdvertisementReceived(IBluetoothAdvertisement advertisement)
     {
         // Last vs. New

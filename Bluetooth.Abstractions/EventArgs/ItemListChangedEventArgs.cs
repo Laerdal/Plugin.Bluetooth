@@ -1,13 +1,13 @@
 namespace Bluetooth.Abstractions.EventArgs;
 
 /// <summary>
-/// Provides data for collection changed events involving typed items.
+///     Provides data for collection changed events involving typed items.
 /// </summary>
 /// <typeparam name="T">The type of items in the collection.</typeparam>
 public class ItemListChangedEventArgs<T> : System.EventArgs
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ItemListChangedEventArgs{T}"/> class.
+    ///     Initializes a new instance of the <see cref="ItemListChangedEventArgs{T}" /> class.
     /// </summary>
     /// <param name="args">The collection changed event arguments.</param>
     public ItemListChangedEventArgs(NotifyCollectionChangedEventArgs args)
@@ -19,7 +19,7 @@ public class ItemListChangedEventArgs<T> : System.EventArgs
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ItemListChangedEventArgs{T}"/> class.
+    ///     Initializes a new instance of the <see cref="ItemListChangedEventArgs{T}" /> class.
     /// </summary>
     /// <param name="addedItems">The items that were added.</param>
     /// <param name="removedItems">The items that were removed.</param>
@@ -30,24 +30,24 @@ public class ItemListChangedEventArgs<T> : System.EventArgs
     }
 
     /// <summary>
-    /// Gets the items that were added to the collection.
+    ///     Gets the items that were added to the collection.
     /// </summary>
     public IEnumerable<T>? AddedItems { get; }
 
     /// <summary>
-    /// Gets the items that were removed from the collection.
+    ///     Gets the items that were removed from the collection.
     /// </summary>
     public IEnumerable<T>? RemovedItems { get; }
 }
 
 /// <summary>
-/// Provides data for the ItemsAdded event.
+///     Provides data for the ItemsAdded event.
 /// </summary>
 /// <param name="items">The items that were added.</param>
 public class ItemsAddedEventArgs<T>(IEnumerable<T> items) : ItemsChangedEventArgs<T>(items);
 
 /// <summary>
-/// Provides data for the ItemsRemoved event.
+///     Provides data for the ItemsRemoved event.
 /// </summary>
 /// <param name="items">The items that were removed.</param>
 public class ItemsRemovedEventArgs<T>(IEnumerable<T> items) : ItemsChangedEventArgs<T>(items);

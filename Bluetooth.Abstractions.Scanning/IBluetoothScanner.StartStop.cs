@@ -3,46 +3,59 @@ namespace Bluetooth.Abstractions.Scanning;
 public partial interface IBluetoothScanner
 {
     /// <summary>
-    /// Gets the current scanning options being used.
+    ///     Gets the current scanning options being used.
     /// </summary>
     ScanningOptions CurrentScanningOptions { get; }
 
     /// <summary>
-    /// Occurs when the running state of the Bluetooth activity changes.
+    ///     Gets a value indicating whether the Bluetooth activity is actively running.
+    /// </summary>
+    bool IsRunning { get; }
+
+    /// <summary>
+    ///     Occurs when the running state of the Bluetooth activity changes.
     /// </summary>
     event EventHandler? RunningStateChanged;
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth activity is actively running.
+    ///     Updates the scanning options while scanning is active.
     /// </summary>
-    bool IsRunning { get; }
+    /// <param name="options">The new scanning options to apply.</param>
+    /// <param name="timeout">The timeout for this operation</param>
+    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options" /> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when scanning is not active.</exception>
+    /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
+    ValueTask UpdateScannerOptionsAsync(ScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #region Start
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth activity is starting.
+    ///     Gets a value indicating whether the Bluetooth activity is starting.
     /// </summary>
     bool IsStarting { get; }
 
     /// <summary>
-    /// Occurs when the Bluetooth activity is starting.
+    ///     Occurs when the Bluetooth activity is starting.
     /// </summary>
     event EventHandler Starting;
 
     /// <summary>
-    /// Occurs when the Bluetooth activity has started.
+    ///     Occurs when the Bluetooth activity has started.
     /// </summary>
     event EventHandler Started;
 
     /// <summary>
-    /// Asynchronously starts the Bluetooth activity with an optional timeout.
+    ///     Asynchronously starts the Bluetooth activity with an optional timeout.
     /// </summary>
     /// <param name="options">The options for starting the Bluetooth activity.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous start operation.</returns>
     /// <remarks>Ensures that the Bluetooth activity is initialized and ready for use.</remarks>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options" /> is null.</exception>
     /// <exception cref="ScannerIsAlreadyStartedException">Thrown when the scanner is already running.</exception>
     /// <exception cref="ScannerFailedToStartException">Thrown when the scanner fails to start.</exception>
     /// <exception cref="ScannerUnexpectedStartException">Thrown when an unexpected error occurs during start.</exception>
@@ -51,7 +64,7 @@ public partial interface IBluetoothScanner
     Task StartScanningAsync(ScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously starts the Bluetooth activity if it is not already running, with an optional timeout.
+    ///     Asynchronously starts the Bluetooth activity if it is not already running, with an optional timeout.
     /// </summary>
     /// <param name="options">The options for starting the Bluetooth activity.</param>
     /// <param name="timeout">The timeout for this operation</param>
@@ -65,22 +78,22 @@ public partial interface IBluetoothScanner
     #region Stop
 
     /// <summary>
-    /// Gets a value indicating whether the Scanner is stopping.
+    ///     Gets a value indicating whether the Scanner is stopping.
     /// </summary>
     bool IsStopping { get; }
 
     /// <summary>
-    /// Occurs when the Scanner is stopping.
+    ///     Occurs when the Scanner is stopping.
     /// </summary>
     event EventHandler Stopping;
 
     /// <summary>
-    /// Occurs when the Scanner has stopped.
+    ///     Occurs when the Scanner has stopped.
     /// </summary>
     event EventHandler Stopped;
 
     /// <summary>
-    /// Asynchronously stops the Scanner with an optional timeout.
+    ///     Asynchronously stops the Scanner with an optional timeout.
     /// </summary>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
@@ -94,7 +107,7 @@ public partial interface IBluetoothScanner
     Task StopScanningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously stops the Scanner if it is running, with an optional timeout.
+    ///     Asynchronously stops the Scanner if it is running, with an optional timeout.
     /// </summary>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
@@ -103,17 +116,4 @@ public partial interface IBluetoothScanner
     ValueTask StopScanningIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
-
-    /// <summary>
-    /// Updates the scanning options while scanning is active.
-    /// </summary>
-    /// <param name="options">The new scanning options to apply.</param>
-    /// <param name="timeout">The timeout for this operation</param>
-    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when scanning is not active.</exception>
-    /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
-    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
-    ValueTask UpdateScannerOptionsAsync(ScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 }

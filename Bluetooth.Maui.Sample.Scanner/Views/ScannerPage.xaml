@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
+
 <base:BaseContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                       xmlns:base="clr-namespace:Bluetooth.Maui.Sample.Scanner.Infrastructure"
@@ -88,7 +89,7 @@
                             Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}" StrokeThickness="1"
                             BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
                         <Border.Shadow>
-                            <Shadow Brush="{AppThemeBinding Light={StaticResource ShadowColorLight}, Dark={StaticResource ShadowColorDark}}" 
+                            <Shadow Brush="{AppThemeBinding Light={StaticResource ShadowColorLight}, Dark={StaticResource ShadowColorDark}}"
                                     Opacity="0.1" Radius="4" Offset="0,2" />
                         </Border.Shadow>
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">

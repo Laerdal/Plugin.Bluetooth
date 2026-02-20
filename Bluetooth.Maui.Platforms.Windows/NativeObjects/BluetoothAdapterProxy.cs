@@ -3,13 +3,13 @@ using Windows_BluetoothAdapter = Windows.Devices.Bluetooth.BluetoothAdapter;
 namespace Bluetooth.Maui.Platforms.Windows.NativeObjects;
 
 /// <summary>
-/// Proxy class for Windows Bluetooth adapter that provides a singleton-like access pattern
-/// and delegate-based communication for Bluetooth operations.
+///     Proxy class for Windows Bluetooth adapter that provides a singleton-like access pattern
+///     and delegate-based communication for Bluetooth operations.
 /// </summary>
 public partial class BluetoothAdapterProxy
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothAdapterProxy"/> class.
+    ///     Initializes a new instance of the <see cref="BluetoothAdapterProxy" /> class.
     /// </summary>
     /// <param name="bluetoothAdapter">The native Windows Bluetooth adapter instance.</param>
     /// <param name="bluetoothAdapterProxyDelegate">The delegate for handling Bluetooth adapter events.</param>
@@ -20,24 +20,24 @@ public partial class BluetoothAdapterProxy
     }
 
     /// <summary>
-    /// Gets the delegate responsible for handling Bluetooth adapter events and operations.
+    ///     Gets the delegate responsible for handling Bluetooth adapter events and operations.
     /// </summary>
     protected IBluetoothAdapterProxyDelegate BluetoothAdapterProxyDelegate { get; }
 
     /// <summary>
-    /// Gets the native Windows Bluetooth adapter instance.
+    ///     Gets the native Windows Bluetooth adapter instance.
     /// </summary>
     public Windows_BluetoothAdapter BluetoothAdapter { get; }
 
     #region Static instance
 
     /// <summary>
-    /// Gets a singleton instance of the <see cref="BluetoothAdapterProxy"/> with the specified delegate.
+    ///     Gets a singleton instance of the <see cref="BluetoothAdapterProxy" /> with the specified delegate.
     /// </summary>
     /// <param name="bluetoothAdapterProxyDelegate">The delegate for handling Bluetooth adapter events.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the proxy instance.</returns>
     /// <exception cref="PermissionException">
-    /// Thrown when the default Bluetooth adapter is null, indicating missing Bluetooth capability in the app manifest.
+    ///     Thrown when the default Bluetooth adapter is null, indicating missing Bluetooth capability in the app manifest.
     /// </exception>
     public async static Task<BluetoothAdapterProxy> GetInstanceAsync(IBluetoothAdapterProxyDelegate bluetoothAdapterProxyDelegate)
     {

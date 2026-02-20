@@ -1,20 +1,21 @@
 using Bluetooth.Maui.Platforms.Windows.Exceptions;
+using Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 
 /// <summary>
-/// Windows implementation of the Bluetooth scanner using Windows.Devices.Bluetooth APIs.
+///     Windows implementation of the Bluetooth scanner using Windows.Devices.Bluetooth APIs.
 /// </summary>
 /// <remarks>
-/// This implementation uses <see cref="BluetoothLEAdvertisementWatcher"/> to monitor BLE advertisements.
+///     This implementation uses <see cref="BluetoothLEAdvertisementWatcher" /> to monitor BLE advertisements.
 /// </remarks>
 public class BluetoothScanner : BaseBluetoothScanner,
     BluetoothLeAdvertisementWatcherWrapper.IBluetoothLeAdvertisementWatcherProxyDelegate
 {
     private BluetoothLeAdvertisementWatcherWrapper? _watcher;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public BluetoothScanner(
         IBluetoothAdapter adapter,
         IBluetoothPermissionManager permissionManager,
@@ -29,7 +30,7 @@ public class BluetoothScanner : BaseBluetoothScanner,
     #region Delegate Callbacks
 
     /// <summary>
-    /// Called when a Bluetooth LE advertisement is received.
+    ///     Called when a Bluetooth LE advertisement is received.
     /// </summary>
     /// <param name="argsAdvertisement">The advertisement event arguments.</param>
     public void OnAdvertisementReceived(BluetoothLEAdvertisementReceivedEventArgs argsAdvertisement)
@@ -39,7 +40,7 @@ public class BluetoothScanner : BaseBluetoothScanner,
     }
 
     /// <summary>
-    /// Called when the advertisement watcher is stopped.
+    ///     Called when the advertisement watcher is stopped.
     /// </summary>
     /// <param name="argsError">The error code, if any.</param>
     public void OnAdvertisementWatcherStopped(BluetoothError argsError)
@@ -58,9 +59,9 @@ public class BluetoothScanner : BaseBluetoothScanner,
 
     #region Abstract Method Implementations
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <remarks>
-    /// On Windows, this checks if the advertisement watcher status is <see cref="BluetoothLEAdvertisementWatcherStatus.Started"/>.
+    ///     On Windows, this checks if the advertisement watcher status is <see cref="BluetoothLEAdvertisementWatcherStatus.Started" />.
     /// </remarks>
     protected override void NativeRefreshIsRunning()
     {
@@ -74,10 +75,10 @@ public class BluetoothScanner : BaseBluetoothScanner,
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <remarks>
-    /// Starts the Windows Bluetooth LE advertisement watcher.
-    /// The watcher will begin receiving advertisements and call <see cref="OnAdvertisementReceived"/> for each one.
+    ///     Starts the Windows Bluetooth LE advertisement watcher.
+    ///     The watcher will begin receiving advertisements and call <see cref="OnAdvertisementReceived" /> for each one.
     /// </remarks>
     protected override ValueTask NativeStartAsync(
         ScanningOptions scanningOptions,
@@ -93,9 +94,9 @@ public class BluetoothScanner : BaseBluetoothScanner,
         return ValueTask.CompletedTask;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <remarks>
-    /// Stops the Windows Bluetooth LE advertisement watcher.
+    ///     Stops the Windows Bluetooth LE advertisement watcher.
     /// </remarks>
     protected override ValueTask NativeStopAsync(
         TimeSpan? timeout = null,
@@ -105,9 +106,9 @@ public class BluetoothScanner : BaseBluetoothScanner,
         return ValueTask.CompletedTask;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <remarks>
-    /// Creates a Windows-specific device factory request from the advertisement.
+    ///     Creates a Windows-specific device factory request from the advertisement.
     /// </remarks>
     protected override IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest
         CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
@@ -119,7 +120,7 @@ public class BluetoothScanner : BaseBluetoothScanner,
                 nameof(advertisement));
         }
 
-        return new Factories.BluetoothDeviceFactoryRequest(windowsAdvertisement);
+        return new BluetoothDeviceFactoryRequest(windowsAdvertisement);
     }
 
     #endregion

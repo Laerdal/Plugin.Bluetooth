@@ -3,9 +3,8 @@ namespace Bluetooth.Core.Broadcasting.Factories;
 /// <inheritdoc />
 public abstract class BaseBluetoothLocalServiceFactory : IBluetoothLocalServiceFactory
 {
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothLocalServiceFactory"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothLocalServiceFactory" /> class.
     /// </summary>
     protected BaseBluetoothLocalServiceFactory(IBluetoothLocalCharacteristicFactory localCharacteristicFactory)
     {
@@ -13,11 +12,10 @@ public abstract class BaseBluetoothLocalServiceFactory : IBluetoothLocalServiceF
     }
 
     /// <summary>
-    /// Gets the characteristic factory to pass to the new Service.
+    ///     Gets the characteristic factory to pass to the new Service.
     /// </summary>
     protected IBluetoothLocalCharacteristicFactory LocalCharacteristicFactory { get; }
 
     /// <inheritdoc />
     public abstract IBluetoothLocalService CreateService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec);
-
 }

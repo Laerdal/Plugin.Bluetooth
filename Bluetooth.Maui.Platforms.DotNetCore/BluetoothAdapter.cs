@@ -1,11 +1,11 @@
 namespace Bluetooth.Maui.Platforms.DotNetCore;
 
 /// <summary>
-/// Android implementation of the Bluetooth adapter.
+///     Android implementation of the Bluetooth adapter.
 /// </summary>
 public abstract class BluetoothAdapter : BaseBluetoothAdapter
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected BluetoothAdapter(ILogger<IBluetoothAdapter>? logger = null) : base(logger)
     {
     }

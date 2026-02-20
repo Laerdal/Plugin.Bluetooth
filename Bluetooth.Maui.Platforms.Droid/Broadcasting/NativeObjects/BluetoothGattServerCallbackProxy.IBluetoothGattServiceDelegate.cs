@@ -7,19 +7,19 @@ namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 public partial class BluetoothGattServerCallbackProxy
 {
     /// <summary>
-    /// Delegate interface for handling GATT service-level events.
+    ///     Delegate interface for handling GATT service-level events.
     /// </summary>
     public interface IBluetoothGattServiceDelegate
     {
         /// <summary>
-        /// Gets the characteristic delegate for the specified native GATT characteristic.
+        ///     Gets the characteristic delegate for the specified native GATT characteristic.
         /// </summary>
         /// <param name="native">The native Android GATT characteristic.</param>
         /// <returns>The characteristic delegate for the specified characteristic.</returns>
-        BluetoothGattServerCallbackProxy.IBluetoothGattCharacteristicDelegate GetCharacteristic(Android.Bluetooth.BluetoothGattCharacteristic? native);
+        IBluetoothGattCharacteristicDelegate GetCharacteristic(BluetoothGattCharacteristic? native);
 
         /// <summary>
-        /// Called when a service has been added to the GATT server.
+        ///     Called when a service has been added to the GATT server.
         /// </summary>
         /// <param name="status">The status of the service addition operation.</param>
         void OnServiceAdded(GattStatus status);

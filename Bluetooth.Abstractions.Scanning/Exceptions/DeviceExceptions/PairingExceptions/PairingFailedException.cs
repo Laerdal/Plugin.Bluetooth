@@ -6,9 +6,8 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 /// <seealso cref="DeviceException" />
 public class PairingFailedException : DeviceException
 {
-
     /// <summary>
-    ///     Initializes a new instance of the <see cref="PairingFailedException"/> class.
+    ///     Initializes a new instance of the <see cref="PairingFailedException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

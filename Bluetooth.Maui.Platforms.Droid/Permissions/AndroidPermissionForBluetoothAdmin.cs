@@ -1,3 +1,5 @@
+using Android;
+
 namespace Bluetooth.Maui.Platforms.Droid.Permissions;
 
-public class AndroidPermissionForBluetoothAdmin() : BaseAndroidPermissionHandler(Android.Manifest.Permission.BluetoothAdmin, false);
+public class AndroidPermissionForBluetoothAdmin() : BaseAndroidPermissionHandler(Manifest.Permission.BluetoothAdmin, false);

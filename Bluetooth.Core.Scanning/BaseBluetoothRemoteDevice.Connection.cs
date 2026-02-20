@@ -2,19 +2,18 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteDevice
 {
-
     #region ConnectionState
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler? Connected;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler? Disconnected;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<DeviceConnectionStateChangedEventArgs>? ConnectionStateChanged;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool IsConnected
     {
         get => GetValue(false);
@@ -24,25 +23,26 @@ public abstract partial class BaseBluetoothRemoteDevice
             {
                 if (value)
                 {
-                    Connected?.Invoke(this, System.EventArgs.Empty);
+                    Connected?.Invoke(this, EventArgs.Empty);
                 }
                 else
                 {
-                    Disconnected?.Invoke(this, System.EventArgs.Empty);
+                    Disconnected?.Invoke(this, EventArgs.Empty);
                 }
+
                 ConnectionStateChanged?.Invoke(this, new DeviceConnectionStateChangedEventArgs(this, value));
             }
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask WaitForIsConnectedAsync(bool isConnected, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         await WaitForPropertyToBeOfValue(nameof(IsConnected), isConnected, timeout, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
-    /// Platform-specific implementation to refresh the current connection state from the native platform.
+    ///     Platform-specific implementation to refresh the current connection state from the native platform.
     /// </summary>
     protected abstract void NativeRefreshIsConnected();
 
@@ -51,7 +51,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     #region Connecting
 
     /// <summary>
-    /// Gets a value indicating whether a connection operation is currently in progress.
+    ///     Gets a value indicating whether a connection operation is currently in progress.
     /// </summary>
     public bool IsConnecting
     {
@@ -59,7 +59,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         private set => SetValue(value);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler? Connecting;
 
     private TaskCompletionSource? ConnectionTcs
@@ -69,7 +69,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Called when a connection attempt succeeds. Updates the connection state and completes the connection task.
+    ///     Called when a connection attempt succeeds. Updates the connection state and completes the connection task.
     /// </summary>
     protected void OnConnectSucceeded()
     {
@@ -83,7 +83,7 @@ public abstract partial class BaseBluetoothRemoteDevice
             return;
         }
 
-        if(IsConnected)
+        if (IsConnected)
         {
             return;
         }
@@ -93,7 +93,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Called when a connection attempt fails. Completes the connection task with an exception or dispatches to the unhandled exception listener.
+    ///     Called when a connection attempt fails. Completes the connection task with an exception or dispatches to the unhandled exception listener.
     /// </summary>
     /// <param name="e">The exception that occurred during the connection attempt.</param>
     protected void OnConnectFailed(Exception e)
@@ -112,7 +112,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async virtual ValueTask ConnectIfNeededAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();
@@ -124,7 +124,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         await ConnectAsync(connectionOptions, timeout, cancellationToken).ConfigureAwait(false);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async virtual ValueTask ConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure we are not already connected
@@ -132,6 +132,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         {
             LogDeviceAlreadyConnected(Id);
         }
+
         DeviceIsAlreadyConnectedException.ThrowIfAlreadyConnected(this);
         ArgumentNullException.ThrowIfNull(connectionOptions);
 
@@ -145,16 +146,17 @@ public abstract partial class BaseBluetoothRemoteDevice
 
         ConnectionTcs = new TaskCompletionSource(); // Reset the TCS
         IsConnecting = true; // Set the connecting state to true
-        Connecting?.Invoke(this, System.EventArgs.Empty);
+        Connecting?.Invoke(this, EventArgs.Empty);
 
         try // try-catch to dispatch exceptions rising from start
         {
             LogDeviceConnecting(Id);
-            if(connectionOptions.WaitForAdvertisementBeforeConnecting)
+            if (connectionOptions.WaitForAdvertisementBeforeConnecting)
             {
                 LogWaitingForAdvertisement(Id);
                 await WaitForAdvertisementAsync(timeout, cancellationToken).ConfigureAwait(false);
             }
+
             await NativeConnectAsync(connectionOptions, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
         }
         catch (Exception e)
@@ -182,7 +184,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Platform-specific implementation to initiate a connection to the device.
+    ///     Platform-specific implementation to initiate a connection to the device.
     /// </summary>
     /// <param name="connectionOptions"></param>
     /// <param name="timeout">Optional timeout for the operation.</param>
@@ -194,7 +196,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     #region Disconnecting
 
     /// <summary>
-    /// Gets a value indicating whether a disconnection operation is currently in progress.
+    ///     Gets a value indicating whether a disconnection operation is currently in progress.
     /// </summary>
     public bool IsDisconnecting
     {
@@ -203,7 +205,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler? Disconnecting;
 
     private TaskCompletionSource? DisconnectionTcs
@@ -213,7 +215,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Called when a disconnection occurs, either intentionally or unexpectedly. Completes the disconnection task.
+    ///     Called when a disconnection occurs, either intentionally or unexpectedly. Completes the disconnection task.
     /// </summary>
     /// <param name="e">Optional exception that caused the disconnection.</param>
     protected void OnDisconnect(Exception? e = null)
@@ -239,7 +241,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         OnUnexpectedDisconnection(e);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask DisconnectIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();
@@ -251,7 +253,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         await DisconnectAsync(timeout, cancellationToken).ConfigureAwait(false);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask DisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure we are not already disconnected
@@ -259,6 +261,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         {
             LogDeviceAlreadyDisconnected(Id);
         }
+
         DeviceIsAlreadyDisconnectedException.ThrowIfAlreadyDisconnected(this);
 
         // Prevents multiple calls to ConnectAsync, if already starting, we merge the calls
@@ -271,7 +274,7 @@ public abstract partial class BaseBluetoothRemoteDevice
 
         DisconnectionTcs = new TaskCompletionSource(); // Reset the TCS
         IsDisconnecting = true; // Set the disconnecting state to true
-        Disconnecting?.Invoke(this, System.EventArgs.Empty);
+        Disconnecting?.Invoke(this, EventArgs.Empty);
 
         try // try-catch to dispatch exceptions rising from start
         {
@@ -303,7 +306,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Platform-specific implementation to initiate a disconnection from the device.
+    ///     Platform-specific implementation to initiate a disconnection from the device.
     /// </summary>
     /// <param name="timeout">Optional timeout for the operation.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
@@ -313,16 +316,16 @@ public abstract partial class BaseBluetoothRemoteDevice
 
     #region Connection - UnexpectedDisconnection
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<DeviceUnexpectedDisconnectionEventArgs>? UnexpectedDisconnection;
 
     /// <summary>
-    /// Gets or sets a value indicating whether the next unexpected disconnection should be ignored.
+    ///     Gets or sets a value indicating whether the next unexpected disconnection should be ignored.
     /// </summary>
     public bool IgnoreNextUnexpectedDisconnection { get; set; }
 
     /// <summary>
-    /// Called when an unexpected disconnection occurs. Clears services and raises the UnexpectedDisconnection event.
+    ///     Called when an unexpected disconnection occurs. Clears services and raises the UnexpectedDisconnection event.
     /// </summary>
     /// <param name="e">Optional exception that caused the unexpected disconnection.</param>
     protected virtual void OnUnexpectedDisconnection(Exception? e = null)
@@ -344,7 +347,7 @@ public abstract partial class BaseBluetoothRemoteDevice
 
     #region Connection Priority
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask RequestConnectionPriorityAsync(BluetoothConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         if (!IsConnected)
@@ -358,17 +361,16 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Platform-specific implementation to request a connection priority change.
+    ///     Platform-specific implementation to request a connection priority change.
     /// </summary>
     /// <param name="priority">The desired connection priority mode.</param>
     /// <param name="timeout">Optional timeout for the operation.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <remarks>
-    /// On platforms that don't support this feature (iOS, Windows), this should be a no-op.
+    ///     On platforms that don't support this feature (iOS, Windows), this should be a no-op.
     /// </remarks>
     protected abstract ValueTask NativeRequestConnectionPriorityAsync(BluetoothConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
-
 }

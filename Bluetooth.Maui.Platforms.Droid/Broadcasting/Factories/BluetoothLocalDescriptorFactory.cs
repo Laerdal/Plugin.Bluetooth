@@ -6,7 +6,7 @@ namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.Factories;
 public class BluetoothLocalDescriptorFactory : BaseBluetoothLocalDescriptorFactory
 {
     /// <inheritdoc />
-    public override Abstractions.Broadcasting.IBluetoothLocalDescriptor CreateDescriptor(Abstractions.Broadcasting.IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
+    public override IBluetoothLocalDescriptor CreateDescriptor(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
     {
         throw new NotImplementedException();
     }

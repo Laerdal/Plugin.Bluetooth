@@ -3,11 +3,10 @@ using Bluetooth.Maui.Platforms.Windows.NativeObjects;
 namespace Bluetooth.Maui.Platforms.Windows;
 
 /// <summary>
-/// Windows implementation of the Bluetooth adapter using Windows.Devices.Bluetooth namespace.
+///     Windows implementation of the Bluetooth adapter using Windows.Devices.Bluetooth namespace.
 /// </summary>
 public partial class BluetoothAdapter : BaseBluetoothAdapter, RadioProxy.IRadioProxyDelegate, BluetoothAdapterProxy.IBluetoothAdapterProxyDelegate
 {
-
     /*
     /// <inheritdoc/>
     protected override void NativeRefreshValues()
@@ -28,7 +27,7 @@ public partial class BluetoothAdapter : BaseBluetoothAdapter, RadioProxy.IRadioP
 
         // Broadcaster properties
         BluetoothLeAdvertisementPublisherStatus = BluetoothLeAdvertisementPublisherWrapper?.BluetoothLeAdvertisementPublisher.Status ?? BluetoothLEAdvertisementPublisherStatus.Created;
-        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22621))
         {
             BluetoothLeAdvertisementPublisherIsAnonymous = BluetoothLeAdvertisementPublisherWrapper?.BluetoothLeAdvertisementPublisher.IsAnonymous ?? false;
             BluetoothLeAdvertisementPublisherUseExtendedAdvertisement = BluetoothLeAdvertisementPublisherWrapper?.BluetoothLeAdvertisementPublisher.UseExtendedAdvertisement ?? false;
@@ -237,12 +236,12 @@ public partial class BluetoothAdapter : BaseBluetoothAdapter, RadioProxy.IRadioP
 */
 
     /// <summary>
-    /// Handles radio state changes.
+    ///     Handles radio state changes.
     /// </summary>
     /// <param name="senderState">The new radio state.</param>
     /// <remarks>
-    /// This is a placeholder for future implementation. The RadioProxy is not currently instantiated,
-    /// so this method is not called in the current scanning implementation.
+    ///     This is a placeholder for future implementation. The RadioProxy is not currently instantiated,
+    ///     so this method is not called in the current scanning implementation.
     /// </remarks>
     public void OnRadioStateChanged(RadioState senderState)
     {

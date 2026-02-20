@@ -6,9 +6,8 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 /// <seealso cref="DeviceException" />
 public class DeviceAdvertisementParsingException : DeviceException
 {
-
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DeviceAdvertisementParsingException"/> class.
+    ///     Initializes a new instance of the <see cref="DeviceAdvertisementParsingException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="advertisement">The advertisement that failed to parse.</param>

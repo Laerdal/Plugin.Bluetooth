@@ -1,15 +1,15 @@
 namespace Bluetooth.Core.Scanning.Converters;
 
 /// <summary>
-/// A linear implementation of <see cref="IBluetoothRssiToSignalStrengthConverter"/> that maps RSSI values to signal strength percentages.
+///     A linear implementation of <see cref="IBluetoothRssiToSignalStrengthConverter" /> that maps RSSI values to signal strength percentages.
 /// </summary>
 public class LinearRssiToSignalStrengthConverter : IBluetoothRssiToSignalStrengthConverter
 {
-    private readonly Lock _lock = new Lock();
+    private readonly Lock _lock = new();
     private double _closeRssiValue = -50;
     private double _farRssiValue = -100;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public double Convert(double rssi)
     {
         lock (_lock)

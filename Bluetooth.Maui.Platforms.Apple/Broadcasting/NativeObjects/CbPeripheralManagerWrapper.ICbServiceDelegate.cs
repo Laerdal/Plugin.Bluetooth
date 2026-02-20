@@ -7,12 +7,12 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 public partial class CbPeripheralManagerWrapper
 {
     /// <summary>
-    /// Delegate interface for CoreBluetooth service callbacks, extending the base Bluetooth broadcast service interface.
+    ///     Delegate interface for CoreBluetooth service callbacks, extending the base Bluetooth broadcast service interface.
     /// </summary>
     public interface ICbServiceDelegate
     {
         /// <summary>
-        /// Gets the characteristic delegate for the specified CoreBluetooth characteristic.
+        ///     Gets the characteristic delegate for the specified CoreBluetooth characteristic.
         /// </summary>
         /// <param name="characteristic">The CoreBluetooth characteristic to get the delegate for.</param>
         /// <returns>The characteristic delegate for the specified characteristic.</returns>

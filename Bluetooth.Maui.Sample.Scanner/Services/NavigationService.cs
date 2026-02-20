@@ -1,19 +1,14 @@
 namespace Bluetooth.Maui.Sample.Scanner.Services;
 
 /// <summary>
-/// Implementation of <see cref="INavigationService"/> using MAUI's NavigationPage.
+///     Implementation of <see cref="INavigationService" /> using MAUI's NavigationPage.
 /// </summary>
 public class NavigationService : INavigationService
 {
     private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
-    /// Gets the current navigation instance from the application's main window.
-    /// </summary>
-    private INavigation? Navigation => Application.Current?.Windows.FirstOrDefault()?.Page?.Navigation;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="NavigationService"/> class.
+    ///     Initializes a new instance of the <see cref="NavigationService" /> class.
     /// </summary>
     /// <param name="serviceProvider">The service provider for resolving pages.</param>
     public NavigationService(IServiceProvider serviceProvider)
@@ -21,7 +16,12 @@ public class NavigationService : INavigationService
         _serviceProvider = serviceProvider;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///     Gets the current navigation instance from the application's main window.
+    /// </summary>
+    private INavigation? Navigation => Application.Current?.Windows.FirstOrDefault()?.Page?.Navigation;
+
+    /// <inheritdoc />
     public async ValueTask NavigateToAsync<TPage>(IDictionary<string, object>? parameters = null)
         where TPage : Page
     {
@@ -39,7 +39,7 @@ public class NavigationService : INavigationService
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask NavigateBackAsync()
     {
         if (Navigation != null)
@@ -48,7 +48,7 @@ public class NavigationService : INavigationService
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask PopToRootAsync()
     {
         if (Navigation != null)

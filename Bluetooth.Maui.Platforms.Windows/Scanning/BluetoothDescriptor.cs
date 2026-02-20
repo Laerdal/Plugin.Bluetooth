@@ -6,19 +6,14 @@ using Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
 namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 
 /// <summary>
-/// Represents a Windows-specific Bluetooth Low Energy descriptor.
-/// This class wraps Windows's GattDescriptor, providing platform-specific
-/// implementations for reading and writing descriptor values.
+///     Represents a Windows-specific Bluetooth Low Energy descriptor.
+///     This class wraps Windows's GattDescriptor, providing platform-specific
+///     implementations for reading and writing descriptor values.
 /// </summary>
 public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
 {
     /// <summary>
-    /// Gets the native Windows GATT descriptor.
-    /// </summary>
-    public GattDescriptor NativeDescriptor { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the Windows <see cref="BluetoothDescriptor"/> class.
+    ///     Initializes a new instance of the Windows <see cref="BluetoothDescriptor" /> class.
     /// </summary>
     /// <param name="characteristic">The Bluetooth characteristic that contains this descriptor.</param>
     /// <param name="request">The descriptor factory request containing descriptor information.</param>
@@ -33,9 +28,14 @@ public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
         NativeDescriptor = windowsRequest.NativeDescriptor;
     }
 
+    /// <summary>
+    ///     Gets the native Windows GATT descriptor.
+    /// </summary>
+    public GattDescriptor NativeDescriptor { get; }
+
     #region Read
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeReadValueAsync()
     {
         try
@@ -47,7 +47,7 @@ public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
             if (result.Value is { Length: > 0 } buffer)
             {
                 var data = new byte[buffer.Length];
-                using var reader = global::Windows.Storage.Streams.DataReader.FromBuffer(buffer);
+                using var reader = DataReader.FromBuffer(buffer);
                 reader.ReadBytes(data);
                 OnReadValueSucceeded(data);
             }
@@ -62,7 +62,7 @@ public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override bool NativeCanRead()
     {
         // Windows GATT descriptors generally support read operations
@@ -74,7 +74,7 @@ public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
 
     #region Write
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
         try
@@ -82,7 +82,7 @@ public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
             // Create buffer
             IBuffer buffer;
 
-            using (var writer = new global::Windows.Storage.Streams.DataWriter())
+            using (var writer = new DataWriter())
             {
                 writer.WriteBytes(value.ToArray());
                 buffer = writer.DetachBuffer();
@@ -101,7 +101,7 @@ public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override bool NativeCanWrite()
     {
         // Windows GATT descriptors generally support write operations
@@ -110,5 +110,4 @@ public class BluetoothDescriptor : BaseBluetoothRemoteDescriptor
     }
 
     #endregion
-
 }

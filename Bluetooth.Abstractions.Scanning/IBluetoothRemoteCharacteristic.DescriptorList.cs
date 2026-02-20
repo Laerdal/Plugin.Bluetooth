@@ -2,22 +2,31 @@ namespace Bluetooth.Abstractions.Scanning;
 
 public partial interface IBluetoothRemoteCharacteristic
 {
+    #region Descriptors - Clear
+
+    /// <summary>
+    ///     Resets the list of descriptors, and stops all subscriptions and notifications.
+    /// </summary>
+    ValueTask ClearDescriptorsAsync();
+
+    #endregion
+
     // ## LIST OF DESCRIPTORS ##
 
     #region Descriptors - Events
 
     /// <summary>
-    /// Event triggered when the list of available descriptors changes.
+    ///     Event triggered when the list of available descriptors changes.
     /// </summary>
     event EventHandler<DescriptorListChangedEventArgs>? DescriptorListChanged;
 
     /// <summary>
-    /// Event triggered when descriptors are added.
+    ///     Event triggered when descriptors are added.
     /// </summary>
     event EventHandler<DescriptorsAddedEventArgs>? DescriptorsAdded;
 
     /// <summary>
-    /// Event triggered when descriptors are removed.
+    ///     Event triggered when descriptors are removed.
     /// </summary>
     event EventHandler<DescriptorsRemovedEventArgs>? DescriptorsRemoved;
 
@@ -26,52 +35,51 @@ public partial interface IBluetoothRemoteCharacteristic
     #region Descriptors - Exploration
 
     /// <summary>
-    /// Gets a value indicating whether the service is exploring descriptors.
+    ///     Gets a value indicating whether the service is exploring descriptors.
     /// </summary>
     bool IsExploringDescriptors { get; }
 
     /// <summary>
-    /// Explores (discovers) the descriptors of this characteristic asynchronously.
+    ///     Explores (discovers) the descriptors of this characteristic asynchronously.
     /// </summary>
     /// <param name="options">
-    /// Optional exploration configuration. If null, uses default options (with caching enabled).
-    /// Set <c>UseCache = false</c> to force re-exploration even if descriptors were previously discovered.
-    /// Use <c>DescriptorUuidFilter</c> to discover only specific descriptors by UUID.
+    ///     Optional exploration configuration. If null, uses default options (with caching enabled).
+    ///     Set <c>UseCache = false</c> to force re-exploration even if descriptors were previously discovered.
+    ///     Use <c>DescriptorUuidFilter</c> to discover only specific descriptors by UUID.
     /// </param>
     /// <param name="timeout">The timeout for this operation.</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <remarks>
-    /// <b>Common Usage Patterns:</b>
-    /// <example>
-    /// <code>
+    ///     <b>Common Usage Patterns:</b>
+    ///     <example>
+    ///         <code>
     /// // Simple exploration (uses defaults: all descriptors, with caching):
     /// await characteristic.ExploreDescriptorsAsync();
-    ///
+    /// 
     /// // Force re-exploration (ignore cache):
     /// await characteristic.ExploreDescriptorsAsync(new() { UseCache = false });
-    ///
+    /// 
     /// // Filter by descriptor UUID (e.g., Client Characteristic Configuration):
     /// await characteristic.ExploreDescriptorsAsync(new DescriptorExplorationOptions
     /// {
     ///     DescriptorUuidFilter = uuid => uuid == BluetoothUuids.ClientCharacteristicConfiguration
     /// });
     /// </code>
-    /// </example>
-    ///
-    /// <b>Caching Behavior:</b>
-    /// By default (<c>options = null</c>), caching is enabled (<c>UseCache = true</c>).
-    /// This means if descriptors have already been explored, the method returns immediately
-    /// without re-querying the device. To force re-exploration, explicitly set <c>UseCache = false</c>.
+    ///     </example>
+    ///     <b>Caching Behavior:</b>
+    ///     By default (<c>options = null</c>), caching is enabled (<c>UseCache = true</c>).
+    ///     This means if descriptors have already been explored, the method returns immediately
+    ///     without re-querying the device. To force re-exploration, explicitly set <c>UseCache = false</c>.
     /// </remarks>
-    Task ExploreDescriptorsAsync(Options.DescriptorExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    Task ExploreDescriptorsAsync(DescriptorExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 
     #region Descriptors - Get
 
     /// <summary>
-    /// Gets the descriptor that matches the specified filter.
+    ///     Gets the descriptor that matches the specified filter.
     /// </summary>
     /// <param name="filter">The filter to apply to the descriptors.</param>
     /// <returns>The descriptor that matches the filter.</returns>
@@ -80,7 +88,7 @@ public partial interface IBluetoothRemoteCharacteristic
     IBluetoothRemoteDescriptor GetDescriptor(Func<IBluetoothRemoteDescriptor, bool> filter);
 
     /// <summary>
-    /// Gets a descriptor by its ID.
+    ///     Gets a descriptor by its ID.
     /// </summary>
     /// <param name="id">The ID of the descriptor to get.</param>
     /// <returns>The descriptor with the specified ID.</returns>
@@ -89,7 +97,7 @@ public partial interface IBluetoothRemoteCharacteristic
     IBluetoothRemoteDescriptor GetDescriptor(Guid id);
 
     /// <summary>
-    /// Gets the descriptor that matches the specified filter.
+    ///     Gets the descriptor that matches the specified filter.
     /// </summary>
     /// <param name="filter">The filter to apply to the descriptors.</param>
     /// <returns>The descriptor that matches the filter, or null if not found.</returns>
@@ -97,7 +105,7 @@ public partial interface IBluetoothRemoteCharacteristic
     IBluetoothRemoteDescriptor? GetDescriptorOrDefault(Func<IBluetoothRemoteDescriptor, bool> filter);
 
     /// <summary>
-    /// Gets a descriptor by its ID.
+    ///     Gets a descriptor by its ID.
     /// </summary>
     /// <param name="id">The ID of the descriptor to get.</param>
     /// <returns>The descriptor with the specified ID, or null if not found.</returns>
@@ -105,8 +113,8 @@ public partial interface IBluetoothRemoteCharacteristic
     IBluetoothRemoteDescriptor? GetDescriptorOrDefault(Guid id);
 
     /// <summary>
-    /// Gets the descriptors that match the specified filter.
-    /// 0-N
+    ///     Gets the descriptors that match the specified filter.
+    ///     0-N
     /// </summary>
     /// <param name="filter">The filter to apply to the descriptors.</param>
     /// <returns>The descriptors that match the filter, or all descriptors if the filter is null.</returns>
@@ -114,26 +122,17 @@ public partial interface IBluetoothRemoteCharacteristic
 
     #endregion
 
-    #region Descriptors - Clear
-
-    /// <summary>
-    /// Resets the list of descriptors, and stops all subscriptions and notifications.
-    /// </summary>
-    ValueTask ClearDescriptorsAsync();
-
-    #endregion
-
     #region Descriptors - Has
 
     /// <summary>
-    /// Gets a value indicating whether this characteristic has a descriptor that matches the specified filter.
+    ///     Gets a value indicating whether this characteristic has a descriptor that matches the specified filter.
     /// </summary>
     /// <param name="filter">The filter to apply to the descriptors.</param>
     /// <returns>True if a matching descriptor is found; otherwise, false.</returns>
     bool HasDescriptor(Func<IBluetoothRemoteDescriptor, bool> filter);
 
     /// <summary>
-    /// Gets a value indicating whether this characteristic has a descriptor with the specified ID.
+    ///     Gets a value indicating whether this characteristic has a descriptor with the specified ID.
     /// </summary>
     /// <param name="id">The ID of the descriptor to check for.</param>
     /// <returns>True if a descriptor with the specified ID is found; otherwise, false.</returns>

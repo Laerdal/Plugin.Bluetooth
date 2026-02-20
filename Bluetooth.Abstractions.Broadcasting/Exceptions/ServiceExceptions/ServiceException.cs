@@ -8,7 +8,7 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 public abstract class ServiceException : BluetoothBroadcastingException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ServiceException"/> class.
+    ///     Initializes a new instance of the <see cref="ServiceException" /> class.
     /// </summary>
     /// <param name="localService">The Bluetooth broadcast service associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

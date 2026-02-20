@@ -7,12 +7,12 @@ namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 public partial class BluetoothGattServerCallbackProxy
 {
     /// <summary>
-    /// Delegate interface for handling GATT descriptor-level events.
+    ///     Delegate interface for handling GATT descriptor-level events.
     /// </summary>
     public interface IBluetoothGattDescriptorDelegate
     {
         /// <summary>
-        /// Called when a remote device has requested to read a descriptor.
+        ///     Called when a remote device has requested to read a descriptor.
         /// </summary>
         /// <param name="sharedBluetoothDeviceDelegate">The device delegate for the requesting device.</param>
         /// <param name="requestId">The ID of the read request.</param>
@@ -21,7 +21,7 @@ public partial class BluetoothGattServerCallbackProxy
         void OnDescriptorReadRequest(IBluetoothDeviceDelegate sharedBluetoothDeviceDelegate, int requestId, int offset, BluetoothGattDescriptor? descriptor);
 
         /// <summary>
-        /// Called when a remote device has requested to write to a descriptor.
+        ///     Called when a remote device has requested to write to a descriptor.
         /// </summary>
         /// <param name="sharedBluetoothDeviceDelegate">The device delegate for the requesting device.</param>
         /// <param name="requestId">The ID of the write request.</param>

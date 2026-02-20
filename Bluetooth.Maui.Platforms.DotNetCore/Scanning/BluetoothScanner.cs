@@ -1,9 +1,9 @@
 namespace Bluetooth.Maui.Platforms.DotNetCore.Scanning;
 
-/// <inheritdoc/>
+/// <inheritdoc />
 public class BluetoothScanner : BaseBluetoothScanner
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     public BluetoothScanner(IBluetoothAdapter adapter,
         IBluetoothPermissionManager permissionManager,
@@ -11,37 +11,37 @@ public class BluetoothScanner : BaseBluetoothScanner
         ITicker ticker,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ILogger<IBluetoothScanner>? logger = null) : base(adapter,
-                                       permissionManager,
-                                       deviceFactory,
-                                       rssiToSignalStrengthConverter,
-                                       ticker,
-                                       logger)
+        permissionManager,
+        deviceFactory,
+        rssiToSignalStrengthConverter,
+        ticker,
+        logger)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     protected override void NativeRefreshIsRunning()
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     protected override ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     protected override IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
     {

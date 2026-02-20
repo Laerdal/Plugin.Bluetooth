@@ -1,18 +1,16 @@
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 
+using MultipleServicesFoundException = Bluetooth.Abstractions.Broadcasting.Exceptions.MultipleServicesFoundException;
+using ServiceNotFoundException = Bluetooth.Abstractions.Broadcasting.Exceptions.ServiceNotFoundException;
+
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 
 /// <inheritdoc cref="BaseBluetoothBroadcaster" />
 public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralManagerWrapper.ICbPeripheralManagerDelegate, IDisposable
 {
     /// <summary>
-    /// Gets the Core Bluetooth peripheral manager wrapper.
-    /// </summary>
-    public CbPeripheralManagerWrapper CbPeripheralManagerWrapper { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AppleBluetoothBroadcaster"/> class.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothBroadcaster" /> class.
     /// </summary>
     /// <param name="adapter">The Bluetooth adapter associated with this broadcaster.</param>
     /// <param name="localServiceFactory">The factory for creating broadcast services.</param>
@@ -28,18 +26,30 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
         CbPeripheralManagerWrapper cbPeripheralManagerWrapper,
         ITicker ticker,
         ILogger<IBluetoothBroadcaster>? logger = null) : base(adapter,
-                                       localServiceFactory,
-                                       connectedDeviceFactory,
-                                       permissionManager,
-                                       ticker,
-                                       logger)
+        localServiceFactory,
+        connectedDeviceFactory,
+        permissionManager,
+        ticker,
+        logger)
     {
         ArgumentNullException.ThrowIfNull(cbPeripheralManagerWrapper);
         CbPeripheralManagerWrapper = cbPeripheralManagerWrapper;
     }
 
     /// <summary>
-    /// Disposes the instance and releases any unmanaged resources.
+    ///     Gets the Core Bluetooth peripheral manager wrapper.
+    /// </summary>
+    public CbPeripheralManagerWrapper CbPeripheralManagerWrapper { get; }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    ///     Disposes the instance and releases any unmanaged resources.
     /// </summary>
     /// <param name="disposing">Indicates whether the method is being called from the Dispose method (true) or from a finalizer (false).</param>
     protected virtual void Dispose(bool disposing)
@@ -51,17 +61,36 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     }
 
     /// <inheritdoc />
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <inheritdoc />
     protected override void NativeRefreshIsRunning()
     {
         IsRunning = CbPeripheralManagerWrapper.CbPeripheralManager.Advertising;
     }
+
+    #region Client Device Management
+
+    /// <summary>
+    ///     Gets an existing client device or creates and registers a new one for the specified central.
+    /// </summary>
+    /// <param name="central">The Core Bluetooth central device.</param>
+    /// <returns>The client device corresponding to the central.</returns>
+    internal IBluetoothConnectedDevice GetOrCreateClientDevice(CBCentral central)
+    {
+        ArgumentNullException.ThrowIfNull(central);
+
+        var deviceId = central.Identifier.ToString();
+        var device = GetClientDeviceOrDefault(deviceId);
+
+        if (device == null)
+        {
+            var request = new AppleBluetoothConnectedDeviceSpec(central);
+            device = ConnectedDeviceFactory.CreateConnectedDevice(this, request);
+            AddClientDevice(device);
+        }
+
+        return device;
+    }
+
+    #endregion
 
     #region Start
 
@@ -83,6 +112,7 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
             {
                 throw new BroadcasterFailedToStartException(this, "Failed to start advertising for an unknown reason.");
             }
+
             OnStartSucceeded();
         }
         catch (Exception e)
@@ -112,6 +142,7 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
             {
                 throw new BroadcasterFailedToStopException(this, "Failed to stop advertising for an unknown reason.");
             }
+
             OnStopSucceeded();
         }
         catch (Exception e)
@@ -125,10 +156,10 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     #region State
 
     /// <summary>
-    /// Gets or sets the current state of the Core Bluetooth central manager.
+    ///     Gets or sets the current state of the Core Bluetooth central manager.
     /// </summary>
     /// <remarks>
-    /// The state indicates whether Bluetooth is powered on, off, unauthorized, unsupported, etc.
+    ///     The state indicates whether Bluetooth is powered on, off, unauthorized, unsupported, etc.
     /// </remarks>
     public CBManagerState State
     {
@@ -173,20 +204,20 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     {
         if (characteristicService == null)
         {
-            throw new Abstractions.Broadcasting.Exceptions.ServiceNotFoundException(this);
+            throw new ServiceNotFoundException(this);
         }
 
         try
         {
             var serviceGuid = characteristicService.UUID.ToGuid();
             var match = GetServiceOrDefault(serviceGuid);
-            return match as CbPeripheralManagerWrapper.ICbServiceDelegate ?? throw new Abstractions.Broadcasting.Exceptions.ServiceNotFoundException(this, serviceGuid);
+            return match as CbPeripheralManagerWrapper.ICbServiceDelegate ?? throw new ServiceNotFoundException(this, serviceGuid);
         }
         catch (InvalidOperationException e)
         {
             var serviceGuid = characteristicService.UUID.ToGuid();
             var matches = GetServices(service => service.Id == serviceGuid).ToArray();
-            throw new Abstractions.Broadcasting.Exceptions.MultipleServicesFoundException(this, matches, e);
+            throw new MultipleServicesFoundException(this, matches, e);
         }
     }
 
@@ -216,31 +247,4 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     }
 
     #endregion
-
-    #region Client Device Management
-
-    /// <summary>
-    /// Gets an existing client device or creates and registers a new one for the specified central.
-    /// </summary>
-    /// <param name="central">The Core Bluetooth central device.</param>
-    /// <returns>The client device corresponding to the central.</returns>
-    internal IBluetoothConnectedDevice GetOrCreateClientDevice(CBCentral central)
-    {
-        ArgumentNullException.ThrowIfNull(central);
-
-        var deviceId = central.Identifier.ToString();
-        var device = GetClientDeviceOrDefault(deviceId);
-
-        if (device == null)
-        {
-            var request = new AppleBluetoothConnectedDeviceSpec(central);
-            device = ConnectedDeviceFactory.CreateConnectedDevice(this, request);
-            AddClientDevice(device);
-        }
-
-        return device;
-    }
-
-    #endregion
-
 }

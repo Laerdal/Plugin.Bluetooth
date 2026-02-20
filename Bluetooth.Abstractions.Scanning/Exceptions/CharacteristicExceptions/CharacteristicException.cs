@@ -10,9 +10,8 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 /// <seealso cref="IBluetoothRemoteCharacteristic" />
 public abstract class CharacteristicException : BluetoothScanningException
 {
-
     /// <summary>
-    ///     Initializes a new instance of the <see cref="CharacteristicException"/> class.
+    ///     Initializes a new instance of the <see cref="CharacteristicException" /> class.
     /// </summary>
     /// <param name="remoteCharacteristic">The Bluetooth characteristic associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

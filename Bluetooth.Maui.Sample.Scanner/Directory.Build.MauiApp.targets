@@ -32,21 +32,25 @@
     <!-- ==================== PLATFORM VERSIONS ==================== -->
     <!-- Set minimum platform versions -->
     <PropertyGroup>
-        <!-- iOS -->
-        <SupportedOSPlatformVersion Condition=" $(IsForIOS) And '$(SupportedOSPlatformVersion)' == '' ">15.0</SupportedOSPlatformVersion>
-        <TargetPlatformMinVersion Condition=" $(IsForIOS) And '$(TargetPlatformMinVersion)' == '' ">15.0</TargetPlatformMinVersion>
+        <!-- android -->
+        <TargetPlatformVersion Condition=" '$(IsForAndroid)' == 'true' ">36.1</TargetPlatformVersion>
+        <TargetPlatformMinVersion Condition=" '$(IsForAndroid)' == 'true' ">21.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForAndroid)' == 'true' ">21.0</SupportedOSPlatformVersion>
 
-        <!-- MacCatalyst -->
-        <SupportedOSPlatformVersion Condition=" $(IsForMacCatalyst) And '$(SupportedOSPlatformVersion)' == '' ">15.0</SupportedOSPlatformVersion>
-        <TargetPlatformMinVersion Condition=" $(IsForMacCatalyst) And '$(TargetPlatformMinVersion)' == '' ">15.0</TargetPlatformMinVersion>
+        <!-- ios -->
+        <TargetPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">26.0</TargetPlatformVersion>
+        <TargetPlatformMinVersion Condition=" '$(IsForIOS)' == 'true' ">15.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">15.0</SupportedOSPlatformVersion>
 
-        <!-- Android -->
-        <SupportedOSPlatformVersion Condition=" $(IsForAndroid) And '$(SupportedOSPlatformVersion)' == '' ">21.0</SupportedOSPlatformVersion>
-        <TargetPlatformMinVersion Condition=" $(IsForAndroid) And '$(TargetPlatformMinVersion)' == '' ">21.0</TargetPlatformMinVersion>
+        <!-- mac-catalyst -->
+        <TargetPlatformVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">26.0</TargetPlatformVersion>
+        <TargetPlatformMinVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">15.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">15.0</SupportedOSPlatformVersion>
 
-        <!-- Windows -->
-        <SupportedOSPlatformVersion Condition=" $(IsForWindows) And '$(SupportedOSPlatformVersion)' == '' ">10.0.26100.0</SupportedOSPlatformVersion>
-        <TargetPlatformMinVersion Condition=" $(IsForWindows) And '$(TargetPlatformMinVersion)' == '' ">10.0.26100.0</TargetPlatformMinVersion>
+        <!-- windows -->
+        <TargetPlatformVersion Condition=" '$(IsForWindows)' == 'true' ">10.0.22621.0</TargetPlatformVersion>
+        <TargetPlatformMinVersion Condition=" '$(IsForWindows)' == 'true' ">10.0.17763.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForWindows)' == 'true' ">10.0.17763.0</SupportedOSPlatformVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -54,18 +58,9 @@
         <PackageReference Include="Microsoft.Maui.Essentials" />
         <PackageReference Include="CommunityToolkit.Maui" />
         <PackageReference Include="CommunityToolkit.Mvvm" />
-        <PackageReference Include="NLog.Targets.MauiLog" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     </ItemGroup>
-
-
-    <!-- ==================== CONDITIONAL WINDOWS BUILD ==================== -->
-    <!-- For apps: Completely exclude Windows TFM when building on non-Windows hosts -->
-    <!-- For libraries: Use EnableWindowsTargeting to include TFM but skip actual build -->
-    <PropertyGroup>
-        <!-- Set flag to control Windows TFM inclusion -->
-        <IncludeWindowsPlatform Condition=" '$(IncludeWindowsPlatform)' == '' And $(IsHostMachineWindows) ">true</IncludeWindowsPlatform>
-        <IncludeWindowsPlatform Condition=" '$(IncludeWindowsPlatform)' == '' And !$(IsHostMachineWindows) ">false</IncludeWindowsPlatform>
-    </PropertyGroup>
 
     <!-- ==================== BUILD LOGGING ==================== -->
     <Target Name="PrintBuildInfo" BeforeTargets="CoreCompile">

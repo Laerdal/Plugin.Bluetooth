@@ -1,15 +1,15 @@
 namespace Bluetooth.Maui.Sample.Scanner;
 
 /// <summary>
-/// Main application class for the Bluetooth Scanner sample.
+///     Main application class for the Bluetooth Scanner sample.
 /// </summary>
 public partial class App : Application
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly BluetoothUnhandledExceptionListener _exceptionListener;
+    private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="App"/> class.
+    ///     Initializes a new instance of the <see cref="App" /> class.
     /// </summary>
     /// <param name="serviceProvider">The service provider for resolving dependencies.</param>
     public App(IServiceProvider serviceProvider)
@@ -22,7 +22,7 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Creates and configures the main application window.
+    ///     Creates and configures the main application window.
     /// </summary>
     /// <param name="activationState">The activation state for the window.</param>
     /// <returns>A configured window with the main navigation page.</returns>
@@ -34,25 +34,23 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Sets up global exception handlers for the application.
+    ///     Sets up global exception handlers for the application.
     /// </summary>
     /// <returns>The Bluetooth exception listener instance.</returns>
     private BluetoothUnhandledExceptionListener SetupExceptionHandlers()
     {
         // Setup Bluetooth exception listener
-        return new BluetoothUnhandledExceptionListener((sender, args) =>
-        {
+        return new BluetoothUnhandledExceptionListener((sender, args) => {
             OnBluetoothException(sender, args.Exception);
         });
     }
 
     /// <summary>
-    /// Handles Bluetooth exceptions globally.
+    ///     Handles Bluetooth exceptions globally.
     /// </summary>
     private void OnBluetoothException(object? sender, Exception exception)
     {
-        MainThread.BeginInvokeOnMainThread(async () =>
-        {
+        MainThread.BeginInvokeOnMainThread(async () => {
             var mainPage = Windows.FirstOrDefault()?.Page;
             if (mainPage != null)
             {

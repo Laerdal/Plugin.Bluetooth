@@ -2,15 +2,14 @@ using Bluetooth.Maui.Platforms.Windows.Exceptions;
 
 namespace Bluetooth.Maui.Platforms.Windows;
 
-
 /// <summary>
-/// Proxy class for Windows GATT session that provides event handling and lifecycle management
-/// for GATT session operations.
+///     Proxy class for Windows GATT session that provides event handling and lifecycle management
+///     for GATT session operations.
 /// </summary>
 public sealed partial class GattSessionWrapper : IDisposable
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="GattSessionWrapper"/> class.
+    ///     Initializes a new instance of the <see cref="GattSessionWrapper" /> class.
     /// </summary>
     /// <param name="gattSession">The native Windows GATT session instance.</param>
     /// <param name="gattSessionDelegate">The delegate for handling GATT session events.</param>
@@ -23,17 +22,17 @@ public sealed partial class GattSessionWrapper : IDisposable
     }
 
     /// <summary>
-    /// Gets the delegate responsible for handling GATT session events.
+    ///     Gets the delegate responsible for handling GATT session events.
     /// </summary>
     private IGattSessionDelegate GattSessionDelegate { get; }
 
     /// <summary>
-    /// Gets the native Windows GATT session instance.
+    ///     Gets the native Windows GATT session instance.
     /// </summary>
     public GattSession GattSession { get; }
 
     /// <summary>
-    /// Releases all resources used by the <see cref="GattSessionWrapper"/> instance.
+    ///     Releases all resources used by the <see cref="GattSessionWrapper" /> instance.
     /// </summary>
     public void Dispose()
     {
@@ -43,7 +42,7 @@ public sealed partial class GattSessionWrapper : IDisposable
     }
 
     /// <summary>
-    /// Handles maximum PDU size change events and forwards them to the delegate.
+    ///     Handles maximum PDU size change events and forwards them to the delegate.
     /// </summary>
     /// <param name="sender">The GATT session that changed PDU size.</param>
     /// <param name="args">The event arguments (not used).</param>
@@ -60,7 +59,7 @@ public sealed partial class GattSessionWrapper : IDisposable
     }
 
     /// <summary>
-    /// Handles session status change events and forwards them to the delegate.
+    ///     Handles session status change events and forwards them to the delegate.
     /// </summary>
     /// <param name="sender">The GATT session that changed status.</param>
     /// <param name="args">The session status change event arguments.</param>
@@ -77,13 +76,13 @@ public sealed partial class GattSessionWrapper : IDisposable
     }
 
     /// <summary>
-    /// Creates a new <see cref="GattSessionWrapper"/> instance for the specified Bluetooth LE device.
+    ///     Creates a new <see cref="GattSessionWrapper" /> instance for the specified Bluetooth LE device.
     /// </summary>
     /// <param name="bluetoothLeDevice">The Bluetooth LE device to create a GATT session for.</param>
     /// <param name="gattSessionDelegate">The delegate for handling GATT session events.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the GATT session proxy instance.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="bluetoothLeDevice"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="bluetoothLeDevice" /> is null.</exception>
     /// <exception cref="WindowsNativeBluetoothException">Thrown when the GATT session cannot be created.</exception>
     public async static Task<GattSessionWrapper> GetInstanceAsync(BluetoothLEDevice bluetoothLeDevice, IGattSessionDelegate gattSessionDelegate, CancellationToken cancellationToken = default)
     {
@@ -99,4 +98,3 @@ public sealed partial class GattSessionWrapper : IDisposable
         return new GattSessionWrapper(nativeGattSession, gattSessionDelegate);
     }
 }
-

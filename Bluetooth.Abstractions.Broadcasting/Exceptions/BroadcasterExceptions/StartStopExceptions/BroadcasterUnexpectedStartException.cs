@@ -7,9 +7,8 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 /// <seealso cref="BroadcasterException" />
 public class BroadcasterUnexpectedStartException : BroadcasterException
 {
-
     /// <summary>
-    ///     Initializes a new instance of the <see cref="BroadcasterUnexpectedStartException"/> class.
+    ///     Initializes a new instance of the <see cref="BroadcasterUnexpectedStartException" /> class.
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

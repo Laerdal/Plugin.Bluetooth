@@ -1,12 +1,12 @@
 namespace Bluetooth.Maui.Platforms.Droid.Permissions;
 
 /// <summary>
-/// Base class for Android-specific permission handling.
+///     Base class for Android-specific permission handling.
 /// </summary>
 public abstract class BaseAndroidPermissionHandler : Microsoft.Maui.ApplicationModel.Permissions.BasePlatformPermission
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseAndroidPermissionHandler"/> class.
+    ///     Initializes a new instance of the <see cref="BaseAndroidPermissionHandler" /> class.
     /// </summary>
     /// <param name="permissionName">The Android permission name.</param>
     /// <param name="permissionIsRuntime">Indicates whether the permission is a runtime permission.</param>
@@ -23,7 +23,7 @@ public abstract class BaseAndroidPermissionHandler : Microsoft.Maui.ApplicationM
     public override (string androidPermission, bool isRuntime)[] RequiredPermissions => [(PermissionName, PermissionIsRuntime)];
 
     /// <summary>
-    /// Requests the permission if needed asynchronously.
+    ///     Requests the permission if needed asynchronously.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     /// <exception cref="PermissionException"></exception>

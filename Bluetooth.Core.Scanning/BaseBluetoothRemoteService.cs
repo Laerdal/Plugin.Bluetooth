@@ -4,20 +4,12 @@ namespace Bluetooth.Core.Scanning;
 public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, IBluetoothRemoteService
 {
     /// <summary>
-    /// The logger instance used for logging service operations.
+    ///     The logger instance used for logging service operations.
     /// </summary>
     private readonly ILogger<IBluetoothRemoteService> _logger;
 
-    /// <inheritdoc/>
-    public IBluetoothRemoteDevice Device { get; }
-
     /// <summary>
-    /// The factory responsible for creating characteristics associated with this service.
-    /// </summary>
-    protected IBluetoothCharacteristicFactory CharacteristicFactory { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothRemoteService"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteService" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with this service.</param>
     /// <param name="request">The factory request containing service information.</param>
@@ -38,15 +30,29 @@ public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, I
         Id = request.ServiceId;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///     The factory responsible for creating characteristics associated with this service.
+    /// </summary>
+    protected IBluetoothCharacteristicFactory CharacteristicFactory { get; }
+
+    /// <inheritdoc />
+    public IBluetoothRemoteDevice Device { get; }
+
+    /// <inheritdoc />
     public Guid Id { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string Name { get; } = "Unknown Service";
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+    }
 
 
     /// <summary>
-    /// Performs the core disposal logic for the service, including canceling pending operations and cleaning up resources.
+    ///     Performs the core disposal logic for the service, including canceling pending operations and cleaning up resources.
     /// </summary>
     /// <returns>A task that represents the asynchronous disposal operation.</returns>
     protected async virtual ValueTask DisposeAsyncCore()
@@ -65,13 +71,7 @@ public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, I
         await ClearCharacteristicsAsync().ConfigureAwait(false);
     }
 
-    /// <inheritdoc/>
-    public async ValueTask DisposeAsync()
-    {
-        await DisposeAsyncCore().ConfigureAwait(false);
-    }
-    
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override string ToString()
     {
         return $"[{Id}] {Name}";

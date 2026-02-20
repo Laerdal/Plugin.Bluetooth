@@ -1,25 +1,45 @@
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
 /// <summary>
-/// Proxy class for CoreBluetooth central manager delegate callbacks.
-/// https://developer.apple.com/documentation/corebluetooth/cbcentralmanagerdelegate
+///     Proxy class for CoreBluetooth central manager delegate callbacks.
+///     https://developer.apple.com/documentation/corebluetooth/cbcentralmanagerdelegate
 /// </summary>
 public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
 {
-    private CBCentralManager? _cbCentralManager;
-
-    private readonly CBCentralInitOptions _options;
+    private readonly ICbCentralManagerDelegate _cbCentralManagerDelegate;
 
     private readonly IDispatchQueueProvider _dispatchQueueProvider;
 
-    private readonly CbCentralManagerWrapper.ICbCentralManagerDelegate _cbCentralManagerDelegate;
+    private readonly CBCentralInitOptions _options;
 
     private readonly ITicker _ticker;
+    private CBCentralManager? _cbCentralManager;
 
     private IDisposable? _refreshSubscription;
 
     /// <summary>
-    /// The underlying CBCentralManager instance.
+    ///     Initializes a new instance of the CbCentralManagerWrapper class.
+    /// </summary>
+    /// <param name="cbCentralManagerDelegate"></param>
+    /// <param name="options">The initialization options for the central manager.</param>
+    /// <param name="dispatchQueueProvider">The provider for dispatch queues.</param>
+    /// <param name="ticker">The ticker for scheduling tasks.</param>
+    public CbCentralManagerWrapper(ICbCentralManagerDelegate cbCentralManagerDelegate, IOptions<CBCentralInitOptions> options, IDispatchQueueProvider dispatchQueueProvider, ITicker ticker)
+    {
+        ArgumentNullException.ThrowIfNull(cbCentralManagerDelegate);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(options.Value);
+        ArgumentNullException.ThrowIfNull(dispatchQueueProvider);
+        ArgumentNullException.ThrowIfNull(ticker);
+
+        _cbCentralManagerDelegate = cbCentralManagerDelegate;
+        _options = options.Value;
+        _dispatchQueueProvider = dispatchQueueProvider;
+        _ticker = ticker;
+    }
+
+    /// <summary>
+    ///     The underlying CBCentralManager instance.
     /// </summary>
     public CBCentralManager CbCentralManager
     {
@@ -33,30 +53,15 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
                 };
                 _refreshSubscription = _ticker.Register("refresh_central_manager_properties", TimeSpan.FromSeconds(1), RefreshIsScanning, true);
             }
+
             return _cbCentralManager;
         }
     }
 
     /// <summary>
-    /// Initializes a new instance of the CbCentralManagerWrapper class.
+    ///     Gets or sets a value indicating whether the central manager is currently scanning for peripherals.
     /// </summary>
-    /// <param name="cbCentralManagerDelegate"></param>
-    /// <param name="options">The initialization options for the central manager.</param>
-    /// <param name="dispatchQueueProvider">The provider for dispatch queues.</param>
-    /// <param name="ticker">The ticker for scheduling tasks.</param>
-    public CbCentralManagerWrapper(CbCentralManagerWrapper.ICbCentralManagerDelegate cbCentralManagerDelegate, IOptions<CBCentralInitOptions> options, IDispatchQueueProvider dispatchQueueProvider, ITicker ticker)
-    {
-        ArgumentNullException.ThrowIfNull(cbCentralManagerDelegate);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(options.Value);
-        ArgumentNullException.ThrowIfNull(dispatchQueueProvider);
-        ArgumentNullException.ThrowIfNull(ticker);
-
-        _cbCentralManagerDelegate = cbCentralManagerDelegate;
-        _options = options.Value;
-        _dispatchQueueProvider = dispatchQueueProvider;
-        _ticker = ticker;
-    }
+    private bool CbCentralManagerIsScanning { get; set; }
 
     private void RefreshIsScanning()
     {
@@ -75,12 +80,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether the central manager is currently scanning for peripherals.
-    /// </summary>
-    private bool CbCentralManagerIsScanning { get; set; }
-
-    /// <summary>
-    /// Releases the unmanaged resources used by the CbCentralManagerWrapper and optionally releases the managed resources.
+    ///     Releases the unmanaged resources used by the CbCentralManagerWrapper and optionally releases the managed resources.
     /// </summary>
     /// <param name="disposing">True to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
     protected override void Dispose(bool disposing)
@@ -91,6 +91,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
             _cbCentralManager?.StopScan();
             _cbCentralManager?.Dispose();
         }
+
         base.Dispose(disposing);
     }
 
@@ -287,5 +288,4 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
     }
 
     #endregion
-
 }

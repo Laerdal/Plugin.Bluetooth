@@ -1,29 +1,21 @@
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
+using DescriptorNotFoundException = Bluetooth.Abstractions.Scanning.Exceptions.DescriptorNotFoundException;
+using MultipleDescriptorsFoundException = Bluetooth.Abstractions.Scanning.Exceptions.MultipleDescriptorsFoundException;
+
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
 /// <inheritdoc cref="BaseBluetoothRemoteCharacteristic" />
-public class AppleBluetoothRemoteCharacteristic : Core.Scanning.BaseBluetoothRemoteCharacteristic, CbPeripheralWrapper.ICbCharacteristicDelegate
+public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteristic, CbPeripheralWrapper.ICbCharacteristicDelegate
 {
-
     /// <summary>
-    /// Gets the native iOS Core Bluetooth characteristic.
-    /// </summary>
-    public CBCharacteristic CbCharacteristic { get; }
-
-    /// <summary>
-    /// Gets the Bluetooth service to which this characteristic belongs, cast to the Apple-specific implementation.
-    /// </summary>
-    public AppleBluetoothRemoteService AppleBluetoothRemoteService => (AppleBluetoothRemoteService) RemoteService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AppleBluetoothRemoteCharacteristic"/> class with the specified service, factory request, and descriptor factory.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteCharacteristic" /> class with the specified service, factory request, and descriptor factory.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service to which this characteristic belongs.</param>
     /// <param name="request">The factory request containing the information needed to create this characteristic.</param>
     /// <param name="descriptorFactory">The factory used to create descriptors for this characteristic.</param>
-    public AppleBluetoothRemoteCharacteristic(Abstractions.Scanning.IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request, IBluetoothDescriptorFactory descriptorFactory) :
+    public AppleBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request, IBluetoothDescriptorFactory descriptorFactory) :
         base(remoteService, request, descriptorFactory)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -31,8 +23,19 @@ public class AppleBluetoothRemoteCharacteristic : Core.Scanning.BaseBluetoothRem
         {
             throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothCharacteristicFactoryRequest)}, but got {request.GetType()}");
         }
+
         CbCharacteristic = appleRequest.CbCharacteristic;
     }
+
+    /// <summary>
+    ///     Gets the native iOS Core Bluetooth characteristic.
+    /// </summary>
+    public CBCharacteristic CbCharacteristic { get; }
+
+    /// <summary>
+    ///     Gets the Bluetooth service to which this characteristic belongs, cast to the Apple-specific implementation.
+    /// </summary>
+    public AppleBluetoothRemoteService AppleBluetoothRemoteService => (AppleBluetoothRemoteService) RemoteService;
 
     #region Read
 
@@ -72,10 +75,8 @@ public class AppleBluetoothRemoteCharacteristic : Core.Scanning.BaseBluetoothRem
     protected override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
         AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.WriteValue(value.ToNSData(),
-                                                                                               CbCharacteristic,
-                                                                                               CbCharacteristic.Properties.HasFlag(CBCharacteristicProperties.WriteWithoutResponse) ?
-                                                                                                   CBCharacteristicWriteType.WithoutResponse :
-                                                                                                   CBCharacteristicWriteType.WithResponse);
+            CbCharacteristic,
+            CbCharacteristic.Properties.HasFlag(CBCharacteristicProperties.WriteWithoutResponse) ? CBCharacteristicWriteType.WithoutResponse : CBCharacteristicWriteType.WithResponse);
         return ValueTask.CompletedTask;
     }
 
@@ -100,11 +101,11 @@ public class AppleBluetoothRemoteCharacteristic : Core.Scanning.BaseBluetoothRem
     }
 
     /// <summary>
-    /// Gets the iOS-specific write capability string representation for the characteristic.
+    ///     Gets the iOS-specific write capability string representation for the characteristic.
     /// </summary>
     /// <returns>
-    /// Returns "WNR" for write without response, "WS" for authenticated signed writes, "W" for standard write,
-    /// or an empty string if no write operations are supported.
+    ///     Returns "WNR" for write without response, "WS" for authenticated signed writes, "W" for standard write,
+    ///     or an empty string if no write operations are supported.
     /// </returns>
     protected override string ToWriteString()
     {
@@ -125,6 +126,7 @@ public class AppleBluetoothRemoteCharacteristic : Core.Scanning.BaseBluetoothRem
 
         return string.Empty;
     }
+
     #endregion
 
     #region Listen
@@ -209,9 +211,10 @@ public class AppleBluetoothRemoteCharacteristic : Core.Scanning.BaseBluetoothRem
         {
             OnDescriptorsExplorationFailed(e);
         }
+
         return;
 
-        Abstractions.Scanning.IBluetoothRemoteDescriptor FromInputTypeToOutputTypeConversion(CBDescriptor native)
+        IBluetoothRemoteDescriptor FromInputTypeToOutputTypeConversion(CBDescriptor native)
         {
             var request = new AppleBluetoothDescriptorFactoryRequest(native);
             return DescriptorFactory.CreateDescriptor(this, request);
@@ -225,21 +228,19 @@ public class AppleBluetoothRemoteCharacteristic : Core.Scanning.BaseBluetoothRem
         try
         {
             var match = GetDescriptorOrDefault(descriptor => AreRepresentingTheSameObject(native, descriptor));
-            return match as CbPeripheralWrapper.ICbDescriptorDelegate ?? throw new Abstractions.Scanning.Exceptions.DescriptorNotFoundException(this, native.UUID.ToGuid());
+            return match as CbPeripheralWrapper.ICbDescriptorDelegate ?? throw new DescriptorNotFoundException(this, native.UUID.ToGuid());
         }
         catch (InvalidOperationException e)
         {
             var matches = GetDescriptors(descriptor => AreRepresentingTheSameObject(native, descriptor)).ToArray();
-            throw new Abstractions.Scanning.Exceptions.MultipleDescriptorsFoundException(this, matches, e);
+            throw new MultipleDescriptorsFoundException(this, matches, e);
         }
     }
 
-    private static bool AreRepresentingTheSameObject(CBDescriptor native, Abstractions.Scanning.IBluetoothRemoteDescriptor shared)
+    private static bool AreRepresentingTheSameObject(CBDescriptor native, IBluetoothRemoteDescriptor shared)
     {
         return shared is AppleBluetoothRemoteDescriptor s && native.UUID.Equals(s.CbDescriptor.UUID) && native.Handle.Handle.Equals(s.CbDescriptor.Handle.Handle);
     }
 
-
     #endregion
-
 }

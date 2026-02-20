@@ -1,24 +1,24 @@
 namespace Bluetooth.Abstractions.Scanning;
 
 /// <summary>
-/// Interface representing a Bluetooth characteristic, providing properties and methods for interacting with it.
+///     Interface representing a Bluetooth characteristic, providing properties and methods for interacting with it.
 /// </summary>
 public partial interface IBluetoothRemoteCharacteristic
 {
     #region Listen
 
     /// <summary>
-    /// Gets a value indicating whether the characteristic supports notifications.
+    ///     Gets a value indicating whether the characteristic supports notifications.
     /// </summary>
     bool CanListen { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the characteristic is currently listening for notifications.
+    ///     Gets a value indicating whether the characteristic is currently listening for notifications.
     /// </summary>
     bool IsListening { get; }
 
     /// <summary>
-    /// Starts listening for notifications from the characteristic asynchronously.
+    ///     Starts listening for notifications from the characteristic asynchronously.
     /// </summary>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
@@ -32,7 +32,7 @@ public partial interface IBluetoothRemoteCharacteristic
     ValueTask StartListeningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Stops listening for notifications from the characteristic asynchronously.
+    ///     Stops listening for notifications from the characteristic asynchronously.
     /// </summary>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>

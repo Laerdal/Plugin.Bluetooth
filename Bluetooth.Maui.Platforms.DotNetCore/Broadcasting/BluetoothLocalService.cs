@@ -1,10 +1,9 @@
 namespace Bluetooth.Maui.Platforms.DotNetCore.Broadcasting;
 
-/// <inheritdoc/>
-public class BluetoothLocalService : Core.Broadcasting.BaseBluetoothLocalService
+/// <inheritdoc />
+public class BluetoothLocalService : BaseBluetoothLocalService
 {
-
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     public BluetoothLocalService(IBluetoothBroadcaster broadcaster,
         IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec request,

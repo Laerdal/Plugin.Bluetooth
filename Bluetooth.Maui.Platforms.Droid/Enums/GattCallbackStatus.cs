@@ -1,4 +1,5 @@
 // ReSharper disable InconsistentNaming
+
 #pragma warning disable CA1707 // Identifiers should not contain underscores
 namespace Bluetooth.Maui.Platforms.Droid.Enums;
 
@@ -82,7 +83,7 @@ public enum GattCallbackStatus
 
     GATT_PROCEDURE_IN_PROGRESS = 0xFE,
 
-    GATT_VALUE_OUT_OF_RANGE = 0xFF,
+    GATT_VALUE_OUT_OF_RANGE = 0xFF
 }
 
 #pragma warning restore CA1707 // Identifiers should not contain underscores

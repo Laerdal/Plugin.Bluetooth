@@ -1,3 +1,5 @@
+using Android;
+
 namespace Bluetooth.Maui.Platforms.Droid.Permissions;
 
-public class AndroidPermissionForAccessFineLocation() : BaseAndroidPermissionHandler(Android.Manifest.Permission.AccessFineLocation, true);
+public class AndroidPermissionForAccessFineLocation() : BaseAndroidPermissionHandler(Manifest.Permission.AccessFineLocation, true);

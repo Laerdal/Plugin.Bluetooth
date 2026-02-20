@@ -6,7 +6,7 @@ namespace Bluetooth.Abstractions.Scanning.EventArgs;
 public class ValueUpdatedEventArgs : System.EventArgs
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ValueUpdatedEventArgs"/> class.
+    ///     Initializes a new instance of the <see cref="ValueUpdatedEventArgs" /> class.
     /// </summary>
     /// <param name="newValue">The new value of the characteristic.</param>
     /// <param name="oldValue">The old value of the characteristic.</param>
@@ -25,5 +25,4 @@ public class ValueUpdatedEventArgs : System.EventArgs
     ///     Gets the old value as a read-only memory segment.
     /// </summary>
     public ReadOnlyMemory<byte> OldValue { get; }
-
 }

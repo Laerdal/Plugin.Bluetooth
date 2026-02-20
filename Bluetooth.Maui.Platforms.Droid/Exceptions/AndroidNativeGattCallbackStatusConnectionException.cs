@@ -3,22 +3,17 @@ using Bluetooth.Maui.Platforms.Droid.Enums;
 namespace Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 /// <summary>
-/// Represents an exception that occurs when Android GATT connection callback operations return a non-success status.
+///     Represents an exception that occurs when Android GATT connection callback operations return a non-success status.
 /// </summary>
 /// <remarks>
-/// This exception wraps Android's GattCallbackStatusConnection enum values to provide detailed
-/// information about why GATT connection callback operations failed.
+///     This exception wraps Android's GattCallbackStatusConnection enum values to provide detailed
+///     information about why GATT connection callback operations failed.
 /// </remarks>
 /// <seealso cref="AndroidNativeBluetoothException" />
 public class AndroidNativeGattCallbackStatusConnectionException : AndroidNativeBluetoothException
 {
     /// <summary>
-    /// Gets the specific GattCallbackStatusConnection that caused this exception.
-    /// </summary>
-    public GattCallbackStatusConnection GattCallbackStatusConnection { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusConnectionException"/> class with the specified GattCallbackStatusConnection and inner exception.
+    ///     Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusConnectionException" /> class with the specified GattCallbackStatusConnection and inner exception.
     /// </summary>
     /// <param name="status">The GattCallbackStatusConnection that caused this exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception.</param>
@@ -28,7 +23,12 @@ public class AndroidNativeGattCallbackStatusConnectionException : AndroidNativeB
     }
 
     /// <summary>
-    /// Throws an <see cref="AndroidNativeGattCallbackStatusConnectionException"/> if the status is not GATT_SUCCESS.
+    ///     Gets the specific GattCallbackStatusConnection that caused this exception.
+    /// </summary>
+    public GattCallbackStatusConnection GattCallbackStatusConnection { get; }
+
+    /// <summary>
+    ///     Throws an <see cref="AndroidNativeGattCallbackStatusConnectionException" /> if the status is not GATT_SUCCESS.
     /// </summary>
     /// <param name="status">The status to check.</param>
     /// <exception cref="AndroidNativeGattCallbackStatusConnectionException">Thrown when the status is not GATT_SUCCESS.</exception>
@@ -58,5 +58,4 @@ public class AndroidNativeGattCallbackStatusConnectionException : AndroidNativeB
             _ => "Unknown GATT connection status code."
         };
     }
-
 }

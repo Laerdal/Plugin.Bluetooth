@@ -1,13 +1,10 @@
 namespace Bluetooth.Core.Scanning;
 
 /// <inheritdoc cref="IBluetoothPairingManager" />
-public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, IBluetoothPairingManager
+public abstract class BaseBluetoothPairingManager : BaseBindableObject, IBluetoothPairingManager
 {
-    /// <inheritdoc />
-    public IBluetoothAdapter Adapter { get; }
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothPairingManager"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothPairingManager" /> class.
     /// </summary>
     /// <param name="adapter">The Bluetooth adapter associated with this pairing manager.</param>
     /// <param name="logger">The logger instance to use for logging.</param>
@@ -18,33 +15,47 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
     }
 
     /// <inheritdoc />
+    public IBluetoothAdapter Adapter { get; }
+
+    /// <inheritdoc />
     public event EventHandler<PairingStateChangedEventArgs>? PairingStateChanged;
+
+    /// <summary>
+    ///     Raises the <see cref="PairingStateChanged" /> event.
+    /// </summary>
+    /// <param name="device">The device whose pairing state changed.</param>
+    /// <param name="isPaired">Indicates whether the device is now paired.</param>
+    protected virtual void OnPairingStateChanged(IBluetoothRemoteDevice device, bool isPaired)
+    {
+        var args = new PairingStateChangedEventArgs(device, isPaired);
+        PairingStateChanged?.Invoke(this, args);
+    }
 
     #region Paired Devices List
 
     private readonly static Func<IBluetoothRemoteDevice, bool> _defaultAcceptAllFilter = _ => true;
 
     /// <summary>
-    /// Event raised when the list of paired devices changes.
+    ///     Event raised when the list of paired devices changes.
     /// </summary>
     public event EventHandler<DeviceListChangedEventArgs>? PairedDeviceListChanged;
 
     /// <summary>
-    /// Event raised when devices are added to the paired devices list.
+    ///     Event raised when devices are added to the paired devices list.
     /// </summary>
     public event EventHandler<DevicesAddedEventArgs>? PairedDevicesAdded;
 
     /// <summary>
-    /// Event raised when devices are removed from the paired devices list.
+    ///     Event raised when devices are removed from the paired devices list.
     /// </summary>
     public event EventHandler<DevicesRemovedEventArgs>? PairedDevicesRemoved;
 
     /// <summary>
-    /// Gets the collection of paired Bluetooth devices.
+    ///     Gets the collection of paired Bluetooth devices.
     /// </summary>
     /// <remarks>
-    /// This collection is automatically maintained and synchronized with the platform's paired device state.
-    /// Use the protected methods to add/remove devices from this collection.
+    ///     This collection is automatically maintained and synchronized with the platform's paired device state.
+    ///     Use the protected methods to add/remove devices from this collection.
     /// </remarks>
     private ObservableCollection<IBluetoothRemoteDevice> PairedDevices
     {
@@ -61,7 +72,7 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
     }
 
     /// <summary>
-    /// Handles collection change notifications for the <see cref="PairedDevices"/> collection.
+    ///     Handles collection change notifications for the <see cref="PairedDevices" /> collection.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="ea">Event arguments containing the collection change details.</param>
@@ -72,10 +83,12 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
         {
             PairedDevicesAdded?.Invoke(this, new DevicesAddedEventArgs(listChangedEventArgs.AddedItems));
         }
+
         if (listChangedEventArgs.RemovedItems != null)
         {
             PairedDevicesRemoved?.Invoke(this, new DevicesRemovedEventArgs(listChangedEventArgs.RemovedItems));
         }
+
         PairedDeviceListChanged?.Invoke(this, listChangedEventArgs);
     }
 
@@ -208,21 +221,10 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
 
     #endregion
 
-    /// <summary>
-    /// Raises the <see cref="PairingStateChanged"/> event.
-    /// </summary>
-    /// <param name="device">The device whose pairing state changed.</param>
-    /// <param name="isPaired">Indicates whether the device is now paired.</param>
-    protected virtual void OnPairingStateChanged(IBluetoothRemoteDevice device, bool isPaired)
-    {
-        var args = new PairingStateChangedEventArgs(device, isPaired);
-        PairingStateChanged?.Invoke(this, args);
-    }
-
     #region Pairing - Pair
 
     /// <summary>
-    /// Gets a value indicating whether a pairing operation is currently in progress.
+    ///     Gets a value indicating whether a pairing operation is currently in progress.
     /// </summary>
     public bool IsPairing
     {
@@ -231,12 +233,12 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
     }
 
     /// <summary>
-    /// Event raised when a pairing operation starts.
+    ///     Event raised when a pairing operation starts.
     /// </summary>
     public event EventHandler? Pairing;
 
     /// <summary>
-    /// Event raised when a pairing operation completes successfully.
+    ///     Event raised when a pairing operation completes successfully.
     /// </summary>
     public event EventHandler? Paired;
 
@@ -247,7 +249,7 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
     }
 
     /// <summary>
-    /// Called when a pairing attempt succeeds. Completes the pairing task with success result.
+    ///     Called when a pairing attempt succeeds. Completes the pairing task with success result.
     /// </summary>
     /// <param name="device">The device that was successfully paired.</param>
     protected void OnPairSucceeded(IBluetoothRemoteDevice device)
@@ -266,7 +268,7 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
     }
 
     /// <summary>
-    /// Called when a pairing attempt fails. Completes the pairing task with an exception.
+    ///     Called when a pairing attempt fails. Completes the pairing task with an exception.
     /// </summary>
     /// <param name="e">The exception that occurred during the pairing attempt.</param>
     protected void OnPairFailed(Exception e)
@@ -320,7 +322,7 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
     }
 
     /// <summary>
-    /// Platform-specific implementation to initiate a pairing operation with the device.
+    ///     Platform-specific implementation to initiate a pairing operation with the device.
     /// </summary>
     /// <param name="device">The device to pair with.</param>
     /// <param name="timeout">Optional timeout for the operation.</param>
@@ -332,7 +334,7 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
     #region Pairing - Unpair
 
     /// <summary>
-    /// Gets a value indicating whether an unpairing operation is currently in progress.
+    ///     Gets a value indicating whether an unpairing operation is currently in progress.
     /// </summary>
     public bool IsUnpairing
     {
@@ -341,12 +343,12 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
     }
 
     /// <summary>
-    /// Event raised when an unpairing operation starts.
+    ///     Event raised when an unpairing operation starts.
     /// </summary>
     public event EventHandler? Unpairing;
 
     /// <summary>
-    /// Event raised when an unpairing operation completes successfully.
+    ///     Event raised when an unpairing operation completes successfully.
     /// </summary>
     public event EventHandler? Unpaired;
 
@@ -357,7 +359,7 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
     }
 
     /// <summary>
-    /// Called when an unpairing attempt succeeds. Completes the unpairing task.
+    ///     Called when an unpairing attempt succeeds. Completes the unpairing task.
     /// </summary>
     /// <param name="device">The device that was successfully unpaired.</param>
     protected void OnUnpairSucceeded(IBluetoothRemoteDevice device)
@@ -376,7 +378,7 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
     }
 
     /// <summary>
-    /// Called when an unpairing attempt fails. Completes the unpairing task with an exception.
+    ///     Called when an unpairing attempt fails. Completes the unpairing task with an exception.
     /// </summary>
     /// <param name="e">The exception that occurred during the unpairing attempt.</param>
     protected void OnUnpairFailed(Exception e)
@@ -431,7 +433,7 @@ public abstract partial class BaseBluetoothPairingManager : BaseBindableObject, 
     }
 
     /// <summary>
-    /// Platform-specific implementation to initiate an unpairing operation with the device.
+    ///     Platform-specific implementation to initiate an unpairing operation with the device.
     /// </summary>
     /// <param name="device">The device to unpair.</param>
     /// <param name="timeout">Optional timeout for the operation.</param>

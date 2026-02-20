@@ -1,33 +1,33 @@
 namespace Bluetooth.Maui.Platforms.Windows.Exceptions;
 
 /// <summary>
-/// Represents an exception that occurs when Windows device access status is not allowed.
+///     Represents an exception that occurs when Windows device access status is not allowed.
 /// </summary>
 /// <remarks>
-/// This exception wraps Windows' DeviceAccessStatus enum values to provide detailed
-/// information about why device access operations failed.
+///     This exception wraps Windows' DeviceAccessStatus enum values to provide detailed
+///     information about why device access operations failed.
 /// </remarks>
 /// <seealso cref="WindowsNativeBluetoothException" />
 public class WindowsNativeDeviceAccessStatusException : WindowsNativeBluetoothException
 {
     /// <summary>
-    /// Gets the specific DeviceAccessStatus that caused this exception.
-    /// </summary>
-    public DeviceAccessStatus DeviceAccessStatus { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="WindowsNativeDeviceAccessStatusException"/> class with the specified DeviceAccessStatus and inner exception.
+    ///     Initializes a new instance of the <see cref="WindowsNativeDeviceAccessStatusException" /> class with the specified DeviceAccessStatus and inner exception.
     /// </summary>
     /// <param name="status">The DeviceAccessStatus that caused this exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception.</param>
     public WindowsNativeDeviceAccessStatusException(DeviceAccessStatus status, Exception? innerException = null)
-        : base($"{DeviceAccessStatusToDescription(status)} : {status} ({(int)status})", innerException)
+        : base($"{DeviceAccessStatusToDescription(status)} : {status} ({(int) status})", innerException)
     {
         DeviceAccessStatus = status;
     }
 
     /// <summary>
-    /// Throws a <see cref="WindowsNativeDeviceAccessStatusException"/> if the status is not Allowed.
+    ///     Gets the specific DeviceAccessStatus that caused this exception.
+    /// </summary>
+    public DeviceAccessStatus DeviceAccessStatus { get; }
+
+    /// <summary>
+    ///     Throws a <see cref="WindowsNativeDeviceAccessStatusException" /> if the status is not Allowed.
     /// </summary>
     /// <param name="status">The status to check.</param>
     /// <exception cref="WindowsNativeDeviceAccessStatusException">Thrown when the status is not Allowed.</exception>
@@ -41,7 +41,7 @@ public class WindowsNativeDeviceAccessStatusException : WindowsNativeBluetoothEx
 
     private static string DeviceAccessStatusToDescription(DeviceAccessStatus deviceAccessStatus)
     {
-        var statusCodeValue = (int)deviceAccessStatus;
+        var statusCodeValue = (int) deviceAccessStatus;
         return statusCodeValue switch
         {
             0 => "The device access is not specified.",
@@ -52,4 +52,3 @@ public class WindowsNativeDeviceAccessStatusException : WindowsNativeBluetoothEx
         };
     }
 }
-

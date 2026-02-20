@@ -2,21 +2,21 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteCharacteristic
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ReadOnlySpan<byte> ValueSpan => Value.Span;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ReadOnlyMemory<byte> Value
     {
         get => GetValue<ReadOnlyMemory<byte>>(default);
         private set => SetValue(value);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<ValueUpdatedEventArgs>? ValueUpdated;
 
     /// <summary>
-    /// Waits for the characteristic's value to change and optionally applies a filter to the new value.
+    ///     Waits for the characteristic's value to change and optionally applies a filter to the new value.
     /// </summary>
     /// <param name="valueFilter">Optional filter to apply to the new value. If null, any value change will trigger completion.</param>
     /// <param name="timeout">Optional timeout for the operation.</param>
@@ -30,7 +30,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
 
         ValueUpdated += EventCallback;
 
-        return await tcs.Task.WaitBetterAsync(timeout, cancellationToken: cancellationToken).ConfigureAwait(false);
+        return await tcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
 
         void EventCallback(object? sender, ValueUpdatedEventArgs valueUpdatedEventArgs)
         {
@@ -43,5 +43,4 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
             tcs.TrySetResult(valueUpdatedEventArgs.NewValue);
         }
     }
-
 }

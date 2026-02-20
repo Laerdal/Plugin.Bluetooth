@@ -1,9 +1,9 @@
 namespace Bluetooth.Maui.Platforms.Droid.Permissions;
 
-/// <inheritdoc/>
+/// <inheritdoc />
 public class BluetoothPermissionManager : IBluetoothPermissionManager
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> HasBluetoothPermissionsAsync()
     {
         try
@@ -12,18 +12,18 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
             if (OperatingSystem.IsAndroidVersionAtLeast(31))
             {
                 var status = await BluetoothPermissions.BluetoothConnectPermission.CheckStatusAsync().ConfigureAwait(false);
-                return status == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+                return status == PermissionStatus.Granted;
             }
 
             // For older versions, need location permissions
             if (OperatingSystem.IsAndroidVersionAtLeast(29))
             {
                 var status = await BluetoothPermissions.FineLocationPermission.CheckStatusAsync().ConfigureAwait(false);
-                return status == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+                return status == PermissionStatus.Granted;
             }
 
             var coarseStatus = await BluetoothPermissions.CoarseLocationPermission.CheckStatusAsync().ConfigureAwait(false);
-            return coarseStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+            return coarseStatus == PermissionStatus.Granted;
         }
         catch
         {
@@ -31,7 +31,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> HasScannerPermissionsAsync()
     {
         try
@@ -43,20 +43,20 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
             {
                 var scanStatus = await BluetoothPermissions.BluetoothScanPermission.CheckStatusAsync().ConfigureAwait(false);
                 var connectStatus = await BluetoothPermissions.BluetoothConnectPermission.CheckStatusAsync().ConfigureAwait(false);
-                return scanStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted &&
-                       connectStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+                return scanStatus == PermissionStatus.Granted &&
+                       connectStatus == PermissionStatus.Granted;
             }
 
             // For API 29-30 (Android 10-11), need FINE_LOCATION
             if (OperatingSystem.IsAndroidVersionAtLeast(29))
             {
                 var status = await BluetoothPermissions.FineLocationPermission.CheckStatusAsync().ConfigureAwait(false);
-                return status == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+                return status == PermissionStatus.Granted;
             }
 
             // For older versions, COARSE_LOCATION is sufficient
             var coarseStatus = await BluetoothPermissions.CoarseLocationPermission.CheckStatusAsync().ConfigureAwait(false);
-            return coarseStatus == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+            return coarseStatus == PermissionStatus.Granted;
         }
         catch
         {
@@ -64,7 +64,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> HasBroadcasterPermissionsAsync()
     {
         try
@@ -75,7 +75,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
             if (OperatingSystem.IsAndroidVersionAtLeast(31))
             {
                 var status = await BluetoothPermissions.BluetoothAdvertisePermission.CheckStatusAsync().ConfigureAwait(false);
-                return status == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+                return status == PermissionStatus.Granted;
             }
 
             // For older versions, advertising doesn't need special permissions beyond basic Bluetooth
@@ -87,7 +87,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> RequestBluetoothPermissionsAsync()
     {
         try
@@ -117,7 +117,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> RequestScannerPermissionsAsync()
     {
         try
@@ -145,6 +145,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
                 {
                     // Background location is optional, continue without it
                 }
+
                 return true;
             }
 
@@ -158,7 +159,7 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask<bool> RequestBroadcasterPermissionsAsync()
     {
         try

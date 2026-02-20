@@ -1,5 +1,6 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <?xaml-comp compile="true" ?>
+
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
@@ -67,7 +68,7 @@
     <Color x:Key="LightTextDisabled">#BDBDBD</Color>
     <Color x:Key="LightIcon">#616161</Color>
     <Color x:Key="LightIconSecondary">#9E9E9E</Color>
-    
+
     <!-- Dark Theme Semantic Colors -->
     <Color x:Key="DarkPageBackgroundColor">#121212</Color>
     <Color x:Key="DarkCardBackgroundColor">#2C2C2C</Color>
@@ -81,23 +82,23 @@
     <Color x:Key="DarkIconSecondaryColor">#9E9E9E</Color>
 
     <!-- Brushes -->
-    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
-    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
-    <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>
-    <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource White}"/>
-    <SolidColorBrush x:Key="BlackBrush" Color="{StaticResource Black}"/>
-    
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}" />
+    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}" />
+    <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}" />
+    <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource White}" />
+    <SolidColorBrush x:Key="BlackBrush" Color="{StaticResource Black}" />
+
     <!-- Theme-Aware Semantic Brushes (Brushes CAN use AppThemeBinding) -->
-    <SolidColorBrush x:Key="PageBackgroundBrush" Color="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource DarkPageBackgroundColor}}"/>
-    <SolidColorBrush x:Key="CardBackgroundBrush" Color="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}"/>
-    <SolidColorBrush x:Key="BorderBrush" Color="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"/>
-    <SolidColorBrush x:Key="DividerBrush" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDividerColor}}"/>
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}"/>
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
-    <SolidColorBrush x:Key="TextTertiaryBrush" Color="{AppThemeBinding Light={StaticResource LightTextTertiary}, Dark={StaticResource DarkTextTertiary}}"/>
-    <SolidColorBrush x:Key="TextDisabledBrush" Color="{AppThemeBinding Light={StaticResource LightTextDisabled}, Dark={StaticResource DarkTextDisabled}}"/>
-    <SolidColorBrush x:Key="IconBrush" Color="{AppThemeBinding Light={StaticResource LightIcon}, Dark={StaticResource DarkIconColor}}"/>
-    <SolidColorBrush x:Key="IconSecondaryBrush" Color="{AppThemeBinding Light={StaticResource LightIconSecondary}, Dark={StaticResource DarkIconSecondaryColor}}"/>
-    <SolidColorBrush x:Key="ShadowBrush" Color="{AppThemeBinding Light={StaticResource ShadowColorLight}, Dark={StaticResource ShadowColorDark}}"/>
+    <SolidColorBrush x:Key="PageBackgroundBrush" Color="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource DarkPageBackgroundColor}}" />
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}" />
+    <SolidColorBrush x:Key="DividerBrush" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDividerColor}}" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+    <SolidColorBrush x:Key="TextTertiaryBrush" Color="{AppThemeBinding Light={StaticResource LightTextTertiary}, Dark={StaticResource DarkTextTertiary}}" />
+    <SolidColorBrush x:Key="TextDisabledBrush" Color="{AppThemeBinding Light={StaticResource LightTextDisabled}, Dark={StaticResource DarkTextDisabled}}" />
+    <SolidColorBrush x:Key="IconBrush" Color="{AppThemeBinding Light={StaticResource LightIcon}, Dark={StaticResource DarkIconColor}}" />
+    <SolidColorBrush x:Key="IconSecondaryBrush" Color="{AppThemeBinding Light={StaticResource LightIconSecondary}, Dark={StaticResource DarkIconSecondaryColor}}" />
+    <SolidColorBrush x:Key="ShadowBrush" Color="{AppThemeBinding Light={StaticResource ShadowColorLight}, Dark={StaticResource ShadowColorDark}}" />
 
 </ResourceDictionary>

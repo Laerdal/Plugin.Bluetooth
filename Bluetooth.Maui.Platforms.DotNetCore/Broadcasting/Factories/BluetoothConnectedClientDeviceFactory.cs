@@ -2,17 +2,17 @@ using Bluetooth.Core.Broadcasting.Factories;
 
 namespace Bluetooth.Maui.Platforms.DotNetCore.Broadcasting.Factories;
 
-/// <inheritdoc/>
+/// <inheritdoc />
 public class BluetoothConnectedClientDeviceFactory : BaseBluetoothConnectedClientDeviceFactory
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     public BluetoothConnectedClientDeviceFactory()
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     public override IBluetoothConnectedDevice CreateConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec)
     {

@@ -1,7 +1,7 @@
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
-/// Base class for Bluetooth broadcaster services.
+///     Base class for Bluetooth broadcaster services.
 /// </summary>
 public abstract partial class BaseBluetoothLocalService
 {
@@ -16,7 +16,7 @@ public abstract partial class BaseBluetoothLocalService
 
     #region Characteristics - Add
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ValueTask<IBluetoothLocalCharacteristic> AddCharacteristicAsync(IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
@@ -42,13 +42,13 @@ public abstract partial class BaseBluetoothLocalService
 
     #region Characteristics - Get
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothLocalCharacteristic GetCharacteristic(Func<IBluetoothLocalCharacteristic, bool> filter)
     {
         return GetCharacteristicOrDefault(filter) ?? throw new CharacteristicNotFoundException(this);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothLocalCharacteristic GetCharacteristic(Guid id)
     {
         var characteristic = GetCharacteristicOrDefault(id);
@@ -57,10 +57,11 @@ public abstract partial class BaseBluetoothLocalService
             LogCharacteristicNotFound(Id, id);
             throw new CharacteristicNotFoundException(this, id);
         }
+
         return characteristic;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothLocalCharacteristic? GetCharacteristicOrDefault(Func<IBluetoothLocalCharacteristic, bool> filter)
     {
         try
@@ -73,7 +74,7 @@ public abstract partial class BaseBluetoothLocalService
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothLocalCharacteristic? GetCharacteristicOrDefault(Guid id)
     {
         try
@@ -86,7 +87,7 @@ public abstract partial class BaseBluetoothLocalService
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IEnumerable<IBluetoothLocalCharacteristic> GetCharacteristics(Func<IBluetoothLocalCharacteristic, bool>? filter = null)
     {
         filter ??= _ => true;
@@ -97,14 +98,14 @@ public abstract partial class BaseBluetoothLocalService
 
     #region Characteristics - Remove
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ValueTask RemoveCharacteristicAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         var characteristic = GetCharacteristic(id);
         return RemoveCharacteristicAsync(characteristic, timeout, cancellationToken);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask RemoveCharacteristicAsync(IBluetoothLocalCharacteristic localCharacteristic, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(localCharacteristic);
@@ -115,7 +116,7 @@ public abstract partial class BaseBluetoothLocalService
         LogCharacteristicRemoved(Id, localCharacteristic.Id);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask RemoveAllCharacteristicsAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         var characteristicList = Characteristics.ToList();
@@ -135,18 +136,17 @@ public abstract partial class BaseBluetoothLocalService
 
     #region Characteristics - Has
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool HasCharacteristic(Func<IBluetoothLocalCharacteristic, bool> filter)
     {
         return Characteristics.Any(filter);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool HasCharacteristic(Guid id)
     {
         return HasCharacteristic(characteristic => characteristic.Id == id);
     }
 
     #endregion
-
 }

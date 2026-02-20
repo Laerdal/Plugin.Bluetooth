@@ -1,25 +1,17 @@
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
-/// Base class for Bluetooth broadcast characteristics.
+///     Base class for Bluetooth broadcast characteristics.
 /// </summary>
 public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObject, IBluetoothLocalCharacteristic
 {
     /// <summary>
-    /// The logger instance used for logging characteristic operations.
+    ///     The logger instance used for logging characteristic operations.
     /// </summary>
     private readonly ILogger<IBluetoothLocalCharacteristic> _logger;
 
-    /// <inheritdoc />
-    public IBluetoothLocalService LocalService { get; }
-
     /// <summary>
-    /// Backing field for the <see cref="Descriptors"/> property.
-    /// </summary>
-    protected IBluetoothLocalDescriptorFactory LocalDescriptorFactory { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothLocalCharacteristic"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothLocalCharacteristic" /> class.
     /// </summary>
     protected BaseBluetoothLocalCharacteristic(IBluetoothLocalService localService,
         IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request,
@@ -39,6 +31,14 @@ public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObj
         Permissions = request.Permissions;
     }
 
+    /// <summary>
+    ///     Backing field for the <see cref="Descriptors" /> property.
+    /// </summary>
+    protected IBluetoothLocalDescriptorFactory LocalDescriptorFactory { get; }
+
+    /// <inheritdoc />
+    public IBluetoothLocalService LocalService { get; }
+
     /// <inheritdoc />
     public Guid Id { get; }
 
@@ -51,24 +51,24 @@ public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObj
     /// <inheritdoc />
     public BluetoothCharacteristicPermissions Permissions { get; init; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <inheritdoc />
     public override string ToString()
     {
         return $"[{Id}] {Name}";
     }
 
     /// <summary>
-    /// Disposes the resources asynchronously.
+    ///     Disposes the resources asynchronously.
     /// </summary>
     protected async virtual ValueTask DisposeAsyncCore()
     {
         await RemoveAllDescriptorsAsync().ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
-    public async ValueTask DisposeAsync()
-    {
-        await DisposeAsyncCore().ConfigureAwait(false);
-        GC.SuppressFinalize(this);
     }
 }

@@ -1,15 +1,15 @@
 namespace Bluetooth.Maui.Platforms.Windows.Tools;
 
 /// <summary>
-/// Provides extension methods for converting Bluetooth characteristic properties and permissions to their corresponding Windows GATT flags.
+///     Provides extension methods for converting Bluetooth characteristic properties and permissions to their corresponding Windows GATT flags.
 /// </summary>
 public static class GattMapping
 {
     /// <summary>
-    /// Converts the specified <see cref="BluetoothCharacteristicProperties"/> to the corresponding Windows <see cref="GattCharacteristicProperties"/> flags.
+    ///     Converts the specified <see cref="BluetoothCharacteristicProperties" /> to the corresponding Windows <see cref="GattCharacteristicProperties" /> flags.
     /// </summary>
     /// <param name="props">The Bluetooth characteristic properties to convert.</param>
-    /// <returns>A <see cref="GattCharacteristicProperties"/> value representing the specified properties.</returns>
+    /// <returns>A <see cref="GattCharacteristicProperties" /> value representing the specified properties.</returns>
     public static GattCharacteristicProperties ToNative(this BluetoothCharacteristicProperties props)
     {
         var result = GattCharacteristicProperties.None;
@@ -18,26 +18,32 @@ public static class GattMapping
         {
             result |= GattCharacteristicProperties.Broadcast;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.Read))
         {
             result |= GattCharacteristicProperties.Read;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.WriteWithoutResponse))
         {
             result |= GattCharacteristicProperties.WriteWithoutResponse;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.Write))
         {
             result |= GattCharacteristicProperties.Write;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.Notify))
         {
             result |= GattCharacteristicProperties.Notify;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.Indicate))
         {
             result |= GattCharacteristicProperties.Indicate;
         }
+
         if (props.HasFlag(BluetoothCharacteristicProperties.ExtendedProperties))
         {
             result |= GattCharacteristicProperties.ExtendedProperties;
@@ -48,7 +54,7 @@ public static class GattMapping
     }
 
     /// <summary>
-    /// Applies the specified <see cref="BluetoothCharacteristicPermissions"/> to the given <see cref="GattLocalCharacteristicParameters"/> by setting the appropriate read and write protection levels.
+    ///     Applies the specified <see cref="BluetoothCharacteristicPermissions" /> to the given <see cref="GattLocalCharacteristicParameters" /> by setting the appropriate read and write protection levels.
     /// </summary>
     /// <param name="perms">The Bluetooth characteristic permissions to apply.</param>
     /// <param name="parameters">The GATT local characteristic parameters to modify based on the permissions.</param>
@@ -58,7 +64,7 @@ public static class GattMapping
         parameters.ReadProtectionLevel = MapReadProtection(perms);
         parameters.WriteProtectionLevel = MapWriteProtection(perms);
     }
-    
+
     private static GattProtectionLevel MapReadProtection(BluetoothCharacteristicPermissions perms)
     {
         if (perms.HasFlag(BluetoothCharacteristicPermissions.ReadAuthenticated) &&
@@ -104,9 +110,9 @@ public static class GattMapping
 
         return GattProtectionLevel.Plain;
     }
-    
+
     /// <summary>
-    /// Applies the specified <see cref="BluetoothDescriptorPermissions"/> to the given <see cref="GattLocalDescriptorParameters"/> by setting the appropriate read and write protection levels.
+    ///     Applies the specified <see cref="BluetoothDescriptorPermissions" /> to the given <see cref="GattLocalDescriptorParameters" /> by setting the appropriate read and write protection levels.
     /// </summary>
     /// <param name="perms">The Bluetooth descriptor permissions to apply.</param>
     /// <param name="parameters">The GATT local descriptor parameters to modify based on the permissions.</param>
@@ -128,14 +134,17 @@ public static class GattMapping
         {
             return GattProtectionLevel.EncryptionAndAuthenticationRequired;
         }
+
         if (auth)
         {
             return GattProtectionLevel.AuthenticationRequired;
         }
+
         if (encrypted)
         {
             return GattProtectionLevel.EncryptionRequired;
         }
+
         return GattProtectionLevel.Plain;
     }
 
@@ -148,14 +157,17 @@ public static class GattMapping
         {
             return GattProtectionLevel.EncryptionAndAuthenticationRequired;
         }
+
         if (auth)
         {
             return GattProtectionLevel.AuthenticationRequired;
         }
+
         if (encrypted)
         {
             return GattProtectionLevel.EncryptionRequired;
         }
+
         return GattProtectionLevel.Plain;
     }
 }

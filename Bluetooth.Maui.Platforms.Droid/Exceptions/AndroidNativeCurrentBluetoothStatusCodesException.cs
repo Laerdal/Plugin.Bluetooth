@@ -1,22 +1,17 @@
 namespace Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 /// <summary>
-/// Represents an exception that occurs when Android Bluetooth operations return a non-success status code.
+///     Represents an exception that occurs when Android Bluetooth operations return a non-success status code.
 /// </summary>
 /// <remarks>
-/// This exception wraps Android's CurrentBluetoothStatusCodes enum values to provide detailed
-/// information about why Bluetooth operations failed.
+///     This exception wraps Android's CurrentBluetoothStatusCodes enum values to provide detailed
+///     information about why Bluetooth operations failed.
 /// </remarks>
 /// <seealso cref="AndroidNativeBluetoothException" />
 public class AndroidNativeCurrentBluetoothStatusCodesException : AndroidNativeBluetoothException
 {
     /// <summary>
-    /// Gets the specific CurrentBluetoothStatusCodes that caused this exception.
-    /// </summary>
-    public CurrentBluetoothStatusCodes CurrentBluetoothStatusCodes { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeCurrentBluetoothStatusCodesException"/> class with the specified CurrentBluetoothStatusCodes status and inner exception.
+    ///     Initializes a new instance of the <see cref="AndroidNativeCurrentBluetoothStatusCodesException" /> class with the specified CurrentBluetoothStatusCodes status and inner exception.
     /// </summary>
     /// <param name="status">The CurrentBluetoothStatusCodes status that caused this exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception.</param>
@@ -26,7 +21,12 @@ public class AndroidNativeCurrentBluetoothStatusCodesException : AndroidNativeBl
     }
 
     /// <summary>
-    /// Throws an <see cref="AndroidNativeCurrentBluetoothStatusCodesException"/> if the status is not Success.
+    ///     Gets the specific CurrentBluetoothStatusCodes that caused this exception.
+    /// </summary>
+    public CurrentBluetoothStatusCodes CurrentBluetoothStatusCodes { get; }
+
+    /// <summary>
+    ///     Throws an <see cref="AndroidNativeCurrentBluetoothStatusCodesException" /> if the status is not Success.
     /// </summary>
     /// <param name="status">The status to check.</param>
     /// <exception cref="AndroidNativeCurrentBluetoothStatusCodesException">Thrown when the status is not Success.</exception>
@@ -40,7 +40,7 @@ public class AndroidNativeCurrentBluetoothStatusCodesException : AndroidNativeBl
 
     private static string CurrentBluetoothStatusCodesToDescription(CurrentBluetoothStatusCodes status)
     {
-        var statusCodeValue = (int)status;
+        var statusCodeValue = (int) status;
         return statusCodeValue switch
         {
             0 => "Success: The operation completed successfully.",

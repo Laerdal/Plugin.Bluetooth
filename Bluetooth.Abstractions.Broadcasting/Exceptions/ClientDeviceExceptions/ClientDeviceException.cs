@@ -8,7 +8,7 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 public class ClientDeviceException : BluetoothBroadcastingException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ClientDeviceException"/> class.
+    ///     Initializes a new instance of the <see cref="ClientDeviceException" /> class.
     /// </summary>
     /// <param name="broadcastConnectedDevice">The Bluetooth broadcaster associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

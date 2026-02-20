@@ -6,13 +6,13 @@ namespace Bluetooth.Maui.Platforms.Windows;
 public partial class GattCharacteristicProxy
 {
     /// <summary>
-    /// Delegate interface for handling GATT characteristic operations and events.
-    /// Extends the base Bluetooth characteristic interface with Windows-specific characteristic callbacks.
+    ///     Delegate interface for handling GATT characteristic operations and events.
+    ///     Extends the base Bluetooth characteristic interface with Windows-specific characteristic callbacks.
     /// </summary>
     public interface IBluetoothCharacteristicProxyDelegate
     {
         /// <summary>
-        /// Called when the characteristic value changes.
+        ///     Called when the characteristic value changes.
         /// </summary>
         /// <param name="value">The new characteristic value.</param>
         /// <param name="argsTimestamp">The timestamp when the value changed.</param>

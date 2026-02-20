@@ -3,20 +3,17 @@ namespace Bluetooth.Core.Scanning;
 /// <inheritdoc cref="IBluetoothRemoteDescriptor" />
 public abstract partial class BaseBluetoothRemoteDescriptor : BaseBindableObject, IBluetoothRemoteDescriptor
 {
-    /// <inheritdoc/>
-    public IBluetoothRemoteCharacteristic RemoteCharacteristic { get; }
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothRemoteDescriptor"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteDescriptor" /> class.
     /// </summary>
     /// <param name="remoteCharacteristic">The Bluetooth characteristic associated with this descriptor.</param>
     /// <param name="request">The factory request containing initialization data for the descriptor.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="remoteCharacteristic"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="remoteCharacteristic" /> is null.</exception>
     protected BaseBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic remoteCharacteristic, IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest request)
     {
         ArgumentNullException.ThrowIfNull(remoteCharacteristic);
         ArgumentNullException.ThrowIfNull(request);
-        
+
         RemoteCharacteristic = remoteCharacteristic;
         Id = request.DescriptorId;
 
@@ -24,16 +21,25 @@ public abstract partial class BaseBluetoothRemoteDescriptor : BaseBindableObject
         LazyCanWrite = new Lazy<bool>(NativeCanWrite);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
+    public IBluetoothRemoteCharacteristic RemoteCharacteristic { get; }
+
+    /// <inheritdoc />
     public Guid Id { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string Name { get; } = "Unknown Descriptor";
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return $"[{Id}] {Name}";
+    }
 
     #region Dispose
 
     /// <summary>
-    /// Performs the core disposal logic for the descriptor.
+    ///     Performs the core disposal logic for the descriptor.
     /// </summary>
     protected virtual ValueTask DisposeAsyncCore()
     {
@@ -47,7 +53,7 @@ public abstract partial class BaseBluetoothRemoteDescriptor : BaseBindableObject
         return ValueTask.CompletedTask;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore().ConfigureAwait(false);
@@ -55,10 +61,4 @@ public abstract partial class BaseBluetoothRemoteDescriptor : BaseBindableObject
     }
 
     #endregion
-
-    /// <inheritdoc/>
-    public override string ToString()
-    {
-        return $"[{Id}] {Name}";
-    }
 }

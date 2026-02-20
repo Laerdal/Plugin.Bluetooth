@@ -1,52 +1,15 @@
 namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 
 /// <summary>
-/// ViewModel for the scanner page, handling BLE device discovery and display.
+///     ViewModel for the scanner page, handling BLE device discovery and display.
 /// </summary>
 public class ScannerViewModel : BaseViewModel
 {
-    private readonly IBluetoothScanner _scanner;
     private readonly INavigationService _navigation;
+    private readonly IBluetoothScanner _scanner;
 
     /// <summary>
-    /// Collection of discovered Bluetooth devices.
-    /// Automatically updated when devices are discovered or removed.
-    /// </summary>
-    public ObservableCollection<IBluetoothRemoteDevice> Devices { get; } = new ObservableCollection<IBluetoothRemoteDevice>();
-    
-    public IBluetoothRemoteDevice? SelectedDevice
-    {
-        get => GetValue<IBluetoothRemoteDevice?>(null);
-        set => SetValue(value);
-    }
-
-    /// <summary>
-    /// Gets a value indicating whether scanning is currently active.
-    /// </summary>
-    public bool IsScanning => GetValue(false);
-
-    /// <summary>
-    /// Gets the number of discovered devices.
-    /// </summary>
-    public int DeviceCount => Devices.Count;
-
-    /// <summary>
-    /// Command to start scanning for BLE devices.
-    /// </summary>
-    public IAsyncRelayCommand StartScanCommand { get; }
-
-    /// <summary>
-    /// Command to stop scanning for BLE devices.
-    /// </summary>
-    public IAsyncRelayCommand StopScanCommand { get; }
-
-    /// <summary>
-    /// Command to select a device from the list.
-    /// </summary>
-    public IAsyncRelayCommand<IBluetoothRemoteDevice> SelectDeviceCommand { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ScannerViewModel"/> class.
+    ///     Initializes a new instance of the <see cref="ScannerViewModel" /> class.
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner service.</param>
     /// <param name="navigation">The navigation service.</param>
@@ -66,7 +29,44 @@ public class ScannerViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Starts BLE scanning when the page appears.
+    ///     Collection of discovered Bluetooth devices.
+    ///     Automatically updated when devices are discovered or removed.
+    /// </summary>
+    public ObservableCollection<IBluetoothRemoteDevice> Devices { get; } = new();
+
+    public IBluetoothRemoteDevice? SelectedDevice
+    {
+        get => GetValue<IBluetoothRemoteDevice?>(null);
+        set => SetValue(value);
+    }
+
+    /// <summary>
+    ///     Gets a value indicating whether scanning is currently active.
+    /// </summary>
+    public bool IsScanning => GetValue(false);
+
+    /// <summary>
+    ///     Gets the number of discovered devices.
+    /// </summary>
+    public int DeviceCount => Devices.Count;
+
+    /// <summary>
+    ///     Command to start scanning for BLE devices.
+    /// </summary>
+    public IAsyncRelayCommand StartScanCommand { get; }
+
+    /// <summary>
+    ///     Command to stop scanning for BLE devices.
+    /// </summary>
+    public IAsyncRelayCommand StopScanCommand { get; }
+
+    /// <summary>
+    ///     Command to select a device from the list.
+    /// </summary>
+    public IAsyncRelayCommand<IBluetoothRemoteDevice> SelectDeviceCommand { get; }
+
+    /// <summary>
+    ///     Starts BLE scanning when the page appears.
     /// </summary>
     public async override ValueTask OnAppearingAsync()
     {
@@ -74,7 +74,7 @@ public class ScannerViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Stops BLE scanning when the page disappears.
+    ///     Stops BLE scanning when the page disappears.
     /// </summary>
     public async override ValueTask OnDisappearingAsync()
     {
@@ -82,16 +82,16 @@ public class ScannerViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Starts scanning for BLE devices.
+    ///     Starts scanning for BLE devices.
     /// </summary>
     private async Task StartScanAsync()
     {
         try
         {
             // Create scanning options (cross-platform)
-            var options = new Bluetooth.Abstractions.Scanning.Options.ScanningOptions
+            var options = new ScanningOptions
             {
-                IgnoreNamelessAdvertisements =  true,
+                IgnoreNamelessAdvertisements = true
                 // Using defaults - scans for all devices
             };
 
@@ -112,7 +112,7 @@ public class ScannerViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Stops scanning for BLE devices.
+    ///     Stops scanning for BLE devices.
     /// </summary>
     private async Task StopScanAsync()
     {
@@ -134,7 +134,7 @@ public class ScannerViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Handles device selection and navigates to device details.
+    ///     Handles device selection and navigates to device details.
     /// </summary>
     /// <param name="device">The selected device.</param>
     private async Task SelectDeviceAsync(IBluetoothRemoteDevice? device)
@@ -143,7 +143,7 @@ public class ScannerViewModel : BaseViewModel
         {
             return;
         }
-        
+
         SelectedDevice = device;
 
         // Navigate to DevicePage with the selected device
@@ -154,7 +154,7 @@ public class ScannerViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Handles changes to the scanner's running state.
+    ///     Handles changes to the scanner's running state.
     /// </summary>
     private void OnRunningStateChanged(object? sender, EventArgs e)
     {
@@ -164,13 +164,12 @@ public class ScannerViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Handles changes to the device list (devices added/removed).
+    ///     Handles changes to the device list (devices added/removed).
     /// </summary>
     private void OnDeviceListChanged(object? sender, DeviceListChangedEventArgs e)
     {
         // Update the ObservableCollection on the UI thread
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
+        MainThread.BeginInvokeOnMainThread(() => {
             // Use Plugin.BaseTypeExtensions to efficiently sync collections
             Devices.UpdateFrom(_scanner.GetDevices());
             OnPropertyChanged(nameof(DeviceCount));

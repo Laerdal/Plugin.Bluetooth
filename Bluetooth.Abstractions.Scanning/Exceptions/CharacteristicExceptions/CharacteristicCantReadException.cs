@@ -6,9 +6,8 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 /// <seealso cref="CharacteristicException" />
 public class CharacteristicCantReadException : CharacteristicException
 {
-
     /// <summary>
-    ///     Initializes a new instance of the <see cref="CharacteristicCantReadException"/> class.
+    ///     Initializes a new instance of the <see cref="CharacteristicCantReadException" /> class.
     /// </summary>
     /// <param name="remoteCharacteristic">The Bluetooth characteristic associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>
@@ -22,7 +21,7 @@ public class CharacteristicCantReadException : CharacteristicException
     }
 
     /// <summary>
-    ///     Throws a <see cref="CharacteristicCantReadException"/> if the specified characteristic cannot be read.
+    ///     Throws a <see cref="CharacteristicCantReadException" /> if the specified characteristic cannot be read.
     /// </summary>
     /// <param name="baseBluetoothRemoteCharacteristic">The Bluetooth characteristic to check.</param>
     public static void ThrowIfCantRead(IBluetoothRemoteCharacteristic baseBluetoothRemoteCharacteristic)

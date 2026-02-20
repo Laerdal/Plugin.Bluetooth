@@ -11,7 +11,7 @@ public class AppleBluetoothServiceFactory : BaseBluetoothServiceFactory
     }
 
     /// <inheritdoc />
-    public override Abstractions.Scanning.IBluetoothRemoteService CreateService(IBluetoothRemoteDevice device, IBluetoothServiceFactory.BluetoothServiceFactoryRequest request)
+    public override IBluetoothRemoteService CreateService(IBluetoothRemoteDevice device, IBluetoothServiceFactory.BluetoothServiceFactoryRequest request)
     {
         return new AppleBluetoothRemoteService(device, request, CharacteristicFactory);
     }

@@ -1,12 +1,12 @@
 namespace Bluetooth.Abstractions.Scanning.Exceptions;
 
 /// <summary>
-/// Base exception class for descriptor-related errors.
+///     Base exception class for descriptor-related errors.
 /// </summary>
 public class DescriptorException : BluetoothScanningException
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="DescriptorException"/> class.
+    ///     Initializes a new instance of the <see cref="DescriptorException" /> class.
     /// </summary>
     /// <param name="remoteDescriptor">The descriptor associated with this exception.</param>
     /// <param name="message">The error message.</param>
@@ -18,7 +18,7 @@ public class DescriptorException : BluetoothScanningException
     }
 
     /// <summary>
-    /// Gets the descriptor associated with this exception.
+    ///     Gets the descriptor associated with this exception.
     /// </summary>
     public IBluetoothRemoteDescriptor RemoteDescriptor { get; }
 }

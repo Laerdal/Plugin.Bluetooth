@@ -20,7 +20,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         set => SetValue(value);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask BeginReliableWriteAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
@@ -54,7 +54,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask ExecuteReliableWriteAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
@@ -88,7 +88,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async ValueTask AbortReliableWriteAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
@@ -125,17 +125,17 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     #region Native Abstracts
 
     /// <summary>
-    /// Platform-specific implementation to begin a reliable write transaction.
+    ///     Platform-specific implementation to begin a reliable write transaction.
     /// </summary>
     protected abstract ValueTask NativeBeginReliableWriteAsync();
 
     /// <summary>
-    /// Platform-specific implementation to execute a reliable write transaction.
+    ///     Platform-specific implementation to execute a reliable write transaction.
     /// </summary>
     protected abstract ValueTask NativeExecuteReliableWriteAsync();
 
     /// <summary>
-    /// Platform-specific implementation to abort a reliable write transaction.
+    ///     Platform-specific implementation to abort a reliable write transaction.
     /// </summary>
     protected abstract ValueTask NativeAbortReliableWriteAsync();
 
@@ -144,7 +144,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     #region Callbacks
 
     /// <summary>
-    /// Called when begin reliable write succeeds.
+    ///     Called when begin reliable write succeeds.
     /// </summary>
     protected void OnBeginReliableWriteSucceeded()
     {
@@ -152,7 +152,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Called when begin reliable write fails.
+    ///     Called when begin reliable write fails.
     /// </summary>
     protected void OnBeginReliableWriteFailed(Exception e)
     {
@@ -166,7 +166,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Called when execute reliable write succeeds.
+    ///     Called when execute reliable write succeeds.
     /// </summary>
     protected void OnExecuteReliableWriteSucceeded()
     {
@@ -174,7 +174,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Called when execute reliable write fails.
+    ///     Called when execute reliable write fails.
     /// </summary>
     protected void OnExecuteReliableWriteFailed(Exception e)
     {
@@ -188,7 +188,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Called when abort reliable write succeeds.
+    ///     Called when abort reliable write succeeds.
     /// </summary>
     protected void OnAbortReliableWriteSucceeded()
     {
@@ -196,7 +196,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Called when abort reliable write fails.
+    ///     Called when abort reliable write fails.
     /// </summary>
     protected void OnAbortReliableWriteFailed(Exception e)
     {

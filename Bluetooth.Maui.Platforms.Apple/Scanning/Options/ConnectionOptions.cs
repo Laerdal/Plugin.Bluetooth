@@ -1,36 +1,36 @@
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.Options;
 
-/// <inheritdoc/>
+/// <inheritdoc />
 public record ConnectionOptions : Abstractions.Scanning.Options.ConnectionOptions
 {
     /// <summary>
-    /// Gets or sets whether to notify on connection events.
+    ///     Gets or sets whether to notify on connection events.
     /// </summary>
     public bool? NotifyOnConnection { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to notify on disconnection events.
+    ///     Gets or sets whether to notify on disconnection events.
     /// </summary>
     public bool? NotifyOnDisconnection { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to notify on notification events.
+    ///     Gets or sets whether to notify on notification events.
     /// </summary>
     public bool? NotifyOnNotification { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to enable transport bridging.
+    ///     Gets or sets whether to enable transport bridging.
     /// </summary>
     public bool? EnableTransportBridging { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to require ANCS (Apple Notification Center Service) support.
+    ///     Gets or sets whether to require ANCS (Apple Notification Center Service) support.
     /// </summary>
     public bool? RequiresAncs { get; set; }
 
 
     /// <summary>
-    /// Implicitly converts CbPeripheralManagerOptions to NSDictionary.
+    ///     Implicitly converts CbPeripheralManagerOptions to NSDictionary.
     /// </summary>
     /// <param name="options">The options to convert.</param>
     /// <returns>An NSDictionary containing the options.</returns>
@@ -72,7 +72,7 @@ public record ConnectionOptions : Abstractions.Scanning.Options.ConnectionOption
     }
 
     /// <summary>
-    /// Converts the CbPeripheralManagerOptions to an NSDictionary.
+    ///     Converts the CbPeripheralManagerOptions to an NSDictionary.
     /// </summary>
     /// <returns>An NSDictionary containing the options.</returns>
     // ReSharper disable once InconsistentNaming

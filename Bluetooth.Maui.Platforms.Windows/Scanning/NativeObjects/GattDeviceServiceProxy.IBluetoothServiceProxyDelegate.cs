@@ -6,13 +6,13 @@ namespace Bluetooth.Maui.Platforms.Windows;
 public partial class GattDeviceServiceProxy
 {
     /// <summary>
-    /// Delegate interface for handling GATT device service operations and events.
-    /// Extends the base Bluetooth service interface with Windows-specific service callbacks.
+    ///     Delegate interface for handling GATT device service operations and events.
+    ///     Extends the base Bluetooth service interface with Windows-specific service callbacks.
     /// </summary>
     public interface IBluetoothServiceProxyDelegate
     {
         /// <summary>
-        /// Called when the device access status changes for the service.
+        ///     Called when the device access status changes for the service.
         /// </summary>
         /// <param name="argsId">The service identifier.</param>
         /// <param name="argsStatus">The new access status.</param>

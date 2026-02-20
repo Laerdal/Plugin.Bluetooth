@@ -5,7 +5,6 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 /// <inheritdoc />
 public class AppleBluetoothDeviceFactory : BaseBluetoothDeviceFactory
 {
-
     /// <inheritdoc />
     public AppleBluetoothDeviceFactory(IBluetoothServiceFactory serviceFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) : base(serviceFactory, rssiToSignalStrengthConverter)
     {

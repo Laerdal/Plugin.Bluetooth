@@ -1,23 +1,22 @@
 namespace Bluetooth.Abstractions.Scanning;
 
 /// <summary>
-/// Interface representing a Bluetooth characteristic, providing properties and methods for interacting with it.
+///     Interface representing a Bluetooth characteristic, providing properties and methods for interacting with it.
 /// </summary>
 public partial interface IBluetoothRemoteCharacteristic
 {
-
     /// <summary>
-    /// Gets a value indicating whether the characteristic can be read.
+    ///     Gets a value indicating whether the characteristic can be read.
     /// </summary>
     bool CanRead { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the characteristic is currently reading its value.
+    ///     Gets a value indicating whether the characteristic is currently reading its value.
     /// </summary>
     bool IsReading { get; }
 
     /// <summary>
-    /// Reads the value of the characteristic asynchronously.
+    ///     Reads the value of the characteristic asynchronously.
     /// </summary>
     /// <param name="skipIfPreviouslyRead">If true, skips reading if the value was previously read.</param>
     /// <param name="timeout">The timeout for this operation</param>
@@ -29,5 +28,4 @@ public partial interface IBluetoothRemoteCharacteristic
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
     ValueTask<ReadOnlyMemory<byte>> ReadValueAsync(bool skipIfPreviouslyRead = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
-
 }

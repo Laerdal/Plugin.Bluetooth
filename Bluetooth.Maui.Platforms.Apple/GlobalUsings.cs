@@ -47,13 +47,16 @@ global using Plugin.ExceptionListeners;
 
 #if IOS || MACCATALYST
 global using CoreBluetooth;
+
 global using CoreFoundation;
+
 global using Foundation;
 
 global using Bluetooth.Maui.Platforms.Apple;
 global using Bluetooth.Maui.Platforms.Apple.Tools;
 global using Bluetooth.Maui.Platforms.Apple.NativeObjects;
 global using Bluetooth.Maui.Platforms.Apple.Exceptions;
+
 #elif ANDROID
 global using Android.Bluetooth;
 global using Android.Bluetooth.LE;

@@ -2,37 +2,6 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteDevice
 {
-    #region Properties
-
-    private readonly ConcurrentQueue<int> _rssiHistory = new ConcurrentQueue<int>();
-
-    /// <inheritdoc />
-    public int SignalStrengthDbm
-    {
-        get => GetValue(0);
-        private set
-        {
-            SetValue(value);
-            _rssiHistory.Enqueue(value, IsConnected ? Scanner.CurrentScanningOptions.SignalStrengthJitterSmoothing.SmoothingWhenConnected : Scanner.CurrentScanningOptions.SignalStrengthJitterSmoothing.SmoothingOnAdvertisement);
-            SignalStrengthPercent = RssiToSignalStrengthConverter.Convert(_rssiHistory.Average());
-        }
-    }
-
-    /// <inheritdoc />
-    public double SignalStrengthPercent
-    {
-        get => GetValue(0d);
-        private set => SetValue(value);
-    }
-
-    private TaskCompletionSource<int>? SignalStrengthReadingTcs
-    {
-        get => GetValue<TaskCompletionSource<int>?>(null);
-        set => SetValue(value);
-    }
-
-    #endregion
-
     #region Public API
 
     /// <inheritdoc />
@@ -73,10 +42,50 @@ public abstract partial class BaseBluetoothRemoteDevice
 
     #endregion
 
+    #region Native Abstracts
+
+    /// <summary>
+    ///     Platform-specific implementation to initiate a signal strength reading.
+    /// </summary>
+    protected abstract void NativeReadSignalStrength();
+
+    #endregion
+
+    #region Properties
+
+    private readonly ConcurrentQueue<int> _rssiHistory = new();
+
+    /// <inheritdoc />
+    public int SignalStrengthDbm
+    {
+        get => GetValue(0);
+        private set
+        {
+            SetValue(value);
+            _rssiHistory.Enqueue(value, IsConnected ? Scanner.CurrentScanningOptions.SignalStrengthJitterSmoothing.SmoothingWhenConnected : Scanner.CurrentScanningOptions.SignalStrengthJitterSmoothing.SmoothingOnAdvertisement);
+            SignalStrengthPercent = RssiToSignalStrengthConverter.Convert(_rssiHistory.Average());
+        }
+    }
+
+    /// <inheritdoc />
+    public double SignalStrengthPercent
+    {
+        get => GetValue(0d);
+        private set => SetValue(value);
+    }
+
+    private TaskCompletionSource<int>? SignalStrengthReadingTcs
+    {
+        get => GetValue<TaskCompletionSource<int>?>(null);
+        set => SetValue(value);
+    }
+
+    #endregion
+
     #region Callbacks
 
     /// <summary>
-    /// Called when signal strength reading succeeds. Updates the SignalStrengthDbm property and completes the task.
+    ///     Called when signal strength reading succeeds. Updates the SignalStrengthDbm property and completes the task.
     /// </summary>
     /// <param name="rssi">The signal strength value in dBm.</param>
     protected void OnSignalStrengthRead(int rssi)
@@ -86,7 +95,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Called when signal strength reading fails. Completes the task with an exception or dispatches to the unhandled exception listener.
+    ///     Called when signal strength reading fails. Completes the task with an exception or dispatches to the unhandled exception listener.
     /// </summary>
     /// <param name="e">The exception that occurred during the signal strength reading.</param>
     protected void OnSignalStrengthReadFailed(Exception e)
@@ -101,15 +110,6 @@ public abstract partial class BaseBluetoothRemoteDevice
         // If the TaskCompletionSource was already completed, dispatch the exception to the listener
         BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
     }
-
-    #endregion
-
-    #region Native Abstracts
-
-    /// <summary>
-    /// Platform-specific implementation to initiate a signal strength reading.
-    /// </summary>
-    protected abstract void NativeReadSignalStrength();
 
     #endregion
 }

@@ -3,41 +3,10 @@ namespace Bluetooth.Core.Scanning;
 /// <inheritdoc cref="IBluetoothScanner" />
 public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBluetoothScanner
 {
-    #region Properties
-
-    /// <summary>
-    /// The logger instance used for logging scanner operations.
-    /// </summary>
-    private readonly ILogger<IBluetoothScanner> _logger;
-
-    /// <summary>
-    /// The Bluetooth adapter associated with this scanner, used for performing scanning operations and managing Bluetooth interactions.
-    /// </summary>
-    public IBluetoothAdapter Adapter { get; }
-
-    /// <summary>
-    /// The factory responsible for creating Bluetooth devices managed by this scanner.
-    /// </summary>
-    protected IBluetoothDeviceFactory DeviceFactory { get; }
-
-    /// <summary>
-    /// The manager responsible for handling Bluetooth permissions required for scanning and device interactions.
-    /// </summary>
-    protected IBluetoothPermissionManager PermissionManager { get; }
-
-    /// <summary>
-    /// The converter responsible for translating RSSI values to signal strength levels, which can be used for filtering and sorting devices based on signal quality.
-    /// </summary>
-    protected IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
-
-    private readonly IDisposable? _refreshSubscription;
-
-    #endregion
-
     #region Constructor
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothScanner"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothScanner" /> class.
     /// </summary>
     /// <param name="adapter">The Bluetooth adapter associated with this scanner.</param>
     /// <param name="permissionManager">The permission manager for handling Bluetooth permissions.</param>
@@ -71,13 +40,13 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     #region Refresh
 
     /// <summary>
-    /// Refreshes the broadcaster's properties and state.
+    ///     Refreshes the broadcaster's properties and state.
     /// </summary>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <remarks>
-    /// This method is called periodically by the ticker to ensure the broadcaster's properties and state are up-to-date. Derived classes should override this method to implement the logic for refreshing the broadcaster's properties, such
-    /// as checking the broadcasting state, updating the list of active services, or any other relevant information. The base implementation throws a <see cref="NotImplementedException"/>, indicating that derived classes must provide their
-    /// own implementation of the refresh logic specific to the platform or implementation.
+    ///     This method is called periodically by the ticker to ensure the broadcaster's properties and state are up-to-date. Derived classes should override this method to implement the logic for refreshing the broadcaster's properties, such
+    ///     as checking the broadcasting state, updating the list of active services, or any other relevant information. The base implementation throws a <see cref="NotImplementedException" />, indicating that derived classes must provide their
+    ///     own implementation of the refresh logic specific to the platform or implementation.
     /// </remarks>
     protected virtual Task RefreshAsync(CancellationToken cancellationToken)
     {
@@ -96,10 +65,41 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
         }
     }
 
+    #region Properties
+
+    /// <summary>
+    ///     The logger instance used for logging scanner operations.
+    /// </summary>
+    private readonly ILogger<IBluetoothScanner> _logger;
+
+    /// <summary>
+    ///     The Bluetooth adapter associated with this scanner, used for performing scanning operations and managing Bluetooth interactions.
+    /// </summary>
+    public IBluetoothAdapter Adapter { get; }
+
+    /// <summary>
+    ///     The factory responsible for creating Bluetooth devices managed by this scanner.
+    /// </summary>
+    protected IBluetoothDeviceFactory DeviceFactory { get; }
+
+    /// <summary>
+    ///     The manager responsible for handling Bluetooth permissions required for scanning and device interactions.
+    /// </summary>
+    protected IBluetoothPermissionManager PermissionManager { get; }
+
+    /// <summary>
+    ///     The converter responsible for translating RSSI values to signal strength levels, which can be used for filtering and sorting devices based on signal quality.
+    /// </summary>
+    protected IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
+
+    private readonly IDisposable? _refreshSubscription;
+
+    #endregion
+
     #region Dispose
 
     /// <summary>
-    /// Disposes the resources asynchronously.
+    ///     Disposes the resources asynchronously.
     /// </summary>
     protected async virtual ValueTask DisposeAsyncCore()
     {
@@ -148,5 +148,4 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     }
 
     #endregion
-
 }

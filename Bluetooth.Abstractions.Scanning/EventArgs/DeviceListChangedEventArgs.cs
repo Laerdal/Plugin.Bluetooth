@@ -1,12 +1,12 @@
 namespace Bluetooth.Abstractions.Scanning.EventArgs;
 
 /// <summary>
-/// Provides data for the DeviceListChanged event.
+///     Provides data for the DeviceListChanged event.
 /// </summary>
 public class DeviceListChangedEventArgs : ItemListChangedEventArgs<IBluetoothRemoteDevice>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="DeviceListChangedEventArgs"/> class.
+    ///     Initializes a new instance of the <see cref="DeviceListChangedEventArgs" /> class.
     /// </summary>
     /// <param name="args">The collection changed event arguments.</param>
     public DeviceListChangedEventArgs(NotifyCollectionChangedEventArgs args) : base(args)
@@ -14,7 +14,7 @@ public class DeviceListChangedEventArgs : ItemListChangedEventArgs<IBluetoothRem
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DeviceListChangedEventArgs"/> class.
+    ///     Initializes a new instance of the <see cref="DeviceListChangedEventArgs" /> class.
     /// </summary>
     /// <param name="addedItems">The devices that were added.</param>
     /// <param name="removedItems">The devices that were removed.</param>
@@ -24,13 +24,13 @@ public class DeviceListChangedEventArgs : ItemListChangedEventArgs<IBluetoothRem
 }
 
 /// <summary>
-/// Provides data for the DevicesAdded event.
+///     Provides data for the DevicesAdded event.
 /// </summary>
 /// <param name="items">The devices that were added.</param>
 public class DevicesAddedEventArgs(IEnumerable<IBluetoothRemoteDevice> items) : ItemsChangedEventArgs<IBluetoothRemoteDevice>(items);
 
 /// <summary>
-/// Provides data for the DevicesRemoved event.
+///     Provides data for the DevicesRemoved event.
 /// </summary>
 /// <param name="items">The devices that were removed.</param>
 public class DevicesRemovedEventArgs(IEnumerable<IBluetoothRemoteDevice> items) : ItemsChangedEventArgs<IBluetoothRemoteDevice>(items);

@@ -1,14 +1,12 @@
-using NLog.Extensions.Logging;
-
 namespace Bluetooth.Maui.Sample.Scanner;
 
 /// <summary>
-/// Main entry point for MAUI application configuration.
+///     Main entry point for MAUI application configuration.
 /// </summary>
 public static class MauiProgram
 {
     /// <summary>
-    /// Creates and configures the MAUI application.
+    ///     Creates and configures the MAUI application.
     /// </summary>
     /// <returns>The configured MAUI application.</returns>
     public static MauiApp CreateMauiApp()
@@ -18,19 +16,28 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkit()
-            .ConfigureFonts(fonts =>
-            {
+            .ConfigureMauiHandlers(handlers => {
+#if WINDOWS
+                Microsoft.Maui.Controls.Handlers.Items.CollectionViewHandler.Mapper.AppendToMapping("KeyboardAccessibleCollectionView", (handler, view) => {
+                    handler.PlatformView.SingleSelectionFollowsFocus = false;
+                });
+
+                Microsoft.Maui.Handlers.ContentViewHandler.Mapper.AppendToMapping(nameof(Pages.Controls.CategoryChart), (handler, view) => {
+                    if (view is Pages.Controls.CategoryChart && handler.PlatformView is Microsoft.Maui.Platform.ContentPanel contentPanel)
+                    {
+                        contentPanel.IsTabStop = true;
+                    }
+                });
+#endif
+            })
+            .ConfigureFonts(fonts => {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
 #if DEBUG
-        // Add debug logging
-        builder.Logging.SetMinimumLevel(LogLevel.Debug);
-        
-        // Add NLog for Logging
-        builder.Logging.ClearProviders();
-        builder.Logging.AddNLog();
+        builder.Logging.AddDebug();
+        builder.Services.AddLogging(configure => configure.AddDebug());
 #endif
 
         // Register Bluetooth services

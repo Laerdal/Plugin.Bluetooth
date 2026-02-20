@@ -1,7 +1,7 @@
 namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 
 /// <summary>
-/// ViewModel for the characteristics page, handling service details and characteristic exploration.
+///     ViewModel for the characteristics page, handling service details and characteristic exploration.
 /// </summary>
 public class CharacteristicsViewModel : BaseViewModel
 {
@@ -9,7 +9,18 @@ public class CharacteristicsViewModel : BaseViewModel
     private IBluetoothRemoteService? _service;
 
     /// <summary>
-    /// Gets or sets the current Bluetooth service.
+    ///     Initializes a new instance of the <see cref="CharacteristicsViewModel" /> class.
+    /// </summary>
+    public CharacteristicsViewModel(INavigationService navigation)
+    {
+        _navigation = navigation;
+
+        ExploreCharacteristicsCommand = new AsyncRelayCommand(ExploreCharacteristicsAsync);
+        SelectCharacteristicCommand = new AsyncRelayCommand<IBluetoothRemoteCharacteristic>(SelectCharacteristicAsync);
+    }
+
+    /// <summary>
+    ///     Gets or sets the current Bluetooth service.
     /// </summary>
     public IBluetoothRemoteService? Service
     {
@@ -35,43 +46,32 @@ public class CharacteristicsViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Gets the service ID for display.
+    ///     Gets the service ID for display.
     /// </summary>
     public string ServiceId => Service?.Id.ToString() ?? "N/A";
 
     /// <summary>
-    /// Gets the collection of discovered characteristics.
+    ///     Gets the collection of discovered characteristics.
     /// </summary>
-    public ObservableCollection<IBluetoothRemoteCharacteristic> Characteristics { get; } = new ObservableCollection<IBluetoothRemoteCharacteristic>();
+    public ObservableCollection<IBluetoothRemoteCharacteristic> Characteristics { get; } = new();
 
     /// <summary>
-    /// Gets the number of discovered characteristics.
+    ///     Gets the number of discovered characteristics.
     /// </summary>
     public int CharacteristicCount => Characteristics.Count;
 
     /// <summary>
-    /// Gets the command to explore characteristics on the service.
+    ///     Gets the command to explore characteristics on the service.
     /// </summary>
     public IAsyncRelayCommand ExploreCharacteristicsCommand { get; }
 
     /// <summary>
-    /// Gets the command to select and interact with a characteristic.
+    ///     Gets the command to select and interact with a characteristic.
     /// </summary>
     public IAsyncRelayCommand<IBluetoothRemoteCharacteristic> SelectCharacteristicCommand { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CharacteristicsViewModel"/> class.
-    /// </summary>
-    public CharacteristicsViewModel(INavigationService navigation)
-    {
-        _navigation = navigation;
-
-        ExploreCharacteristicsCommand = new AsyncRelayCommand(ExploreCharacteristicsAsync);
-        SelectCharacteristicCommand = new AsyncRelayCommand<IBluetoothRemoteCharacteristic>(SelectCharacteristicAsync);
-    }
-
-    /// <summary>
-    /// Sets the service to display and manage.
+    ///     Sets the service to display and manage.
     /// </summary>
     /// <param name="service">The Bluetooth service.</param>
     public void SetService(IBluetoothRemoteService service)
@@ -80,7 +80,7 @@ public class CharacteristicsViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Explores and discovers characteristics on the service.
+    ///     Explores and discovers characteristics on the service.
     /// </summary>
     private async Task ExploreCharacteristicsAsync()
     {
@@ -95,8 +95,7 @@ public class CharacteristicsViewModel : BaseViewModel
             await Service.ExploreCharacteristicsAsync();
 
             // Update the characteristics collection on the UI thread
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
+            MainThread.BeginInvokeOnMainThread(() => {
                 Characteristics.UpdateFrom([.. Service.GetCharacteristics()]);
                 OnPropertyChanged(nameof(CharacteristicCount));
             });
@@ -115,7 +114,7 @@ public class CharacteristicsViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Handles characteristic selection.
+    ///     Handles characteristic selection.
     /// </summary>
     private async Task SelectCharacteristicAsync(IBluetoothRemoteCharacteristic? characteristic)
     {
@@ -130,18 +129,20 @@ public class CharacteristicsViewModel : BaseViewModel
         {
             properties.Add("Read");
         }
+
         if (characteristic.CanWrite)
         {
             properties.Add("Write");
         }
+
         if (characteristic.CanListen)
         {
             properties.Add("Listen/Notify");
         }
 
         var propertiesText = properties.Any()
-                                 ? string.Join(", ", properties)
-                                 : "None";
+            ? string.Join(", ", properties)
+            : "None";
 
         var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
         if (mainPage != null)
@@ -154,12 +155,11 @@ public class CharacteristicsViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Handles characteristic list changes.
+    ///     Handles characteristic list changes.
     /// </summary>
     private void OnCharacteristicListChanged(object? sender, CharacteristicListChangedEventArgs e)
     {
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
+        MainThread.BeginInvokeOnMainThread(() => {
             var newList = Service?.GetCharacteristics() ?? [];
             Characteristics.UpdateFrom([.. newList]);
             OnPropertyChanged(nameof(CharacteristicCount));

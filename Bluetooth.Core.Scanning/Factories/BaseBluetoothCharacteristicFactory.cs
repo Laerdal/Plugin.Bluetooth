@@ -4,7 +4,7 @@ namespace Bluetooth.Core.Scanning.Factories;
 public abstract class BaseBluetoothCharacteristicFactory : IBluetoothCharacteristicFactory
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothCharacteristicFactory"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothCharacteristicFactory" /> class.
     /// </summary>
     /// <param name="descriptorFactory">The descriptor factory to pass to the new Characteristic.</param>
     protected BaseBluetoothCharacteristicFactory(IBluetoothDescriptorFactory descriptorFactory)
@@ -13,11 +13,10 @@ public abstract class BaseBluetoothCharacteristicFactory : IBluetoothCharacteris
     }
 
     /// <summary>
-    /// Gets the descriptor factory to pass to the new Characteristic.
+    ///     Gets the descriptor factory to pass to the new Characteristic.
     /// </summary>
     protected IBluetoothDescriptorFactory DescriptorFactory { get; }
 
     /// <inheritdoc />
     public abstract IBluetoothRemoteCharacteristic CreateCharacteristic(IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request);
-
 }

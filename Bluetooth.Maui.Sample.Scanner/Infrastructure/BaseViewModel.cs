@@ -1,20 +1,15 @@
 namespace Bluetooth.Maui.Sample.Scanner.Infrastructure;
 
 /// <summary>
-/// Base class for all ViewModels in the application.
-/// Provides property change notification and lifecycle hooks using a concurrent dictionary backing store.
+///     Base class for all ViewModels in the application.
+///     Provides property change notification and lifecycle hooks using a concurrent dictionary backing store.
 /// </summary>
 public abstract partial class BaseViewModel : INotifyPropertyChanged
 {
-    private readonly ConcurrentDictionary<string, object?> _values = new ConcurrentDictionary<string, object?>();
+    private readonly ConcurrentDictionary<string, object?> _values = new();
 
     /// <summary>
-    ///     The logger instance for this object.
-    /// </summary>
-    protected ILogger? Logger { get; }
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="BaseViewModel"/> class.
+    ///     Initializes a new instance of the <see cref="BaseViewModel" /> class.
     /// </summary>
     /// <param name="logger">Optional logger instance for tracking property changes.</param>
     protected BaseViewModel(ILogger? logger = null)
@@ -23,37 +18,22 @@ public abstract partial class BaseViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
+    ///     The logger instance for this object.
+    /// </summary>
+    protected ILogger? Logger { get; }
+
+    /// <summary>
+    ///     Occurs when a property value changes.
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>
     ///     Returns a string that represents the current object.
     /// </summary>
     public override string ToString()
     {
         return GetType().Name;
     }
-
-    #region Logging
-
-    [LoggerMessage(Level = LogLevel.Trace, Message = "{Sender}.{PropertyName} : {Value} (no change)")]
-    private static partial void LogPropertyNotChanged(ILogger logger, string propertyName, object sender, object? value);
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "{Sender}.{PropertyName} : {OldValue} -> {NewValue}")]
-    private static partial void LogPropertyChanged(ILogger logger,
-        string propertyName,
-        object sender,
-        object? oldValue,
-        object? newValue);
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "{Sender}.{PropertyName} : {OldValue} -> (cleared)")]
-    private static partial void LogPropertyCleared(ILogger logger, string propertyName, object sender, object? oldValue);
-
-    [LoggerMessage(Level = LogLevel.Trace, Message = "{Sender}.{PropertyName} : (already cleared)")]
-    private static partial void LogPropertyClearAttempt(ILogger logger, string propertyName, object sender);
-
-    #endregion
-
-    /// <summary>
-    ///     Occurs when a property value changes.
-    /// </summary>
-    public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
     ///     Determines whether a value has been set for the specified property.
@@ -114,7 +94,7 @@ public abstract partial class BaseViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Sets the value of the specified property and raises the <see cref="PropertyChanged"/> event if the value changes.
+    ///     Sets the value of the specified property and raises the <see cref="PropertyChanged" /> event if the value changes.
     /// </summary>
     /// <typeparam name="T">The type of the property value.</typeparam>
     /// <param name="value">The value to set.</param>
@@ -134,6 +114,7 @@ public abstract partial class BaseViewModel : INotifyPropertyChanged
             {
                 LogPropertyNotChanged(Logger, propertyName, this, value);
             }
+
             return false; // No change
         }
 
@@ -141,17 +122,18 @@ public abstract partial class BaseViewModel : INotifyPropertyChanged
         if (Logger?.IsEnabled(LogLevel.Debug) == true)
         {
             LogPropertyChanged(Logger,
-                               propertyName,
-                               this,
-                               existingValue,
-                               value);
+                propertyName,
+                this,
+                existingValue,
+                value);
         }
+
         OnPropertyChanged(propertyName);
         return true;
     }
 
     /// <summary>
-    ///     Clears the value of the specified property and raises the <see cref="PropertyChanged"/> event.
+    ///     Clears the value of the specified property and raises the <see cref="PropertyChanged" /> event.
     /// </summary>
     /// <param name="propertyName">The name of the property to clear. If not provided, the caller's member name is used.</param>
     /// <returns>True if the property was cleared; otherwise, false.</returns>
@@ -169,6 +151,7 @@ public abstract partial class BaseViewModel : INotifyPropertyChanged
             {
                 LogPropertyCleared(Logger, propertyName, this, removedValue);
             }
+
             OnPropertyChanged(propertyName);
             return true;
         }
@@ -177,11 +160,12 @@ public abstract partial class BaseViewModel : INotifyPropertyChanged
         {
             LogPropertyClearAttempt(Logger, propertyName, this);
         }
+
         return false;
     }
 
     /// <summary>
-    ///     Raises the <see cref="PropertyChanged"/> event for the specified property.
+    ///     Raises the <see cref="PropertyChanged" /> event for the specified property.
     /// </summary>
     /// <param name="propertyName">The name of the property that changed. If not provided, the caller's member name is used.</param>
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -417,8 +401,8 @@ public abstract partial class BaseViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Called when the associated page is appearing.
-    /// Override to perform initialization logic.
+    ///     Called when the associated page is appearing.
+    ///     Override to perform initialization logic.
     /// </summary>
     public virtual ValueTask OnAppearingAsync()
     {
@@ -426,11 +410,31 @@ public abstract partial class BaseViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Called when the associated page is disappearing.
-    /// Override to perform cleanup logic.
+    ///     Called when the associated page is disappearing.
+    ///     Override to perform cleanup logic.
     /// </summary>
     public virtual ValueTask OnDisappearingAsync()
     {
         return ValueTask.CompletedTask;
     }
+
+    #region Logging
+
+    [LoggerMessage(Level = LogLevel.Trace, Message = "{Sender}.{PropertyName} : {Value} (no change)")]
+    private static partial void LogPropertyNotChanged(ILogger logger, string propertyName, object sender, object? value);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "{Sender}.{PropertyName} : {OldValue} -> {NewValue}")]
+    private static partial void LogPropertyChanged(ILogger logger,
+        string propertyName,
+        object sender,
+        object? oldValue,
+        object? newValue);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "{Sender}.{PropertyName} : {OldValue} -> (cleared)")]
+    private static partial void LogPropertyCleared(ILogger logger, string propertyName, object sender, object? oldValue);
+
+    [LoggerMessage(Level = LogLevel.Trace, Message = "{Sender}.{PropertyName} : (already cleared)")]
+    private static partial void LogPropertyClearAttempt(ILogger logger, string propertyName, object sender);
+
+    #endregion
 }

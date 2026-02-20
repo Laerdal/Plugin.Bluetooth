@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class ScannerUnexpectedStopException : ScannerException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ScannerUnexpectedStopException"/> class.
+    ///     Initializes a new instance of the <see cref="ScannerUnexpectedStopException" /> class.
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

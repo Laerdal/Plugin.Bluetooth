@@ -1,9 +1,9 @@
 namespace Bluetooth.Maui.Platforms.Windows.Broadcasting;
 
-/// <inheritdoc/>
+/// <inheritdoc />
 public class BluetoothBroadcaster : BaseBluetoothBroadcaster
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public BluetoothBroadcaster(
         IBluetoothAdapter adapter,
         IBluetoothLocalServiceFactory localServiceFactory,
@@ -15,19 +15,19 @@ public class BluetoothBroadcaster : BaseBluetoothBroadcaster
     {
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override void NativeRefreshIsRunning()
     {
         throw new NotImplementedException("BluetoothBroadcaster is not yet implemented on Windows.");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override ValueTask NativeStartAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("BluetoothBroadcaster is not yet implemented on Windows.");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("BluetoothBroadcaster is not yet implemented on Windows.");

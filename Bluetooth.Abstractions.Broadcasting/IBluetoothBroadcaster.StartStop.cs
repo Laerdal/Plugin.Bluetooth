@@ -1,25 +1,38 @@
 namespace Bluetooth.Abstractions.Broadcasting;
 
 /// <summary>
-/// Interface for managing Bluetooth broadcasting operations.
-/// Enables the device to act as a Bluetooth peripheral/server, advertising services and handling client connections.
+///     Interface for managing Bluetooth broadcasting operations.
+///     Enables the device to act as a Bluetooth peripheral/server, advertising services and handling client connections.
 /// </summary>
 public partial interface IBluetoothBroadcaster
 {
     /// <summary>
-    /// Gets the current information being advertised
+    ///     Gets the current information being advertised
     /// </summary>
     BroadcastingOptions CurrentBroadcastingOptions { get; }
+
+    /// <summary>
+    ///     Submits changes to the advertised information
+    /// </summary>
+    /// <param name="options">The new set of information to broadcast</param>
+    /// <param name="timeout">The timeout for this operation</param>
+    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options" /> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when broadcasting is not active.</exception>
+    /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
+    ValueTask UpdateBroadcastingOptionsAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #region IsRunning
 
     /// <summary>
-    /// Occurs when the running state of the Bluetooth activity changes.
+    ///     Occurs when the running state of the Bluetooth activity changes.
     /// </summary>
     event EventHandler? RunningStateChanged;
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth activity is actively running.
+    ///     Gets a value indicating whether the Bluetooth activity is actively running.
     /// </summary>
     bool IsRunning { get; }
 
@@ -28,29 +41,29 @@ public partial interface IBluetoothBroadcaster
     #region Start
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth activity is starting.
+    ///     Gets a value indicating whether the Bluetooth activity is starting.
     /// </summary>
     bool IsStarting { get; }
 
     /// <summary>
-    /// Occurs when the Bluetooth activity is starting.
+    ///     Occurs when the Bluetooth activity is starting.
     /// </summary>
     event EventHandler Starting;
 
     /// <summary>
-    /// Occurs when the Bluetooth activity has started.
+    ///     Occurs when the Bluetooth activity has started.
     /// </summary>
     event EventHandler Started;
 
     /// <summary>
-    /// Asynchronously starts the Bluetooth activity with an optional timeout.
+    ///     Asynchronously starts the Bluetooth activity with an optional timeout.
     /// </summary>
     /// <param name="options">The broadcasting options to use when starting the broadcaster.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous start operation.</returns>
     /// <remarks>Ensures that the Bluetooth activity is initialized and ready for use.</remarks>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options" /> is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when broadcasting is already active.</exception>
     /// <exception cref="PlatformNotSupportedException">Thrown when the platform doesn't support peripheral mode.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
@@ -58,7 +71,7 @@ public partial interface IBluetoothBroadcaster
     ValueTask StartBroadcastingAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously starts the Bluetooth activity if it is not already running, with an optional timeout.
+    ///     Asynchronously starts the Bluetooth activity if it is not already running, with an optional timeout.
     /// </summary>
     /// <param name="options">The broadcasting options to use when starting the broadcaster if needed.</param>
     /// <param name="timeout">The timeout for this operation</param>
@@ -72,22 +85,22 @@ public partial interface IBluetoothBroadcaster
     #region Stop
 
     /// <summary>
-    /// Gets a value indicating whether the Broadcaster is stopping.
+    ///     Gets a value indicating whether the Broadcaster is stopping.
     /// </summary>
     bool IsStopping { get; }
 
     /// <summary>
-    /// Occurs when the Broadcaster is stopping.
+    ///     Occurs when the Broadcaster is stopping.
     /// </summary>
     event EventHandler Stopping;
 
     /// <summary>
-    /// Occurs when the Broadcaster has stopped.
+    ///     Occurs when the Broadcaster has stopped.
     /// </summary>
     event EventHandler Stopped;
 
     /// <summary>
-    /// Asynchronously stops the Broadcaster with an optional timeout.
+    ///     Asynchronously stops the Broadcaster with an optional timeout.
     /// </summary>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
@@ -99,7 +112,7 @@ public partial interface IBluetoothBroadcaster
     ValueTask StopBroadcastingAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously stops the Broadcaster if it is running, with an optional timeout.
+    ///     Asynchronously stops the Broadcaster if it is running, with an optional timeout.
     /// </summary>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
@@ -108,18 +121,4 @@ public partial interface IBluetoothBroadcaster
     ValueTask StopBroadcastingIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
-
-    /// <summary>
-    /// Submits changes to the advertised information
-    /// </summary>
-    /// <param name="options">The new set of information to broadcast</param>
-    /// <param name="timeout">The timeout for this operation</param>
-    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when broadcasting is not active.</exception>
-    /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
-    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
-    ValueTask UpdateBroadcastingOptionsAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
-
 }

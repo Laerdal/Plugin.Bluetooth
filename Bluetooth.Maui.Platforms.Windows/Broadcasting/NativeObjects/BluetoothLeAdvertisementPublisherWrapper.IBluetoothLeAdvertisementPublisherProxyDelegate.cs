@@ -6,13 +6,13 @@ namespace Bluetooth.Maui.Platforms.Windows.Broadcasting.NativeObjects;
 public partial class BluetoothLeAdvertisementPublisherWrapper
 {
     /// <summary>
-    /// Delegate interface for handling Bluetooth LE advertisement publisher operations and events.
-    /// Extends the base Bluetooth broadcaster interface with Windows-specific publisher callbacks.
+    ///     Delegate interface for handling Bluetooth LE advertisement publisher operations and events.
+    ///     Extends the base Bluetooth broadcaster interface with Windows-specific publisher callbacks.
     /// </summary>
     public interface IBluetoothLeAdvertisementPublisherProxyDelegate
     {
         /// <summary>
-        /// Called when the advertisement publisher status changes.
+        ///     Called when the advertisement publisher status changes.
         /// </summary>
         /// <param name="status">The new publisher status.</param>
         /// <param name="errorCode">The error code associated with the status change, if any.</param>

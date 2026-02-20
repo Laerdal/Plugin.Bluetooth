@@ -1,30 +1,21 @@
+using Application = Android.App.Application;
 using Exception = System.Exception;
 
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 
 /// <summary>
-/// Android Bluetooth GATT server callback proxy that handles GATT server events.
-/// Implements <see cref="BluetoothGattServerCallback"/> to redirect events to the delegate instance.
+///     Android Bluetooth GATT server callback proxy that handles GATT server events.
+///     Implements <see cref="BluetoothGattServerCallback" /> to redirect events to the delegate instance.
 /// </summary>
 /// <remarks>
-/// This class wraps the Android BluetoothGattServerCallback and provides exception handling
-/// for all callback methods. See Android documentation:
-/// https://developer.android.com/reference/android/bluetooth/BluetoothGattServerCallback
+///     This class wraps the Android BluetoothGattServerCallback and provides exception handling
+///     for all callback methods. See Android documentation:
+///     https://developer.android.com/reference/android/bluetooth/BluetoothGattServerCallback
 /// </remarks>
 public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallback
 {
     /// <summary>
-    /// Gets the delegate instance that receives callback events.
-    /// </summary>
-    private IBluetoothGattServerCallbackProxyDelegate BluetoothGattServerCallbackProxyDelegate { get; }
-
-    /// <summary>
-    /// Gets the Bluetooth GATT server instance for communication with remote devices.
-    /// </summary>
-    public BluetoothGattServer BluetoothGattServer { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothGattServerCallbackProxy"/> class.
+    ///     Initializes a new instance of the <see cref="BluetoothGattServerCallbackProxy" /> class.
     /// </summary>
     /// <param name="bluetoothGattServerCallbackProxyDelegate">The delegate instance that will receive callback events.</param>
     /// <exception cref="InvalidOperationException">Thrown when the GATT server cannot be opened.</exception>
@@ -32,12 +23,22 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     {
         ArgumentNullException.ThrowIfNull(bluetoothGattServerCallbackProxyDelegate);
         ArgumentNullException.ThrowIfNull(bluetoothManager);
-        
+
         BluetoothGattServerCallbackProxyDelegate = bluetoothGattServerCallbackProxyDelegate;
-        BluetoothGattServer = bluetoothManager.OpenGattServer(Android.App.Application.Context, this) ?? throw new InvalidOperationException("Failed to open GATT server");
+        BluetoothGattServer = bluetoothManager.OpenGattServer(Application.Context, this) ?? throw new InvalidOperationException("Failed to open GATT server");
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///     Gets the delegate instance that receives callback events.
+    /// </summary>
+    private IBluetoothGattServerCallbackProxyDelegate BluetoothGattServerCallbackProxyDelegate { get; }
+
+    /// <summary>
+    ///     Gets the Bluetooth GATT server instance for communication with remote devices.
+    /// </summary>
+    public BluetoothGattServer BluetoothGattServer { get; }
+
+    /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
         if (disposing)
@@ -45,11 +46,12 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
             BluetoothGattServer.Close();
             BluetoothGattServer.Dispose();
         }
+
         base.Dispose(disposing);
     }
 
-    /// <inheritdoc/>
-    public override void OnMtuChanged(Android.Bluetooth.BluetoothDevice? device, int mtu)
+    /// <inheritdoc />
+    public override void OnMtuChanged(BluetoothDevice? device, int mtu)
     {
         try
         {
@@ -65,8 +67,8 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         }
     }
 
-    /// <inheritdoc/>
-    public override void OnExecuteWrite(Android.Bluetooth.BluetoothDevice? device, int requestId, bool execute)
+    /// <inheritdoc />
+    public override void OnExecuteWrite(BluetoothDevice? device, int requestId, bool execute)
     {
         try
         {
@@ -82,8 +84,8 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         }
     }
 
-    /// <inheritdoc/>
-    public override void OnNotificationSent(Android.Bluetooth.BluetoothDevice? device, GattStatus status)
+    /// <inheritdoc />
+    public override void OnNotificationSent(BluetoothDevice? device, GattStatus status)
     {
         try
         {
@@ -129,7 +131,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     ///         </item>
     ///     </list>
     /// </remarks>
-    public override void OnPhyRead(Android.Bluetooth.BluetoothDevice? device, ScanSettingsPhy txPhy, ScanSettingsPhy rxPhy, GattStatus status)
+    public override void OnPhyRead(BluetoothDevice? device, ScanSettingsPhy txPhy, ScanSettingsPhy rxPhy, GattStatus status)
     {
         try
         {
@@ -175,7 +177,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     ///         </item>
     ///     </list>
     /// </remarks>
-    public override void OnPhyUpdate(Android.Bluetooth.BluetoothDevice? device, ScanSettingsPhy txPhy, ScanSettingsPhy rxPhy, GattStatus status)
+    public override void OnPhyUpdate(BluetoothDevice? device, ScanSettingsPhy txPhy, ScanSettingsPhy rxPhy, GattStatus status)
     {
         try
         {
@@ -242,8 +244,8 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
         }
     }
 
-    /// <inheritdoc/>
-    public override void OnConnectionStateChange(Android.Bluetooth.BluetoothDevice? device, ProfileState status, ProfileState newState)
+    /// <inheritdoc />
+    public override void OnConnectionStateChange(BluetoothDevice? device, ProfileState status, ProfileState newState)
     {
         try
         {
@@ -288,7 +290,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     ///         </item>
     ///     </list>
     /// </remarks>
-    public override void OnCharacteristicReadRequest(Android.Bluetooth.BluetoothDevice? device, int requestId, int offset, BluetoothGattCharacteristic? characteristic)
+    public override void OnCharacteristicReadRequest(BluetoothDevice? device, int requestId, int offset, BluetoothGattCharacteristic? characteristic)
     {
         try
         {
@@ -341,14 +343,15 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     ///     <list type="bullet">
     ///         <item>
     ///             <description>
-    ///                 <a href="https://developer.android.com/reference/android/bluetooth/BluetoothGattServerCallback#onCharacteristicWriteRequest(android.bluetooth.BluetoothDevice,%20int,%20android.bluetooth.BluetoothGattCharacteristic,%20boolean,%20boolean,%20int,%20byte[])">
+    ///                 <a
+    ///                     href="https://developer.android.com/reference/android/bluetooth/BluetoothGattServerCallback#onCharacteristicWriteRequest(android.bluetooth.BluetoothDevice,%20int,%20android.bluetooth.BluetoothGattCharacteristic,%20boolean,%20boolean,%20int,%20byte[])">
     ///                     BluetoothGattServerCallback.OnCharacteristicWriteRequest (Android API)
     ///                 </a>
     ///             </description>
     ///         </item>
     ///     </list>
     /// </remarks>
-    public override void OnCharacteristicWriteRequest(Android.Bluetooth.BluetoothDevice? device,
+    public override void OnCharacteristicWriteRequest(BluetoothDevice? device,
         int requestId,
         BluetoothGattCharacteristic? characteristic,
         bool preparedWrite,
@@ -369,11 +372,11 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
 
             // ACTION
             sharedCharacteristic.OnCharacteristicWriteRequest(sharedDevice,
-                                                              requestId,
-                                                              preparedWrite,
-                                                              responseNeeded,
-                                                              offset,
-                                                              value ?? []);
+                requestId,
+                preparedWrite,
+                responseNeeded,
+                offset,
+                value ?? []);
         }
         catch (Exception e)
         {
@@ -410,7 +413,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     ///         </item>
     ///     </list>
     /// </remarks>
-    public override void OnDescriptorReadRequest(Android.Bluetooth.BluetoothDevice? device, int requestId, int offset, BluetoothGattDescriptor? descriptor)
+    public override void OnDescriptorReadRequest(BluetoothDevice? device, int requestId, int offset, BluetoothGattDescriptor? descriptor)
     {
         try
         {
@@ -466,14 +469,15 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     ///     <list type="bullet">
     ///         <item>
     ///             <description>
-    ///                 <a href="https://developer.android.com/reference/android/bluetooth/BluetoothGattServerCallback#onDescriptorWriteRequest(android.bluetooth.BluetoothDevice,%20int,%20android.bluetooth.BluetoothGattDescriptor,%20boolean,%20boolean,%20int,%20byte[])">
+    ///                 <a
+    ///                     href="https://developer.android.com/reference/android/bluetooth/BluetoothGattServerCallback#onDescriptorWriteRequest(android.bluetooth.BluetoothDevice,%20int,%20android.bluetooth.BluetoothGattDescriptor,%20boolean,%20boolean,%20int,%20byte[])">
     ///                     BluetoothGattServerCallback.OnDescriptorWriteRequest (Android API)
     ///                 </a>
     ///             </description>
     ///         </item>
     ///     </list>
     /// </remarks>
-    public override void OnDescriptorWriteRequest(Android.Bluetooth.BluetoothDevice? device,
+    public override void OnDescriptorWriteRequest(BluetoothDevice? device,
         int requestId,
         BluetoothGattDescriptor? descriptor,
         bool preparedWrite,
@@ -497,12 +501,12 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
 
             // ACTION
             sharedDescriptor.OnDescriptorWriteRequest(sharedDevice,
-                                                      requestId,
-                                                      descriptor,
-                                                      preparedWrite,
-                                                      responseNeeded,
-                                                      offset,
-                                                      value ?? []);
+                requestId,
+                descriptor,
+                preparedWrite,
+                responseNeeded,
+                offset,
+                value ?? []);
         }
         catch (Exception e)
         {

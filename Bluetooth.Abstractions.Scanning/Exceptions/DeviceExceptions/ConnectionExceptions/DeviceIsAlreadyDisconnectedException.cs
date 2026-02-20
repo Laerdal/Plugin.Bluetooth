@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class DeviceIsAlreadyDisconnectedException : DeviceException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DeviceIsAlreadyDisconnectedException"/> class.
+    ///     Initializes a new instance of the <see cref="DeviceIsAlreadyDisconnectedException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>
@@ -17,10 +17,10 @@ public class DeviceIsAlreadyDisconnectedException : DeviceException
     }
 
     /// <summary>
-    ///     Throws a <see cref="DeviceIsAlreadyDisconnectedException"/> if the device is already disconnected.
+    ///     Throws a <see cref="DeviceIsAlreadyDisconnectedException" /> if the device is already disconnected.
     /// </summary>
     /// <param name="device">The Bluetooth device to check.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="device"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="device" /> is null.</exception>
     /// <exception cref="DeviceIsAlreadyDisconnectedException">Thrown when the device is already disconnected.</exception>
     public static void ThrowIfAlreadyDisconnected(IBluetoothRemoteDevice device)
     {

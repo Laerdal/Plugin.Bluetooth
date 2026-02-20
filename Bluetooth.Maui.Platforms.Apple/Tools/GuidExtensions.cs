@@ -1,14 +1,14 @@
 namespace Bluetooth.Maui.Platforms.Apple.Tools;
 
 /// <summary>
-/// Extension methods for converting between System.Guid and iOS CoreBluetooth UUID types.
+///     Extension methods for converting between System.Guid and iOS CoreBluetooth UUID types.
 /// </summary>
 public static class GuidExtensions
 {
     private const string StandardGuidExtension = "-0000-1000-8000-00805F9B34FB";
 
     /// <summary>
-    /// Converts an NSUuid to a System.Guid.
+    ///     Converts an NSUuid to a System.Guid.
     /// </summary>
     /// <param name="uuid">The NSUuid to convert.</param>
     /// <returns>A System.Guid representation of the NSUuid.</returns>
@@ -20,7 +20,7 @@ public static class GuidExtensions
     }
 
     /// <summary>
-    /// Converts a CBUUID to a System.Guid, handling both 16-bit and 128-bit UUIDs.
+    ///     Converts a CBUUID to a System.Guid, handling both 16-bit and 128-bit UUIDs.
     /// </summary>
     /// <param name="uuid">The CBUUID to convert.</param>
     /// <returns>A System.Guid representation of the CBUUID.</returns>
@@ -43,7 +43,7 @@ public static class GuidExtensions
     }
 
     /// <summary>
-    /// Converts a System.Guid to an NSUuid.
+    ///     Converts a System.Guid to an NSUuid.
     /// </summary>
     /// <param name="value">The System.Guid to convert.</param>
     /// <returns>An NSUuid representation of the System.Guid.</returns>
@@ -58,7 +58,7 @@ public static class GuidExtensions
     // guid 12345678-0000-1000-8000-00805F9B34FB -> cbuuid 12345678  (special case for 32bit ble uuids)
     // guid ADC23234-3209-3240-2308-209ABDE0932F -> cbuuid ADC23234-3209-3240-2308-209ABDE0932F
     /// <summary>
-    /// Converts a System.Guid to a CBUUID, with optional shortening for standard Bluetooth UUIDs.
+    ///     Converts a System.Guid to a CBUUID, with optional shortening for standard Bluetooth UUIDs.
     /// </summary>
     /// <param name="value">The System.Guid to convert.</param>
     /// <param name="shorten">Whether to shorten standard Bluetooth UUIDs to their 16-bit or 32-bit forms.</param>

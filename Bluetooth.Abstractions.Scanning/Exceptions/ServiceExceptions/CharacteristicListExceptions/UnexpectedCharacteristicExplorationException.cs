@@ -8,7 +8,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class UnexpectedCharacteristicExplorationException : CharacteristicExplorationException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="UnexpectedCharacteristicExplorationException"/> class.
+    ///     Initializes a new instance of the <see cref="UnexpectedCharacteristicExplorationException" /> class.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

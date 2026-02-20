@@ -1,18 +1,18 @@
 namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 
 /// <summary>
-/// Represents a Bluetooth Low Energy advertisement packet received from a Windows device.
-/// This readonly struct wraps Windows Bluetooth advertisement data.
+///     Represents a Bluetooth Low Energy advertisement packet received from a Windows device.
+///     This readonly struct wraps Windows Bluetooth advertisement data.
 /// </summary>
 /// <remarks>
-/// This is a readonly struct for memory efficiency. Since advertisements arrive by the thousands,
-/// using a value type eliminates heap allocations and reduces GC pressure.
+///     This is a readonly struct for memory efficiency. Since advertisements arrive by the thousands,
+///     using a value type eliminates heap allocations and reduces GC pressure.
 /// </remarks>
 public readonly record struct BluetoothAdvertisement : IBluetoothAdvertisement
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothAdvertisement"/> struct from Windows Bluetooth LE event arguments.
-    /// For more information, see <see href="https://docs.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs"/>.
+    ///     Initializes a new instance of the <see cref="BluetoothAdvertisement" /> struct from Windows Bluetooth LE event arguments.
+    ///     For more information, see <see href="https://docs.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs" />.
     /// </summary>
     /// <param name="args">The Windows Bluetooth LE advertisement received event arguments.</param>
     public BluetoothAdvertisement(BluetoothLEAdvertisementReceivedEventArgs args)
@@ -22,7 +22,7 @@ public readonly record struct BluetoothAdvertisement : IBluetoothAdvertisement
         DeviceName = ExtractDeviceName(args);
         ServicesGuids = args.Advertisement.ServiceUuids?.ToArray() ?? [];
         IsConnectable = args.AdvertisementType is BluetoothLEAdvertisementType.ConnectableDirected
-                                                or BluetoothLEAdvertisementType.ConnectableUndirected;
+            or BluetoothLEAdvertisementType.ConnectableUndirected;
         RawSignalStrengthInDBm = args.RawSignalStrengthInDBm;
         TransmitPowerLevelInDBm = ExtractTransmitPowerLevel(args);
         BluetoothAddress = ConvertNumericBleAddressToHexBleAddress(args.BluetoothAddress);
@@ -32,36 +32,36 @@ public readonly record struct BluetoothAdvertisement : IBluetoothAdvertisement
 
     #region IBluetoothAdvertisement Members
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public DateTimeOffset DateReceived { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string DeviceName { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IEnumerable<Guid> ServicesGuids { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool IsConnectable { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int RawSignalStrengthInDBm { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int TransmitPowerLevelInDBm { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string BluetoothAddress { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ReadOnlyMemory<byte> ManufacturerData { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public Manufacturer Manufacturer => ManufacturerData.Length >= 2
-        ? (Manufacturer)ManufacturerId
-        : (Manufacturer)(-1);
+        ? (Manufacturer) ManufacturerId
+        : (Manufacturer) (-1);
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int ManufacturerId
     {
         get
@@ -94,7 +94,7 @@ public readonly record struct BluetoothAdvertisement : IBluetoothAdvertisement
     {
         var data = TryGetSectionData(args, BluetoothLEAdvertisementDataTypes.TxPowerLevel);
         var firstByteOrDefaultToZero = data?[0] ?? 0;
-        return (sbyte)firstByteOrDefaultToZero;
+        return (sbyte) firstByteOrDefaultToZero;
     }
 
     private static ReadOnlyMemory<byte> ExtractManufacturerData(BluetoothLEAdvertisementReceivedEventArgs args)

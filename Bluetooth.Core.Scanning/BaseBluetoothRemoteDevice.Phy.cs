@@ -2,30 +2,30 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteDevice
 {
-    /// <inheritdoc/>
-    public PhyMode CurrentTxPhy
-    {
-        get => GetValue(PhyMode.Le1M);
-        private set => SetValue(value);
-    }
-
-    /// <inheritdoc/>
-    public PhyMode CurrentRxPhy
-    {
-        get => GetValue(PhyMode.Le1M);
-        private set => SetValue(value);
-    }
-
-    /// <inheritdoc/>
-    public event EventHandler<PhyChangedEventArgs>? PhyChanged;
-
     private TaskCompletionSource? SetPreferredPhyTcs
     {
         get => GetValue<TaskCompletionSource?>(null);
         set => SetValue(value);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
+    public PhyMode CurrentTxPhy
+    {
+        get => GetValue(PhyMode.Le1M);
+        private set => SetValue(value);
+    }
+
+    /// <inheritdoc />
+    public PhyMode CurrentRxPhy
+    {
+        get => GetValue(PhyMode.Le1M);
+        private set => SetValue(value);
+    }
+
+    /// <inheritdoc />
+    public event EventHandler<PhyChangedEventArgs>? PhyChanged;
+
+    /// <inheritdoc />
     public async ValueTask SetPreferredPhyAsync(PhyMode txPhy, PhyMode rxPhy, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Prevents multiple calls
@@ -57,12 +57,12 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Platform-specific implementation to set preferred PHY.
+    ///     Platform-specific implementation to set preferred PHY.
     /// </summary>
     protected abstract ValueTask NativeSetPreferredPhyAsync(PhyMode txPhy, PhyMode rxPhy);
 
     /// <summary>
-    /// Called when PHY changes.
+    ///     Called when PHY changes.
     /// </summary>
     protected void OnPhyChanged(PhyMode txPhy, PhyMode rxPhy)
     {
@@ -74,7 +74,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Called when set preferred PHY fails.
+    ///     Called when set preferred PHY fails.
     /// </summary>
     protected void OnSetPreferredPhyFailed(Exception e)
     {

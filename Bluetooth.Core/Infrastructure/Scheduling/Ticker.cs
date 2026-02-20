@@ -1,32 +1,25 @@
 namespace Bluetooth.Core.Infrastructure.Scheduling;
 
 /// <summary>
-/// Implementation of the ITicker interface.
+///     Implementation of the ITicker interface.
 /// </summary>
 public sealed partial class Ticker : ITicker, IDisposable
 {
+    private readonly object _gate = new();
     private readonly ILogger<Ticker> _logger;
+    private readonly Dictionary<Guid, Registration> _registrations = new();
     private readonly TimeSpan _resolution;
-
-    private readonly object _gate = new object();
-    private readonly Dictionary<Guid, Registration> _registrations = new Dictionary<Guid, Registration>();
-
-    private PeriodicTimer? _timer;
     private CancellationTokenSource? _cts;
     private Task? _loopTask;
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Ticker loop crashed.")]
-    private static partial void LogTickerLoopCrashed(ILogger logger, Exception ex);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Ticker job '{JobName}' failed.")]
-    private static partial void LogTickerJobFailed(ILogger logger, string jobName, Exception ex);
+    private PeriodicTimer? _timer;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Ticker"/> class.
+    ///     Initializes a new instance of the <see cref="Ticker" /> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="options">The ticker options.</param>
-    public Ticker(ILogger<Ticker> logger, Microsoft.Extensions.Options.IOptions<TickerOptions> options)
+    public Ticker(ILogger<Ticker> logger, IOptions<TickerOptions> options)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -36,17 +29,26 @@ public sealed partial class Ticker : ITicker, IDisposable
             : options.Value.Resolution;
     }
 
-    /// <inheritdoc/>
-    public IDisposable Register(string name, TimeSpan period, Action tick, bool runImmediately = false)
+    /// <inheritdoc />
+    public void Dispose()
     {
-        return Register(name, period, ct =>
-            {
-                tick();
-                return Task.CompletedTask;
-            }, runImmediately);
+        lock (_gate)
+        {
+            Stop_NoLock();
+            _registrations.Clear();
+        }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
+    public IDisposable Register(string name, TimeSpan period, Action tick, bool runImmediately = false)
+    {
+        return Register(name, period, ct => {
+            tick();
+            return Task.CompletedTask;
+        }, runImmediately);
+    }
+
+    /// <inheritdoc />
     public IDisposable Register(string name, TimeSpan period, Func<CancellationToken, Task> tickAsync, bool runImmediately = false)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -71,6 +73,12 @@ public sealed partial class Ticker : ITicker, IDisposable
         // If runImmediately, schedule it; the loop will pick it up.
         return new Subscription(this, id);
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Ticker loop crashed.")]
+    private static partial void LogTickerLoopCrashed(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Ticker job '{JobName}' failed.")]
+    private static partial void LogTickerJobFailed(ILogger logger, string jobName, Exception ex);
 
     private void EnsureStarted_NoLock()
     {
@@ -191,7 +199,11 @@ public sealed partial class Ticker : ITicker, IDisposable
 
     private void Stop_NoLock()
     {
-        try { _cts?.Cancel(); } catch { /* ignore */ }
+        try { _cts?.Cancel(); }
+        catch
+        {
+            /* ignore */
+        }
 
         _timer?.Dispose();
         _timer = null;
@@ -202,20 +214,10 @@ public sealed partial class Ticker : ITicker, IDisposable
         _loopTask = null;
     }
 
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        lock (_gate)
-        {
-            Stop_NoLock();
-            _registrations.Clear();
-        }
-    }
-
     private sealed class Subscription : IDisposable
     {
-        private readonly Ticker _owner;
         private readonly Guid _id;
+        private readonly Ticker _owner;
         private int _disposed;
 
         public Subscription(Ticker owner, Guid id)

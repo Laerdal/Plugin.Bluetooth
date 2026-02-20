@@ -2,11 +2,11 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 
-/// <inheritdoc/>
+/// <inheritdoc />
 public record AppleBluetoothDescriptorFactoryRequest : IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AppleBluetoothDescriptorFactoryRequest"/> class with the specified Core Bluetooth descriptor.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothDescriptorFactoryRequest" /> class with the specified Core Bluetooth descriptor.
     /// </summary>
     public AppleBluetoothDescriptorFactoryRequest([NotNull] CBDescriptor cbDescriptor) : base(cbDescriptor.UUID.ToGuid())
     {
@@ -14,7 +14,7 @@ public record AppleBluetoothDescriptorFactoryRequest : IBluetoothDescriptorFacto
     }
 
     /// <summary>
-    /// Gets the native iOS Core Bluetooth descriptor.
+    ///     Gets the native iOS Core Bluetooth descriptor.
     /// </summary>
     public CBDescriptor CbDescriptor { get; init; }
 }

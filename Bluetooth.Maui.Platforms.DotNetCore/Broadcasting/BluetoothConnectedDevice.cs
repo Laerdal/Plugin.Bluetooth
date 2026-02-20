@@ -1,9 +1,9 @@
 namespace Bluetooth.Maui.Platforms.DotNetCore.Broadcasting;
 
-/// <inheritdoc/>
-public class BluetoothConnectedDevice : Core.Broadcasting.BaseBluetoothConnectedDevice
+/// <inheritdoc />
+public class BluetoothConnectedDevice : BaseBluetoothConnectedDevice
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     public BluetoothConnectedDevice(IBluetoothBroadcaster broadcaster,
         IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec request,
@@ -11,7 +11,7 @@ public class BluetoothConnectedDevice : Core.Broadcasting.BaseBluetoothConnected
     {
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {

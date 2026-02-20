@@ -1,12 +1,12 @@
 namespace Bluetooth.Maui.Sample.Scanner.Converters;
 
 /// <summary>
-/// Converts an integer value to a boolean indicating whether it's not zero.
+///     Converts an integer value to a boolean indicating whether it's not zero.
 /// </summary>
 public class IsNotZeroConverter : IValueConverter
 {
     /// <summary>
-    /// Converts an integer to a boolean (true if not zero).
+    ///     Converts an integer to a boolean (true if not zero).
     /// </summary>
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -29,7 +29,7 @@ public class IsNotZeroConverter : IValueConverter
     }
 
     /// <summary>
-    /// Not implemented for one-way conversion.
+    ///     Not implemented for one-way conversion.
     /// </summary>
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {

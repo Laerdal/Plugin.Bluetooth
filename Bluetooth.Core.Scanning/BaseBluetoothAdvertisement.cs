@@ -2,14 +2,14 @@ namespace Bluetooth.Core.Scanning;
 
 /// <inheritdoc cref="IBluetoothAdvertisement" />
 /// <remarks>
-/// This is a readonly struct for memory efficiency. Advertisements are immutable snapshots
-/// that are created frequently (thousands per second), so using a value type reduces heap allocations
-/// and GC pressure significantly.
+///     This is a readonly struct for memory efficiency. Advertisements are immutable snapshots
+///     that are created frequently (thousands per second), so using a value type reduces heap allocations
+///     and GC pressure significantly.
 /// </remarks>
 public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertisement
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothAdvertisement"/> struct.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothAdvertisement" /> struct.
     /// </summary>
     /// <param name="deviceName">The device name from the advertisement.</param>
     /// <param name="servicesGuids">The collection of service GUIDs advertised.</param>
@@ -39,36 +39,36 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
 
     #region IBluetoothAdvertisement Members
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public DateTimeOffset DateReceived { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string DeviceName { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IEnumerable<Guid> ServicesGuids { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool IsConnectable { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int RawSignalStrengthInDBm { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int TransmitPowerLevelInDBm { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string BluetoothAddress { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ReadOnlyMemory<byte> ManufacturerData { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public Manufacturer Manufacturer => ManufacturerData.Length >= 2
-        ? (Manufacturer)ManufacturerId
-        : (Manufacturer)(-1);
+        ? (Manufacturer) ManufacturerId
+        : (Manufacturer) (-1);
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int ManufacturerId
     {
         get

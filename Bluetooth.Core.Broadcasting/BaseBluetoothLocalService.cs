@@ -1,25 +1,17 @@
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
-/// Base class for Bluetooth broadcaster services.
+///     Base class for Bluetooth broadcaster services.
 /// </summary>
 public abstract partial class BaseBluetoothLocalService : BaseBindableObject, IBluetoothLocalService
 {
     /// <summary>
-    /// The logger instance used for logging service operations.
+    ///     The logger instance used for logging service operations.
     /// </summary>
     private readonly ILogger<IBluetoothLocalService> _logger;
 
-    /// <inheritdoc/>
-    public IBluetoothBroadcaster Broadcaster { get; }
-
     /// <summary>
-    /// Factory for creating characteristics within this service.
-    /// </summary>
-    protected IBluetoothLocalCharacteristicFactory LocalCharacteristicFactory { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothLocalService"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothLocalService" /> class.
     /// </summary>
     /// <param name="broadcaster">The broadcaster that owns this service.</param>
     /// <param name="request">The request for creating the service.</param>
@@ -41,33 +33,41 @@ public abstract partial class BaseBluetoothLocalService : BaseBindableObject, IB
         IsPrimary = request.IsPrimary;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///     Factory for creating characteristics within this service.
+    /// </summary>
+    protected IBluetoothLocalCharacteristicFactory LocalCharacteristicFactory { get; }
+
+    /// <inheritdoc />
+    public IBluetoothBroadcaster Broadcaster { get; }
+
+    /// <inheritdoc />
     public Guid Id { get; }
 
     /// <inheritdoc />
     public string Name { get; } = "Unknown Service";
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool IsPrimary { get; }
-
-    /// <inheritdoc/>
-    public override string ToString()
-    {
-        return $"[{Id}] {Name}";
-    }
-
-    /// <summary>
-    /// Disposes the resources asynchronously.
-    /// </summary>
-    protected async virtual ValueTask DisposeAsyncCore()
-    {
-        await RemoveAllCharacteristicsAsync().ConfigureAwait(false);
-    }
 
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore().ConfigureAwait(false);
         GC.SuppressFinalize(this);
+    }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return $"[{Id}] {Name}";
+    }
+
+    /// <summary>
+    ///     Disposes the resources asynchronously.
+    /// </summary>
+    protected async virtual ValueTask DisposeAsyncCore()
+    {
+        await RemoveAllCharacteristicsAsync().ConfigureAwait(false);
     }
 }

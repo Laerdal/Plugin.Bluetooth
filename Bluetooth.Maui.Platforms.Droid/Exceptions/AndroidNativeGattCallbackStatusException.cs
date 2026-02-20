@@ -3,22 +3,17 @@ using Bluetooth.Maui.Platforms.Droid.Enums;
 namespace Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 /// <summary>
-/// Represents an exception that occurs when Android GATT callback operations return a non-success status.
+///     Represents an exception that occurs when Android GATT callback operations return a non-success status.
 /// </summary>
 /// <remarks>
-/// This exception wraps Android's GattCallbackStatus enum values to provide detailed
-/// information about why GATT callback operations failed.
+///     This exception wraps Android's GattCallbackStatus enum values to provide detailed
+///     information about why GATT callback operations failed.
 /// </remarks>
 /// <seealso cref="AndroidNativeBluetoothException" />
 public class AndroidNativeGattCallbackStatusException : AndroidNativeBluetoothException
 {
     /// <summary>
-    /// Gets the specific GattCallbackStatus that caused this exception.
-    /// </summary>
-    public GattCallbackStatus GattCallbackStatus { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusException"/> class with the specified GattCallbackStatus and inner exception.
+    ///     Initializes a new instance of the <see cref="AndroidNativeGattCallbackStatusException" /> class with the specified GattCallbackStatus and inner exception.
     /// </summary>
     /// <param name="status">The GattCallbackStatus that caused this exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception.</param>
@@ -29,7 +24,12 @@ public class AndroidNativeGattCallbackStatusException : AndroidNativeBluetoothEx
     }
 
     /// <summary>
-    /// Throws an <see cref="AndroidNativeGattCallbackStatusException"/> if the status is not GATT_SUCCESS.
+    ///     Gets the specific GattCallbackStatus that caused this exception.
+    /// </summary>
+    public GattCallbackStatus GattCallbackStatus { get; }
+
+    /// <summary>
+    ///     Throws an <see cref="AndroidNativeGattCallbackStatusException" /> if the status is not GATT_SUCCESS.
     /// </summary>
     /// <param name="status">The status to check.</param>
     /// <exception cref="AndroidNativeGattCallbackStatusException">Thrown when the status is not GATT_SUCCESS.</exception>
@@ -43,7 +43,7 @@ public class AndroidNativeGattCallbackStatusException : AndroidNativeBluetoothEx
 
     private static string GattCallbackStatusToDescription(GattCallbackStatus status)
     {
-        var statusCodeValue = (int)status;
+        var statusCodeValue = (int) status;
         return statusCodeValue switch
         {
             0x00 => "Success: The GATT operation completed successfully.",

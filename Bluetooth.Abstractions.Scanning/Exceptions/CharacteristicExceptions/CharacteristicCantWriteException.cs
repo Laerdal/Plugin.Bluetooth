@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class CharacteristicCantWriteException : CharacteristicException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="CharacteristicCantWriteException"/> class.
+    ///     Initializes a new instance of the <see cref="CharacteristicCantWriteException" /> class.
     /// </summary>
     /// <param name="remoteCharacteristic">The Bluetooth characteristic associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>
@@ -21,7 +21,7 @@ public class CharacteristicCantWriteException : CharacteristicException
     }
 
     /// <summary>
-    ///     Throws a <see cref="CharacteristicCantWriteException"/> if the specified characteristic cannot be written to.
+    ///     Throws a <see cref="CharacteristicCantWriteException" /> if the specified characteristic cannot be written to.
     /// </summary>
     /// <param name="baseBluetoothRemoteCharacteristic">The Bluetooth characteristic to check.</param>
     public static void ThrowIfCantWrite(IBluetoothRemoteCharacteristic baseBluetoothRemoteCharacteristic)

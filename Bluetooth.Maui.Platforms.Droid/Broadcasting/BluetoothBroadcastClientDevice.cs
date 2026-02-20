@@ -2,33 +2,19 @@ using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 
-/// <inheritdoc/>
+/// <inheritdoc />
 public class BluetoothBroadcastClientDevice : BaseBluetoothConnectedDevice,
     BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate
 {
-    /// <summary>
-    /// Gets or sets the native Android Bluetooth device.
-    /// </summary>
-    public Android.Bluetooth.BluetoothDevice? NativeDevice { get; private set; }
-
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public BluetoothBroadcastClientDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec request) : base(broadcaster, request)
     {
     }
 
-    /// <inheritdoc/>
-    protected override ValueTask DisposeAsyncCore()
-    {
-        NativeDevice = null;
-        return base.DisposeAsyncCore();
-    }
-
-
-    /// <inheritdoc/>
-    protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("Client device disconnect is not yet implemented on Android.");
-    }
+    /// <summary>
+    ///     Gets or sets the native Android Bluetooth device.
+    /// </summary>
+    public BluetoothDevice? NativeDevice { get; private set; }
 
     // BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate implementation
     void BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate.OnMtuChanged(int mtu)
@@ -62,5 +48,19 @@ public class BluetoothBroadcastClientDevice : BaseBluetoothConnectedDevice,
     void BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate.OnConnectionStateChange(ProfileState status, ProfileState newState)
     {
         // Connection state changed
+    }
+
+    /// <inheritdoc />
+    protected override ValueTask DisposeAsyncCore()
+    {
+        NativeDevice = null;
+        return base.DisposeAsyncCore();
+    }
+
+
+    /// <inheritdoc />
+    protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("Client device disconnect is not yet implemented on Android.");
     }
 }

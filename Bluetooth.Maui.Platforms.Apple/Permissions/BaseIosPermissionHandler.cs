@@ -1,16 +1,14 @@
-using System.Collections.Generic;
-
-using Microsoft.Maui.ApplicationModel;
-
 namespace Bluetooth.Maui.Platforms.Apple.Permissions;
 
 /// <summary>
-/// Base class for iOS-specific permission handling.
+///     Base class for iOS-specific permission handling.
 /// </summary>
 public abstract class BaseIosPermissionHandler : Microsoft.Maui.ApplicationModel.Permissions.BasePlatformPermission
 {
+    private readonly string _infoPlistKey;
+
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseIosPermissionHandler"/> class.
+    ///     Initializes a new instance of the <see cref="BaseIosPermissionHandler" /> class.
     /// </summary>
     /// <param name="infoPlistKey">The Info.plist key associated with this permission.</param>
     protected BaseIosPermissionHandler(string infoPlistKey)
@@ -18,10 +16,8 @@ public abstract class BaseIosPermissionHandler : Microsoft.Maui.ApplicationModel
         _infoPlistKey = infoPlistKey;
     }
 
-    private readonly string _infoPlistKey;
-
     /// <summary>
-    /// Gets the required Info.plist keys for this permission.
+    ///     Gets the required Info.plist keys for this permission.
     /// </summary>
     protected override Func<IEnumerable<string>> RequiredInfoPlistKeys => () =>
     [
@@ -29,7 +25,7 @@ public abstract class BaseIosPermissionHandler : Microsoft.Maui.ApplicationModel
     ];
 
     /// <summary>
-    /// Requests the permission if needed asynchronously.
+    ///     Requests the permission if needed asynchronously.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     /// <exception cref="PermissionException"></exception>

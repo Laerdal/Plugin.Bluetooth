@@ -4,7 +4,7 @@ namespace Bluetooth.Core.Scanning.Factories;
 public abstract class BaseBluetoothDeviceFactory : IBluetoothDeviceFactory
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothDeviceFactory"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothDeviceFactory" /> class.
     /// </summary>
     protected BaseBluetoothDeviceFactory(IBluetoothServiceFactory serviceFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter)
     {
@@ -13,12 +13,12 @@ public abstract class BaseBluetoothDeviceFactory : IBluetoothDeviceFactory
     }
 
     /// <summary>
-    /// Gets the service factory to pass to the new Device.
+    ///     Gets the service factory to pass to the new Device.
     /// </summary>
     protected IBluetoothServiceFactory ServiceFactory { get; }
 
     /// <summary>
-    /// Gets the RSSI to signal strength converter to pass to the new Device.
+    ///     Gets the RSSI to signal strength converter to pass to the new Device.
     /// </summary>
     protected IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
 

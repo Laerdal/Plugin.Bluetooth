@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class DeviceUnexpectedDisconnectionException : DeviceException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DeviceUnexpectedDisconnectionException"/> class.
+    ///     Initializes a new instance of the <see cref="DeviceUnexpectedDisconnectionException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

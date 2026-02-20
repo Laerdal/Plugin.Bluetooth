@@ -3,7 +3,7 @@ namespace Bluetooth.Core.Scanning;
 public abstract partial class BaseBluetoothRemoteDevice
 {
     /// <summary>
-    /// Waits for the device's advertised name to change.
+    ///     Waits for the device's advertised name to change.
     /// </summary>
     /// <param name="timeout">Optional timeout for the operation.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
@@ -14,7 +14,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Gets the debug-friendly name of the device, including both advertised and cached names for logging purposes.
+    ///     Gets the debug-friendly name of the device, including both advertised and cached names for logging purposes.
     /// </summary>
     public string DebugName
     {
@@ -23,7 +23,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Gets the name advertised by the device in its advertisement data.
+    ///     Gets the name advertised by the device in its advertisement data.
     /// </summary>
     public string AdvertisedName
     {
@@ -39,7 +39,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string Name
     {
         get => GetValue("");
@@ -47,7 +47,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Gets the cached name of the device, typically stored from previous connections or GATT reads.
+    ///     Gets the cached name of the device, typically stored from previous connections or GATT reads.
     /// </summary>
     public string CachedName
     {

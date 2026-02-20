@@ -4,48 +4,35 @@ using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 
 /// <inheritdoc cref="BaseBluetoothLocalCharacteristic" />
-public class AppleBluetoothLocalCharacteristic : Core.Broadcasting.BaseBluetoothLocalCharacteristic, CbPeripheralManagerWrapper.ICbCharacteristicDelegate
+public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristic, CbPeripheralManagerWrapper.ICbCharacteristicDelegate
 {
     /// <summary>
-    /// Gets the native iOS Core Bluetooth mutable characteristic.
-    /// </summary>
-    public CBMutableCharacteristic CbCharacteristic { get; }
-
-    /// <summary>
-    /// Gets the Bluetooth service to which this characteristic belongs, cast to the Apple-specific implementation.
-    /// </summary>
-    public AppleBluetoothLocalService AppleBluetoothLocalService => (AppleBluetoothLocalService) LocalService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AppleBluetoothLocalCharacteristic"/> class with the specified service, factory request, and descriptor factory.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothLocalCharacteristic" /> class with the specified service, factory request, and descriptor factory.
     /// </summary>
     /// <param name="localService">The Bluetooth service to which this characteristic belongs.</param>
     /// <param name="request">The factory request containing the information needed to create this characteristic.</param>
     /// <param name="localDescriptorFactory">The factory used to create descriptors for this characteristic.</param>
-    public AppleBluetoothLocalCharacteristic(Abstractions.Broadcasting.IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request, IBluetoothLocalDescriptorFactory localDescriptorFactory) : base(localService, request, localDescriptorFactory)
+    public AppleBluetoothLocalCharacteristic(IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request, IBluetoothLocalDescriptorFactory localDescriptorFactory) : base(localService,
+        request, localDescriptorFactory)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request is not AppleBluetoothCharacteristicSpec appleRequest)
         {
             throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothCharacteristicSpec)}, but got {request.GetType()}");
         }
+
         CbCharacteristic = appleRequest.CbCharacteristic;
     }
 
-    /// <inheritdoc />
-    protected override ValueTask NativeUpdateValueAsync(ReadOnlyMemory<byte> value, bool notifyClients, TimeSpan? timeout, CancellationToken cancellationToken)
-    {
-        var nsData = value.ToNSData();
-        var centralsToNotify = notifyClients ? SubscribedDevices.Cast<AppleBluetoothConnectedDevice>().Select(d => d.CbCentral).ToArray() : null;
+    /// <summary>
+    ///     Gets the native iOS Core Bluetooth mutable characteristic.
+    /// </summary>
+    public CBMutableCharacteristic CbCharacteristic { get; }
 
-        var result = AppleBluetoothLocalService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.UpdateValue(nsData, CbCharacteristic, centralsToNotify);
-
-        if (!result)
-        {
-            throw new InvalidOperationException("Failed to update characteristic value on iOS peripheral manager. The queue may be full.");
-        }
-        return ValueTask.CompletedTask;
-    }
+    /// <summary>
+    ///     Gets the Bluetooth service to which this characteristic belongs, cast to the Apple-specific implementation.
+    /// </summary>
+    public AppleBluetoothLocalService AppleBluetoothLocalService => (AppleBluetoothLocalService) LocalService;
 
     /// <inheritdoc />
     public void CharacteristicSubscribed(CBCentral central, CBCharacteristic characteristic)
@@ -120,8 +107,24 @@ public class AppleBluetoothLocalCharacteristic : Core.Broadcasting.BaseBluetooth
         }
     }
 
+    /// <inheritdoc />
+    protected override ValueTask NativeUpdateValueAsync(ReadOnlyMemory<byte> value, bool notifyClients, TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        var nsData = value.ToNSData();
+        var centralsToNotify = notifyClients ? SubscribedDevices.Cast<AppleBluetoothConnectedDevice>().Select(d => d.CbCentral).ToArray() : null;
+
+        var result = AppleBluetoothLocalService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.UpdateValue(nsData, CbCharacteristic, centralsToNotify);
+
+        if (!result)
+        {
+            throw new InvalidOperationException("Failed to update characteristic value on iOS peripheral manager. The queue may be full.");
+        }
+
+        return ValueTask.CompletedTask;
+    }
+
     /// <summary>
-    /// Gets an existing client device or creates a new one for the specified central.
+    ///     Gets an existing client device or creates a new one for the specified central.
     /// </summary>
     /// <param name="central">The Core Bluetooth central device.</param>
     /// <returns>The client device corresponding to the central.</returns>

@@ -8,7 +8,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class MultipleDevicesFoundException : DeviceExplorationException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleDevicesFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleDevicesFoundException" /> class.
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner associated with the exception.</param>
     /// <param name="devices">The devices that were found matching the criteria.</param>
@@ -20,7 +20,7 @@ public class MultipleDevicesFoundException : DeviceExplorationException
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleDevicesFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleDevicesFoundException" /> class.
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner associated with the exception.</param>
     /// <param name="id">The id of the devices that were found matching the criteria.</param>

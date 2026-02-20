@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class ServiceExplorationException : DeviceException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ServiceExplorationException"/> class.
+    ///     Initializes a new instance of the <see cref="ServiceExplorationException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

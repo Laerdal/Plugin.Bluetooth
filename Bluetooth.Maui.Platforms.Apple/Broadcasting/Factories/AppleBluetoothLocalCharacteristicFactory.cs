@@ -11,7 +11,7 @@ public class AppleBluetoothLocalCharacteristicFactory : BaseBluetoothLocalCharac
     }
 
     /// <inheritdoc />
-    public override Abstractions.Broadcasting.IBluetoothLocalCharacteristic CreateCharacteristic(Abstractions.Broadcasting.IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec)
+    public override IBluetoothLocalCharacteristic CreateCharacteristic(IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec)
     {
         return new AppleBluetoothLocalCharacteristic(localService, spec, LocalDescriptorFactory);
     }

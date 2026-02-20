@@ -1,33 +1,33 @@
 namespace Bluetooth.Maui.Platforms.Windows.Exceptions;
 
 /// <summary>
-/// Represents an exception that occurs when Windows Bluetooth operations return a non-success error.
+///     Represents an exception that occurs when Windows Bluetooth operations return a non-success error.
 /// </summary>
 /// <remarks>
-/// This exception wraps Windows' BluetoothError enum values to provide detailed
-/// information about why Bluetooth operations failed.
+///     This exception wraps Windows' BluetoothError enum values to provide detailed
+///     information about why Bluetooth operations failed.
 /// </remarks>
 /// <seealso cref="WindowsNativeBluetoothException" />
 public class WindowsNativeBluetoothErrorException : WindowsNativeBluetoothException
 {
     /// <summary>
-    /// Gets the specific BluetoothError that caused this exception.
-    /// </summary>
-    public BluetoothError BluetoothError { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="WindowsNativeBluetoothErrorException"/> class with the specified BluetoothError and inner exception.
+    ///     Initializes a new instance of the <see cref="WindowsNativeBluetoothErrorException" /> class with the specified BluetoothError and inner exception.
     /// </summary>
     /// <param name="error">The BluetoothError that caused this exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception.</param>
     public WindowsNativeBluetoothErrorException(BluetoothError error, Exception? innerException = null)
-        : base($"{BluetoothErrorToDescription(error)} : {error} ({(int)error})", innerException)
+        : base($"{BluetoothErrorToDescription(error)} : {error} ({(int) error})", innerException)
     {
         BluetoothError = error;
     }
 
     /// <summary>
-    /// Throws a <see cref="WindowsNativeBluetoothErrorException"/> if the error is not Success.
+    ///     Gets the specific BluetoothError that caused this exception.
+    /// </summary>
+    public BluetoothError BluetoothError { get; }
+
+    /// <summary>
+    ///     Throws a <see cref="WindowsNativeBluetoothErrorException" /> if the error is not Success.
     /// </summary>
     /// <param name="error">The error to check.</param>
     /// <exception cref="WindowsNativeBluetoothErrorException">Thrown when the error is not Success.</exception>
@@ -41,7 +41,7 @@ public class WindowsNativeBluetoothErrorException : WindowsNativeBluetoothExcept
 
     private static string BluetoothErrorToDescription(BluetoothError error)
     {
-        var errorCodeValue = (int)error;
+        var errorCodeValue = (int) error;
         return errorCodeValue switch
         {
             0 => "Success: The operation was successfully completed or serviced.",
@@ -58,4 +58,3 @@ public class WindowsNativeBluetoothErrorException : WindowsNativeBluetoothExcept
         };
     }
 }
-

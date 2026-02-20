@@ -1,12 +1,12 @@
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 
 /// <summary>
-/// Extension methods for <see cref="CBPeripheralManager"/> to support Bluetooth broadcasting functionality.
+///     Extension methods for <see cref="CBPeripheralManager" /> to support Bluetooth broadcasting functionality.
 /// </summary>
 public static class CbPeripheralManagerExtensions
 {
     /// <summary>
-    /// Starts advertising with the specified options.
+    ///     Starts advertising with the specified options.
     /// </summary>
     public static void StartAdvertising(this CBPeripheralManager manager, BroadcastingOptions options)
     {
@@ -30,11 +30,11 @@ public static class CbPeripheralManagerExtensions
             {
                 array.Add(CBUUID.FromString(serviceUuid.ToString()));
             }
+
             advertisementData.Add(CBAdvertisement.DataServiceUUIDsKey, array);
         }
 
         // Start advertising
         manager.StartAdvertising(advertisementData);
     }
-
 }

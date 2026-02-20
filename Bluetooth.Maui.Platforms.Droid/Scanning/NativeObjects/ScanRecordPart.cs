@@ -3,13 +3,13 @@ using Array = System.Array;
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 
 /// <summary>
-/// Represents a part of a Bluetooth LE advertisement scan record.
-/// Contains the size, type, and payload data for a specific advertisement data element.
+///     Represents a part of a Bluetooth LE advertisement scan record.
+///     Contains the size, type, and payload data for a specific advertisement data element.
 /// </summary>
 public partial class ScanRecordPart
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ScanRecordPart"/> class.
+    ///     Initializes a new instance of the <see cref="ScanRecordPart" /> class.
     /// </summary>
     /// <param name="size">The size of the data element in bytes.</param>
     /// <param name="type">The type of the advertisement record.</param>
@@ -24,7 +24,7 @@ public partial class ScanRecordPart
     #region Size
 
     /// <summary>
-    /// Gets the size of the data element in bytes.
+    ///     Gets the size of the data element in bytes.
     /// </summary>
     public byte Size { get; }
 
@@ -33,47 +33,21 @@ public partial class ScanRecordPart
     #region Type
 
     /// <summary>
-    /// Gets the type of the advertisement record.
+    ///     Gets the type of the advertisement record.
     /// </summary>
     public AdvertisementRecordType Type { get; init; }
 
     #endregion
 
-    #region Payload
-
-    private readonly byte[] _payloadArray;
-
     /// <summary>
-    /// Gets the payload data as a read-only span for better performance.
-    /// </summary>
-    public ReadOnlySpan<byte> Payload => _payloadArray;
-
-    /// <summary>
-    /// Gets the manufacturer-specific data (excluding the manufacturer ID) if this is a manufacturer data record.
-    /// </summary>
-    public ReadOnlySpan<byte> ManufacturerData => Type != AdvertisementRecordType.ManufacturerSpecificData ? default : _payloadArray.AsSpan(2);
-
-    /// <summary>
-    /// Gets the manufacturer ID bytes if this is a manufacturer data record.
-    /// </summary>
-    public ReadOnlySpan<byte> ManufacturerIdBytes => Type != AdvertisementRecordType.ManufacturerSpecificData ? default : _payloadArray.AsSpan(0, 2);
-
-    /// <summary>
-    /// Gets the manufacturer ID if this is a manufacturer data record.
-    /// </summary>
-    public Manufacturer? ManufacturerId => Type != AdvertisementRecordType.ManufacturerSpecificData ? null : (Manufacturer)(((ManufacturerIdBytes[1] & 0xFF) << 8) + (ManufacturerIdBytes[0] & 0xFF));
-
-    #endregion
-
-    /// <summary>
-    /// Parses the raw BLE advertisement bytes into appropriate data chunks.
+    ///     Parses the raw BLE advertisement bytes into appropriate data chunks.
     /// </summary>
     /// <param name="rawBytes">The raw bytes that comprise an entire BLE advertisement message.</param>
     /// <returns>A collection of scan record parts parsed from the raw bytes.</returns>
     /// <remarks>
-    /// This mechanism was created to work around certain issues with the default Android BLE API,
-    /// specifically the fact that GetManufacturerData(manufacturer_id) returns just the last
-    /// manufacturer data chunk instead of all of them.
+    ///     This mechanism was created to work around certain issues with the default Android BLE API,
+    ///     specifically the fact that GetManufacturerData(manufacturer_id) returns just the last
+    ///     manufacturer data chunk instead of all of them.
     /// </remarks>
     internal static IEnumerable<ScanRecordPart> FromRawBytes(byte[] rawBytes)
     {
@@ -96,23 +70,49 @@ public partial class ScanRecordPart
 
             // Copy the payload data into the pre-allocated array
             Array.Copy(rawBytes,
-                       index + 2,
-                       payloadArray,
-                       0,
-                       size - 1);
+                index + 2,
+                payloadArray,
+                0,
+                size - 1);
 
-            yield return new ScanRecordPart(size, (AdvertisementRecordType)rawBytes[index + 1], payloadArray);
+            yield return new ScanRecordPart(size, (AdvertisementRecordType) rawBytes[index + 1], payloadArray);
 
             index += size + 1;
         }
     }
 
     /// <summary>
-    /// Returns a string representation of this scan record part.
+    ///     Returns a string representation of this scan record part.
     /// </summary>
     /// <returns>A string containing the size, type, and length information.</returns>
     public override string ToString()
     {
         return $"Size = {Size}; Type = {Type}; {_payloadArray.Length} bytes long";
     }
+
+    #region Payload
+
+    private readonly byte[] _payloadArray;
+
+    /// <summary>
+    ///     Gets the payload data as a read-only span for better performance.
+    /// </summary>
+    public ReadOnlySpan<byte> Payload => _payloadArray;
+
+    /// <summary>
+    ///     Gets the manufacturer-specific data (excluding the manufacturer ID) if this is a manufacturer data record.
+    /// </summary>
+    public ReadOnlySpan<byte> ManufacturerData => Type != AdvertisementRecordType.ManufacturerSpecificData ? default : _payloadArray.AsSpan(2);
+
+    /// <summary>
+    ///     Gets the manufacturer ID bytes if this is a manufacturer data record.
+    /// </summary>
+    public ReadOnlySpan<byte> ManufacturerIdBytes => Type != AdvertisementRecordType.ManufacturerSpecificData ? default : _payloadArray.AsSpan(0, 2);
+
+    /// <summary>
+    ///     Gets the manufacturer ID if this is a manufacturer data record.
+    /// </summary>
+    public Manufacturer? ManufacturerId => Type != AdvertisementRecordType.ManufacturerSpecificData ? null : (Manufacturer) (((ManufacturerIdBytes[1] & 0xFF) << 8) + (ManufacturerIdBytes[0] & 0xFF));
+
+    #endregion
 }

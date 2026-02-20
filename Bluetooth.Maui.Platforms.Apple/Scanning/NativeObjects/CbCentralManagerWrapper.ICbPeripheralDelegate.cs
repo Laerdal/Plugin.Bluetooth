@@ -7,40 +7,40 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 public partial class CbCentralManagerWrapper
 {
     /// <summary>
-    /// Delegate interface for CoreBluetooth peripheral callbacks, extending the base Bluetooth device interface.
+    ///     Delegate interface for CoreBluetooth peripheral callbacks, extending the base Bluetooth device interface.
     /// </summary>
     public interface ICbPeripheralDelegate
     {
         /// <summary>
-        /// Called when a connection attempt to the peripheral fails.
+        ///     Called when a connection attempt to the peripheral fails.
         /// </summary>
         /// <param name="error">The error that occurred during the connection attempt, or null if successful.</param>
         void FailedToConnectPeripheral(NSError? error);
 
         /// <summary>
-        /// Called when the peripheral is disconnected (legacy method).
+        ///     Called when the peripheral is disconnected (legacy method).
         /// </summary>
         /// <param name="error">The error that caused the disconnection, or null if disconnected normally.</param>
         void DisconnectedPeripheral(NSError? error);
 
         /// <summary>
-        /// Called when the peripheral is successfully connected.
+        ///     Called when the peripheral is successfully connected.
         /// </summary>
         void ConnectedPeripheral();
 
         /// <summary>
-        /// Called when a connection event occurs for the peripheral.
+        ///     Called when a connection event occurs for the peripheral.
         /// </summary>
         /// <param name="connectionEvent">The connection event that occurred.</param>
         void ConnectionEventDidOccur(CBConnectionEvent connectionEvent);
 
         /// <summary>
-        /// Called when the ANCS (Apple Notification Center Service) authorization is updated.
+        ///     Called when the ANCS (Apple Notification Center Service) authorization is updated.
         /// </summary>
         void DidUpdateAncsAuthorization();
 
         /// <summary>
-        /// Called when the peripheral is disconnected with additional timing and reconnection information.
+        ///     Called when the peripheral is disconnected with additional timing and reconnection information.
         /// </summary>
         /// <param name="timestamp">The timestamp when the disconnection occurred.</param>
         /// <param name="isReconnecting">Whether the system is attempting to reconnect automatically.</param>

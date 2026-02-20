@@ -1,12 +1,11 @@
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
-/// Base class for Bluetooth broadcaster devices.
+///     Base class for Bluetooth broadcaster devices.
 /// </summary>
 public abstract partial class BaseBluetoothConnectedDevice
 {
-
-    private readonly List<IBluetoothLocalCharacteristic> _subscribedCharacteristics = new List<IBluetoothLocalCharacteristic>();
+    private readonly List<IBluetoothLocalCharacteristic> _subscribedCharacteristics = new();
 
     /// <inheritdoc />
     public IReadOnlyList<IBluetoothLocalCharacteristic> SubscribedCharacteristics => _subscribedCharacteristics.AsReadOnly();

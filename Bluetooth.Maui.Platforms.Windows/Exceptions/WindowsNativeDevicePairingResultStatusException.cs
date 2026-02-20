@@ -1,33 +1,33 @@
 namespace Bluetooth.Maui.Platforms.Windows.Exceptions;
 
 /// <summary>
-/// Represents an exception that occurs when Windows device pairing operations return a non-success status.
+///     Represents an exception that occurs when Windows device pairing operations return a non-success status.
 /// </summary>
 /// <remarks>
-/// This exception wraps Windows' DevicePairingResultStatus enum values to provide detailed
-/// information about why device pairing operations failed.
+///     This exception wraps Windows' DevicePairingResultStatus enum values to provide detailed
+///     information about why device pairing operations failed.
 /// </remarks>
 /// <seealso cref="WindowsNativeBluetoothException" />
 public class WindowsNativeDevicePairingResultStatusException : WindowsNativeBluetoothException
 {
     /// <summary>
-    /// Gets the specific DevicePairingResultStatus that caused this exception.
-    /// </summary>
-    public DevicePairingResultStatus DevicePairingResultStatus { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="WindowsNativeDevicePairingResultStatusException"/> class with the specified DevicePairingResultStatus and inner exception.
+    ///     Initializes a new instance of the <see cref="WindowsNativeDevicePairingResultStatusException" /> class with the specified DevicePairingResultStatus and inner exception.
     /// </summary>
     /// <param name="status">The DevicePairingResultStatus that caused this exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception.</param>
     public WindowsNativeDevicePairingResultStatusException(DevicePairingResultStatus status, Exception? innerException = null)
-        : base($"{DevicePairingResultStatusToDescription(status)} : {status} ({(int)status})", innerException)
+        : base($"{DevicePairingResultStatusToDescription(status)} : {status} ({(int) status})", innerException)
     {
         DevicePairingResultStatus = status;
     }
 
     /// <summary>
-    /// Throws a <see cref="WindowsNativeDevicePairingResultStatusException"/> if the status is not Paired.
+    ///     Gets the specific DevicePairingResultStatus that caused this exception.
+    /// </summary>
+    public DevicePairingResultStatus DevicePairingResultStatus { get; }
+
+    /// <summary>
+    ///     Throws a <see cref="WindowsNativeDevicePairingResultStatusException" /> if the status is not Paired.
     /// </summary>
     /// <param name="status">The status to check.</param>
     /// <exception cref="WindowsNativeDevicePairingResultStatusException">Thrown when the status is not Paired.</exception>
@@ -41,7 +41,7 @@ public class WindowsNativeDevicePairingResultStatusException : WindowsNativeBlue
 
     private static string DevicePairingResultStatusToDescription(DevicePairingResultStatus status)
     {
-        var statusCodeValue = (int)status;
+        var statusCodeValue = (int) status;
         return statusCodeValue switch
         {
             0 => "Success: The device object is now paired.",
@@ -68,4 +68,3 @@ public class WindowsNativeDevicePairingResultStatusException : WindowsNativeBlue
         };
     }
 }
-

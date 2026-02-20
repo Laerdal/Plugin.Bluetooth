@@ -10,9 +10,8 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 /// <seealso cref="IBluetoothRemoteDevice" />
 public abstract class DeviceException : BluetoothScanningException
 {
-
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DeviceException"/> class.
+    ///     Initializes a new instance of the <see cref="DeviceException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

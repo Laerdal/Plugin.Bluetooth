@@ -1,4 +1,6 @@
-﻿namespace Bluetooth.Maui.Platforms.Droid.Permissions;
+﻿using Android;
+
+namespace Bluetooth.Maui.Platforms.Droid.Permissions;
 
 [SupportedOSPlatform("android31.0")]
-public class AndroidPermissionForBluetoothScan() : BaseAndroidPermissionHandler(Android.Manifest.Permission.BluetoothScan, true);
+public class AndroidPermissionForBluetoothScan() : BaseAndroidPermissionHandler(Manifest.Permission.BluetoothScan, true);

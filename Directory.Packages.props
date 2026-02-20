@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <Project>
     <!-- Enable Central Package Management -->
     <PropertyGroup>
@@ -6,17 +7,18 @@
     </PropertyGroup>
     <!-- ==================== INTERNAL DEPENDENCIES ==================== -->
     <ItemGroup>
-        <PackageVersion Include="Plugin.ByteArrays" Version="1.0.30"/>
-        <PackageVersion Include="Plugin.ExceptionListeners" Version="1.0.5"/>
-        <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.26"/>
-        <PackageVersion Include="Plugin.ExceptionListeners.Maui" Version="1.0.5"/>
+        <PackageVersion Include="Plugin.ByteArrays" Version="1.0.30" />
+        <PackageVersion Include="Plugin.ExceptionListeners" Version="1.0.5" />
+        <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.26" />
+        <PackageVersion Include="Plugin.ExceptionListeners.Maui" Version="1.0.5" />
     </ItemGroup>
     <!-- ==================== CORE DEPENDENCIES ==================== -->
     <ItemGroup>
-        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3"/>
-        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3"/>
-        <PackageVersion Include="Microsoft.Extensions.Diagnostics.Abstractions" Version="10.0.3"/>
-        <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.3"/>
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
+        <PackageVersion Include="Microsoft.Extensions.Diagnostics.Abstractions" Version="10.0.3" />
+        <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.3" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.3" />
     </ItemGroup>
     <!-- ==================== MAUI DEPENDENCIES ==================== -->
     <PropertyGroup>
@@ -24,16 +26,14 @@
         <MauiVersion>10.0.41</MauiVersion>
     </PropertyGroup>
     <ItemGroup>
-        <PackageVersion Include="Microsoft.Maui.Core" Version="$(MauiVersion)"/>
-        <PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
-        <PackageVersion Include="Microsoft.Maui.Essentials" Version="$(MauiVersion)"/>
-        <PackageVersion Include="Microsoft.Windows.SDK.Contracts" Version="10.0.26100.7705"/>
-        <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7705"/>
+        <PackageVersion Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
+        <PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+        <PackageVersion Include="Microsoft.Maui.Essentials" Version="$(MauiVersion)" />
     </ItemGroup>
     <!-- ==================== COMMUNITY DEPENDENCIES ==================== -->
     <ItemGroup>
-        <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
-        <PackageVersion Include="CommunityToolkit.Maui" Version="14.0.0"/>
+        <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+        <PackageVersion Include="CommunityToolkit.Maui" Version="14.0.0" />
     </ItemGroup>
     <!-- ==================== TEST DEPENDENCIES ==================== -->
     <ItemGroup>
@@ -42,22 +42,22 @@
         <!--                                                                               -->
         <!-- Version 7 will remain fully open source indefinitely and receive              -->
         <!-- bugfixes and other important corrections                                      -->
-        <PackageVersion Include="FluentAssertions" Version="7.2.0"/>
-        <PackageVersion Include="coverlet.collector" Version="6.0.4"/>
-        <PackageVersion Include="coverlet.msbuild" Version="6.0.4"/>
-        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.0"/>
-        <PackageVersion Include="xunit" Version="2.9.3"/>
-        <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5"/>
+        <PackageVersion Include="FluentAssertions" Version="7.2.0" />
+        <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+        <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
+        <PackageVersion Include="xunit" Version="2.9.3" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     </ItemGroup>
     <!-- ==================== BUILD & ANALYSIS DEPENDENCIES ==================== -->
     <ItemGroup>
-        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.103"/>
-        <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.103"/>
+        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.103" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.103" />
     </ItemGroup>
     <!-- ==================== LOGGING DEPENDENCIES ==================== -->
     <ItemGroup>
-        <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4"/>
-        <PackageVersion Include="NLog.Extensions.Logging" Version="6.1.1"/>
-        <PackageVersion Include="NLog.Targets.MauiLog" Version="10.0.3"/>
+        <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4" />
+        <PackageVersion Include="NLog.Extensions.Logging" Version="6.1.1" />
+        <PackageVersion Include="NLog.Targets.MauiLog" Version="10.0.3" />
     </ItemGroup>
 </Project>

@@ -7,7 +7,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class DeviceNotConnectedException : DeviceException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DeviceNotConnectedException"/> class.
+    ///     Initializes a new instance of the <see cref="DeviceNotConnectedException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>
@@ -21,7 +21,7 @@ public class DeviceNotConnectedException : DeviceException
     }
 
     /// <summary>
-    ///     Throws a <see cref="DeviceNotConnectedException"/> if the specified device is not connected.
+    ///     Throws a <see cref="DeviceNotConnectedException" /> if the specified device is not connected.
     /// </summary>
     /// <param name="serviceDevice">The Bluetooth device to check.</param>
     public static void ThrowIfNotConnected(IBluetoothRemoteDevice serviceDevice)

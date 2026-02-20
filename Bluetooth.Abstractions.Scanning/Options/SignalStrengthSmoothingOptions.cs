@@ -1,7 +1,7 @@
 namespace Bluetooth.Abstractions.Scanning.Options;
 
 /// <summary>
-/// Represents options for smoothing signal strength jitter in Bluetooth scanning.
+///     Represents options for smoothing signal strength jitter in Bluetooth scanning.
 /// </summary>
 public record SignalStrengthSmoothingOptions
 {

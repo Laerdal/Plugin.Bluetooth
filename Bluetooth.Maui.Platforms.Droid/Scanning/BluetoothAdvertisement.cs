@@ -1,26 +1,29 @@
+using Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 using Bluetooth.Maui.Platforms.Droid.Tools;
+
+using Array = System.Array;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning;
 
 /// <summary>
-/// Represents a Bluetooth Low Energy advertisement packet received from an Android device.
-/// This readonly struct wraps Android's ScanResult, providing access to device information,
-/// services, signal strength, and manufacturer-specific data.
+///     Represents a Bluetooth Low Energy advertisement packet received from an Android device.
+///     This readonly struct wraps Android's ScanResult, providing access to device information,
+///     services, signal strength, and manufacturer-specific data.
 /// </summary>
 /// <remarks>
-/// This is a readonly struct for memory efficiency. Since advertisements arrive by the thousands,
-/// using a value type eliminates heap allocations and reduces GC pressure.
+///     This is a readonly struct for memory efficiency. Since advertisements arrive by the thousands,
+///     using a value type eliminates heap allocations and reduces GC pressure.
 /// </remarks>
 public readonly record struct BluetoothAdvertisement : IBluetoothAdvertisement
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothAdvertisement"/> struct from an Android scan result.
+    ///     Initializes a new instance of the <see cref="BluetoothAdvertisement" /> struct from an Android scan result.
     /// </summary>
     /// <param name="scanResult">The Android scan result containing the advertisement data.</param>
     /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="scanResult"/> is <c>null</c>, or when
-    /// <see cref="ScanResult.ScanRecord"/> is <c>null</c>, or when
-    /// <see cref="ScanResult.Device"/> is <c>null</c>.
+    ///     Thrown when <paramref name="scanResult" /> is <c>null</c>, or when
+    ///     <see cref="ScanResult.ScanRecord" /> is <c>null</c>, or when
+    ///     <see cref="ScanResult.Device" /> is <c>null</c>.
     /// </exception>
     public BluetoothAdvertisement(ScanResult scanResult)
     {
@@ -43,36 +46,36 @@ public readonly record struct BluetoothAdvertisement : IBluetoothAdvertisement
 
     #region IBluetoothAdvertisement Members
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public DateTimeOffset DateReceived { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string DeviceName { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IEnumerable<Guid> ServicesGuids { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool IsConnectable { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int RawSignalStrengthInDBm { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int TransmitPowerLevelInDBm { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string BluetoothAddress { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ReadOnlyMemory<byte> ManufacturerData { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public Manufacturer Manufacturer => ManufacturerData.Length >= 2
-        ? (Manufacturer)ManufacturerId
-        : (Manufacturer)(-1);
+        ? (Manufacturer) ManufacturerId
+        : (Manufacturer) (-1);
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public int ManufacturerId
     {
         get
@@ -111,7 +114,7 @@ public readonly record struct BluetoothAdvertisement : IBluetoothAdvertisement
         // If some UUIDs were null, resize the array
         if (index < guids.Length)
         {
-            System.Array.Resize(ref guids, index);
+            Array.Resize(ref guids, index);
         }
 
         return guids;
@@ -125,9 +128,9 @@ public readonly record struct BluetoothAdvertisement : IBluetoothAdvertisement
             return ReadOnlyMemory<byte>.Empty;
         }
 
-        var scanRecordParts = NativeObjects.ScanRecordPart.FromRawBytes(bytes).ToArray();
+        var scanRecordParts = ScanRecordPart.FromRawBytes(bytes).ToArray();
         var manufacturerDataParts = scanRecordParts
-            .Where(part => part.Type == NativeObjects.ScanRecordPart.AdvertisementRecordType.ManufacturerSpecificData)
+            .Where(part => part.Type == ScanRecordPart.AdvertisementRecordType.ManufacturerSpecificData)
             .ToArray();
 
         if (manufacturerDataParts.Length == 0)
@@ -150,9 +153,9 @@ public readonly record struct BluetoothAdvertisement : IBluetoothAdvertisement
             }
 
             // Write manufacturer ID (2 bytes)
-            var idBytes = (short)group.Key;
-            resultArray[currentOffset++] = (byte)(idBytes & 0xFF);
-            resultArray[currentOffset++] = (byte)((idBytes >> 8) & 0xFF);
+            var idBytes = (short) group.Key;
+            resultArray[currentOffset++] = (byte) (idBytes & 0xFF);
+            resultArray[currentOffset++] = (byte) ((idBytes >> 8) & 0xFF);
 
             // Write all manufacturer data for this ID
             foreach (var part in group)
@@ -165,7 +168,6 @@ public readonly record struct BluetoothAdvertisement : IBluetoothAdvertisement
 
         return resultArray;
     }
-
 
     #endregion
 }

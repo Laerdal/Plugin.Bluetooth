@@ -3,21 +3,21 @@ using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 
 /// <inheritdoc cref="BaseBluetoothLocalService" />
-public partial class BluetoothBroadcastService : BaseBluetoothLocalService, BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate
+public class BluetoothBroadcastService : BaseBluetoothLocalService, BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate
 {
-    /// <summary>
-    /// Gets the native Android Bluetooth GATT service.
-    /// </summary>
-    public BluetoothGattService? NativeService { get; private set; }
-
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public BluetoothBroadcastService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec request, IBluetoothLocalCharacteristicFactory characteristicFactory) :
         base(broadcaster, request, characteristicFactory)
     {
         throw new NotImplementedException("BluetoothBroadcastService is not yet implemented on Android.");
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///     Gets the native Android Bluetooth GATT service.
+    /// </summary>
+    public BluetoothGattService? NativeService { get; private set; }
+
+    /// <inheritdoc />
     public BluetoothGattServerCallbackProxy.IBluetoothGattCharacteristicDelegate GetCharacteristic(BluetoothGattCharacteristic? native)
     {
         ArgumentNullException.ThrowIfNull(native);

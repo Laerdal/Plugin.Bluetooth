@@ -5494,8 +5494,7 @@ public enum Manufacturer : short
     [Description("Henway Technologies, LTD.")]
     Henway_Technologies_LTD = 2360, // Henway Technologies, LTD.
 
-    [Description("ASTEM Co.,Ltd.")]
-    ASTEM_Co_Ltd = 2361, // ASTEM Co.,Ltd.
+    [Description("ASTEM Co.,Ltd.")] ASTEM_Co_Ltd = 2361, // ASTEM Co.,Ltd.
 
     [Description("LinkedSemi Microelectronics (Xiamen) Co., Ltd")]
     LinkedSemi_Microelectronics_Xiamen_Co_Ltd = 2362, // LinkedSemi Microelectronics (Xiamen) Co., Ltd

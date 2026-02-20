@@ -1,38 +1,31 @@
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
 
+using BluetoothPhy = Android.Bluetooth.BluetoothPhy;
+using Boolean = Java.Lang.Boolean;
+using ConnectionOptions = Bluetooth.Maui.Platforms.Droid.Scanning.Options.ConnectionOptions;
 using Exception = System.Exception;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 
 /// <summary>
-/// Android Bluetooth GATT callback proxy that handles GATT events.
-/// Implements <see cref="BluetoothGattCallback"/> to redirect events to the device instance.
+///     Android Bluetooth GATT callback proxy that handles GATT events.
+///     Implements <see cref="BluetoothGattCallback" /> to redirect events to the device instance.
 /// </summary>
 /// <remarks>
-/// This class wraps the Android BluetoothGattCallback and provides exception handling
-/// for all callback methods. See Android documentation:
-/// https://developer.android.com/reference/android/bluetooth/BluetoothGattCallback
+///     This class wraps the Android BluetoothGattCallback and provides exception handling
+///     for all callback methods. See Android documentation:
+///     https://developer.android.com/reference/android/bluetooth/BluetoothGattCallback
 /// </remarks>
 public partial class BluetoothGattProxy : BluetoothGattCallback
 {
     /// <summary>
-    /// Gets the Bluetooth GATT instance for communication with the remote device.
-    /// </summary>
-    public BluetoothGatt BluetoothGatt { get; }
-
-    /// <summary>
-    /// Gets the device instance that will receive the callback events.
-    /// </summary>
-    private IBluetoothGattDelegate BluetoothGattDelegate { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothGattProxy"/> class.
+    ///     Initializes a new instance of the <see cref="BluetoothGattProxy" /> class.
     /// </summary>
     /// <param name="bluetoothGattDelegate">The device instance that will receive callback events.</param>
     /// <param name="connectionOptions">The connection options for the GATT connection.</param>
     /// <param name="nativeDevice">The native Android Bluetooth device.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null or when GATT connection fails.</exception>
-    public BluetoothGattProxy(IBluetoothGattDelegate bluetoothGattDelegate, Options.ConnectionOptions? connectionOptions, Android.Bluetooth.BluetoothDevice nativeDevice)
+    public BluetoothGattProxy(IBluetoothGattDelegate bluetoothGattDelegate, ConnectionOptions? connectionOptions, BluetoothDevice nativeDevice)
     {
         ArgumentNullException.ThrowIfNull(bluetoothGattDelegate);
         ArgumentNullException.ThrowIfNull(connectionOptions);
@@ -42,7 +35,17 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         BluetoothGatt = nativeDevice.ConnectGatt(connectionOptions, this) ?? throw new InvalidOperationException("Failed to create GATT connection");
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///     Gets the Bluetooth GATT instance for communication with the remote device.
+    /// </summary>
+    public BluetoothGatt BluetoothGatt { get; }
+
+    /// <summary>
+    ///     Gets the device instance that will receive the callback events.
+    /// </summary>
+    private IBluetoothGattDelegate BluetoothGattDelegate { get; }
+
+    /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
         if (disposing)
@@ -50,6 +53,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
             BluetoothGatt.Close();
             BluetoothGatt.Dispose();
         }
+
         base.Dispose(disposing);
     }
 
@@ -70,7 +74,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
     }*/
 
     /// <summary>
-    /// Attempts to refresh the GATT cache using Android's hidden refresh method.
+    ///     Attempts to refresh the GATT cache using Android's hidden refresh method.
     /// </summary>
     /// <returns>True if the refresh operation was successful; otherwise, false.</returns>
     public bool TryGattRefresh()
@@ -81,8 +85,8 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
             var javaReflectionClassForNativeBluetoothGatt = nativeBluetoothGattSnapshot.Class;
 
             // ReSharper disable once CanReplaceCastWithVariableType
-            var method = (Method?) javaReflectionClassForNativeBluetoothGatt.GetMethod(name: "refresh", parameterTypes: null);
-            var success = method?.Invoke(obj: nativeBluetoothGattSnapshot, args: null) as Java.Lang.Boolean;
+            var method = (Method?) javaReflectionClassForNativeBluetoothGatt.GetMethod("refresh", null);
+            var success = method?.Invoke(nativeBluetoothGattSnapshot, null) as Boolean;
 
             return success?.BooleanValue() ?? false;
         }
@@ -94,24 +98,40 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
     }
 
     /// <param name="gatt">GATT client the characteristic is associated with</param>
-    /// <param name="characteristic">Characteristic that has been updated as a result of a remote
-    /// notification event.</param>
+    /// <param name="characteristic">
+    ///     Characteristic that has been updated as a result of a remote
+    ///     notification event.
+    /// </param>
     /// <summary>Callback triggered as a result of a remote characteristic notification.</summary>
     /// <remarks>
     ///     <para>Callback triggered as a result of a remote characteristic notification.</para>
-    ///     <para>This member is deprecated. Use <c>BluetoothGattCallback#onCharacteristicChanged(BluetoothGatt,
-    ///     BluetoothGattCharacteristic, byte[])</c> as it is memory safe by providing the
-    ///     characteristic value at the time of notification.</para>
+    ///     <para>
+    ///         This member is deprecated. Use
+    ///         <c>
+    ///             BluetoothGattCallback#onCharacteristicChanged(BluetoothGatt,
+    ///             BluetoothGattCharacteristic, byte[])
+    ///         </c>
+    ///         as it is memory safe by providing the
+    ///         characteristic value at the time of notification.
+    ///     </para>
     ///     <para>
     ///         <format type="text/html">
-    ///             <a href="https://developer.android.com/reference/android/bluetooth/BluetoothGattCallback#onCharacteristicChanged(android.bluetooth.BluetoothGatt,%20android.bluetooth.BluetoothGattCharacteristic)" title="Reference documentation">Java documentation for <code>android.bluetooth.BluetoothGattCallback.onCharacteristicChanged(android.bluetooth.BluetoothGatt, android.bluetooth.BluetoothGattCharacteristic)</code>.</a>
+    ///             <a href="https://developer.android.com/reference/android/bluetooth/BluetoothGattCallback#onCharacteristicChanged(android.bluetooth.BluetoothGatt,%20android.bluetooth.BluetoothGattCharacteristic)" title="Reference documentation">
+    ///                 Java
+    ///                 documentation for <code>android.bluetooth.BluetoothGattCallback.onCharacteristicChanged(android.bluetooth.BluetoothGatt, android.bluetooth.BluetoothGattCharacteristic)</code>.
+    ///             </a>
     ///         </format>
     ///     </para>
     ///     <para>
     ///         Portions of this page are modifications based on work created and shared by the
-    ///         <format type="text/html"><a href="https://developers.google.com/terms/site-policies" title="Android Open Source Project">Android Open Source Project</a></format>
-    ///          and used according to terms described in the
-    ///         <format type="text/html"><a href="https://creativecommons.org/licenses/by/2.5/" title="Creative Commons 2.5 Attribution License">Creative Commons 2.5 Attribution License.</a></format></para>
+    ///         <format type="text/html">
+    ///             <a href="https://developers.google.com/terms/site-policies" title="Android Open Source Project">Android Open Source Project</a>
+    ///         </format>
+    ///         and used according to terms described in the
+    ///         <format type="text/html">
+    ///             <a href="https://creativecommons.org/licenses/by/2.5/" title="Creative Commons 2.5 Attribution License">Creative Commons 2.5 Attribution License.</a>
+    ///         </format>
+    ///     </para>
     /// </remarks>
     /// <since version="Added in API level 18" />
     public override void OnCharacteristicChanged(BluetoothGatt? gatt, BluetoothGattCharacteristic? characteristic)
@@ -139,24 +159,36 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
     }
 
     /// <param name="gatt">GATT client the characteristic is associated with</param>
-    /// <param name="characteristic">Characteristic that has been updated as a result of a remote
-    /// notification event.</param>
+    /// <param name="characteristic">
+    ///     Characteristic that has been updated as a result of a remote
+    ///     notification event.
+    /// </param>
     /// <param name="value">notified characteristic value</param>
     /// <summary>Callback triggered as a result of a remote characteristic notification.</summary>
     /// <remarks>
-    ///     <para>Callback triggered as a result of a remote characteristic notification. Note that the value
-    /// within the characteristic object may have changed since receiving the remote characteristic
-    /// notification, so check the parameter value for the value at the time of notification.</para>
+    ///     <para>
+    ///         Callback triggered as a result of a remote characteristic notification. Note that the value
+    ///         within the characteristic object may have changed since receiving the remote characteristic
+    ///         notification, so check the parameter value for the value at the time of notification.
+    ///     </para>
     ///     <para>
     ///         <format type="text/html">
-    ///             <a href="https://developer.android.com/reference/android/bluetooth/BluetoothGattCallback#onCharacteristicChanged(android.bluetooth.BluetoothGatt,%20android.bluetooth.BluetoothGattCharacteristic,%20byte[])" title="Reference documentation">Java documentation for <code>android.bluetooth.BluetoothGattCallback.onCharacteristicChanged(android.bluetooth.BluetoothGatt, android.bluetooth.BluetoothGattCharacteristic, byte[])</code>.</a>
+    ///             <a href="https://developer.android.com/reference/android/bluetooth/BluetoothGattCallback#onCharacteristicChanged(android.bluetooth.BluetoothGatt,%20android.bluetooth.BluetoothGattCharacteristic,%20byte[])"
+    ///                 title="Reference documentation">
+    ///                 Java documentation for <code>android.bluetooth.BluetoothGattCallback.onCharacteristicChanged(android.bluetooth.BluetoothGatt, android.bluetooth.BluetoothGattCharacteristic, byte[])</code>.
+    ///             </a>
     ///         </format>
     ///     </para>
     ///     <para>
     ///         Portions of this page are modifications based on work created and shared by the
-    ///         <format type="text/html"><a href="https://developers.google.com/terms/site-policies" title="Android Open Source Project">Android Open Source Project</a></format>
-    ///          and used according to terms described in the
-    ///         <format type="text/html"><a href="https://creativecommons.org/licenses/by/2.5/" title="Creative Commons 2.5 Attribution License">Creative Commons 2.5 Attribution License.</a></format></para>
+    ///         <format type="text/html">
+    ///             <a href="https://developers.google.com/terms/site-policies" title="Android Open Source Project">Android Open Source Project</a>
+    ///         </format>
+    ///         and used according to terms described in the
+    ///         <format type="text/html">
+    ///             <a href="https://creativecommons.org/licenses/by/2.5/" title="Creative Commons 2.5 Attribution License">Creative Commons 2.5 Attribution License.</a>
+    ///         </format>
+    ///     </para>
     /// </remarks>
     public override void OnCharacteristicChanged(BluetoothGatt? gatt, BluetoothGattCharacteristic? characteristic, byte[]? value)
     {
@@ -587,7 +619,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         }
     }
 
-    /// <inheritdoc cref="BluetoothGattCallback.OnServicesDiscovered"/>
+    /// <inheritdoc cref="BluetoothGattCallback.OnServicesDiscovered" />
     public override void OnServicesDiscovered(BluetoothGatt? gatt, GattStatus status)
     {
         try
@@ -601,7 +633,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         }
     }
 
-    /// <inheritdoc cref="BluetoothGattCallback.OnConnectionStateChange"/>
+    /// <inheritdoc cref="BluetoothGattCallback.OnConnectionStateChange" />
     public override void OnConnectionStateChange(BluetoothGatt? gatt, GattStatus status, ProfileState newState)
     {
         try
@@ -841,7 +873,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // ACTION
-            BluetoothGattDelegate.OnPhyRead(status, (Android.Bluetooth.BluetoothPhy) txPhy, (Android.Bluetooth.BluetoothPhy) rxPhy);
+            BluetoothGattDelegate.OnPhyRead(status, (BluetoothPhy) txPhy, (BluetoothPhy) rxPhy);
         }
         catch (Exception e)
         {
@@ -896,7 +928,7 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
         try
         {
             // ACTION
-            BluetoothGattDelegate.OnPhyUpdate(status, (Android.Bluetooth.BluetoothPhy) txPhy, (Android.Bluetooth.BluetoothPhy) rxPhy);
+            BluetoothGattDelegate.OnPhyUpdate(status, (BluetoothPhy) txPhy, (BluetoothPhy) rxPhy);
         }
         catch (Exception e)
         {

@@ -3,18 +3,8 @@ namespace Bluetooth.Core.Scanning;
 public abstract partial class BaseBluetoothRemoteCharacteristic
 {
     /// <summary>
-    /// Gets a value indicating whether a read value operation is currently in progress.
-    /// This flag helps prevent concurrent read operations and tracks the operation state.
-    /// </summary>
-    public bool IsReading
-    {
-        get => GetValue(false);
-        private set => SetValue(value);
-    }
-
-    /// <summary>
-    /// Gets or sets the task completion source for the current read value operation.
-    /// Used to signal completion of asynchronous read value operations.
+    ///     Gets or sets the task completion source for the current read value operation.
+    ///     Used to signal completion of asynchronous read value operations.
     /// </summary>
     private TaskCompletionSource<ReadOnlyMemory<byte>>? ReadValueTcs
     {
@@ -22,7 +12,17 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         set => SetValue(value);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///     Gets a value indicating whether a read value operation is currently in progress.
+    ///     This flag helps prevent concurrent read operations and tracks the operation state.
+    /// </summary>
+    public bool IsReading
+    {
+        get => GetValue(false);
+        private set => SetValue(value);
+    }
+
+    /// <inheritdoc />
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
     /// <exception cref="CharacteristicCantReadException">Thrown when the characteristic does not support read operations.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
@@ -79,18 +79,18 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Platform-specific implementation to read the characteristic's value.
-    /// This method should initiate the platform-specific operation to read the characteristic value.
+    ///     Platform-specific implementation to read the characteristic's value.
+    ///     This method should initiate the platform-specific operation to read the characteristic value.
     /// </summary>
     /// <returns>A task that completes when the native read operation is initiated.</returns>
     /// <remarks>
-    /// Implementations should call <see cref="OnReadValueSucceeded"/> when the operation succeeds
-    /// or <see cref="OnReadValueFailed"/> when it fails.
+    ///     Implementations should call <see cref="OnReadValueSucceeded" /> when the operation succeeds
+    ///     or <see cref="OnReadValueFailed" /> when it fails.
     /// </remarks>
     protected abstract ValueTask NativeReadValueAsync();
 
     /// <summary>
-    /// Called when reading the characteristic's value succeeds. Updates the Value property and completes the task.
+    ///     Called when reading the characteristic's value succeeds. Updates the Value property and completes the task.
     /// </summary>
     /// <param name="value">The value read from the characteristic.</param>
     /// <exception cref="CharacteristicUnexpectedReadException">Thrown when no pending read operation is found to complete and the characteristic is not listening.</exception>
@@ -120,12 +120,12 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Called when reading the characteristic's value fails. Completes the task with an exception or dispatches to the unhandled exception listener.
+    ///     Called when reading the characteristic's value fails. Completes the task with an exception or dispatches to the unhandled exception listener.
     /// </summary>
     /// <param name="e">The exception that occurred during the read operation.</param>
     /// <remarks>
-    /// If there's a pending read operation, the exception will be delivered to it. Otherwise, the exception
-    /// will be dispatched to the unhandled exception listener.
+    ///     If there's a pending read operation, the exception will be delivered to it. Otherwise, the exception
+    ///     will be dispatched to the unhandled exception listener.
     /// </remarks>
     protected void OnReadValueFailed(Exception e)
     {
@@ -145,19 +145,19 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     #region Read - Capabilities
 
     /// <summary>
-    /// Platform-specific implementation to determine if the characteristic can be read.
-    /// This method should check the platform-specific properties to determine read capability.
+    ///     Platform-specific implementation to determine if the characteristic can be read.
+    ///     This method should check the platform-specific properties to determine read capability.
     /// </summary>
     /// <returns>True if the characteristic supports read operations; otherwise, false.</returns>
     protected abstract bool NativeCanRead();
 
     /// <summary>
-    /// Gets a value that determines if the characteristic supports read operations based on platform-specific properties.
-    /// This property is computed once and cached using Lazy initialization.
+    ///     Gets a value that determines if the characteristic supports read operations based on platform-specific properties.
+    ///     This property is computed once and cached using Lazy initialization.
     /// </summary>
     private Lazy<bool> LazyCanRead { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool CanRead => LazyCanRead.Value;
 
     #endregion

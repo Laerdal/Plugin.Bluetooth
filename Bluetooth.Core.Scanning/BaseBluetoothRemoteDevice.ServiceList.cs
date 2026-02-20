@@ -3,7 +3,7 @@ namespace Bluetooth.Core.Scanning;
 public abstract partial class BaseBluetoothRemoteDevice
 {
     /// <summary>
-    /// The services' collection.
+    ///     The services' collection.
     /// </summary>
     private ObservableCollection<IBluetoothRemoteService> Services
     {
@@ -19,6 +19,31 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
     }
 
+    #region Services - Clear
+
+    /// <summary>
+    ///     Clears all services and their characteristics, disposing of them properly.
+    /// </summary>
+    /// <returns>A task that completes when all services have been cleared and disposed.</returns>
+    public async ValueTask ClearServicesAsync()
+    {
+        var serviceCount = Services.Count;
+
+        foreach (var service in Services)
+        {
+            await service.DisposeAsync().ConfigureAwait(false);
+        }
+
+        lock (Services)
+        {
+            Services.Clear();
+        }
+
+        LogServicesCleared(Id, serviceCount);
+    }
+
+    #endregion
+
     #region Services - Events
 
     private void ServicesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs ea)
@@ -28,20 +53,22 @@ public abstract partial class BaseBluetoothRemoteDevice
         {
             ServicesAdded?.Invoke(this, new ServicesAddedEventArgs(listChangedEventArgs.AddedItems));
         }
+
         if (listChangedEventArgs.RemovedItems != null)
         {
             ServicesRemoved?.Invoke(this, new ServicesRemovedEventArgs(listChangedEventArgs.RemovedItems));
         }
+
         ServiceListChanged?.Invoke(this, listChangedEventArgs);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<ServicesAddedEventArgs>? ServicesAdded;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<ServicesRemovedEventArgs>? ServicesRemoved;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<ServiceListChangedEventArgs>? ServiceListChanged;
 
     #endregion
@@ -49,7 +76,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     #region Services - Exploration
 
     /// <summary>
-    /// Gets a value indicating whether service exploration is currently in progress.
+    ///     Gets a value indicating whether service exploration is currently in progress.
     /// </summary>
     public bool IsExploringServices
     {
@@ -64,13 +91,14 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Called when service exploration succeeds. Updates the Services collection and completes the exploration task.
+    ///     Called when service exploration succeeds. Updates the Services collection and completes the exploration task.
     /// </summary>
     /// <typeparam name="TNativeServiceType">The platform-specific service type.</typeparam>
     /// <param name="services">The list of native services discovered.</param>
     /// <param name="areRepresentingTheSameObject">Function to determine if a native service and IBluetoothService represent the same object.</param>
     /// <param name="fromInputTypeToOutputTypeConversion">Function to convert from native service type to IBluetoothService.</param>
-    protected void OnServicesExplorationSucceeded<TNativeServiceType>(IList<TNativeServiceType> services, Func<TNativeServiceType, IBluetoothRemoteService, bool> areRepresentingTheSameObject, Func<TNativeServiceType, IBluetoothRemoteService> fromInputTypeToOutputTypeConversion)
+    protected void OnServicesExplorationSucceeded<TNativeServiceType>(IList<TNativeServiceType> services, Func<TNativeServiceType, IBluetoothRemoteService, bool> areRepresentingTheSameObject,
+        Func<TNativeServiceType, IBluetoothRemoteService> fromInputTypeToOutputTypeConversion)
     {
         Services.UpdateFrom(services, areRepresentingTheSameObject, fromInputTypeToOutputTypeConversion);
 
@@ -89,7 +117,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Called when service exploration fails. Completes the exploration task with an exception or dispatches to the unhandled exception listener.
+    ///     Called when service exploration fails. Completes the exploration task with an exception or dispatches to the unhandled exception listener.
     /// </summary>
     /// <param name="e">The exception that occurred during service exploration.</param>
     protected void OnServicesExplorationFailed(Exception e)
@@ -108,15 +136,15 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
-    /// Platform-specific implementation to explore services.
+    ///     Platform-specific implementation to explore services.
     /// </summary>
     protected abstract ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
-    /// <inheritdoc/>
-    public async Task ExploreServicesAsync(Bluetooth.Abstractions.Scanning.Options.ServiceExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public async Task ExploreServicesAsync(ServiceExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Use default options if none provided
-        options ??= new Bluetooth.Abstractions.Scanning.Options.ServiceExplorationOptions();
+        options ??= new ServiceExplorationOptions();
 
         // If caching enabled and services already exist, handle cascading exploration only
         if (options.UseCache && Services.Any())
@@ -125,7 +153,7 @@ public abstract partial class BaseBluetoothRemoteDevice
             // Services already explored, but may need to explore children
             if (options.ExploreCharacteristics)
             {
-                var characteristicOptions = new Bluetooth.Abstractions.Scanning.Options.CharacteristicExplorationOptions
+                var characteristicOptions = new CharacteristicExplorationOptions
                 {
                     ExploreDescriptors = options.ExploreDescriptors,
                     UseCache = options.UseCache
@@ -148,6 +176,7 @@ public abstract partial class BaseBluetoothRemoteDevice
                     await service.ExploreCharacteristicsAsync(characteristicOptions, timeout, cancellationToken).ConfigureAwait(false);
                 }
             }
+
             return;
         }
 
@@ -187,7 +216,7 @@ public abstract partial class BaseBluetoothRemoteDevice
             // Cascade to characteristics if requested
             if (options.ExploreCharacteristics)
             {
-                var characteristicOptions = new Bluetooth.Abstractions.Scanning.Options.CharacteristicExplorationOptions
+                var characteristicOptions = new CharacteristicExplorationOptions
                 {
                     ExploreDescriptors = options.ExploreDescriptors,
                     UseCache = options.UseCache
@@ -220,48 +249,23 @@ public abstract partial class BaseBluetoothRemoteDevice
 
     #endregion
 
-    #region Services - Clear
-
-    /// <summary>
-    /// Clears all services and their characteristics, disposing of them properly.
-    /// </summary>
-    /// <returns>A task that completes when all services have been cleared and disposed.</returns>
-    public async ValueTask ClearServicesAsync()
-    {
-        var serviceCount = Services.Count;
-
-        foreach (var service in Services)
-        {
-            await service.DisposeAsync().ConfigureAwait(false);
-        }
-
-        lock (Services)
-        {
-            Services.Clear();
-        }
-
-        LogServicesCleared(Id, serviceCount);
-    }
-
-    #endregion
-
     #region Services - Get
 
     private readonly static Func<IBluetoothRemoteService, bool> _defaultAcceptAllFilter = _ => true;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteService GetService(Func<IBluetoothRemoteService, bool> filter)
     {
         return GetServiceOrDefault(filter) ?? throw new ServiceNotFoundException(this);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteService GetService(Guid id)
     {
         return GetServiceOrDefault(id) ?? throw new ServiceNotFoundException(this, id);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteService? GetServiceOrDefault(Func<IBluetoothRemoteService, bool> filter)
     {
         try
@@ -274,7 +278,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothRemoteService? GetServiceOrDefault(Guid id)
     {
         try
@@ -287,7 +291,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IEnumerable<IBluetoothRemoteService> GetServices(Func<IBluetoothRemoteService, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
@@ -308,14 +312,14 @@ public abstract partial class BaseBluetoothRemoteDevice
 
     #region Services - Has
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool HasService(Func<IBluetoothRemoteService, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
         return Services.Any(filter);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool HasService(Guid id)
     {
         return HasService(d => d.Id == id);

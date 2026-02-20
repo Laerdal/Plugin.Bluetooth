@@ -7,22 +7,22 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 public partial class CbCentralManagerWrapper
 {
     /// <summary>
-    /// Delegate interface for CoreBluetooth central manager callbacks, extending the base Bluetooth scanner interface.
+    ///     Delegate interface for CoreBluetooth central manager callbacks, extending the base Bluetooth scanner interface.
     /// </summary>
     public interface ICbCentralManagerDelegate
     {
         /// <summary>
-        /// Called when scanning is started, either by the user or automatically.
+        ///     Called when scanning is started, either by the user or automatically.
         /// </summary>
         void ScanningStarted();
-        
+
         /// <summary>
-        /// Called when scanning is stopped, either by the user or due to an error.
+        ///     Called when scanning is stopped, either by the user or due to an error.
         /// </summary>
         void ScanningStopped();
-        
+
         /// <summary>
-        /// Called when a peripheral is discovered during scanning.
+        ///     Called when a peripheral is discovered during scanning.
         /// </summary>
         /// <param name="peripheral">The discovered peripheral.</param>
         /// <param name="advertisementData">The advertisement data from the peripheral.</param>
@@ -30,19 +30,19 @@ public partial class CbCentralManagerWrapper
         void DiscoveredPeripheral(CBPeripheral peripheral, NSDictionary advertisementData, NSNumber rssi);
 
         /// <summary>
-        /// Called when the central manager's state is updated.
+        ///     Called when the central manager's state is updated.
         /// </summary>
         /// <param name="centralState"></param>
         void UpdatedState(CBManagerState centralState);
 
         /// <summary>
-        /// Called when the central manager will restore state from a previous session.
+        ///     Called when the central manager will restore state from a previous session.
         /// </summary>
         /// <param name="dict">The dictionary containing the state information to restore.</param>
         void WillRestoreState(NSDictionary dict);
 
         /// <summary>
-        /// Gets the device delegate for the specified CoreBluetooth peripheral.
+        ///     Gets the device delegate for the specified CoreBluetooth peripheral.
         /// </summary>
         /// <param name="peripheral">The CoreBluetooth peripheral to get the device delegate for.</param>
         /// <returns>The device delegate for the specified peripheral.</returns>

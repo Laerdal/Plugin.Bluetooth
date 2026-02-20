@@ -1,24 +1,18 @@
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
-
 /// <summary>
-/// Proxy class for CoreBluetooth peripheral delegate callbacks.
-/// https://developer.apple.com/documentation/corebluetooth/cbperipheraldelegate
+///     Proxy class for CoreBluetooth peripheral delegate callbacks.
+///     https://developer.apple.com/documentation/corebluetooth/cbperipheraldelegate
 /// </summary>
 public partial class CbPeripheralWrapper : CBPeripheralDelegate
 {
     /// <summary>
-    /// Gets the underlying CoreBluetooth peripheral.
+    ///     Gets the delegate that handles peripheral proxy callbacks.
     /// </summary>
-    public CBPeripheral CbPeripheral { get; }
+    private readonly ICbPeripheralDelegate _cbPeripheralDelegate;
 
     /// <summary>
-    /// Gets the delegate that handles peripheral proxy callbacks.
-    /// </summary>
-    private readonly CbPeripheralWrapper.ICbPeripheralDelegate _cbPeripheralDelegate;
-
-    /// <summary>
-    /// Initializes a new instance of the CbPeripheralManager class.
+    ///     Initializes a new instance of the CbPeripheralManager class.
     /// </summary>
     /// <param name="cbPeripheralDelegate">The delegate to handle peripheral proxy callbacks.</param>
     /// <param name="cbPeripheral">The CoreBluetooth peripheral to proxy.</param>
@@ -29,9 +23,14 @@ public partial class CbPeripheralWrapper : CBPeripheralDelegate
         CbPeripheral.Delegate = this;
     }
 
+    /// <summary>
+    ///     Gets the underlying CoreBluetooth peripheral.
+    /// </summary>
+    public CBPeripheral CbPeripheral { get; }
+
 
     /// <summary>
-    /// Releases the unmanaged resources used by the CbCentralManagerWrapper and optionally releases the managed resources.
+    ///     Releases the unmanaged resources used by the CbCentralManagerWrapper and optionally releases the managed resources.
     /// </summary>
     /// <param name="disposing">True to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
     protected override void Dispose(bool disposing)

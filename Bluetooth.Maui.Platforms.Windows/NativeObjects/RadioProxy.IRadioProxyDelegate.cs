@@ -6,13 +6,13 @@ namespace Bluetooth.Maui.Platforms.Windows;
 public partial class RadioProxy
 {
     /// <summary>
-    /// Delegate interface for handling radio operations and events.
-    /// Extends the base Bluetooth manager interface with Windows-specific radio callbacks.
+    ///     Delegate interface for handling radio operations and events.
+    ///     Extends the base Bluetooth manager interface with Windows-specific radio callbacks.
     /// </summary>
     public interface IRadioProxyDelegate
     {
         /// <summary>
-        /// Called when the radio state changes (e.g., turning on/off).
+        ///     Called when the radio state changes (e.g., turning on/off).
         /// </summary>
         /// <param name="senderState">The new radio state.</param>
         void OnRadioStateChanged(RadioState senderState);

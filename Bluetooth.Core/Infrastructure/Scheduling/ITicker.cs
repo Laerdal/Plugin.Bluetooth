@@ -1,14 +1,14 @@
 namespace Bluetooth.Core.Infrastructure.Scheduling;
 
 /// <summary>
-/// Interface representing a ticker that can register periodic callbacks.
+///     Interface representing a ticker that can register periodic callbacks.
 /// </summary>
 public interface ITicker
 {
     /// <summary>
-    /// Registers a callback to be invoked every <paramref name="period"/>.
-    /// The callback should be fast and non-blocking; if it needs async work, use the async overload.
-    /// Returns a subscription that should be disposed to unregister.
+    ///     Registers a callback to be invoked every <paramref name="period" />.
+    ///     The callback should be fast and non-blocking; if it needs async work, use the async overload.
+    ///     Returns a subscription that should be disposed to unregister.
     /// </summary>
     /// <param name="name">The name of the registration.</param>
     /// <param name="period">The period between invocations.</param>
@@ -22,9 +22,9 @@ public interface ITicker
         bool runImmediately = false);
 
     /// <summary>
-    /// Registers an async callback to be invoked every <paramref name="period"/>.
-    /// The ticker will avoid overlapping executions for the same registration.
-    /// Returns a subscription that should be disposed to unregister.
+    ///     Registers an async callback to be invoked every <paramref name="period" />.
+    ///     The ticker will avoid overlapping executions for the same registration.
+    ///     Returns a subscription that should be disposed to unregister.
     /// </summary>
     /// <param name="name">The name of the registration.</param>
     /// <param name="period">The period between invocations.</param>

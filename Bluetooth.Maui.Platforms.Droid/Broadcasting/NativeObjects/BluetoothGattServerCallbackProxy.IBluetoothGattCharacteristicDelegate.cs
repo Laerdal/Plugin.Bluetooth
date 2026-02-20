@@ -7,12 +7,12 @@ namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 public partial class BluetoothGattServerCallbackProxy
 {
     /// <summary>
-    /// Delegate interface for handling GATT characteristic-level events.
+    ///     Delegate interface for handling GATT characteristic-level events.
     /// </summary>
     public interface IBluetoothGattCharacteristicDelegate
     {
         /// <summary>
-        /// Called when a remote device has requested to read a characteristic.
+        ///     Called when a remote device has requested to read a characteristic.
         /// </summary>
         /// <param name="sharedBluetoothDeviceDelegate">The device delegate for the requesting device.</param>
         /// <param name="requestId">The ID of the read request.</param>
@@ -20,7 +20,7 @@ public partial class BluetoothGattServerCallbackProxy
         void OnCharacteristicReadRequest(IBluetoothDeviceDelegate sharedBluetoothDeviceDelegate, int requestId, int offset);
 
         /// <summary>
-        /// Called when a remote device has requested to write to a characteristic.
+        ///     Called when a remote device has requested to write to a characteristic.
         /// </summary>
         /// <param name="sharedBluetoothDeviceDelegate">The device delegate for the requesting device.</param>
         /// <param name="requestId">The ID of the write request.</param>
@@ -36,11 +36,11 @@ public partial class BluetoothGattServerCallbackProxy
             byte[] value);
 
         /// <summary>
-        /// Gets the descriptor delegate for the specified native descriptor.
+        ///     Gets the descriptor delegate for the specified native descriptor.
         /// </summary>
         /// <param name="native">The native Bluetooth GATT descriptor.</param>
         /// <returns>The descriptor delegate for the specified descriptor.</returns>
-        IBluetoothGattDescriptorDelegate GetDescriptor(Android.Bluetooth.BluetoothGattDescriptor? native);
+        IBluetoothGattDescriptorDelegate GetDescriptor(BluetoothGattDescriptor? native);
     }
 }
 

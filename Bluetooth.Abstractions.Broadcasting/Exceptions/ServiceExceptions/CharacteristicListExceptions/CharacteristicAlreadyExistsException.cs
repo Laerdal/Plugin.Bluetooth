@@ -8,7 +8,7 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 public class CharacteristicAlreadyExistsException : ServiceException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="CharacteristicAlreadyExistsException"/> class.
+    ///     Initializes a new instance of the <see cref="CharacteristicAlreadyExistsException" /> class.
     /// </summary>
     /// <param name="localService">The Bluetooth broadcast service associated with the exception.</param>
     /// <param name="characteristicId">The UUID of the characteristic that already exists.</param>
@@ -34,5 +34,4 @@ public class CharacteristicAlreadyExistsException : ServiceException
     ///     Gets the existing characteristic that caused the exception.
     /// </summary>
     public IBluetoothLocalCharacteristic ExistingLocalCharacteristic { get; }
-
 }

@@ -1,15 +1,12 @@
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
-/// Base class for Bluetooth broadcast descriptors.
+///     Base class for Bluetooth broadcast descriptors.
 /// </summary>
 public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject, IBluetoothLocalDescriptor
 {
-    /// <inheritdoc />
-    public IBluetoothLocalCharacteristic LocalCharacteristic { get; }
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothLocalDescriptor"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothLocalDescriptor" /> class.
     /// </summary>
     protected BaseBluetoothLocalDescriptor(
         IBluetoothLocalCharacteristic localCharacteristic,
@@ -26,13 +23,37 @@ public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject,
     }
 
     /// <inheritdoc />
+    public BluetoothDescriptorPermissions Permissions { get; init; }
+
+    /// <inheritdoc />
+    public IBluetoothLocalCharacteristic LocalCharacteristic { get; }
+
+    /// <inheritdoc />
     public Guid Id { get; }
 
     /// <inheritdoc />
     public string Name { get; } = "Unknown Descriptor";
 
     /// <inheritdoc />
-    public BluetoothDescriptorPermissions Permissions { get; init; }
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return $"[{Id}] {Name}";
+    }
+
+    /// <summary>
+    ///     Disposes the resources asynchronously.
+    /// </summary>
+    protected virtual ValueTask DisposeAsyncCore()
+    {
+        return ValueTask.CompletedTask;
+    }
 
     #region Read/Write Requests
 
@@ -43,7 +64,7 @@ public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject,
     public event EventHandler<DescriptorWriteRequestEventArgs>? WriteRequested;
 
     /// <summary>
-    /// Handles a read request from a client device.
+    ///     Handles a read request from a client device.
     /// </summary>
     protected DescriptorReadRequestEventArgs OnReadRequested(IBluetoothConnectedDevice device, int offset)
     {
@@ -58,7 +79,7 @@ public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject,
     }
 
     /// <summary>
-    /// Handles a write request from a client device.
+    ///     Handles a write request from a client device.
     /// </summary>
     protected DescriptorWriteRequestEventArgs OnWriteRequested(
         IBluetoothConnectedDevice device,
@@ -86,25 +107,4 @@ public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject,
     }
 
     #endregion
-
-    /// <inheritdoc/>
-    public override string ToString()
-    {
-        return $"[{Id}] {Name}";
-    }
-
-    /// <summary>
-    /// Disposes the resources asynchronously.
-    /// </summary>
-    protected virtual ValueTask DisposeAsyncCore()
-    {
-        return ValueTask.CompletedTask;
-    }
-
-        /// <inheritdoc />
-    public async ValueTask DisposeAsync()
-    {
-        await DisposeAsyncCore().ConfigureAwait(false);
-        GC.SuppressFinalize(this);
-    }
 }

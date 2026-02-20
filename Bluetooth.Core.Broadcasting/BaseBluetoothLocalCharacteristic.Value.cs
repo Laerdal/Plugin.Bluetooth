@@ -1,18 +1,17 @@
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
-/// Base class for Bluetooth broadcast characteristics.
+///     Base class for Bluetooth broadcast characteristics.
 /// </summary>
 public abstract partial class BaseBluetoothLocalCharacteristic
 {
-
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ReadOnlySpan<byte> ValueSpan => Value.Span;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ReadOnlyMemory<byte> Value { get; private set; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ValueTask UpdateValueAsync(ReadOnlyMemory<byte> value, bool notifyClients = true, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Value = value;

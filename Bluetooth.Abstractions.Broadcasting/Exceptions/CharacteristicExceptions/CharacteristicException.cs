@@ -12,7 +12,7 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 public abstract class CharacteristicException : BluetoothBroadcastingException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="CharacteristicException"/> class.
+    ///     Initializes a new instance of the <see cref="CharacteristicException" /> class.
     /// </summary>
     /// <param name="broadcastLocalCharacteristic">The Bluetooth broadcast characteristic associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

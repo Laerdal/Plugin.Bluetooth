@@ -1,12 +1,12 @@
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
-/// Base class for Bluetooth broadcast characteristics.
+///     Base class for Bluetooth broadcast characteristics.
 /// </summary>
 public abstract partial class BaseBluetoothLocalCharacteristic
 {
     /// <summary>
-    /// Called when a write request is received from a client device.
+    ///     Called when a write request is received from a client device.
     /// </summary>
     /// <param name="device">The client device that sent the write request.</param>
     /// <param name="data">The data sent in the write request.</param>
@@ -19,7 +19,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
         ArgumentNullException.ThrowIfNull(data);
         LogWriteRequest(Id, LocalService.Id, device.Id, data.Length);
         // TODO : EVENT
-        await UpdateValueAsync(data, notifyClients: true, timeout: timeout, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await UpdateValueAsync(data, true, timeout, cancellationToken).ConfigureAwait(false);
         LogWriteRequestCompleted(Id, LocalService.Id);
     }
 }

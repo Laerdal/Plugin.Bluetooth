@@ -3,13 +3,13 @@ using Bluetooth.Abstractions.Options;
 namespace Bluetooth.Core;
 
 /// <summary>
-/// Extension methods for registering Bluetooth services in a service collection.
+///     Extension methods for registering Bluetooth services in a service collection.
 /// </summary>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds Bluetooth core services to the service collection.
-    /// Registers all core Bluetooth services including the ticker and infrastructure options.
+    ///     Adds Bluetooth core services to the service collection.
+    ///     Registers all core Bluetooth services including the ticker and infrastructure options.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
     /// <param name="configureOptions">Optional configuration action for BluetoothInfrastructureOptions.</param>

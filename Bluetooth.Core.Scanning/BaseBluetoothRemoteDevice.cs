@@ -4,32 +4,20 @@ namespace Bluetooth.Core.Scanning;
 public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IBluetoothRemoteDevice
 {
     /// <summary>
-    /// The logger instance used for logging device operations.
+    ///     The logger instance used for logging device operations.
     /// </summary>
     private readonly ILogger<IBluetoothRemoteDevice> _logger;
 
-    /// <inheritdoc/>
-    public IBluetoothScanner Scanner { get; }
-
     /// <summary>
-    /// The factory responsible for creating services associated with this device.
-    /// </summary>
-    protected IBluetoothServiceFactory ServiceFactory { get; }
-
-    /// <summary>
-    /// The converter responsible for translating RSSI values to signal strength levels, which can be used for filtering and sorting devices based on signal quality.
-    /// </summary>
-    protected IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BaseBluetoothRemoteDevice"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteDevice" /> class.
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner associated with this device.</param>
     /// <param name="request">The factory request containing device information.</param>
     /// <param name="serviceFactory">The factory for creating Bluetooth services.</param>
     /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
     /// <param name="logger">The logger instance to use for logging.</param>
-    protected BaseBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request, IBluetoothServiceFactory serviceFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter, ILogger<IBluetoothRemoteDevice>? logger = null)
+    protected BaseBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request, IBluetoothServiceFactory serviceFactory,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter, ILogger<IBluetoothRemoteDevice>? logger = null)
     {
         ArgumentNullException.ThrowIfNull(scanner);
         ArgumentNullException.ThrowIfNull(serviceFactory);
@@ -42,23 +30,42 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
         RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
         Id = request.DeviceId;
         Manufacturer = request.Manufacturer;
-        if(request.Advertisement != null)
+        if (request.Advertisement != null)
         {
             OnAdvertisementReceived(request.Advertisement);
         }
     }
 
-    /// <inheritdoc/>
-    public string Id { get; }
-
-    /// <inheritdoc/>
-    public Manufacturer Manufacturer { get; }
-
-    /// <inheritdoc/>
-    public DateTimeOffset LastSeen { get; private set; }
+    /// <summary>
+    ///     The factory responsible for creating services associated with this device.
+    /// </summary>
+    protected IBluetoothServiceFactory ServiceFactory { get; }
 
     /// <summary>
-    /// Performs the core disposal logic for the device, including disconnection, cleanup of pending operations, and resource disposal.
+    ///     The converter responsible for translating RSSI values to signal strength levels, which can be used for filtering and sorting devices based on signal quality.
+    /// </summary>
+    protected IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
+
+    /// <inheritdoc />
+    public IBluetoothScanner Scanner { get; }
+
+    /// <inheritdoc />
+    public string Id { get; }
+
+    /// <inheritdoc />
+    public Manufacturer Manufacturer { get; }
+
+    /// <inheritdoc />
+    public DateTimeOffset LastSeen { get; private set; }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Performs the core disposal logic for the device, including disconnection, cleanup of pending operations, and resource disposal.
     /// </summary>
     /// <returns>A task that represents the asynchronous disposal operation.</returns>
     protected async virtual ValueTask DisposeAsyncCore()
@@ -106,13 +113,7 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
         await ClearServicesAsync().ConfigureAwait(false);
     }
 
-    /// <inheritdoc/>
-    public async ValueTask DisposeAsync()
-    {
-        await DisposeAsyncCore().ConfigureAwait(false);
-    }
-
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override string ToString()
     {
         return $"[{Id}] {Name} by {Manufacturer}";

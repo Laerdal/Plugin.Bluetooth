@@ -9,7 +9,7 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 public class BroadcasterIsAlreadyStoppedException : BroadcasterFailedToStopException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="BroadcasterIsAlreadyStoppedException"/> class.
+    ///     Initializes a new instance of the <see cref="BroadcasterIsAlreadyStoppedException" /> class.
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>
@@ -19,10 +19,10 @@ public class BroadcasterIsAlreadyStoppedException : BroadcasterFailedToStopExcep
     }
 
     /// <summary>
-    ///     Throws an <see cref="BroadcasterIsAlreadyStoppedException"/> if the Bluetooth broadcaster is already stopped.
+    ///     Throws an <see cref="BroadcasterIsAlreadyStoppedException" /> if the Bluetooth broadcaster is already stopped.
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster to check.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="broadcaster"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="broadcaster" /> is null.</exception>
     /// <exception cref="BroadcasterIsAlreadyStoppedException">Thrown when the broadcaster is already stopped.</exception>
     public static void ThrowIfIsStopped(IBluetoothBroadcaster broadcaster)
     {

@@ -5,17 +5,17 @@ public partial interface IBluetoothRemoteDescriptor
     #region Read
 
     /// <summary>
-    /// Gets a value indicating whether the descriptor can be read.
+    ///     Gets a value indicating whether the descriptor can be read.
     /// </summary>
     bool CanRead { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the descriptor is currently reading its value.
+    ///     Gets a value indicating whether the descriptor is currently reading its value.
     /// </summary>
     bool IsReadingValue { get; }
 
     /// <summary>
-    /// Reads the value of the descriptor asynchronously.
+    ///     Reads the value of the descriptor asynchronously.
     /// </summary>
     /// <param name="skipIfPreviouslyRead">If true, skips reading if the value was previously read.</param>
     /// <param name="timeout">The timeout for this operation</param>

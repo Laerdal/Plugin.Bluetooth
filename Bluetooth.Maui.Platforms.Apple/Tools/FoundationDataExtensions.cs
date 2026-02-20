@@ -1,12 +1,12 @@
 namespace Bluetooth.Maui.Platforms.Apple.Tools;
 
 /// <summary>
-/// Extension/utility methods for converting between .NET byte buffers and Objective-C Foundation types.
+///     Extension/utility methods for converting between .NET byte buffers and Objective-C Foundation types.
 /// </summary>
 public static class FoundationDataExtensions
 {
     /// <summary>
-    /// Converts a <see cref="ReadOnlyMemory{T}"/> of bytes to an <see cref="NSData"/>.
+    ///     Converts a <see cref="ReadOnlyMemory{T}" /> of bytes to an <see cref="NSData" />.
     /// </summary>
     public static NSData ToNSData(this ReadOnlyMemory<byte> value)
     {
@@ -16,7 +16,7 @@ public static class FoundationDataExtensions
     }
 
     /// <summary>
-    /// Converts an Objective-C <see cref="NSObject"/> (typically <see cref="NSData"/>) to a .NET byte buffer.
+    ///     Converts an Objective-C <see cref="NSObject" /> (typically <see cref="NSData" />) to a .NET byte buffer.
     /// </summary>
     public static ReadOnlyMemory<byte> ToReadOnlyMemoryBytes(this NSObject? value)
     {

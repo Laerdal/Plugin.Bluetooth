@@ -6,7 +6,7 @@ namespace Bluetooth.Abstractions.Scanning.EventArgs;
 public class AdvertisementReceivedEventArgs : System.EventArgs
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AdvertisementReceivedEventArgs"/> class.
+    ///     Initializes a new instance of the <see cref="AdvertisementReceivedEventArgs" /> class.
     /// </summary>
     /// <param name="advertisement">The advertisement data received.</param>
     public AdvertisementReceivedEventArgs(IBluetoothAdvertisement advertisement)
@@ -20,5 +20,4 @@ public class AdvertisementReceivedEventArgs : System.EventArgs
     ///     Gets the advertisement data received.
     /// </summary>
     public IBluetoothAdvertisement Advertisement { get; }
-
 }

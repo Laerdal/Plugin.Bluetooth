@@ -2,19 +2,19 @@ using Bluetooth.Core.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.DotNetCore.Scanning.Factories;
 
-/// <inheritdoc/>
+/// <inheritdoc />
 public class BluetoothCharacteristicFactory : BaseBluetoothCharacteristicFactory
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     public BluetoothCharacteristicFactory(IBluetoothDescriptorFactory descriptorFactory) : base(descriptorFactory)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    public override Abstractions.Scanning.IBluetoothRemoteCharacteristic CreateCharacteristic(Abstractions.Scanning.IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request)
+    public override IBluetoothRemoteCharacteristic CreateCharacteristic(IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

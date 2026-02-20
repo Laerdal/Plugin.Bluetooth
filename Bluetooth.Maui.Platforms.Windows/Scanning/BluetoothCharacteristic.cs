@@ -6,20 +6,15 @@ using Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
 namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 
 /// <summary>
-/// Represents a Windows-specific Bluetooth Low Energy characteristic.
-/// This class wraps Windows's GattCharacteristic, providing platform-specific
-/// implementations for reading, writing, and listening to characteristic values.
+///     Represents a Windows-specific Bluetooth Low Energy characteristic.
+///     This class wraps Windows's GattCharacteristic, providing platform-specific
+///     implementations for reading, writing, and listening to characteristic values.
 /// </summary>
 public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
     GattCharacteristicProxy.IBluetoothCharacteristicProxyDelegate
 {
     /// <summary>
-    /// Gets the Windows GATT characteristic proxy used for characteristic operations.
-    /// </summary>
-    public GattCharacteristicProxy NativeCharacteristicProxy { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the Windows <see cref="BluetoothCharacteristic"/> class.
+    ///     Initializes a new instance of the Windows <see cref="BluetoothCharacteristic" /> class.
     /// </summary>
     /// <param name="service">The Bluetooth service that contains this characteristic.</param>
     /// <param name="request">The characteristic factory request containing characteristic information.</param>
@@ -40,9 +35,28 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
         NativeCharacteristicProxy = new GattCharacteristicProxy(windowsRequest.NativeCharacteristic, this);
     }
 
+    /// <summary>
+    ///     Gets the Windows GATT characteristic proxy used for characteristic operations.
+    /// </summary>
+    public GattCharacteristicProxy NativeCharacteristicProxy { get; }
+
+    #region Delegate Callbacks
+
+    /// <summary>
+    ///     Called when the characteristic value changes on the Windows platform.
+    /// </summary>
+    /// <param name="value">The new characteristic value.</param>
+    /// <param name="argsTimestamp">The timestamp when the value changed.</param>
+    public void OnValueChanged(byte[] value, DateTimeOffset argsTimestamp)
+    {
+        OnReadValueSucceeded(value);
+    }
+
+    #endregion
+
     #region Read
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeReadValueAsync()
     {
         try
@@ -57,7 +71,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
             if (result.Value is { Length: > 0 } buffer)
             {
                 var data = new byte[buffer.Length];
-                using var reader = global::Windows.Storage.Streams.DataReader.FromBuffer(buffer);
+                using var reader = DataReader.FromBuffer(buffer);
                 reader.ReadBytes(data);
                 OnReadValueSucceeded(data);
             }
@@ -72,7 +86,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override bool NativeCanRead()
     {
         return NativeCharacteristicProxy.GattCharacteristic.CharacteristicProperties
@@ -83,7 +97,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
 
     #region Write
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
         try
@@ -95,7 +109,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
 
             if (!supportsWriteWithResponse && !supportsWriteWithoutResponse)
             {
-                throw new Abstractions.Scanning.Exceptions.CharacteristicCantWriteException(
+                throw new CharacteristicCantWriteException(
                     this,
                     "Characteristic doesn't support Write");
             }
@@ -107,7 +121,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
 
             // Create buffer
             IBuffer buffer;
-            using (var writer = new global::Windows.Storage.Streams.DataWriter())
+            using (var writer = new DataWriter())
             {
                 writer.WriteBytes(value.ToArray());
                 buffer = writer.DetachBuffer();
@@ -129,7 +143,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override bool NativeCanWrite()
     {
         var properties = NativeCharacteristicProxy.GattCharacteristic.CharacteristicProperties;
@@ -141,7 +155,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
 
     #region Listen (Notify/Indicate)
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeReadIsListeningAsync()
     {
         try
@@ -154,7 +168,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
             var isListening = result.ClientCharacteristicConfigurationDescriptor !=
-                             GattClientCharacteristicConfigurationDescriptorValue.None;
+                              GattClientCharacteristicConfigurationDescriptorValue.None;
             OnReadIsListeningSucceeded(isListening);
         }
         catch (Exception ex)
@@ -163,7 +177,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
         try
@@ -179,7 +193,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
 
                 if (!supportsNotify && !supportsIndicate)
                 {
-                    throw new Abstractions.Scanning.Exceptions.CharacteristicCantListenException(
+                    throw new CharacteristicCantListenException(
                         this,
                         "Characteristic doesn't support Notify or Indicate");
                 }
@@ -210,7 +224,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override bool NativeCanListen()
     {
         var properties = NativeCharacteristicProxy.GattCharacteristic.CharacteristicProperties;
@@ -222,21 +236,21 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
 
     #region Reliable Write
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override ValueTask NativeBeginReliableWriteAsync()
     {
         // Windows doesn't support reliable write transactions
         throw new NotSupportedException("Reliable write transactions are not supported on Windows platform");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override ValueTask NativeExecuteReliableWriteAsync()
     {
         // Windows doesn't support reliable write transactions
         throw new NotSupportedException("Reliable write transactions are not supported on Windows platform");
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override ValueTask NativeAbortReliableWriteAsync()
     {
         // Windows doesn't support reliable write transactions
@@ -247,7 +261,7 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
 
     #region Descriptor Discovery
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeDescriptorsExplorationAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
@@ -281,20 +295,6 @@ public class BluetoothCharacteristic : BaseBluetoothRemoteCharacteristic,
     private static bool AreRepresentingTheSameObject(GattDescriptor native, IBluetoothRemoteDescriptor shared)
     {
         return native.Uuid.Equals(shared.Id);
-    }
-
-    #endregion
-
-    #region Delegate Callbacks
-
-    /// <summary>
-    /// Called when the characteristic value changes on the Windows platform.
-    /// </summary>
-    /// <param name="value">The new characteristic value.</param>
-    /// <param name="argsTimestamp">The timestamp when the value changed.</param>
-    public void OnValueChanged(byte[] value, DateTimeOffset argsTimestamp)
-    {
-        OnReadValueSucceeded(value);
     }
 
     #endregion

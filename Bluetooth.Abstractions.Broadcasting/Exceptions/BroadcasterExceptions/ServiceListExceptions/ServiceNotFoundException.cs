@@ -6,9 +6,8 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 /// <seealso cref="BroadcasterException" />
 public class ServiceNotFoundException : BroadcasterException
 {
-
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ServiceNotFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="ServiceNotFoundException" /> class.
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster associated with the exception.</param>
     /// <param name="innerException">The inner exception that caused the current exception, if any.</param>
@@ -18,7 +17,7 @@ public class ServiceNotFoundException : BroadcasterException
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ServiceNotFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="ServiceNotFoundException" /> class.
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster associated with the exception.</param>
     /// <param name="id">The UUID of the service that was not found.</param>

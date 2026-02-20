@@ -11,6 +11,7 @@ public abstract partial class BaseBluetoothBroadcaster
                 field = [];
                 field.CollectionChanged += OnClientDevicesCollectionChanged;
             }
+
             return field;
         }
     }
@@ -18,7 +19,7 @@ public abstract partial class BaseBluetoothBroadcaster
     #region ClientDevices - Events
 
     /// <summary>
-    /// Handles collection change notifications for the <see cref="ClientDevices"/> collection.
+    ///     Handles collection change notifications for the <see cref="ClientDevices" /> collection.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="ea">Event arguments containing the collection change details.</param>
@@ -29,20 +30,22 @@ public abstract partial class BaseBluetoothBroadcaster
         {
             ClientDevicesAdded?.Invoke(this, new ClientDevicesAddedEventArgs(listChangedEventArgs.AddedItems));
         }
+
         if (listChangedEventArgs.RemovedItems != null)
         {
             ClientDevicesRemoved?.Invoke(this, new ClientDevicesRemovedEventArgs(listChangedEventArgs.RemovedItems));
         }
+
         ClientDeviceListChanged?.Invoke(this, listChangedEventArgs);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<ClientDeviceListChangedEventArgs>? ClientDeviceListChanged;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<ClientDevicesAddedEventArgs>? ClientDevicesAdded;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public event EventHandler<ClientDevicesRemovedEventArgs>? ClientDevicesRemoved;
 
     #endregion
@@ -50,8 +53,8 @@ public abstract partial class BaseBluetoothBroadcaster
     #region ClientDevices - Add/Remove
 
     /// <summary>
-    /// Adds a newly connected client device to the collection.
-    /// Called by platform implementations when a client connects.
+    ///     Adds a newly connected client device to the collection.
+    ///     Called by platform implementations when a client connects.
     /// </summary>
     /// <param name="device">The client device to add.</param>
     protected void AddClientDevice(IBluetoothConnectedDevice device)
@@ -61,8 +64,8 @@ public abstract partial class BaseBluetoothBroadcaster
     }
 
     /// <summary>
-    /// Removes a client device from the collection.
-    /// Called by platform implementations when a client disconnects.
+    ///     Removes a client device from the collection.
+    ///     Called by platform implementations when a client disconnects.
     /// </summary>
     /// <param name="device">The client device to remove.</param>
     protected void RemoveClientDevice(IBluetoothConnectedDevice device)
@@ -72,8 +75,8 @@ public abstract partial class BaseBluetoothBroadcaster
     }
 
     /// <summary>
-    /// Removes a client device from the collection by ID.
-    /// Called by platform implementations when a client disconnects.
+    ///     Removes a client device from the collection by ID.
+    ///     Called by platform implementations when a client disconnects.
     /// </summary>
     /// <param name="id">The ID of the client device to remove.</param>
     protected void RemoveClientDevice(string id)
@@ -89,19 +92,19 @@ public abstract partial class BaseBluetoothBroadcaster
 
     private readonly static Func<IBluetoothConnectedDevice, bool> _defaultAcceptAllFilter = _ => true;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothConnectedDevice GetClientDevice(Func<IBluetoothConnectedDevice, bool> filter)
     {
         return GetClientDeviceOrDefault(filter) ?? throw new ClientDeviceNotFoundException(this);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothConnectedDevice GetClientDevice(string id)
     {
         return GetClientDeviceOrDefault(id) ?? throw new ClientDeviceNotFoundException(this, id);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothConnectedDevice? GetClientDeviceOrDefault(Func<IBluetoothConnectedDevice, bool> filter)
     {
         lock (ClientDevices)
@@ -118,7 +121,7 @@ public abstract partial class BaseBluetoothBroadcaster
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IBluetoothConnectedDevice? GetClientDeviceOrDefault(string id)
     {
         lock (ClientDevices)
@@ -134,7 +137,7 @@ public abstract partial class BaseBluetoothBroadcaster
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public IReadOnlyList<IBluetoothConnectedDevice> GetClientDevices(Func<IBluetoothConnectedDevice, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
@@ -149,7 +152,7 @@ public abstract partial class BaseBluetoothBroadcaster
 
     #region ClientDevices - Has
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool HasClientDevice(Func<IBluetoothConnectedDevice, bool> filter)
     {
         lock (ClientDevices)
@@ -158,12 +161,11 @@ public abstract partial class BaseBluetoothBroadcaster
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool HasClientDevice(string id)
     {
         return HasClientDevice(device => device.Id == id);
     }
 
     #endregion
-
 }

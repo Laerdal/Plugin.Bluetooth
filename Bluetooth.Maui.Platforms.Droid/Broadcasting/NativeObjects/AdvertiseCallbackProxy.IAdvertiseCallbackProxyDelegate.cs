@@ -7,19 +7,19 @@ namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 public partial class AdvertiseCallbackProxy
 {
     /// <summary>
-    /// Interface for handling Bluetooth LE advertising callbacks.
-    /// Extends the base broadcaster interface with Android-specific callback methods.
+    ///     Interface for handling Bluetooth LE advertising callbacks.
+    ///     Extends the base broadcaster interface with Android-specific callback methods.
     /// </summary>
     public interface IAdvertiseCallbackProxyDelegate
     {
         /// <summary>
-        /// Called when advertising has been started successfully.
+        ///     Called when advertising has been started successfully.
         /// </summary>
         /// <param name="settingsInEffect">The actual advertising settings that are in effect.</param>
         void OnStartSuccess(AdvertiseSettings? settingsInEffect);
 
         /// <summary>
-        /// Called when advertising could not be started.
+        ///     Called when advertising could not be started.
         /// </summary>
         /// <param name="errorCode">The error code indicating why advertising failed to start.</param>
         void OnStartFailure(AdvertiseFailure errorCode);

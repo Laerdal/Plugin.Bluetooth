@@ -6,9 +6,8 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 /// <seealso cref="DeviceException" />
 public class BatteryTooLowException : DeviceException
 {
-
     /// <summary>
-    ///     Initializes a new instance of the <see cref="BatteryTooLowException"/> class.
+    ///     Initializes a new instance of the <see cref="BatteryTooLowException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="batteryLevelPrc">The current battery level percentage.</param>

@@ -10,9 +10,8 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 /// <seealso cref="IBluetoothRemoteService" />
 public abstract class ServiceException : BluetoothScanningException
 {
-
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ServiceException"/> class.
+    ///     Initializes a new instance of the <see cref="ServiceException" /> class.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

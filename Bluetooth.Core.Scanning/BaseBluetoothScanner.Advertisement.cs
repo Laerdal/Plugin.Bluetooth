@@ -2,13 +2,20 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothScanner
 {
+    #region Events
+
+    /// <inheritdoc />
+    public event EventHandler<AdvertisementReceivedEventArgs>? AdvertisementReceived;
+
+    #endregion
+
     #region Device Factory
 
     /// <summary>
-    /// Creates a native device from the advertisement and adds it to the device list.
+    ///     Creates a native device from the advertisement and adds it to the device list.
     /// </summary>
     /// <param name="advertisement">The advertisement from which to create and add the device.</param>
-    /// <returns>The newly created and added <see cref="IBluetoothRemoteDevice"/> instance.</returns>
+    /// <returns>The newly created and added <see cref="IBluetoothRemoteDevice" /> instance.</returns>
     protected virtual IBluetoothRemoteDevice AddDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
         var newDeviceRequest = CreateDeviceFactoryRequestFromAdvertisement(advertisement);
@@ -17,11 +24,12 @@ public abstract partial class BaseBluetoothScanner
         {
             Devices.Add(device);
         }
+
         return device;
     }
 
     /// <summary>
-    /// Creates a factory request for creating a Bluetooth device based on the received advertisement.
+    ///     Creates a factory request for creating a Bluetooth device based on the received advertisement.
     /// </summary>
     /// <param name="advertisement">The received Bluetooth advertisement.</param>
     /// <returns>A factory request containing the necessary information to create a Bluetooth device.</returns>
@@ -29,17 +37,10 @@ public abstract partial class BaseBluetoothScanner
 
     #endregion
 
-    #region Events
-
-    /// <inheritdoc/>
-    public event EventHandler<AdvertisementReceivedEventArgs>? AdvertisementReceived;
-
-    #endregion
-
     #region Advertisement Processing
 
     /// <summary>
-    /// Handles the reception of a Bluetooth advertisement, applying filtering and raising events as necessary.
+    ///     Handles the reception of a Bluetooth advertisement, applying filtering and raising events as necessary.
     /// </summary>
     /// <param name="advertisement">The received Bluetooth advertisement.</param>
     protected void OnAdvertisementReceived<TAdvertisement>(TAdvertisement advertisement)
@@ -49,7 +50,7 @@ public abstract partial class BaseBluetoothScanner
         {
             return;
         }
-        
+
         // Filter
         if (!CurrentScanningOptions.AdvertisementFilter.Invoke(advertisement))
         {
@@ -79,12 +80,12 @@ public abstract partial class BaseBluetoothScanner
     }
 
     /// <summary>
-    /// Processes multiple received advertisements in batch, primarily for Android batch advertisement processing.
+    ///     Processes multiple received advertisements in batch, primarily for Android batch advertisement processing.
     /// </summary>
     /// <param name="advertisements">The collection of advertisements to process.</param>
     /// <remarks>
-    /// This method filters advertisements, raises events for each, groups them by device,
-    /// and processes them accordingly. This is particularly useful for handling Android's batch scan results.
+    ///     This method filters advertisements, raises events for each, groups them by device,
+    ///     and processes them accordingly. This is particularly useful for handling Android's batch scan results.
     /// </remarks>
     protected void OnAdvertisementsReceived(IEnumerable<IBluetoothAdvertisement> advertisements)
     {
@@ -123,5 +124,4 @@ public abstract partial class BaseBluetoothScanner
     }
 
     #endregion
-
 }

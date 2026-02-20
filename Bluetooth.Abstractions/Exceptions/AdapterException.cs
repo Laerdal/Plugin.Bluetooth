@@ -10,7 +10,7 @@ namespace Bluetooth.Abstractions.Exceptions;
 public abstract class AdapterException : BluetoothException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AdapterException"/> class.
+    ///     Initializes a new instance of the <see cref="AdapterException" /> class.
     /// </summary>
     /// <param name="adapter">The Bluetooth adapter associated with the exception.</param>
     /// <param name="message">A message that describes the error.</param>

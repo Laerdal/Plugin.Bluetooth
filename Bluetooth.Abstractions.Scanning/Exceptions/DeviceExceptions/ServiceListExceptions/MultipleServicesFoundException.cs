@@ -8,7 +8,7 @@ namespace Bluetooth.Abstractions.Scanning.Exceptions;
 public class MultipleServicesFoundException : ServiceExplorationException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleServicesFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleServicesFoundException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="services">The services that were found matching the criteria.</param>
@@ -24,7 +24,7 @@ public class MultipleServicesFoundException : ServiceExplorationException
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MultipleServicesFoundException"/> class.
+    ///     Initializes a new instance of the <see cref="MultipleServicesFoundException" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with the exception.</param>
     /// <param name="id">The id of the services that were found matching the criteria.</param>
@@ -46,4 +46,3 @@ public class MultipleServicesFoundException : ServiceExplorationException
     /// </summary>
     public IEnumerable<IBluetoothRemoteService> Services { get; }
 }
-

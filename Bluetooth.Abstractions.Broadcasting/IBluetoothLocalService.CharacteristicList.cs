@@ -7,7 +7,7 @@ public partial interface IBluetoothLocalService
     #region Characteristics - Add
 
     /// <summary>
-    /// Adds a GATT characteristic to be hosted by the broadcaster.
+    ///     Adds a GATT characteristic to be hosted by the broadcaster.
     /// </summary>
     /// <param name="request">The request containing the characteristic details.</param>
     /// <param name="timeout">The timeout for this operation</param>
@@ -22,7 +22,7 @@ public partial interface IBluetoothLocalService
     #region Characteristics - Get
 
     /// <summary>
-    /// Gets a hosted GATT characteristic that matches the specified filter.
+    ///     Gets a hosted GATT characteristic that matches the specified filter.
     /// </summary>
     /// <param name="filter">A function to filter characteristics. Should return true for the desired characteristic.</param>
     /// <returns>The matching characteristic.</returns>
@@ -31,7 +31,7 @@ public partial interface IBluetoothLocalService
     IBluetoothLocalCharacteristic GetCharacteristic(Func<IBluetoothLocalCharacteristic, bool> filter);
 
     /// <summary>
-    /// Gets a hosted GATT characteristic by its UUID.
+    ///     Gets a hosted GATT characteristic by its UUID.
     /// </summary>
     /// <param name="id">The UUID of the characteristic to retrieve.</param>
     /// <returns>The matching characteristic.</returns>
@@ -40,21 +40,21 @@ public partial interface IBluetoothLocalService
     IBluetoothLocalCharacteristic GetCharacteristic(Guid id);
 
     /// <summary>
-    /// Gets a hosted GATT characteristic that matches the specified filter.
+    ///     Gets a hosted GATT characteristic that matches the specified filter.
     /// </summary>
     /// <param name="filter">A function to filter characteristics. Should return true for the desired characteristic.</param>
     /// <returns>The matching characteristic, or null if not found.</returns>
     IBluetoothLocalCharacteristic? GetCharacteristicOrDefault(Func<IBluetoothLocalCharacteristic, bool> filter);
 
     /// <summary>
-    /// Gets a hosted GATT characteristic by its UUID.
+    ///     Gets a hosted GATT characteristic by its UUID.
     /// </summary>
     /// <param name="id">The UUID of the characteristic to retrieve.</param>
     /// <returns>The matching characteristic, or null if not found.</returns>
     IBluetoothLocalCharacteristic? GetCharacteristicOrDefault(Guid id);
 
     /// <summary>
-    /// Gets all hosted GATT characteristics.
+    ///     Gets all hosted GATT characteristics.
     /// </summary>
     /// <param name="filter">An optional filter to apply to the characteristics.</param>
     /// <returns>A collection of all hosted characteristics.</returns>
@@ -65,7 +65,7 @@ public partial interface IBluetoothLocalService
     #region Characteristics - Remove
 
     /// <summary>
-    /// Removes a hosted GATT characteristic from the broadcaster.
+    ///     Removes a hosted GATT characteristic from the broadcaster.
     /// </summary>
     /// <param name="id">The UUID of the characteristic to remove.</param>
     /// <param name="timeout">The timeout for this operation</param>
@@ -74,7 +74,7 @@ public partial interface IBluetoothLocalService
     ValueTask RemoveCharacteristicAsync(Guid id, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Removes a hosted GATT characteristic from the broadcaster.
+    ///     Removes a hosted GATT characteristic from the broadcaster.
     /// </summary>
     /// <param name="localCharacteristic">The characteristic to remove.</param>
     /// <param name="timeout">The timeout for this operation</param>
@@ -83,7 +83,7 @@ public partial interface IBluetoothLocalService
     ValueTask RemoveCharacteristicAsync(IBluetoothLocalCharacteristic localCharacteristic, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Removes all hosted characteristics from the broadcaster.
+    ///     Removes all hosted characteristics from the broadcaster.
     /// </summary>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
@@ -95,14 +95,14 @@ public partial interface IBluetoothLocalService
     #region Characteristics - Has
 
     /// <summary>
-    /// Checks if a hosted GATT characteristic that matches the specified filter exists.
+    ///     Checks if a hosted GATT characteristic that matches the specified filter exists.
     /// </summary>
     /// <param name="filter">A function to filter characteristics. Should return true for the desired characteristic.</param>
     /// <returns>True if a matching characteristic exists, false otherwise.</returns>
     bool HasCharacteristic(Func<IBluetoothLocalCharacteristic, bool> filter);
 
     /// <summary>
-    /// Checks if a hosted GATT characteristic with the specified UUID exists.
+    ///     Checks if a hosted GATT characteristic with the specified UUID exists.
     /// </summary>
     /// <param name="id">The UUID of the characteristic to check for.</param>
     /// <returns>True if a matching characteristic exists, false otherwise.</returns>

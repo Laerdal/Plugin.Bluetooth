@@ -1,18 +1,64 @@
+using Java.Lang;
+
+using Debug = System.Diagnostics.Debug;
+using ScanMode = Android.Bluetooth.ScanMode;
+
 namespace Bluetooth.Maui.Platforms.Droid.NativeObjects;
 
 /// <summary>
-/// Wrapper class for Android's BluetoothAdapter to provide a consistent interface for Bluetooth operations in the application.
-/// This class retrieves the BluetoothAdapter instance from the BluetoothManager wrapper and ensures it is available when accessed.
+///     Wrapper class for Android's BluetoothAdapter to provide a consistent interface for Bluetooth operations in the application.
+///     This class retrieves the BluetoothAdapter instance from the BluetoothManager wrapper and ensures it is available when accessed.
 /// </summary>
-public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAdapterWrapper, IDisposable
+public class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAdapterWrapper, IDisposable
 {
-    private Android.Bluetooth.BluetoothAdapter? _bluetoothAdapter;
-
-    private readonly ITicker _ticker;
-
     private readonly IBluetoothManagerWrapper _bluetoothManagerWrapper;
 
+    private readonly ITicker _ticker;
+    private Android.Bluetooth.BluetoothAdapter? _bluetoothAdapter;
+
     private IDisposable? _refreshSubscription;
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="BluetoothAdapterWrapper" /> class with the specified BluetoothManager wrapper.
+    /// </summary>
+    /// <param name="bluetoothManagerWrapper">The BluetoothManager wrapper to use for accessing the BluetoothAdapter.</param>
+    /// <param name="ticker">The ticker for scheduling periodic updates of adapter properties.</param>
+    /// <param name="logger">An optional logger for logging adapter operations and errors.</param>
+    public BluetoothAdapterWrapper(IBluetoothManagerWrapper bluetoothManagerWrapper, ITicker ticker, ILogger<IBluetoothAdapterWrapper>? logger = null) : base(logger)
+    {
+        ArgumentNullException.ThrowIfNull(bluetoothManagerWrapper);
+        ArgumentNullException.ThrowIfNull(ticker);
+
+        _bluetoothManagerWrapper = bluetoothManagerWrapper;
+        _ticker = ticker;
+    }
+
+    #region Audio Properties (Android API 33+)
+
+    /// <summary>
+    ///     Gets the maximum number of connected audio devices supported by the Bluetooth adapter.
+    ///     Available on Android API 33 and later.
+    /// </summary>
+    public int BluetoothAdapterMaxConnectedAudioDevices
+    {
+        get => GetValue(0);
+        private set => SetValue(value);
+    }
+
+    #endregion
+
+    #region Device Management Properties
+
+    /// <summary>
+    ///     Gets the number of bonded (paired) devices associated with this Bluetooth adapter.
+    /// </summary>
+    public int BluetoothAdapterBondedDevicesCount
+    {
+        get => GetValue(0);
+        private set => SetValue(value);
+    }
+
+    #endregion
 
     /// <inheritdoc />
     public Android.Bluetooth.BluetoothAdapter BluetoothAdapter
@@ -26,35 +72,80 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
                 {
                     throw new InvalidOperationException("BluetoothAdapter is null - ensure Bluetooth is available on this device");
                 }
+
                 _refreshSubscription = _ticker?.Register("bluetooth_adapter_wrapper_refresh", TimeSpan.FromSeconds(1), RefreshAdapterProperties, true);
             }
+
             return _bluetoothAdapter;
         }
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothAdapterWrapper"/> class with the specified BluetoothManager wrapper.
+    ///     Attempts to enable the Bluetooth adapter.
     /// </summary>
-    /// <param name="bluetoothManagerWrapper">The BluetoothManager wrapper to use for accessing the BluetoothAdapter.</param>
-    /// <param name="ticker">The ticker for scheduling periodic updates of adapter properties.</param>
-    /// <param name="logger">An optional logger for logging adapter operations and errors.</param>
-    public BluetoothAdapterWrapper(IBluetoothManagerWrapper bluetoothManagerWrapper, ITicker ticker, ILogger<IBluetoothAdapterWrapper>? logger = null) : base(logger)
+    /// <returns>True if the adapter is enabled; otherwise, false.</returns>
+    public bool TryEnableAdapter()
     {
-        ArgumentNullException.ThrowIfNull(bluetoothManagerWrapper);
-        ArgumentNullException.ThrowIfNull(ticker);
-        
-        _bluetoothManagerWrapper = bluetoothManagerWrapper;
-        _ticker = ticker;
+        try
+        {
+            if (!BluetoothAdapter.IsEnabled && !OperatingSystem.IsAndroidVersionAtLeast(33))
+            {
+                BluetoothAdapter.Enable();
+            }
+
+            return BluetoothAdapter.IsEnabled;
+        }
+        catch (SecurityException ex)
+        {
+            // Handle permission-related issues
+            Debug.WriteLine($"Security exception when enabling BluetoothAdapter: {ex.Message}");
+            return false;
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Handle adapter-related issues
+            Debug.WriteLine($"Invalid operation when enabling BluetoothAdapter: {ex.Message}");
+            return false;
+        }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///     Attempts to disable the Bluetooth adapter.
+    /// </summary>
+    /// <returns>True if the adapter is disabled; otherwise, false.</returns>
+    public bool TryDisableAdapter()
+    {
+        try
+        {
+            if (BluetoothAdapter.IsEnabled && !OperatingSystem.IsAndroidVersionAtLeast(33))
+            {
+                BluetoothAdapter.Disable();
+            }
+
+            return !BluetoothAdapter.IsEnabled;
+        }
+        catch (SecurityException ex)
+        {
+            // Handle permission-related issues
+            Debug.WriteLine($"Security exception when disabling BluetoothAdapter: {ex.Message}");
+            return false;
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Handle adapter-related issues
+            Debug.WriteLine($"Invalid operation when disabling BluetoothAdapter: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
     public void Dispose()
     {
         Dispose(true);
     }
 
     /// <summary>
-    /// Releases the unmanaged resources used by the BluetoothAdapter and optionally releases the managed resources.
+    ///     Releases the unmanaged resources used by the BluetoothAdapter and optionally releases the managed resources.
     /// </summary>
     /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
@@ -66,67 +157,11 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
         }
     }
 
-    /// <summary>
-    /// Attempts to enable the Bluetooth adapter.
-    /// </summary>
-    /// <returns>True if the adapter is enabled; otherwise, false.</returns>
-    public bool TryEnableAdapter()
-    {
-        try
-        {
-            if (!BluetoothAdapter.IsEnabled && !OperatingSystem.IsAndroidVersionAtLeast(33))
-            {
-                BluetoothAdapter.Enable();
-            }
-            return BluetoothAdapter.IsEnabled;
-        }
-        catch (Java.Lang.SecurityException ex)
-        {
-            // Handle permission-related issues
-            System.Diagnostics.Debug.WriteLine($"Security exception when enabling BluetoothAdapter: {ex.Message}");
-            return false;
-        }
-        catch (InvalidOperationException ex)
-        {
-            // Handle adapter-related issues
-            System.Diagnostics.Debug.WriteLine($"Invalid operation when enabling BluetoothAdapter: {ex.Message}");
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Attempts to disable the Bluetooth adapter.
-    /// </summary>
-    /// <returns>True if the adapter is disabled; otherwise, false.</returns>
-    public bool TryDisableAdapter()
-    {
-        try
-        {
-            if (BluetoothAdapter.IsEnabled && !OperatingSystem.IsAndroidVersionAtLeast(33))
-            {
-                BluetoothAdapter.Disable();
-            }
-            return !BluetoothAdapter.IsEnabled;
-        }
-        catch (Java.Lang.SecurityException ex)
-        {
-            // Handle permission-related issues
-            System.Diagnostics.Debug.WriteLine($"Security exception when disabling BluetoothAdapter: {ex.Message}");
-            return false;
-        }
-        catch (InvalidOperationException ex)
-        {
-            // Handle adapter-related issues
-            System.Diagnostics.Debug.WriteLine($"Invalid operation when disabling BluetoothAdapter: {ex.Message}");
-            return false;
-        }
-    }
-
     #region Basic Adapter Properties
 
     /// <summary>
-    /// Refreshes the properties of the Bluetooth adapter by querying the native Android BluetoothAdapter instance.
-    /// This method is called periodically to ensure that the properties reflect the current state of the adapter.
+    ///     Refreshes the properties of the Bluetooth adapter by querying the native Android BluetoothAdapter instance.
+    ///     This method is called periodically to ensure that the properties reflect the current state of the adapter.
     /// </summary>
     private void RefreshAdapterProperties()
     {
@@ -165,7 +200,7 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     }
 
     /// <summary>
-    /// Gets the current state of the Bluetooth adapter.
+    ///     Gets the current state of the Bluetooth adapter.
     /// </summary>
     public State BluetoothAdapterState
     {
@@ -174,7 +209,7 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     }
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth adapter is enabled.
+    ///     Gets a value indicating whether the Bluetooth adapter is enabled.
     /// </summary>
     public bool BluetoothAdapterIsEnabled
     {
@@ -183,7 +218,7 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     }
 
     /// <summary>
-    /// Gets the friendly name of the Bluetooth adapter.
+    ///     Gets the friendly name of the Bluetooth adapter.
     /// </summary>
     public string BluetoothAdapterName
     {
@@ -192,7 +227,7 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     }
 
     /// <summary>
-    /// Gets the hardware address (MAC address) of the Bluetooth adapter.
+    ///     Gets the hardware address (MAC address) of the Bluetooth adapter.
     /// </summary>
     public string BluetoothAdapterAddress
     {
@@ -205,16 +240,16 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     #region Scanning and Discovery Properties
 
     /// <summary>
-    /// Gets the current scan mode of the Bluetooth adapter.
+    ///     Gets the current scan mode of the Bluetooth adapter.
     /// </summary>
-    public Android.Bluetooth.ScanMode BluetoothAdapterScanMode
+    public ScanMode BluetoothAdapterScanMode
     {
-        get => GetValue(Android.Bluetooth.ScanMode.None);
+        get => GetValue(ScanMode.None);
         private set => SetValue(value);
     }
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth adapter is currently discovering devices.
+    ///     Gets a value indicating whether the Bluetooth adapter is currently discovering devices.
     /// </summary>
     public bool BluetoothAdapterIsDiscovering
     {
@@ -227,7 +262,7 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     #region Advertisement Support Properties
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth adapter supports multiple simultaneous advertisements.
+    ///     Gets a value indicating whether the Bluetooth adapter supports multiple simultaneous advertisements.
     /// </summary>
     public bool BluetoothAdapterIsMultipleAdvertisementSupported
     {
@@ -236,7 +271,7 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     }
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth adapter supports offloaded filtering of scan results.
+    ///     Gets a value indicating whether the Bluetooth adapter supports offloaded filtering of scan results.
     /// </summary>
     public bool BluetoothAdapterIsOffloadedFilteringSupported
     {
@@ -245,7 +280,7 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     }
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth adapter supports offloaded batching of scan results.
+    ///     Gets a value indicating whether the Bluetooth adapter supports offloaded batching of scan results.
     /// </summary>
     public bool BluetoothAdapterIsOffloadedScanBatchingSupported
     {
@@ -258,8 +293,8 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     #region Bluetooth 5.0 Features (Android API 26+)
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth adapter supports Bluetooth Low Energy 2M PHY.
-    /// Available on Android API 26 and later.
+    ///     Gets a value indicating whether the Bluetooth adapter supports Bluetooth Low Energy 2M PHY.
+    ///     Available on Android API 26 and later.
     /// </summary>
     public bool BluetoothAdapterIsLe2MPhySupported
     {
@@ -268,8 +303,8 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     }
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth adapter supports Bluetooth Low Energy Coded PHY.
-    /// Available on Android API 26 and later.
+    ///     Gets a value indicating whether the Bluetooth adapter supports Bluetooth Low Energy Coded PHY.
+    ///     Available on Android API 26 and later.
     /// </summary>
     public bool BluetoothAdapterIsLeCodedPhySupported
     {
@@ -278,8 +313,8 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     }
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth adapter supports Bluetooth Low Energy extended advertising.
-    /// Available on Android API 26 and later.
+    ///     Gets a value indicating whether the Bluetooth adapter supports Bluetooth Low Energy extended advertising.
+    ///     Available on Android API 26 and later.
     /// </summary>
     public bool BluetoothAdapterIsLeExtendedAdvertisingSupported
     {
@@ -288,8 +323,8 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     }
 
     /// <summary>
-    /// Gets a value indicating whether the Bluetooth adapter supports Bluetooth Low Energy periodic advertising.
-    /// Available on Android API 26 and later.
+    ///     Gets a value indicating whether the Bluetooth adapter supports Bluetooth Low Energy periodic advertising.
+    ///     Available on Android API 26 and later.
     /// </summary>
     public bool BluetoothAdapterIsLePeriodicAdvertisingSupported
     {
@@ -298,32 +333,4 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
     }
 
     #endregion
-
-    #region Audio Properties (Android API 33+)
-
-    /// <summary>
-    /// Gets the maximum number of connected audio devices supported by the Bluetooth adapter.
-    /// Available on Android API 33 and later.
-    /// </summary>
-    public int BluetoothAdapterMaxConnectedAudioDevices
-    {
-        get => GetValue(0);
-        private set => SetValue(value);
-    }
-
-    #endregion
-
-    #region Device Management Properties
-
-    /// <summary>
-    /// Gets the number of bonded (paired) devices associated with this Bluetooth adapter.
-    /// </summary>
-    public int BluetoothAdapterBondedDevicesCount
-    {
-        get => GetValue(0);
-        private set => SetValue(value);
-    }
-
-    #endregion
-
 }

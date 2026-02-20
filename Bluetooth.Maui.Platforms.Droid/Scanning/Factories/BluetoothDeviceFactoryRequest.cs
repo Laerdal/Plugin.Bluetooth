@@ -1,10 +1,10 @@
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 
-/// <inheritdoc/>
+/// <inheritdoc />
 public record BluetoothDeviceFactoryRequest : IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothDeviceFactoryRequest"/> record from a Bluetooth advertisement.
+    ///     Initializes a new instance of the <see cref="BluetoothDeviceFactoryRequest" /> record from a Bluetooth advertisement.
     /// </summary>
     /// <param name="advertisement">The Bluetooth advertisement containing the device information.</param>
     public BluetoothDeviceFactoryRequest(IBluetoothAdvertisement advertisement) : base(advertisement)
@@ -14,18 +14,18 @@ public record BluetoothDeviceFactoryRequest : IBluetoothDeviceFactory.BluetoothD
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BluetoothDeviceFactoryRequest"/> record with device ID and manufacturer.
+    ///     Initializes a new instance of the <see cref="BluetoothDeviceFactoryRequest" /> record with device ID and manufacturer.
     /// </summary>
     /// <param name="deviceId">The unique identifier of the Bluetooth device.</param>
     /// <param name="manufacturer">The manufacturer information of the Bluetooth device.</param>
     /// <param name="nativeDevice">The native Android Bluetooth device.</param>
-    public BluetoothDeviceFactoryRequest(string deviceId, Manufacturer manufacturer, Android.Bluetooth.BluetoothDevice? nativeDevice = null) : base(deviceId, manufacturer)
+    public BluetoothDeviceFactoryRequest(string deviceId, Manufacturer manufacturer, BluetoothDevice? nativeDevice = null) : base(deviceId, manufacturer)
     {
         NativeDevice = nativeDevice;
     }
 
     /// <summary>
-    /// Gets the native Android Bluetooth device.
+    ///     Gets the native Android Bluetooth device.
     /// </summary>
-    public Android.Bluetooth.BluetoothDevice? NativeDevice { get; init; }
+    public BluetoothDevice? NativeDevice { get; init; }
 }

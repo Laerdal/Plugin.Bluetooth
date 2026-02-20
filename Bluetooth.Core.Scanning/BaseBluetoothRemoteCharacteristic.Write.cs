@@ -3,24 +3,14 @@ namespace Bluetooth.Core.Scanning;
 public abstract partial class BaseBluetoothRemoteCharacteristic
 {
     /// <summary>
-    /// Semaphore used to ensure only one write operation can occur at a time.
-    /// This prevents concurrent write operations that could interfere with each other and ensures proper queuing.
+    ///     Semaphore used to ensure only one write operation can occur at a time.
+    ///     This prevents concurrent write operations that could interfere with each other and ensures proper queuing.
     /// </summary>
-    private SemaphoreSlim WriteSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
+    private SemaphoreSlim WriteSemaphoreSlim { get; } = new(1, 1);
 
     /// <summary>
-    /// Gets a value indicating whether a write value operation is currently in progress.
-    /// This flag helps prevent concurrent write operations and tracks the operation state.
-    /// </summary>
-    public bool IsWriting
-    {
-        get => GetValue(false);
-        private set => SetValue(value);
-    }
-
-    /// <summary>
-    /// Gets or sets the task completion source for the current write value operation.
-    /// Used to signal completion of asynchronous write value operations.
+    ///     Gets or sets the task completion source for the current write value operation.
+    ///     Used to signal completion of asynchronous write value operations.
     /// </summary>
     private TaskCompletionSource? WriteValueTcs
     {
@@ -28,7 +18,17 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         set => SetValue(value);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///     Gets a value indicating whether a write value operation is currently in progress.
+    ///     This flag helps prevent concurrent write operations and tracks the operation state.
+    /// </summary>
+    public bool IsWriting
+    {
+        get => GetValue(false);
+        private set => SetValue(value);
+    }
+
+    /// <inheritdoc />
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
     /// <exception cref="CharacteristicCantWriteException">Thrown when the characteristic does not support write operations.</exception>
     /// <exception cref="CharacteristicAlreadyWritingException">Thrown when another write operation is already in progress despite semaphore protection.</exception>
@@ -90,19 +90,19 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Platform-specific implementation to write the characteristic's value.
-    /// This method should initiate the platform-specific operation to write the value to the characteristic.
+    ///     Platform-specific implementation to write the characteristic's value.
+    ///     This method should initiate the platform-specific operation to write the value to the characteristic.
     /// </summary>
     /// <param name="value">The value to write to the characteristic.</param>
     /// <returns>A task that completes when the native write operation is initiated.</returns>
     /// <remarks>
-    /// Implementations should call <see cref="OnWriteValueSucceeded"/> when the operation succeeds
-    /// or <see cref="OnWriteValueFailed"/> when it fails.
+    ///     Implementations should call <see cref="OnWriteValueSucceeded" /> when the operation succeeds
+    ///     or <see cref="OnWriteValueFailed" /> when it fails.
     /// </remarks>
     protected abstract ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value);
 
     /// <summary>
-    /// Called when writing the characteristic's value succeeds. Completes the task successfully.
+    ///     Called when writing the characteristic's value succeeds. Completes the task successfully.
     /// </summary>
     /// <exception cref="CharacteristicUnexpectedWriteException">Thrown when no pending write operation is found to complete.</exception>
     protected void OnWriteValueSucceeded()
@@ -122,12 +122,12 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     }
 
     /// <summary>
-    /// Called when writing the characteristic's value fails. Completes the task with an exception or dispatches to the unhandled exception listener.
+    ///     Called when writing the characteristic's value fails. Completes the task with an exception or dispatches to the unhandled exception listener.
     /// </summary>
     /// <param name="e">The exception that occurred during the write operation.</param>
     /// <remarks>
-    /// If there's a pending write operation, the exception will be delivered to it. Otherwise, the exception
-    /// will be dispatched to the unhandled exception listener.
+    ///     If there's a pending write operation, the exception will be delivered to it. Otherwise, the exception
+    ///     will be dispatched to the unhandled exception listener.
     /// </remarks>
     protected void OnWriteValueFailed(Exception e)
     {
@@ -147,19 +147,19 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     #region Write - Capabilities
 
     /// <summary>
-    /// Platform-specific implementation to determine if the characteristic can be written to.
-    /// This method should check the platform-specific properties to determine write capability.
+    ///     Platform-specific implementation to determine if the characteristic can be written to.
+    ///     This method should check the platform-specific properties to determine write capability.
     /// </summary>
     /// <returns>True if the characteristic supports write operations; otherwise, false.</returns>
     protected abstract bool NativeCanWrite();
 
     /// <summary>
-    /// Gets a value that determines if the characteristic supports write operations based on platform-specific properties.
-    /// This property is computed once and cached using Lazy initialization.
+    ///     Gets a value that determines if the characteristic supports write operations based on platform-specific properties.
+    ///     This property is computed once and cached using Lazy initialization.
     /// </summary>
     private Lazy<bool> LazyCanWrite { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool CanWrite => LazyCanWrite.Value;
 
     #endregion

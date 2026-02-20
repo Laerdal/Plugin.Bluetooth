@@ -1,7 +1,7 @@
 namespace Bluetooth.Core.Broadcasting;
 
 /// <summary>
-/// Base class for Bluetooth broadcast characteristics.
+///     Base class for Bluetooth broadcast characteristics.
 /// </summary>
 public abstract partial class BaseBluetoothLocalCharacteristic
 {
@@ -9,7 +9,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
     public IReadOnlyList<IBluetoothConnectedDevice> SubscribedDevices => LocalService.Broadcaster.GetClientDevices(d => d.SubscribedCharacteristics.Contains(this)).ToList().AsReadOnly();
 
     /// <summary>
-    /// Called when a client device subscribes to the characteristic.
+    ///     Called when a client device subscribes to the characteristic.
     /// </summary>
     /// <param name="device">The client device that subscribed.</param>
     protected void OnCharacteristicSubscribed(IBluetoothConnectedDevice device)
@@ -22,7 +22,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
     }
 
     /// <summary>
-    /// Called when a client device unsubscribes from the characteristic.
+    ///     Called when a client device unsubscribes from the characteristic.
     /// </summary>
     /// <param name="device">The client device that unsubscribed.</param>
     protected void OnCharacteristicUnsubscribed(IBluetoothConnectedDevice device)

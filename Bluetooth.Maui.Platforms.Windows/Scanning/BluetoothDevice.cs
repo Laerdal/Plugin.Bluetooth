@@ -5,46 +5,16 @@ using Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;
 namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 
 /// <summary>
-/// Represents a Windows-specific Bluetooth Low Energy remote device.
-/// This class wraps Windows's BluetoothLEDevice and GattSession, providing platform-specific
-/// implementations for device connection, service discovery, and device property management.
+///     Represents a Windows-specific Bluetooth Low Energy remote device.
+///     This class wraps Windows's BluetoothLEDevice and GattSession, providing platform-specific
+///     implementations for device connection, service discovery, and device property management.
 /// </summary>
 public class BluetoothDevice : BaseBluetoothRemoteDevice,
     BluetoothLeDeviceProxy.IBluetoothLeDeviceProxyDelegate,
     GattSessionWrapper.IGattSessionDelegate
 {
     /// <summary>
-    /// Gets the Windows Bluetooth LE device proxy used for device operations.
-    /// This is initialized when connecting to the device.
-    /// </summary>
-    public BluetoothLeDeviceProxy? BluetoothLeDeviceProxy { get; protected set; }
-
-    /// <summary>
-    /// Gets the Windows GATT session proxy used for maintaining a reliable connection.
-    /// This is initialized when connecting to the device.
-    /// </summary>
-    public GattSessionWrapper? GattSessionProxy { get; protected set; }
-
-    /// <summary>
-    /// Gets or sets the current Windows GATT session status.
-    /// </summary>
-    public GattSessionStatus GattSessionStatus
-    {
-        get => GetValue(GattSessionStatus.Closed);
-        private set => SetValue(value, nameof(GattSessionStatus));
-    }
-
-    /// <summary>
-    /// Gets or sets the current Windows Bluetooth connection status.
-    /// </summary>
-    public BluetoothConnectionStatus BluetoothConnectionStatus
-    {
-        get => GetValue(BluetoothConnectionStatus.Disconnected);
-        private set => SetValue(value, nameof(BluetoothConnectionStatus));
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the Windows <see cref="BluetoothDevice"/> class.
+    ///     Initializes a new instance of the Windows <see cref="BluetoothDevice" /> class.
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner associated with this device.</param>
     /// <param name="request">The device factory request containing device information.</param>
@@ -65,9 +35,101 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
         }
     }
 
+    /// <summary>
+    ///     Gets the Windows Bluetooth LE device proxy used for device operations.
+    ///     This is initialized when connecting to the device.
+    /// </summary>
+    public BluetoothLeDeviceProxy? BluetoothLeDeviceProxy { get; protected set; }
+
+    /// <summary>
+    ///     Gets the Windows GATT session proxy used for maintaining a reliable connection.
+    ///     This is initialized when connecting to the device.
+    /// </summary>
+    public GattSessionWrapper? GattSessionProxy { get; protected set; }
+
+    /// <summary>
+    ///     Gets or sets the current Windows GATT session status.
+    /// </summary>
+    public GattSessionStatus GattSessionStatus
+    {
+        get => GetValue(GattSessionStatus.Closed);
+        private set => SetValue(value);
+    }
+
+    /// <summary>
+    ///     Gets or sets the current Windows Bluetooth connection status.
+    /// </summary>
+    public BluetoothConnectionStatus BluetoothConnectionStatus
+    {
+        get => GetValue(BluetoothConnectionStatus.Disconnected);
+        private set => SetValue(value);
+    }
+
+    #region MTU
+
+    /// <inheritdoc />
+    protected override ValueTask NativeRequestMtuAsync(int requestedMtu)
+    {
+        // Windows doesn't support requesting MTU changes
+        // MTU is negotiated automatically by the platform
+        throw new NotSupportedException("Requesting MTU changes is not supported on Windows. MTU is automatically negotiated by the platform.");
+    }
+
+    #endregion
+
+    #region Connection Priority
+
+    /// <inheritdoc />
+    protected override ValueTask NativeRequestConnectionPriorityAsync(
+        BluetoothConnectionPriority priority,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Windows doesn't support connection priority requests
+        // Connection parameters are managed automatically by the platform
+        throw new NotSupportedException("Connection priority requests are not supported on Windows. Connection parameters are managed automatically by the platform.");
+    }
+
+    #endregion
+
+    #region PHY
+
+    /// <inheritdoc />
+    protected override ValueTask NativeSetPreferredPhyAsync(PhyMode txPhy, PhyMode rxPhy)
+    {
+        // Windows doesn't support PHY preference settings
+        // PHY is managed automatically by the platform
+        throw new NotSupportedException("PHY preference settings are not supported on Windows. PHY is managed automatically by the platform.");
+    }
+
+    #endregion
+
+    #region L2CAP
+
+    /// <inheritdoc />
+    protected override ValueTask NativeOpenL2CapChannelAsync(int psm)
+    {
+        // Windows doesn't support L2CAP channels in the same way as mobile platforms
+        throw new NotSupportedException("L2CAP channels are not currently supported on Windows.");
+    }
+
+    #endregion
+
+    #region Signal Strength (RSSI)
+
+    /// <inheritdoc />
+    protected override void NativeReadSignalStrength()
+    {
+        // Windows doesn't support reading RSSI after connection
+        // RSSI is only available during advertisement scanning
+        throw new NotSupportedException("Reading RSSI is not supported on Windows after connection. RSSI is only available during device discovery.");
+    }
+
+    #endregion
+
     #region Connection
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected override void NativeRefreshIsConnected()
     {
         SetValue(
@@ -75,7 +137,7 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
             nameof(IsConnected));
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeConnectAsync(
         ConnectionOptions connectionOptions,
         TimeSpan? timeout = null,
@@ -87,7 +149,7 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
         {
             // Parse Bluetooth address from device ID (format: "XX:XX:XX:XX:XX:XX")
             var addressString = Id.Replace(":", "", StringComparison.Ordinal);
-            if (!ulong.TryParse(addressString, System.Globalization.NumberStyles.HexNumber, null, out var address))
+            if (!ulong.TryParse(addressString, NumberStyles.HexNumber, null, out var address))
             {
                 throw new InvalidOperationException($"Invalid Bluetooth address format: {Id}");
             }
@@ -140,7 +202,7 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeDisconnectAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
@@ -179,7 +241,7 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
 
     #region Service Discovery
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     protected async override ValueTask NativeServicesExplorationAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
@@ -218,60 +280,10 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
 
     #endregion
 
-    #region MTU
-
-    /// <inheritdoc/>
-    protected override ValueTask NativeRequestMtuAsync(int requestedMtu)
-    {
-        // Windows doesn't support requesting MTU changes
-        // MTU is negotiated automatically by the platform
-        throw new NotSupportedException("Requesting MTU changes is not supported on Windows. MTU is automatically negotiated by the platform.");
-    }
-
-    #endregion
-
-    #region Connection Priority
-
-    /// <inheritdoc/>
-    protected override ValueTask NativeRequestConnectionPriorityAsync(
-        BluetoothConnectionPriority priority,
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
-    {
-        // Windows doesn't support connection priority requests
-        // Connection parameters are managed automatically by the platform
-        throw new NotSupportedException("Connection priority requests are not supported on Windows. Connection parameters are managed automatically by the platform.");
-    }
-
-    #endregion
-
-    #region PHY
-
-    /// <inheritdoc/>
-    protected override ValueTask NativeSetPreferredPhyAsync(PhyMode txPhy, PhyMode rxPhy)
-    {
-        // Windows doesn't support PHY preference settings
-        // PHY is managed automatically by the platform
-        throw new NotSupportedException("PHY preference settings are not supported on Windows. PHY is managed automatically by the platform.");
-    }
-
-    #endregion
-
-    #region L2CAP
-
-    /// <inheritdoc/>
-    protected override ValueTask NativeOpenL2CapChannelAsync(int psm)
-    {
-        // Windows doesn't support L2CAP channels in the same way as mobile platforms
-        throw new NotSupportedException("L2CAP channels are not currently supported on Windows.");
-    }
-
-    #endregion
-
     #region Delegate Callbacks - BluetoothLeDeviceProxy
 
     /// <summary>
-    /// Called when the device's GATT services change on the Windows platform.
+    ///     Called when the device's GATT services change on the Windows platform.
     /// </summary>
     public void OnGattServicesChanged()
     {
@@ -280,8 +292,8 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <summary>
-    /// Called when the device name changes on the Windows platform.
-    /// Updates the cached device name.
+    ///     Called when the device name changes on the Windows platform.
+    ///     Updates the cached device name.
     /// </summary>
     /// <param name="senderName">The new device name.</param>
     public void OnNameChanged(string senderName)
@@ -290,7 +302,7 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <summary>
-    /// Called when the device access status changes on the Windows platform.
+    ///     Called when the device access status changes on the Windows platform.
     /// </summary>
     /// <param name="argsId">The device identifier.</param>
     /// <param name="argsStatus">The new access status.</param>
@@ -301,7 +313,7 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <summary>
-    /// Called when custom pairing is requested for the device on the Windows platform.
+    ///     Called when custom pairing is requested for the device on the Windows platform.
     /// </summary>
     /// <param name="args">The pairing request event arguments.</param>
     public void OnCustomPairingRequested(DevicePairingRequestedEventArgs args)
@@ -311,7 +323,7 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <summary>
-    /// Called when the Bluetooth connection status changes on the Windows platform.
+    ///     Called when the Bluetooth connection status changes on the Windows platform.
     /// </summary>
     /// <param name="newConnectionStatus">The new connection status.</param>
     public void OnConnectionStatusChanged(BluetoothConnectionStatus newConnectionStatus)
@@ -335,7 +347,7 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
     #region Delegate Callbacks - GattSessionWrapper
 
     /// <summary>
-    /// Called when the GATT session status changes on the Windows platform.
+    ///     Called when the GATT session status changes on the Windows platform.
     /// </summary>
     /// <param name="argsStatus">The new GATT session status.</param>
     public void OnGattSessionStatusChanged(GattSessionStatus argsStatus)
@@ -345,24 +357,12 @@ public class BluetoothDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <summary>
-    /// Called when the maximum PDU (Protocol Data Unit) size changes on the Windows platform.
+    ///     Called when the maximum PDU (Protocol Data Unit) size changes on the Windows platform.
     /// </summary>
     public void OnMaxPduSizeChanged()
     {
         // Handle MTU changes if needed
         // Currently just a placeholder
-    }
-
-    #endregion
-
-    #region Signal Strength (RSSI)
-
-    /// <inheritdoc/>
-    protected override void NativeReadSignalStrength()
-    {
-        // Windows doesn't support reading RSSI after connection
-        // RSSI is only available during advertisement scanning
-        throw new NotSupportedException("Reading RSSI is not supported on Windows after connection. RSSI is only available during device discovery.");
     }
 
     #endregion

@@ -1,12 +1,12 @@
 namespace Bluetooth.Maui.Platforms.Apple.Tools;
 
 /// <summary>
-/// Extension methods for converting Core Bluetooth types to abstraction types.
+///     Extension methods for converting Core Bluetooth types to abstraction types.
 /// </summary>
 public static class CoreBluetoothExtensions
 {
     /// <summary>
-    /// Converts iOS CBCharacteristicProperties to the cross-platform BluetoothCharacteristicProperties enum.
+    ///     Converts iOS CBCharacteristicProperties to the cross-platform BluetoothCharacteristicProperties enum.
     /// </summary>
     /// <param name="properties">The iOS characteristic properties.</param>
     /// <returns>The cross-platform characteristic properties.</returns>
@@ -61,7 +61,7 @@ public static class CoreBluetoothExtensions
     }
 
     /// <summary>
-    /// Converts iOS CBAttributePermissions to the cross-platform BluetoothCharacteristicPermissions enum.
+    ///     Converts iOS CBAttributePermissions to the cross-platform BluetoothCharacteristicPermissions enum.
     /// </summary>
     /// <param name="permissions">The iOS attribute permissions.</param>
     /// <returns>The cross-platform characteristic permissions.</returns>
@@ -93,7 +93,7 @@ public static class CoreBluetoothExtensions
     }
 
     /// <summary>
-    /// Converts iOS CBAttributePermissions to the cross-platform BluetoothDescriptorPermissions enum.
+    ///     Converts iOS CBAttributePermissions to the cross-platform BluetoothDescriptorPermissions enum.
     /// </summary>
     /// <param name="permissions">The iOS attribute permissions.</param>
     /// <returns>The cross-platform descriptor permissions.</returns>

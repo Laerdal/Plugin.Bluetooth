@@ -7,8 +7,8 @@ namespace Bluetooth.Maui.Platforms.Windows.NativeObjects;
 public partial class BluetoothAdapterProxy
 {
     /// <summary>
-    /// Delegate interface for handling Bluetooth adapter operations and events.
-    /// Extends the base Bluetooth manager interface to provide Windows-specific adapter functionality.
+    ///     Delegate interface for handling Bluetooth adapter operations and events.
+    ///     Extends the base Bluetooth manager interface to provide Windows-specific adapter functionality.
     /// </summary>
     public interface IBluetoothAdapterProxyDelegate
     {

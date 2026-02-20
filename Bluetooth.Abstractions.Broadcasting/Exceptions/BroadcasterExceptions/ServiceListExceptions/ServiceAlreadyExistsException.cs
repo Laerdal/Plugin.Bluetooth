@@ -3,11 +3,10 @@ namespace Bluetooth.Abstractions.Broadcasting.Exceptions;
 /// <summary>
 ///     Represents an exception that occurs when attempting to add a service that already exists to a Bluetooth broadcaster.
 /// </summary>
-///
 public class ServiceAlreadyExistsException : BroadcasterException
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ServiceAlreadyExistsException"/> class.
+    ///     Initializes a new instance of the <see cref="ServiceAlreadyExistsException" /> class.
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster associated with the exception.</param>
     /// <param name="serviceId">The UUID of the service that already exists.</param>
@@ -30,7 +29,7 @@ public class ServiceAlreadyExistsException : BroadcasterException
     public Guid ServiceId { get; }
 
     /// <summary>
-    ///    Gets the existing service that caused the exception.
+    ///     Gets the existing service that caused the exception.
     /// </summary>
     public IBluetoothLocalService ExistingLocalService { get; }
 }
