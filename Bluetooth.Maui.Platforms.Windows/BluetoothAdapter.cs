@@ -63,7 +63,7 @@ public partial class BluetoothAdapter : BaseBluetoothAdapter, RadioProxy.IRadioP
             return await RadioInitializationTcs.Task.ConfigureAwait(false);
         }
         RadioInitializationTcs = new TaskCompletionSource<RadioProxy>();
-        var bluetoothAdapterProxy = await GetBluetoothAdapterProxyAsync();
+        var bluetoothAdapterProxy = await GetBluetoothAdapterProxyAsync().ConfigureAwait(false);
         RadioProxy = await RadioProxy.GetInstanceAsync(bluetoothAdapterProxy.BluetoothAdapter,this).ConfigureAwait(false);
         RadioInitializationTcs.TrySetResult(RadioProxy);
         RadioInitializationTcs = null;
