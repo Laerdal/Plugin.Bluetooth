@@ -18,12 +18,13 @@
             <Label Text="{Binding DeviceName}"
                    FontAttributes="Bold"
                    FontSize="24"
+                   TextColor="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                    HorizontalOptions="Center" />
 
             <!-- Device ID -->
             <Label Text="{Binding DeviceId}"
                    FontSize="14"
-                   TextColor="{StaticResource Gray600}"
+                   TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"
                    HorizontalOptions="Center" />
 
             <!-- Connection Status -->
@@ -64,11 +65,11 @@
             <Label Text="{Binding ServiceCount, StringFormat='{0} services discovered'}"
                    FontSize="14"
                    FontAttributes="Italic"
-                   TextColor="{StaticResource Gray600}"
+                   TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"
                    HorizontalOptions="Center"
                    IsVisible="{Binding ServiceCount, Converter={StaticResource IsNotZeroConverter}}" />
 
-            <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,12" />
+            <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDividerColor}}" Margin="0,12" />
         </VerticalStackLayout>
 
         <!-- Services List -->
@@ -82,11 +83,11 @@
                 <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="12">
                     <Label Text="No services discovered"
                            FontSize="18"
-                           TextColor="{StaticResource Gray500}"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"
                            HorizontalOptions="Center" />
                     <Label Text="Connect to the device and tap 'Explore Services' to discover GATT services"
                            FontSize="14"
-                           TextColor="{StaticResource Gray500}"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextTertiary}, Dark={StaticResource DarkTextTertiary}}"
                            HorizontalOptions="Center"
                            HorizontalTextAlignment="Center"
                            Margin="20,0" />
@@ -95,8 +96,15 @@
 
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="scan:IBluetoothRemoteService">
-                    <Frame Padding="12" Margin="0,4" CornerRadius="8" HasShadow="True">
-                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="12">
+                    <Border Padding="12" Margin="0,4" StrokeShape="RoundRectangle 8" 
+                            Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}" 
+                            StrokeThickness="1"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
+                        <Border.Shadow>
+                            <Shadow Brush="{AppThemeBinding Light={StaticResource ShadowColorLight}, Dark={StaticResource ShadowColorDark}}" 
+                                    Opacity="0.1" Radius="4" Offset="0,2" />
+                        </Border.Shadow>
+                        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
 
                             <!-- Service Icon -->
                             <Label Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
@@ -109,16 +117,24 @@
                                    Text="{Binding Id, StringFormat='Service: {0}'}"
                                    FontAttributes="Bold"
                                    FontSize="14"
+                                   TextColor="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}"
                                    LineBreakMode="TailTruncation" />
 
                             <!-- Characteristics Count (placeholder for now) -->
                             <Label Grid.Row="1" Grid.Column="1"
                                    Text="Tap to explore characteristics"
                                    FontSize="12"
-                                   TextColor="{StaticResource Gray600}" />
+                                   TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+
+                            <!-- Arrow Icon -->
+                            <Label Grid.Row="0" Grid.Column="2" Grid.RowSpan="2"
+                                   Text="›"
+                                   FontSize="24"
+                                   TextColor="{AppThemeBinding Light={StaticResource LightIconSecondary}, Dark={StaticResource DarkIconSecondaryColor}}"
+                                   VerticalOptions="Center" />
 
                         </Grid>
-                    </Frame>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
 

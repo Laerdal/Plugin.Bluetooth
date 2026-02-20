@@ -33,7 +33,7 @@
                     </DataTrigger>
                     <DataTrigger TargetType="Label" Binding="{Binding IsScanning}" Value="False">
                         <Setter Property="Text" Value="⚫ Stopped" />
-                        <Setter Property="TextColor" Value="{StaticResource Gray600}" />
+                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
                     </DataTrigger>
                 </Label.Triggers>
             </Label>
@@ -41,7 +41,7 @@
             <!-- Device Count -->
             <Label Text="{Binding DeviceCount, StringFormat='{0} devices found'}"
                    FontSize="14"
-                   TextColor="{StaticResource Gray600}"
+                   TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"
                    HorizontalOptions="Center" />
 
             <!-- Scan Controls -->
@@ -56,7 +56,7 @@
                         WidthRequest="120" />
             </HorizontalStackLayout>
 
-            <BoxView HeightRequest="1" Color="{StaticResource Gray300}" Margin="0,8" />
+            <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDividerColor}}" Margin="0,8" />
         </VerticalStackLayout>
 
         <!-- Device List -->
@@ -72,29 +72,32 @@
                                      Spacing="12">
                     <Label Text="No devices found"
                            FontSize="18"
-                           TextColor="{StaticResource Gray600}"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"
                            HorizontalOptions="Center" />
                     <Label Text="Start scanning to discover BLE devices"
                            FontSize="14"
-                           TextColor="{StaticResource Gray500}"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextTertiary}, Dark={StaticResource DarkTextTertiary}}"
                            HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="scan:IBluetoothRemoteDevice">
-                    <Frame Padding="12"
-                           Margin="0,4"
-                           CornerRadius="8"
-                           HasShadow="False"
-                           BorderColor="{StaticResource Gray300}">
+                    <Border Padding="12" Margin="0,4" StrokeShape="RoundRectangle 8"
+                            Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}" StrokeThickness="1"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
+                        <Border.Shadow>
+                            <Shadow Brush="{AppThemeBinding Light={StaticResource ShadowColorLight}, Dark={StaticResource ShadowColorDark}}" 
+                                    Opacity="0.1" Radius="4" Offset="0,2" />
+                        </Border.Shadow>
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
 
                             <!-- Device Name -->
                             <Label Grid.Row="0" Grid.Column="0"
                                    Text="{Binding Name, TargetNullValue='Unknown Device'}"
                                    FontAttributes="Bold"
-                                   FontSize="16" />
+                                   FontSize="16"
+                                   TextColor="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
 
                             <!-- Connection Indicator -->
                             <Label Grid.Row="0" Grid.Column="1"
@@ -108,7 +111,7 @@
                             <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                    Text="{Binding Id}"
                                    FontSize="12"
-                                   TextColor="{StaticResource Gray600}" />
+                                   TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
 
                             <!-- Signal Strength -->
                             <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
@@ -118,7 +121,7 @@
                                 <Label Grid.Column="0"
                                        Text="RSSI:"
                                        FontSize="12"
-                                       TextColor="{StaticResource Gray600}" />
+                                       TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
                                 <ProgressBar Grid.Column="1"
                                              Progress="{Binding SignalStrengthPercent}"
                                              ProgressColor="{StaticResource Primary}"
@@ -126,11 +129,11 @@
                                 <Label Grid.Column="2"
                                        Text="{Binding SignalStrengthDbm, StringFormat='{0} dBm'}"
                                        FontSize="12"
-                                       TextColor="{StaticResource Gray600}" />
+                                       TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
                             </Grid>
 
                         </Grid>
-                    </Frame>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
 
