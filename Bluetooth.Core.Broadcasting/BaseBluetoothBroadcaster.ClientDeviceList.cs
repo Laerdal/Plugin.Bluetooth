@@ -110,7 +110,7 @@ public abstract partial class BaseBluetoothBroadcaster
             {
                 return ClientDevices.SingleOrDefault(filter);
             }
-            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            catch (InvalidOperationException e)
             {
                 throw new MultipleClientDevicesFoundException(this, ClientDevices.Where(filter).ToList(), e);
             }
@@ -127,7 +127,7 @@ public abstract partial class BaseBluetoothBroadcaster
             {
                 return ClientDevices.SingleOrDefault(device => device.Id == id);
             }
-            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            catch (InvalidOperationException e)
             {
                 throw new MultipleClientDevicesFoundException(this, id, ClientDevices.Where(device => device.Id == id).ToList(), e);
             }

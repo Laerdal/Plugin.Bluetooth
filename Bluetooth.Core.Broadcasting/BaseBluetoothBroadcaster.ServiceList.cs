@@ -95,7 +95,7 @@ public abstract partial class BaseBluetoothBroadcaster
             {
                 return Services.SingleOrDefault(filter);
             }
-            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            catch (InvalidOperationException e)
             {
                 throw new MultipleServicesFoundException(this, Services.Where(filter).ToArray(), e);
             }
@@ -111,7 +111,7 @@ public abstract partial class BaseBluetoothBroadcaster
             {
                 return Services.SingleOrDefault(service => service.Id == id);
             }
-            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            catch (InvalidOperationException e)
             {
                 throw new MultipleServicesFoundException(this, id, Services.Where(service => service.Id == id).ToArray(), e);
             }

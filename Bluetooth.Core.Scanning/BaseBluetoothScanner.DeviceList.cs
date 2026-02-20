@@ -119,7 +119,7 @@ public abstract partial class BaseBluetoothScanner
             {
                 return Devices.SingleOrDefault(filter);
             }
-            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            catch (InvalidOperationException e)
             {
                 throw new MultipleDevicesFoundException(this, Devices.Where(filter).ToList(), e);
             }
@@ -136,7 +136,7 @@ public abstract partial class BaseBluetoothScanner
             {
                 return Devices.SingleOrDefault(d => d.Id == id);
             }
-            catch (InvalidOperationException e) when (e.Message.Contains("more than one"))
+            catch (InvalidOperationException e)
             {
                 throw new MultipleDevicesFoundException(this, id, Devices.Where(d => d.Id == id).ToList(), e);
             }
