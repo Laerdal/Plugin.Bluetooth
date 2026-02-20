@@ -28,8 +28,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBluetoothAdapter, BluetoothAdapter>();
         services.AddSingleton<IBluetoothPermissionManager, BluetoothPermissionManager>();
 
-        services.AddSingleton<IBluetoothScanner, BluetoothScanner>();
-        services.AddSingleton<IBluetoothBroadcaster, BluetoothBroadcaster>();
+        services.AddSingleton<IBluetoothScanner, Scanning.WindowsBluetoothScanner>();
+        services.AddSingleton<IBluetoothBroadcaster, Broadcasting.WindowsBluetoothBroadcaster>();
 
         // Register scanning and broadcasting factories
         services.AddBluetoothMauiWindowsScanningServices();

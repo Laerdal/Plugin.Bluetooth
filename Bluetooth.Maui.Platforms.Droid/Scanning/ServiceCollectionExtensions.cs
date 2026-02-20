@@ -16,9 +16,9 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection for method chaining.</returns>
     public static void AddBluetoothMauiAndroidScanningServices(this IServiceCollection services)
     {
-        services.AddSingleton<IBluetoothDeviceFactory, BluetoothDeviceFactory>();
-        services.AddSingleton<IBluetoothServiceFactory, BluetoothServiceFactory>();
-        services.AddSingleton<IBluetoothCharacteristicFactory, BluetoothCharacteristicFactory>();
-        services.AddSingleton<IBluetoothDescriptorFactory, BluetoothDescriptorFactory>();
+        services.AddSingleton<IBluetoothDeviceFactory, AndroidBluetoothDeviceFactory>();
+        services.AddSingleton<IBluetoothServiceFactory, AndroidBluetoothServiceFactory>();
+        services.AddSingleton<IBluetoothCharacteristicFactory, AndroidBluetoothCharacteristicFactory>();
+        services.AddSingleton<IBluetoothDescriptorFactory, AndroidBluetoothDescriptorFactory>();
     }
 }

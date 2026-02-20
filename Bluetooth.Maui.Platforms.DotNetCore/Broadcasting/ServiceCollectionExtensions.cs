@@ -16,10 +16,10 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection for method chaining.</returns>
     public static void AddBluetoothMauiDotNetBroadcastingServices(this IServiceCollection services)
     {
-        services.AddSingleton<IBluetoothBroadcaster, BluetoothBroadcaster>();
-        services.AddSingleton<IBluetoothLocalCharacteristicFactory, BluetoothLocalCharacteristicFactory>();
-        services.AddSingleton<IBluetoothLocalServiceFactory, BluetoothLocalServiceFactory>();
-        services.AddSingleton<IBluetoothLocalDescriptorFactory, BluetoothLocalDescriptorFactory>();
-        services.AddSingleton<IBluetoothConnectedDeviceFactory, BluetoothConnectedClientDeviceFactory>();
+        services.AddSingleton<IBluetoothBroadcaster, DotNetCoreBluetoothBroadcaster>();
+        services.AddSingleton<IBluetoothLocalCharacteristicFactory, DotNetCoreBluetoothLocalCharacteristicFactory>();
+        services.AddSingleton<IBluetoothLocalServiceFactory, DotNetCoreBluetoothLocalServiceFactory>();
+        services.AddSingleton<IBluetoothLocalDescriptorFactory, DotNetCoreBluetoothLocalDescriptorFactory>();
+        services.AddSingleton<IBluetoothConnectedDeviceFactory, DotNetCoreBluetoothConnectedClientDeviceFactory>();
     }
 }

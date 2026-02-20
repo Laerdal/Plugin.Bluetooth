@@ -1,0 +1,21 @@
+using Bluetooth.Core.Broadcasting.Factories;
+
+namespace Bluetooth.Maui.Platforms.DotNetCore.Broadcasting.Factories;
+
+/// <inheritdoc />
+public class DotNetCoreBluetoothLocalCharacteristicFactory : BaseBluetoothLocalCharacteristicFactory
+{
+    /// <inheritdoc />
+    /// <exception cref="PlatformNotSupportedException"></exception>
+    public DotNetCoreBluetoothLocalCharacteristicFactory(IBluetoothLocalDescriptorFactory localDescriptorFactory) : base(localDescriptorFactory)
+    {
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+    }
+
+    /// <inheritdoc />
+    /// <exception cref="PlatformNotSupportedException"></exception>
+    public override IBluetoothLocalCharacteristic CreateCharacteristic(IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec)
+    {
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+    }
+}

@@ -15,6 +15,6 @@ public class BluetoothDescriptorFactory : BaseBluetoothDescriptorFactory
         IBluetoothRemoteCharacteristic remoteCharacteristic,
         IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest request)
     {
-        return new BluetoothDescriptor(remoteCharacteristic, request);
+        return new WindowsBluetoothRemoteDescriptor(remoteCharacteristic, request);
     }
 }

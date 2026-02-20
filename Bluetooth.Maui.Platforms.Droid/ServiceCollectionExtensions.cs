@@ -29,8 +29,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBluetoothAdapter, BluetoothAdapter>();
         services.AddSingleton<IBluetoothPermissionManager, BluetoothPermissionManager>();
 
-        services.AddSingleton<IBluetoothScanner, BluetoothScanner>();
-        services.AddSingleton<IBluetoothBroadcaster, BluetoothBroadcaster>();
+        services.AddSingleton<IBluetoothScanner, AndroidBluetoothScanner>();
+        services.AddSingleton<IBluetoothBroadcaster, AndroidBluetoothBroadcaster>();
 
         services.AddSingleton<IBluetoothAdapterWrapper, BluetoothAdapterWrapper>();
         services.AddSingleton<IBluetoothManagerWrapper, BluetoothManagerWrapper>();
