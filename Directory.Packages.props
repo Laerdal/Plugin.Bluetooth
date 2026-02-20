@@ -21,7 +21,7 @@
     <!-- ==================== MAUI DEPENDENCIES ==================== -->
     <PropertyGroup>
         <!-- MAUI version - update this single value to upgrade MAUI across all projects -->
-        <MauiVersion>10.0.30</MauiVersion>
+        <MauiVersion>10.0.41</MauiVersion>
     </PropertyGroup>
     <ItemGroup>
         <PackageVersion Include="Microsoft.Maui.Core" Version="$(MauiVersion)"/>
