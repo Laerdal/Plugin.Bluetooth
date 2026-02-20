@@ -1,3 +1,5 @@
+using NLog.Extensions.Logging;
+
 namespace Bluetooth.Maui.Sample.Scanner;
 
 /// <summary>
@@ -21,6 +23,15 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
+
+#if DEBUG
+        // Add debug logging
+        builder.Logging.SetMinimumLevel(LogLevel.Debug);
+        
+        // Add NLog for Logging
+        builder.Logging.ClearProviders();
+        builder.Logging.AddNLog();
+#endif
 
         // Register Bluetooth services
         builder.Services.AddBluetoothServices();
