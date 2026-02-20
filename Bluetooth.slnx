@@ -17,7 +17,9 @@
     <Project Path="Bluetooth.Maui/Bluetooth.Maui.csproj" />
   </Folder>
   <Folder Name="/Samples/">
-    <Project Path="Bluetooth.Maui.Sample.Scanner/Bluetooth.Maui.Sample.Scanner.csproj" />
+    <Project Path="Bluetooth.Maui.Sample.Scanner/Bluetooth.Maui.Sample.Scanner.csproj">
+      <Deploy Solution="Debug|*" />
+    </Project>
   </Folder>
   <Folder Name="/_Extras/">
     <File Path="Directory.Packages.props" />
