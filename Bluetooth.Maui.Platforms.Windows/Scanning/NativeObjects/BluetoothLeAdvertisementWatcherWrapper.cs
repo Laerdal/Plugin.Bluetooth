@@ -9,10 +9,11 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     /// <summary>
     ///     Initializes a new instance of the <see cref="BluetoothLeAdvertisementWatcherWrapper" /> class.
     /// </summary>
-    /// <param name="scanner">The delegate for handling advertisement watcher events.</param>
-    public BluetoothLeAdvertisementWatcherWrapper(IBluetoothLeAdvertisementWatcherProxyDelegate scanner)
+    /// <param name="bluetoothLeAdvertisementWatcherProxyDelegate">The delegate for handling advertisement watcher events.</param>
+    public BluetoothLeAdvertisementWatcherWrapper(IBluetoothLeAdvertisementWatcherProxyDelegate bluetoothLeAdvertisementWatcherProxyDelegate)
     {
-        BluetoothLeAdvertisementWatcherProxyDelegate = scanner;
+        ArgumentNullException.ThrowIfNull(bluetoothLeAdvertisementWatcherProxyDelegate);
+        BluetoothLeAdvertisementWatcherProxyDelegate = bluetoothLeAdvertisementWatcherProxyDelegate;
         BluetoothLeAdvertisementWatcher = new BluetoothLEAdvertisementWatcher();
         BluetoothLeAdvertisementWatcher.Received += BluetoothLEAdvertisementWatcher_Received;
         BluetoothLeAdvertisementWatcher.Stopped += BluetoothLEAdvertisementWatcher_Stopped;

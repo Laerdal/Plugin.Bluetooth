@@ -7,6 +7,71 @@ namespace Bluetooth.Maui.Platforms.Windows;
 /// </summary>
 public partial class BluetoothAdapter : BaseBluetoothAdapter, RadioProxy.IRadioProxyDelegate, BluetoothAdapterProxy.IBluetoothAdapterProxyDelegate
 {
+
+    public BluetoothAdapter(ILogger<IBluetoothAdapter>? logger = null) : base(logger)
+    {
+    }
+
+    #region BluetoothAdapterProxy
+
+    private BluetoothAdapterProxy? BluetoothAdapterProxy { get; set; }
+
+    private TaskCompletionSource<BluetoothAdapterProxy>? BluetoothAdapterInitializationTcs { get; set; }
+
+
+    /// <summary>
+    ///    Gets the Bluetooth adapter proxy, ensuring that only one instance is created and shared across the application.
+    /// </summary>
+    public async ValueTask<BluetoothAdapterProxy> GetBluetoothAdapterProxyAsync()
+    {
+        if (BluetoothAdapterProxy != null)
+        {
+            return BluetoothAdapterProxy;
+        }
+        if (BluetoothAdapterInitializationTcs != null)
+        {
+            return await BluetoothAdapterInitializationTcs.Task.ConfigureAwait(false);
+        }
+        BluetoothAdapterInitializationTcs = new TaskCompletionSource<BluetoothAdapterProxy>();
+        BluetoothAdapterProxy = await BluetoothAdapterProxy.GetInstanceAsync(this).ConfigureAwait(false);
+        BluetoothAdapterInitializationTcs.TrySetResult(BluetoothAdapterProxy);
+        BluetoothAdapterInitializationTcs = null;
+        return BluetoothAdapterProxy;
+    }
+
+    #endregion
+
+
+    #region BluetoothAdapterProxy
+
+    private RadioProxy? RadioProxy { get; set; }
+
+    private TaskCompletionSource<RadioProxy>? RadioInitializationTcs { get; set; }
+
+
+    /// <summary>
+    ///    Gets the Radio proxy, ensuring that only one instance is created and shared across the application.
+    /// </summary>
+    public async ValueTask<RadioProxy> GetRadioProxyAsync()
+    {
+        if (RadioProxy != null)
+        {
+            return RadioProxy;
+        }
+        if (RadioInitializationTcs != null)
+        {
+            return await RadioInitializationTcs.Task.ConfigureAwait(false);
+        }
+        RadioInitializationTcs = new TaskCompletionSource<RadioProxy>();
+        var bluetoothAdapterProxy = await GetBluetoothAdapterProxyAsync();
+        RadioProxy = await RadioProxy.GetInstanceAsync(bluetoothAdapterProxy.BluetoothAdapter,this).ConfigureAwait(false);
+        RadioInitializationTcs.TrySetResult(RadioProxy);
+        RadioInitializationTcs = null;
+        return RadioProxy;
+    }
+
+    #endregion
+
     /*
     /// <inheritdoc/>
     protected override void NativeRefreshValues()

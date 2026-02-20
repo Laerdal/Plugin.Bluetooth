@@ -1,5 +1,6 @@
 using Bluetooth.Maui.Platforms.Windows.Exceptions;
 using Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
+using Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 
@@ -28,13 +29,13 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
                 $"Expected request of type {typeof(WindowsBluetoothServiceFactoryRequest)}, but got {request.GetType()}");
         }
 
-        NativeServiceProxy = new GattDeviceServiceProxy(windowsRequest.NativeService, this);
+        NativeServiceProxy = new NativeObjects.GattDeviceServiceProxy(windowsRequest.NativeService, this);
     }
 
     /// <summary>
     ///     Gets the native Windows GATT device service proxy.
     /// </summary>
-    public GattDeviceServiceProxy NativeServiceProxy { get; }
+    public NativeObjects.GattDeviceServiceProxy NativeServiceProxy { get; }
 
     #region Delegate Callbacks - GattDeviceServiceProxy
 

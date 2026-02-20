@@ -17,7 +17,7 @@ namespace Bluetooth.Maui.Platforms.Droid.Scanning;
 public readonly record struct AndroidBluetoothAdvertisement : IBluetoothAdvertisement
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="BluetoothAdvertisement" /> struct from an Android scan result.
+    ///     Initializes a new instance of the <see cref="AndroidBluetoothAdvertisement" /> struct from an Android scan result.
     /// </summary>
     /// <param name="scanResult">The Android scan result containing the advertisement data.</param>
     /// <exception cref="ArgumentNullException">

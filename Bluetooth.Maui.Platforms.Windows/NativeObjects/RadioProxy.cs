@@ -1,6 +1,6 @@
 using Bluetooth_BluetoothAdapter = Windows.Devices.Bluetooth.BluetoothAdapter;
 
-namespace Bluetooth.Maui.Platforms.Windows;
+namespace Bluetooth.Maui.Platforms.Windows.NativeObjects;
 
 /// <summary>
 ///     Proxy class for Windows Radio that provides event handling and singleton-like access patterns

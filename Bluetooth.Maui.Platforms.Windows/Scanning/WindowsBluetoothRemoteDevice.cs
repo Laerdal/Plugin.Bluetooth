@@ -11,7 +11,7 @@ namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 /// </summary>
 public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     BluetoothLeDeviceProxy.IBluetoothLeDeviceProxyDelegate,
-    GattSessionWrapper.IGattSessionDelegate
+    NativeObjects.GattSessionWrapper.IGattSessionDelegate
 {
     /// <summary>
     ///     Initializes a new instance of the Windows <see cref="WindowsBluetoothRemoteDevice" /> class.
@@ -45,7 +45,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     ///     Gets the Windows GATT session proxy used for maintaining a reliable connection.
     ///     This is initialized when connecting to the device.
     /// </summary>
-    public GattSessionWrapper? GattSessionProxy { get; protected set; }
+    public NativeObjects.GattSessionWrapper? GattSessionProxy { get; protected set; }
 
     /// <summary>
     ///     Gets or sets the current Windows GATT session status.
@@ -167,7 +167,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             SetValue(BluetoothLeDeviceProxy.BluetoothLeDevice.Name, nameof(Name));
 
             // Create GATT session for reliable connection
-            GattSessionProxy = await GattSessionWrapper.GetInstanceAsync(
+            GattSessionProxy = await NativeObjects.GattSessionWrapper.GetInstanceAsync(
                 BluetoothLeDeviceProxy.BluetoothLeDevice, this, cancellationToken).ConfigureAwait(false);
 
             if (GattSessionProxy != null && GattSessionProxy.GattSession.CanMaintainConnection)

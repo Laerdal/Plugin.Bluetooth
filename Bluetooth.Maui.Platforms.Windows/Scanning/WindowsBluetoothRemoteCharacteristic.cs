@@ -2,6 +2,7 @@ using Windows.Storage.Streams;
 
 using Bluetooth.Maui.Platforms.Windows.Exceptions;
 using Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
+using Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Windows.Scanning;
 
@@ -32,13 +33,13 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
                 $"Expected request of type {typeof(WindowsBluetoothCharacteristicFactoryRequest)}, but got {request.GetType()}");
         }
 
-        NativeCharacteristicProxy = new GattCharacteristicProxy(windowsRequest.NativeCharacteristic, this);
+        NativeCharacteristicProxy = new NativeObjects.GattCharacteristicProxy(windowsRequest.NativeCharacteristic, this);
     }
 
     /// <summary>
     ///     Gets the Windows GATT characteristic proxy used for characteristic operations.
     /// </summary>
-    public GattCharacteristicProxy NativeCharacteristicProxy { get; }
+    public NativeObjects.GattCharacteristicProxy NativeCharacteristicProxy { get; }
 
     #region Delegate Callbacks
 

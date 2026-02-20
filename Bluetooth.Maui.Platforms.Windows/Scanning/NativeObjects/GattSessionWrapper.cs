@@ -1,6 +1,6 @@
 using Bluetooth.Maui.Platforms.Windows.Exceptions;
 
-namespace Bluetooth.Maui.Platforms.Windows;
+namespace Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;
 
 /// <summary>
 ///     Proxy class for Windows GATT session that provides event handling and lifecycle management

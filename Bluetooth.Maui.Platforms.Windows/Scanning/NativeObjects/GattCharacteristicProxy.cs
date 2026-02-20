@@ -1,4 +1,4 @@
-namespace Bluetooth.Maui.Platforms.Windows;
+namespace Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;
 
 /// <summary>
 ///     Proxy class for Windows GATT characteristic that provides event handling and lifecycle management

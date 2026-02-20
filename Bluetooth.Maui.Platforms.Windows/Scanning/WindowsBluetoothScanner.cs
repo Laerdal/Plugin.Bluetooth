@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 using Bluetooth.Maui.Platforms.Windows.Exceptions;
 using Bluetooth.Maui.Platforms.Windows.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Windows.Scanning.NativeObjects;
@@ -88,8 +90,17 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
         // Create wrapper if needed
         _watcher ??= new BluetoothLeAdvertisementWatcherWrapper(this);
 
+
         // Start watcher (status change callback will call OnStartSucceeded)
-        _watcher.BluetoothLeAdvertisementWatcher.Start();
+        try
+        {
+            _watcher.BluetoothLeAdvertisementWatcher.Start();
+        }
+        catch (COMException e)
+        {
+            // TODO : Handle Permission exceptions more gracefully
+            throw new WindowsNativeBluetoothException("Failed to start Bluetooth LE advertisement watcher.", e);
+        }
 
         return ValueTask.CompletedTask;
     }
