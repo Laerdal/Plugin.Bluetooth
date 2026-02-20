@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Bluetooth.Maui.Sample.Scanner": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
