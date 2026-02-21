@@ -5,10 +5,10 @@ namespace Bluetooth.Maui.Platforms.Droid;
 /// <summary>
 ///     Android implementation of the Bluetooth adapter.
 /// </summary>
-public class BluetoothAdapter : BaseBluetoothAdapter
+public class AndroidBluetoothAdapter : BaseBluetoothAdapter
 {
     /// <inheritdoc />
-    protected BluetoothAdapter(IBluetoothManagerWrapper bluetoothManagerWrapper, IBluetoothAdapterWrapper bluetoothAdapterWrapper, ILogger<IBluetoothAdapter>? logger = null) : base(logger)
+    protected AndroidBluetoothAdapter(IBluetoothManagerWrapper bluetoothManagerWrapper, IBluetoothAdapterWrapper bluetoothAdapterWrapper, ILogger<IBluetoothAdapter>? logger = null) : base(logger)
     {
         BluetoothManagerWrapper = bluetoothManagerWrapper;
         BluetoothAdapterWrapper = bluetoothAdapterWrapper;

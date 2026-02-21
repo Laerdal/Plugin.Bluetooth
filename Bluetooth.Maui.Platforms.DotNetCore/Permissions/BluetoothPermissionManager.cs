@@ -21,8 +21,9 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
+    /// <param name="cancellationToken"></param>
     /// <inheritdoc />
-    public ValueTask<bool> RequestBluetoothPermissionsAsync()
+    public ValueTask<bool> RequestBluetoothPermissionsAsync(CancellationToken cancellationToken = default)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

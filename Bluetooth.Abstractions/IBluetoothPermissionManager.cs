@@ -75,8 +75,9 @@ public interface IBluetoothPermissionManager
     /// <summary>
     ///     Requests the necessary Bluetooth permissions from the user.
     /// </summary>
+    /// <param name="cancellationToken"></param>
     /// <returns>True if permissions are granted, otherwise false.</returns>
-    ValueTask<bool> RequestBluetoothPermissionsAsync();
+    ValueTask<bool> RequestBluetoothPermissionsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Requests the necessary Bluetooth scanner permissions from the user.

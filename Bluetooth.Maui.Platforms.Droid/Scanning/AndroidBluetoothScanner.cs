@@ -32,7 +32,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     {
         get
         {
-            if (Adapter is not BluetoothAdapter androidAdapter)
+            if (Adapter is not AndroidBluetoothAdapter androidAdapter)
             {
                 throw new InvalidOperationException("Adapter must be an Android BluetoothAdapter");
             }

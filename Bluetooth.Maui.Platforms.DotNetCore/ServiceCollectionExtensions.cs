@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection for method chaining.</returns>
     public static void AddBluetoothMauiDotNetServices(this IServiceCollection services)
     {
-        services.AddSingleton<IBluetoothAdapter, BluetoothAdapter>();
+        services.AddSingleton<IBluetoothAdapter, DotNetBluetoothAdapter>();
         services.AddSingleton<IBluetoothPermissionManager, BluetoothPermissionManager>();
 
         services.AddBluetoothMauiDotNetScanningServices();

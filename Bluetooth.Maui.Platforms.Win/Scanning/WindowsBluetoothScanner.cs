@@ -82,7 +82,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
     ///     Starts the Windows Bluetooth LE advertisement watcher.
     ///     The watcher will begin receiving advertisements and call <see cref="OnAdvertisementReceived" /> for each one.
     /// </remarks>
-    protected override ValueTask NativeStartAsync(
+    protected async override ValueTask NativeStartAsync(
         ScanningOptions scanningOptions,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
@@ -90,6 +90,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
         // Start watcher (status change callback will call OnStartSucceeded)
         try
         {
+            await PermissionManager.RequestBluetoothPermissionsAsync().ConfigureAwait(false);
             Watcher.BluetoothLeAdvertisementWatcher.Start();
         }
         catch (COMException e)
@@ -97,8 +98,6 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
             // TODO : Handle Permission exceptions more gracefully
             throw new WindowsNativeBluetoothException("Failed to start Bluetooth LE advertisement watcher.", e);
         }
-
-        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />

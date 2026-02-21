@@ -87,8 +87,9 @@ public class BluetoothPermissionManager : IBluetoothPermissionManager
         }
     }
 
+    /// <param name="cancellationToken"></param>
     /// <inheritdoc />
-    public async ValueTask<bool> RequestBluetoothPermissionsAsync()
+    public async ValueTask<bool> RequestBluetoothPermissionsAsync(CancellationToken cancellationToken = default)
     {
         try
         {

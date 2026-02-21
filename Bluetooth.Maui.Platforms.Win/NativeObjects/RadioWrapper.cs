@@ -72,6 +72,29 @@ public partial class RadioWrapper : BaseBindableObject, IRadioWrapper, IDisposab
 
     #endregion
 
+    /// <summary>
+    /// Waits asynchronously for the radio to reach a specific state.
+    /// </summary>
+    /// <param name="state">The target radio state to wait for.</param>
+    /// <param name="timeout">The timeout for the wait operation.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A task that completes when the target state is reached.</returns>
+    public ValueTask<RadioState> WaitForRadioStateAsync(RadioState state, TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        return WaitForPropertyToBeOfValue(nameof(RadioState), state, timeout, cancellationToken);
+    }
+
+    /// <summary>
+    /// Waits asynchronously for the radio state to be known (not <see cref="RadioState.Unknown"/>).
+    /// </summary>
+    /// <param name="timeout">The timeout for the wait operation.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A task that completes when the state becomes known.</returns>
+    public ValueTask<RadioState> WaitForRadioStateToBeKnownAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        return WaitForPropertyToBeDifferentThanValue(nameof(RadioState), RadioState.Unknown, timeout, cancellationToken);
+    }
+    
     /// <inheritdoc />
     public void Dispose()
     {

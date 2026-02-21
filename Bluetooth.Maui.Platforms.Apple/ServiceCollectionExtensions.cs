@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IDispatchQueueProvider, DispatchQueueProvider>();
 
-        services.AddSingleton<IBluetoothAdapter, BluetoothAdapter>();
+        services.AddSingleton<IBluetoothAdapter, AppleBluetoothAdapter>();
         services.AddSingleton<IBluetoothPermissionManager, BluetoothPermissionManager>();
 
         services.AddSingleton<IBluetoothScanner, AppleBluetoothScanner>();

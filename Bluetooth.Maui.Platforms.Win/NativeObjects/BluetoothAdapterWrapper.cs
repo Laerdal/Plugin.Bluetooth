@@ -86,20 +86,42 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
 
     private void RefreshAdapterProperties()
     {
-        if(_bluetoothAdapter == null)
+        if (_bluetoothAdapter == null)
         {
             return;
         }
-        
+
+        BluetoothAdapterDeviceId = _bluetoothAdapter.DeviceId;
+        BluetoothAdapterBluetoothAddress = _bluetoothAdapter.BluetoothAddress;
         BluetoothAdapterIsAdvertisementOffloadSupported = _bluetoothAdapter.IsAdvertisementOffloadSupported;
         BluetoothAdapterIsLowEnergySupported = _bluetoothAdapter.IsLowEnergySupported;
         BluetoothAdapterIsClassicSupported = _bluetoothAdapter.IsClassicSupported;
         BluetoothAdapterAreLowEnergySecureConnectionsSupported = _bluetoothAdapter.AreLowEnergySecureConnectionsSupported;
         BluetoothAdapterIsPeripheralRoleSupported = _bluetoothAdapter.IsPeripheralRoleSupported;
+        BluetoothAdapterIsCentralRoleSupported = _bluetoothAdapter.IsCentralRoleSupported;
         BluetoothAdapterAreClassicSecureConnectionsSupported = _bluetoothAdapter.AreClassicSecureConnectionsSupported;
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
+        {
+            BluetoothAdapterMaxAdvertisementDataLength = _bluetoothAdapter.MaxAdvertisementDataLength;
+            BluetoothAdapterIsExtendedAdvertisingSupported = _bluetoothAdapter.IsExtendedAdvertisingSupported;
+        }
     }
 
     #region BluetoothAdapter
+
+    /// <inheritdoc />
+    public string BluetoothAdapterDeviceId
+    {
+        get => GetValue(string.Empty);
+        private set => SetValue(value);
+    }
+
+    /// <inheritdoc />
+    public ulong BluetoothAdapterBluetoothAddress
+    {
+        get => GetValue(0ul);
+        private set => SetValue(value);
+    }
 
     /// <inheritdoc />
     public bool BluetoothAdapterIsAdvertisementOffloadSupported
@@ -138,6 +160,27 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
 
     /// <inheritdoc />
     public bool BluetoothAdapterIsPeripheralRoleSupported
+    {
+        get => GetValue(false);
+        private set => SetValue(value);
+    }
+    
+    /// <inheritdoc />
+    public bool BluetoothAdapterIsCentralRoleSupported
+    {
+        get => GetValue(false);
+        private set => SetValue(value);
+    }
+
+    /// <inheritdoc />
+    public uint BluetoothAdapterMaxAdvertisementDataLength
+    {
+        get => GetValue(0u);
+        private set => SetValue(value);
+    }
+
+    /// <inheritdoc />
+    public bool BluetoothAdapterIsExtendedAdvertisingSupported
     {
         get => GetValue(false);
         private set => SetValue(value);

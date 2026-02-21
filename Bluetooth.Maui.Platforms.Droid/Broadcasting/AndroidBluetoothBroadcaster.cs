@@ -32,7 +32,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     public AdvertiseSettings? SettingsInEffect { get; private set; }
 
     private BluetoothManager BluetoothManager =>
-        ((BluetoothAdapter) Adapter).NativeBluetoothManager;
+        ((AndroidBluetoothAdapter) Adapter).NativeBluetoothManager;
 
     /// <inheritdoc />
     public void OnStartSuccess(AdvertiseSettings? settingsInEffect)
