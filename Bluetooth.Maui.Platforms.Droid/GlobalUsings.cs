@@ -74,7 +74,7 @@ global using Windows.Devices.Enumeration;
 global using Windows.Devices.Radios;
 global using Windows.Security.Authorization.AppCapabilityAccess;
 
-global using Bluetooth.Maui.Platforms.Windows;
+global using Bluetooth.Maui.Platforms.Win;
 #else
 global using Bluetooth.Maui.Platforms.DotNetCore;
 #endif

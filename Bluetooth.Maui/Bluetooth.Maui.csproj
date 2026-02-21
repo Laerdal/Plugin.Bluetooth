@@ -46,7 +46,7 @@
 
         <ProjectReference Condition=" '$(IsForAndroid)' == 'true' " Include="../Bluetooth.Maui.Platforms.Droid/Bluetooth.Maui.Platforms.Droid.csproj" PrivateAssets="all"/>
         <ProjectReference Condition=" '$(IsForAppleStuff)' == 'true' " Include="../Bluetooth.Maui.Platforms.Apple/Bluetooth.Maui.Platforms.Apple.csproj" PrivateAssets="all"/>
-        <ProjectReference Condition=" '$(IsForWindows)' == 'true' " Include="../Bluetooth.Maui.Platforms.Windows/Bluetooth.Maui.Platforms.Windows.csproj" PrivateAssets="all"/>
+        <ProjectReference Condition=" '$(IsForWindows)' == 'true' " Include="../Bluetooth.Maui.Platforms.Win/Bluetooth.Maui.Platforms.Win.csproj" PrivateAssets="all" />
         <ProjectReference Condition=" '$(IsForPlainNetX)' == 'true' " Include="../Bluetooth.Maui.Platforms.DotNetCore/Bluetooth.Maui.Platforms.DotNetCore.csproj" PrivateAssets="all"/>
     </ItemGroup>
 

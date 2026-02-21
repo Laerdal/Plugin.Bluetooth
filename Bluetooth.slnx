@@ -13,7 +13,7 @@
     <Project Path="Bluetooth.Maui.Platforms.Apple/Bluetooth.Maui.Platforms.Apple.csproj" />
     <Project Path="Bluetooth.Maui.Platforms.DotNetCore/Bluetooth.Maui.Platforms.DotNetCore.csproj" />
     <Project Path="Bluetooth.Maui.Platforms.Droid/Bluetooth.Maui.Platforms.Droid.csproj" />
-    <Project Path="Bluetooth.Maui.Platforms.Windows/Bluetooth.Maui.Platforms.Windows.csproj" />
+    <Project Path="Bluetooth.Maui.Platforms.Win\Bluetooth.Maui.Platforms.Win.csproj" />
     <Project Path="Bluetooth.Maui/Bluetooth.Maui.csproj" />
   </Folder>
   <Folder Name="/Samples/">

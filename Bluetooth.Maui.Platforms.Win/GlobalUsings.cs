@@ -1,4 +1,5 @@
 // ReSharper disable RedundantUsingDirective.Global
+// ReSharper disable RedundantUsingDirective.Global
 
 global using System;
 global using System.Collections.Concurrent;
@@ -66,6 +67,7 @@ global using Java.Util;
 global using Bluetooth.Maui.Platforms.Droid;
 #elif WINDOWS
 global using System.Runtime.InteropServices.WindowsRuntime;
+
 global using Windows.Devices.Bluetooth;
 global using Windows.Devices.Bluetooth.Advertisement;
 global using Windows.Devices.Bluetooth.GenericAttributeProfile;
@@ -74,6 +76,7 @@ global using Windows.Devices.Radios;
 global using Windows.Security.Authorization.AppCapabilityAccess;
 
 global using Bluetooth.Maui.Platforms.Win;
+
 #else
 global using Bluetooth.Maui.Platforms.DotNetCore;
 #endif
