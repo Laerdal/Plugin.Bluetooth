@@ -77,7 +77,7 @@ public abstract partial class BaseBluetoothBroadcaster : BaseBindableObject, IBl
     /// <summary>
     ///     Gets the factory for creating broadcast services.
     /// </summary>
-    protected IBluetoothLocalServiceFactory LocalServiceFactory { get; }
+    private IBluetoothLocalServiceFactory LocalServiceFactory { get; }
 
     /// <summary>
     ///     Gets the factory for creating broadcast client devices.

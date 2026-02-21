@@ -14,6 +14,7 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection for method chaining.</returns>
     public static void AddBluetoothServices(this IServiceCollection services)
     {
+        services.AddSingleton<ITicker, Ticker>();
         services.AddBluetoothCoreServices();
         services.AddBluetoothCoreScanningServices();
         services.AddBluetoothCoreBroadcastingServices();

@@ -26,8 +26,7 @@ public static class ServiceCollectionExtensions
         }
         else
         {
-            services.AddSingleton<IOptions<BluetoothInfrastructureOptions>>(
-                Options.Create(new BluetoothInfrastructureOptions()));
+            services.AddSingleton(Options.Create(new BluetoothInfrastructureOptions()));
         }
 
         return services;

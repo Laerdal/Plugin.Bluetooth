@@ -16,6 +16,8 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection for method chaining.</returns>
     public static void AddBluetoothMauiAndroidBroadcastingServices(this IServiceCollection services)
     {
+        services.AddSingleton<IBluetoothBroadcaster, AndroidBluetoothBroadcaster>();
+        
         services.AddSingleton<IBluetoothLocalCharacteristicFactory, AndroidBluetoothLocalCharacteristicFactory>();
         services.AddSingleton<IBluetoothLocalServiceFactory, AndroidBluetoothLocalServiceFactory>();
         services.AddSingleton<IBluetoothLocalDescriptorFactory, AndroidBluetoothLocalDescriptorFactory>();

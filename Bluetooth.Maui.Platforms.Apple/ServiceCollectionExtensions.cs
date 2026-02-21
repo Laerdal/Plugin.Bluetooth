@@ -26,9 +26,6 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IBluetoothAdapter, AppleBluetoothAdapter>();
 
-        services.AddSingleton<IBluetoothScanner, AppleBluetoothScanner>();
-        services.AddSingleton<IBluetoothBroadcaster, AppleBluetoothBroadcaster>();
-
         services.AddBluetoothMauiAppleScanningServices();
         services.AddBluetoothMauiAppleBroadcastingServices();
     }

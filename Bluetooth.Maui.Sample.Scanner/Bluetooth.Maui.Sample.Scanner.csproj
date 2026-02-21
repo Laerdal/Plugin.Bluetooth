@@ -85,5 +85,26 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
     </ItemGroup>
 
+    <ItemGroup>
+      <AndroidResource Include="Resources\Images\dotnet_bot.png">
+        <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+      </AndroidResource>
+      <AndroidResource Include="Resources\Raw\AboutAssets.txt">
+        <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+      </AndroidResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiSplashScreen Include="Resources\Splash\splash.svg" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <BundleResource Include="Resources\AppIcon\appiconfg.svg" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiIcon Include="Resources\AppIcon\appicon.svg" />
+    </ItemGroup>
+
 
 </Project>

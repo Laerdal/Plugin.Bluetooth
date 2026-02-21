@@ -18,18 +18,9 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection for method chaining.</returns>
     public static void AddBluetoothMauiAndroidServices(this IServiceCollection services)
     {
-        // Core infrastructure services
-        services.AddSingleton<ITicker, Ticker>();
-        services.AddBluetoothCoreServices();
-        services.AddBluetoothCoreScanningServices();
-        services.AddBluetoothCoreBroadcastingServices();
-
         // Platform-specific services
         services.AddSingleton<IBluetoothAdapter, AndroidBluetoothAdapter>();
-
-        services.AddSingleton<IBluetoothScanner, AndroidBluetoothScanner>();
-        services.AddSingleton<IBluetoothBroadcaster, AndroidBluetoothBroadcaster>();
-
+        
         services.AddSingleton<IBluetoothAdapterWrapper, BluetoothAdapterWrapper>();
         services.AddSingleton<IBluetoothManagerWrapper, BluetoothManagerWrapper>();
 
