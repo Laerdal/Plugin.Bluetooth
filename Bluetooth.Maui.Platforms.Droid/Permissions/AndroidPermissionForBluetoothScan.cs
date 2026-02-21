@@ -1,4 +1,4 @@
-﻿using Android;
+using Android;
 
 namespace Bluetooth.Maui.Platforms.Droid.Permissions;
 

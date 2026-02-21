@@ -66,6 +66,10 @@ public abstract partial class BaseBluetoothBroadcaster
         Message = "Broadcaster configuration update failed")]
     partial void LogConfigurationUpdateFailed(Exception exception);
 
+    [LoggerMessage(EventId = 515, Level = LogLevel.Error,
+        Message = "Error checking broadcaster permissions")]
+    partial void LogBroadcasterPermissionCheckFailed(Exception exception);
+
     // Service list operations (520-539)
     [LoggerMessage(EventId = 520, Level = LogLevel.Information,
         Message = "Broadcaster adding service {ServiceId}")]

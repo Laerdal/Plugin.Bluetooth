@@ -187,31 +187,9 @@ public abstract partial class BaseBluetoothScanner
         try // try-catch to dispatch exceptions rising from start through OnStartFailed
         {
             CurrentScanningOptions = options; // Set the configuration
-            var permissionStrategy = options.PermissionStrategy;
 
             // Handle permissions based on strategy
-            switch (permissionStrategy)
-            {
-                case PermissionRequestStrategy.RequestAutomatically:
-                        await RequestScannerPermissionsAsync(options.RequireBackgroundLocation, cancellationToken).ConfigureAwait(false);
-                    break;
-
-                case PermissionRequestStrategy.ThrowIfNotGranted:
-                    var hasPermissions = await HasScannerPermissionsAsync().ConfigureAwait(false);
-                    if (!hasPermissions)
-                    {
-                        throw new BluetoothPermissionException(
-                            "Scanner permissions not granted. Call scanner.RequestScannerPermissionsAsync() before starting the scanner.");
-                    }
-                    break;
-
-                case PermissionRequestStrategy.AssumeGranted:
-                    // Skip all permission checks
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(options.PermissionStrategy), options.PermissionStrategy, "Invalid permission request strategy.");
-            }
+            await HandlePermissionsAsync(options.PermissionStrategy, options.RequireBackgroundLocation, cancellationToken).ConfigureAwait(false);
 
             LogScannerStarting(options.ServiceUuids?.Count ?? 0);
             await NativeStartAsync(options, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
@@ -242,6 +220,41 @@ public abstract partial class BaseBluetoothScanner
             {
                 LogScannerStarted();
             }
+        }
+    }
+
+    /// <summary>
+    ///     Handles permissions based on the specified strategy.
+    ///     This method is called by <see cref="StartScanningAsync" /> to manage permissions before starting the scanner.
+    /// </summary>
+    /// <param name="permissionStrategy">The strategy to use for handling permissions.</param>
+    /// <param name="requireBackgroundLocation">Indicates whether background location permission is required.</param>
+    /// <param name="cancellationToken">An optional cancellation token to cancel the permission handling operation.</param>
+    protected async virtual Task HandlePermissionsAsync(
+        PermissionRequestStrategy permissionStrategy,
+        bool requireBackgroundLocation, CancellationToken cancellationToken = default)
+    {
+        switch (permissionStrategy)
+        {
+            case PermissionRequestStrategy.RequestAutomatically:
+                await RequestScannerPermissionsAsync(requireBackgroundLocation, cancellationToken).ConfigureAwait(false);
+                break;
+
+            case PermissionRequestStrategy.ThrowIfNotGranted:
+                var hasPermissions = await HasScannerPermissionsAsync().ConfigureAwait(false);
+                if (!hasPermissions)
+                {
+                    throw new BluetoothPermissionException(
+                                                           "Scanner permissions not granted. Call scanner.RequestScannerPermissionsAsync() before starting the scanner.");
+                }
+                break;
+
+            case PermissionRequestStrategy.AssumeGranted:
+                // Skip all permission checks
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(permissionStrategy), permissionStrategy, "Invalid permission request strategy.");
         }
     }
 

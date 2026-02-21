@@ -124,7 +124,7 @@ public abstract partial class BaseBluetoothBroadcaster : BaseBindableObject, IBl
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking broadcaster permissions");
+            LogBroadcasterPermissionCheckFailed(ex);
             return false;
         }
     }

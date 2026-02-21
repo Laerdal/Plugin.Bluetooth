@@ -164,7 +164,7 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
         get => GetValue(false);
         private set => SetValue(value);
     }
-    
+
     /// <inheritdoc />
     public bool BluetoothAdapterIsCentralRoleSupported
     {

@@ -60,5 +60,9 @@ public abstract partial class BaseBluetoothScanner
         Message = "Scanner already stopped, throwing ScannerIsAlreadyStoppedException")]
     partial void LogScannerAlreadyStopped();
 
+    [LoggerMessage(EventId = 114, Level = LogLevel.Error,
+        Message = "Error checking scanner permissions")]
+    partial void LogScannerPermissionCheckFailed(Exception exception);
+
     #endregion
 }

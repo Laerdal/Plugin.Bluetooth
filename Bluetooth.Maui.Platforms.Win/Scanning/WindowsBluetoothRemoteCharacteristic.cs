@@ -1,8 +1,8 @@
-using Windows.Storage.Streams;
-
 using Bluetooth.Maui.Platforms.Win.Exceptions;
 using Bluetooth.Maui.Platforms.Win.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Win.Scanning.NativeObjects;
+
+using Windows.Storage.Streams;
 
 namespace Bluetooth.Maui.Platforms.Win.Scanning;
 

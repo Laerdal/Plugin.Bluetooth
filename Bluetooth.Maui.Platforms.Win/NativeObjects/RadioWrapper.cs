@@ -94,7 +94,7 @@ public partial class RadioWrapper : BaseBindableObject, IRadioWrapper, IDisposab
     {
         return WaitForPropertyToBeDifferentThanValue(nameof(RadioState), RadioState.Unknown, timeout, cancellationToken);
     }
-    
+
     /// <inheritdoc />
     public void Dispose()
     {

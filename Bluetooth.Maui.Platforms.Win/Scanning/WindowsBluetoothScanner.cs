@@ -96,7 +96,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
         catch (COMException e)
         {
             // Check if it's a permission-related error
-            const int E_ACCESSDENIED = unchecked((int)0x80070005);
+            const int E_ACCESSDENIED = unchecked((int) 0x80070005);
             if (e.HResult == E_ACCESSDENIED)
             {
                 throw new BluetoothPermissionException(

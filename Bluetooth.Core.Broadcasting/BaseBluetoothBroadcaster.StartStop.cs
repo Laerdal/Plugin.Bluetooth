@@ -186,7 +186,7 @@ public abstract partial class BaseBluetoothBroadcaster
             CurrentBroadcastingOptions = options; // Set the options
 
             // Handle permissions based on strategy
-            await HandlePermissions(options.PermissionStrategy, cancellationToken).ConfigureAwait(false);
+            await HandlePermissionsAsync(options.PermissionStrategy, cancellationToken).ConfigureAwait(false);
 
             await NativeStartAsync(options, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
         }
@@ -223,7 +223,7 @@ public abstract partial class BaseBluetoothBroadcaster
     /// </summary>
     /// <param name="strategy">The permission request strategy defined in the broadcasting options.</param>
     /// <param name="cancellationToken">Cancellation token to cancel the permission request operation.</param>
-    protected async virtual ValueTask HandlePermissions(PermissionRequestStrategy strategy, CancellationToken cancellationToken)
+    protected async virtual ValueTask HandlePermissionsAsync(PermissionRequestStrategy strategy, CancellationToken cancellationToken = default)
     {
         switch (strategy)
         {

@@ -124,7 +124,7 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking scanner permissions");
+            LogScannerPermissionCheckFailed(ex);
             return false;
         }
     }
