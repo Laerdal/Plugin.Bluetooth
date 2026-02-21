@@ -36,7 +36,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui.Platforms.Do
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui.Platforms.Droid", "Bluetooth.Maui.Platforms.Droid\Bluetooth.Maui.Platforms.Droid.csproj", "{A7B8C9D0-E1F2-4A5B-8C9D-0E1F2A3B4C5D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui.Platforms.Windows", "Bluetooth.Maui.Platforms.Windows\Bluetooth.Maui.Platforms.Windows.csproj", "{B8C9D0E1-F2A3-4B5C-8D9E-0F1A2B3C4D5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui.Platforms.Win", "Bluetooth.Maui.Platforms.Win\Bluetooth.Maui.Platforms.Win.csproj", "{B8C9D0E1-F2A3-4B5C-8D9E-0F1A2B3C4D5E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui", "Bluetooth.Maui\Bluetooth.Maui.csproj", "{B64B9C4F-0C25-46A4-B2C2-45CB27E0512B}"
 EndProject
