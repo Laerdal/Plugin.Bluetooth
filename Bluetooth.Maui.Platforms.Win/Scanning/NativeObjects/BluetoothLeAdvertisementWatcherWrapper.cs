@@ -126,7 +126,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
         SignalStrengthFilterSamplingInterval = _watcher.SignalStrengthFilter?.SamplingInterval;
         SignalStrengthFilterOutOfRangeTimeout = _watcher.SignalStrengthFilter?.OutOfRangeTimeout;
 
-        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22621))
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
         {
             AllowExtendedAdvertisements = _watcher.AllowExtendedAdvertisements;
         }

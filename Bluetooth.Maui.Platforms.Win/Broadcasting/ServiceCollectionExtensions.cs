@@ -14,6 +14,9 @@ public static class ServiceCollectionExtensions
     /// <param name="services">The service collection to add services to.</param>
     public static void AddBluetoothMauiWindowsBroadcastingServices(this IServiceCollection services)
     {
+        services.AddSingleton<IBluetoothBroadcaster, WindowsBluetoothBroadcaster>();
+        
+        // Register factories
         services.AddSingleton<IBluetoothLocalServiceFactory, WindowsBluetoothLocalServiceFactory>();
         services.AddSingleton<IBluetoothLocalCharacteristicFactory, WindowsBluetoothLocalCharacteristicFactory>();
         services.AddSingleton<IBluetoothLocalDescriptorFactory, WindowsBluetoothLocalDescriptorFactory>();

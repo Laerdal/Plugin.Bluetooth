@@ -103,7 +103,15 @@ public sealed partial class BluetoothLeAdvertisementPublisherWrapper : BaseBinda
         }
 
         Status = _publisher.Status;
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
+        {
+            IsAnonymous = _publisher.IsAnonymous;
+            UseExtendedAdvertisement = _publisher.UseExtendedAdvertisement;
+            IncludeTransmitPowerLevel = _publisher.IncludeTransmitPowerLevel;
+            PreferredTransmitPowerLevelInDBm = _publisher.PreferredTransmitPowerLevelInDBm;
+        }
     }
+
 
     /// <inheritdoc/>
     public BluetoothLEAdvertisementPublisherStatus Status
@@ -112,5 +120,32 @@ public sealed partial class BluetoothLeAdvertisementPublisherWrapper : BaseBinda
         private set => SetValue(value);
     }
 
+    /// <inheritdoc/>
+    public bool IsAnonymous
+    {
+        get => GetValue(false);
+        private set => SetValue(value);
+    }
+
+    /// <inheritdoc/>
+    public bool UseExtendedAdvertisement
+    {
+        get => GetValue(false);
+        private set => SetValue(value);
+    }
+
+    /// <inheritdoc/>
+    public bool IncludeTransmitPowerLevel
+    {
+        get => GetValue(false);
+        private set => SetValue(value);
+    }
+
+    /// <inheritdoc/>
+    public short? PreferredTransmitPowerLevelInDBm
+    {
+        get => GetValue<short?>(null);
+        private set => SetValue(value);
+    }
     #endregion
 }

@@ -28,9 +28,7 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
 
     private TaskCompletionSource<Windows.Devices.Bluetooth.BluetoothAdapter>? BluetoothAdapterInitializationTcs { get; set; }
 
-    /// <summary>
-    ///    Gets the Bluetooth adapter proxy, ensuring that only one instance is created and shared across the application.
-    /// </summary>
+    /// <inheritdoc />
     public async ValueTask<Windows.Devices.Bluetooth.BluetoothAdapter> GetBluetoothAdapterAsync(CancellationToken cancellationToken = default)
     {
         if (_bluetoothAdapter != null)
@@ -88,65 +86,57 @@ public partial class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAda
 
     private void RefreshAdapterProperties()
     {
-        // Adapter properties
-        BluetoothAdapterIsAdvertisementOffloadSupported = _bluetoothAdapter?.IsAdvertisementOffloadSupported ?? false;
-        BluetoothAdapterIsLowEnergySupported = _bluetoothAdapter?.IsLowEnergySupported ?? false;
-        BluetoothAdapterIsClassicSupported = _bluetoothAdapter?.IsClassicSupported ?? false;
-        BluetoothAdapterAreLowEnergySecureConnectionsSupported = _bluetoothAdapter?.AreLowEnergySecureConnectionsSupported ?? false;
-        BluetoothAdapterIsPeripheralRoleSupported = _bluetoothAdapter?.IsPeripheralRoleSupported ?? false;
-        BluetoothAdapterAreClassicSecureConnectionsSupported = _bluetoothAdapter?.AreClassicSecureConnectionsSupported ?? false;
+        if(_bluetoothAdapter == null)
+        {
+            return;
+        }
+        
+        BluetoothAdapterIsAdvertisementOffloadSupported = _bluetoothAdapter.IsAdvertisementOffloadSupported;
+        BluetoothAdapterIsLowEnergySupported = _bluetoothAdapter.IsLowEnergySupported;
+        BluetoothAdapterIsClassicSupported = _bluetoothAdapter.IsClassicSupported;
+        BluetoothAdapterAreLowEnergySecureConnectionsSupported = _bluetoothAdapter.AreLowEnergySecureConnectionsSupported;
+        BluetoothAdapterIsPeripheralRoleSupported = _bluetoothAdapter.IsPeripheralRoleSupported;
+        BluetoothAdapterAreClassicSecureConnectionsSupported = _bluetoothAdapter.AreClassicSecureConnectionsSupported;
     }
 
     #region BluetoothAdapter
 
-    /// <summary>
-    /// Gets a value indicating whether Bluetooth advertisement offload is supported.
-    /// </summary>
+    /// <inheritdoc />
     public bool BluetoothAdapterIsAdvertisementOffloadSupported
     {
         get => GetValue(false);
         private set => SetValue(value);
     }
 
-    /// <summary>
-    /// Gets a value indicating whether Bluetooth Low Energy is supported.
-    /// </summary>
+    /// <inheritdoc />
     public bool BluetoothAdapterIsLowEnergySupported
     {
         get => GetValue(false);
         private set => SetValue(value);
     }
 
-    /// <summary>
-    /// Gets a value indicating whether classic Bluetooth is supported.
-    /// </summary>
+    /// <inheritdoc />
     public bool BluetoothAdapterIsClassicSupported
     {
         get => GetValue(false);
         private set => SetValue(value);
     }
 
-    /// <summary>
-    /// Gets a value indicating whether classic Bluetooth secure connections are supported.
-    /// </summary>
+    /// <inheritdoc />
     public bool BluetoothAdapterAreClassicSecureConnectionsSupported
     {
         get => GetValue(false);
         private set => SetValue(value);
     }
 
-    /// <summary>
-    /// Gets a value indicating whether Bluetooth Low Energy secure connections are supported.
-    /// </summary>
+    /// <inheritdoc />
     public bool BluetoothAdapterAreLowEnergySecureConnectionsSupported
     {
         get => GetValue(false);
         private set => SetValue(value);
     }
 
-    /// <summary>
-    /// Gets a value indicating whether the peripheral role is supported.
-    /// </summary>
+    /// <inheritdoc />
     public bool BluetoothAdapterIsPeripheralRoleSupported
     {
         get => GetValue(false);

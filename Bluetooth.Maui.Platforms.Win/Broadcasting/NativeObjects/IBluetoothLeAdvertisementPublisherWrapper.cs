@@ -16,4 +16,24 @@ public interface IBluetoothLeAdvertisementPublisherWrapper
     ///     Gets the current status of the Bluetooth LE Advertisement publisher.
     /// </summary>
     BluetoothLEAdvertisementPublisherStatus Status { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the Bluetooth LE advertisement publisher is set to anonymous.
+    /// </summary>
+    bool IsAnonymous { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the Bluetooth LE advertisement publisher uses extended advertisements.
+    /// </summary>
+    bool UseExtendedAdvertisement { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the Bluetooth LE advertisement publisher includes the transmit power level.
+    /// </summary>
+    bool IncludeTransmitPowerLevel { get; }
+
+    /// <summary>
+    /// Gets the preferred transmit power level in dBm for the Bluetooth LE advertisement publisher.
+    /// </summary>
+    short? PreferredTransmitPowerLevelInDBm { get; }
 }

@@ -1,5 +1,9 @@
 namespace Bluetooth.Maui.Platforms.Win.NativeObjects;
 
+/// <summary>
+///     Wrapper class for Windows Bluetooth radio that provides singleton-like access pattern
+///     and manages radio state, kind, and name properties.
+/// </summary>
 public partial class RadioWrapper : BaseBindableObject, IRadioWrapper, IDisposable
 {
     private readonly ITicker _ticker;
@@ -7,9 +11,16 @@ public partial class RadioWrapper : BaseBindableObject, IRadioWrapper, IDisposab
     private Windows.Devices.Radios.Radio? _radio;
 
     private readonly IBluetoothAdapterWrapper _bluetoothAdapterWrapper;
-    
+
     private IDisposable? _refreshSubscription;
-    
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="RadioWrapper" /> class.
+    ///     This constructor is private; instances should be created through a factory method.
+    /// </summary>
+    /// <param name="bluetoothAdapterWrapper">The Bluetooth adapter wrapper to retrieve the radio from.</param>
+    /// <param name="ticker">The ticker for scheduling periodic updates of radio properties.</param>
+    /// <param name="logger">An optional logger for logging radio operations and errors.</param>
     private RadioWrapper(IBluetoothAdapterWrapper bluetoothAdapterWrapper, ITicker ticker, ILogger<IBluetoothAdapterWrapper>? logger = null) : base(logger)
     {
         ArgumentNullException.ThrowIfNull(ticker);
@@ -22,9 +33,7 @@ public partial class RadioWrapper : BaseBindableObject, IRadioWrapper, IDisposab
 
     private TaskCompletionSource<Windows.Devices.Radios.Radio>? RadioInitializationTcs { get; set; }
 
-    /// <summary>
-    ///    Gets the Bluetooth adapter proxy, ensuring that only one instance is created and shared across the application.
-    /// </summary>
+    /// <inheritdoc />
     public async ValueTask<Windows.Devices.Radios.Radio> GetRadioAsync(CancellationToken cancellationToken = default)
     {
         if (_radio != null)
@@ -62,7 +71,7 @@ public partial class RadioWrapper : BaseBindableObject, IRadioWrapper, IDisposab
     }
 
     #endregion
-    
+
     /// <inheritdoc />
     public void Dispose()
     {
@@ -80,35 +89,34 @@ public partial class RadioWrapper : BaseBindableObject, IRadioWrapper, IDisposab
             _refreshSubscription?.Dispose();
         }
     }
-    
+
     private void RefreshRadioProperties()
     {
-        // Adapter properties
-        RadioState = _radio?.State ?? RadioState.Unknown;
-        RadioKind = _radio?.Kind ?? RadioKind.Other;
-        RadioName = _radio?.Name ?? string.Empty;
+        if (_radio == null)
+        {
+            return;
+        }
+
+        RadioState = _radio.State;
+        RadioKind = _radio.Kind;
+        RadioName = _radio.Name;
     }
-    
-    /// <summary>
-    /// Gets the current state of the Bluetooth radio.
-    /// </summary>
+
+    /// <inheritdoc />
     public RadioState RadioState
     {
         get => GetValue(RadioState.Unknown);
         private set => SetValue(value);
     }
-    /// <summary>
-    /// Gets the kind of the Bluetooth radio.
-    /// </summary>
+
+    /// <inheritdoc />
     public RadioKind RadioKind
     {
         get => GetValue(RadioKind.Other);
         private set => SetValue(value);
     }
-    
-    /// <summary>
-    /// Gets the name of the Bluetooth radio.
-    /// </summary>
+
+    /// <inheritdoc />
     public string RadioName
     {
         get => GetValue(string.Empty);

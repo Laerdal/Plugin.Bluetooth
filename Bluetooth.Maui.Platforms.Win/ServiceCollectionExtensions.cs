@@ -28,9 +28,6 @@ public static class ServiceCollectionExtensions
         // Platform-specific services
         services.AddSingleton<IBluetoothAdapter, BluetoothAdapter>();
         services.AddSingleton<IBluetoothPermissionManager, BluetoothPermissionManager>();
-
-        services.AddSingleton<IBluetoothScanner, Scanning.WindowsBluetoothScanner>();
-        services.AddSingleton<IBluetoothBroadcaster, Broadcasting.WindowsBluetoothBroadcaster>();
         
         services.AddSingleton<IBluetoothAdapterWrapper, BluetoothAdapterWrapper>();
         services.AddSingleton<IRadioWrapper, RadioWrapper>();
