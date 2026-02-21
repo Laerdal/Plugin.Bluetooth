@@ -6,12 +6,10 @@ public class DotNetCoreBluetoothScanner : BaseBluetoothScanner
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     public DotNetCoreBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothPermissionManager permissionManager,
         IBluetoothDeviceFactory deviceFactory,
         ITicker ticker,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ILogger<IBluetoothScanner>? logger = null) : base(adapter,
-        permissionManager,
         deviceFactory,
         rssiToSignalStrengthConverter,
         ticker,
@@ -44,6 +42,20 @@ public class DotNetCoreBluetoothScanner : BaseBluetoothScanner
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     protected override IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
+    {
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+    }
+
+    /// <inheritdoc />
+    /// <exception cref="PlatformNotSupportedException"></exception>
+    protected override ValueTask<bool> NativeHasScannerPermissionsAsync()
+    {
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+    }
+
+    /// <inheritdoc />
+    /// <exception cref="PlatformNotSupportedException"></exception>
+    protected override ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

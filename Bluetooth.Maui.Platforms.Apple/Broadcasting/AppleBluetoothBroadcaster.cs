@@ -1,5 +1,6 @@
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
+using Bluetooth.Maui.Platforms.Apple.Permissions;
 
 using MultipleServicesFoundException = Bluetooth.Abstractions.Broadcasting.Exceptions.MultipleServicesFoundException;
 using ServiceNotFoundException = Bluetooth.Abstractions.Broadcasting.Exceptions.ServiceNotFoundException;
@@ -15,20 +16,17 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     /// <param name="adapter">The Bluetooth adapter associated with this broadcaster.</param>
     /// <param name="localServiceFactory">The factory for creating broadcast services.</param>
     /// <param name="connectedDeviceFactory">The factory for creating client devices.</param>
-    /// <param name="permissionManager">The permission manager for handling Bluetooth permissions.</param>
     /// <param name="cbPeripheralManagerWrapper">The Core Bluetooth peripheral manager wrapper.</param>
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
     /// <param name="logger">The logger instance to use for logging.</param>
     public AppleBluetoothBroadcaster(IBluetoothAdapter adapter,
         IBluetoothLocalServiceFactory localServiceFactory,
         IBluetoothConnectedDeviceFactory connectedDeviceFactory,
-        IBluetoothPermissionManager permissionManager,
         CbPeripheralManagerWrapper cbPeripheralManagerWrapper,
         ITicker ticker,
         ILogger<IBluetoothBroadcaster>? logger = null) : base(adapter,
         localServiceFactory,
         connectedDeviceFactory,
-        permissionManager,
         ticker,
         logger)
     {
@@ -244,6 +242,60 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     {
         // Called when an L2CAP channel PSM is unpublished
         // Placeholder for future implementation if L2CAP support is needed
+    }
+
+    #endregion
+
+    #region Permission Methods
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     On iOS/macOS, broadcaster permissions require both general Bluetooth and Peripheral permissions:
+    ///     <list type="bullet">
+    ///         <item>iOS 13+/Mac Catalyst 10.15+: Requires both "Bluetooth Always" and "Peripheral" permissions</item>
+    ///         <item>Older versions: Bluetooth permissions automatically granted</item>
+    ///     </list>
+    /// </remarks>
+    protected override async ValueTask<bool> NativeHasBroadcasterPermissionsAsync()
+    {
+        if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(10, 15))
+        {
+            // Check both Bluetooth Always and Peripheral permissions
+            var bluetoothStatus = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<ApplePermissionForBluetoothAlways>().ConfigureAwait(false);
+            var peripheralStatus = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<ApplePermissionForBluetoothPeripheral>().ConfigureAwait(false);
+            return bluetoothStatus == PermissionStatus.Granted &&
+                   peripheralStatus == PermissionStatus.Granted;
+        }
+
+        // On older iOS versions, Bluetooth permissions are automatically granted
+        return true;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     On iOS/macOS, broadcaster permissions require both general Bluetooth and Peripheral permissions:
+    ///     <list type="bullet">
+    ///         <item>iOS 13+/Mac Catalyst 10.15+: Requests both "Bluetooth Always" and "Peripheral" permissions</item>
+    ///         <item>Older versions: No permission request needed</item>
+    ///     </list>
+    /// </remarks>
+    protected override async ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken)
+    {
+        if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(10, 15))
+        {
+            // Request both Bluetooth Always and Peripheral permissions
+            var bluetoothStatus = await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<ApplePermissionForBluetoothAlways>().ConfigureAwait(false);
+            var peripheralStatus = await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<ApplePermissionForBluetoothPeripheral>().ConfigureAwait(false);
+
+            if (bluetoothStatus != PermissionStatus.Granted || peripheralStatus != PermissionStatus.Granted)
+            {
+                throw new BluetoothPermissionException(
+                    "Broadcaster permissions denied on iOS. User must enable Bluetooth permissions in Settings app. " +
+                    "Ensure NSBluetoothAlwaysUsageDescription and NSBluetoothPeripheralUsageDescription are set in Info.plist.");
+            }
+        }
+
+        // On older iOS versions, Bluetooth permissions are automatically granted
     }
 
     #endregion

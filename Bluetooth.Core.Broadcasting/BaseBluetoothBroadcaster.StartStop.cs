@@ -2,6 +2,7 @@ namespace Bluetooth.Core.Broadcasting;
 
 public abstract partial class BaseBluetoothBroadcaster
 {
+
     #region Configuration
 
     /// <inheritdoc />
@@ -32,8 +33,11 @@ public abstract partial class BaseBluetoothBroadcaster
 
     #region Configuration
 
-    /// <inheritdoc />
-    public static BroadcastingOptions DefaultBroadcastingOptions { get; } = new();
+    /// <summary>
+    ///     The default broadcasting options used when starting the broadcaster without specifying options.
+    ///     This can be overridden by derived classes to provide platform-specific default options.
+    /// </summary>
+    private static BroadcastingOptions DefaultBroadcastingOptions { get; } = new BroadcastingOptions();
 
     /// <inheritdoc />
     public BroadcastingOptions CurrentBroadcastingOptions
@@ -158,6 +162,8 @@ public abstract partial class BaseBluetoothBroadcaster
     /// <inheritdoc />
     public async ValueTask StartBroadcastingAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(options);
+
         // Ensure we are not already started
         BroadcasterIsAlreadyStartedException.ThrowIfIsStarted(this);
 
@@ -178,6 +184,9 @@ public abstract partial class BaseBluetoothBroadcaster
         try // try-catch to dispatch exceptions rising from start through OnStartFailed
         {
             CurrentBroadcastingOptions = options; // Set the options
+
+            // Handle permissions based on strategy
+            await HandlePermissions(options.PermissionStrategy, cancellationToken).ConfigureAwait(false);
 
             await NativeStartAsync(options, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
         }
@@ -205,6 +214,37 @@ public abstract partial class BaseBluetoothBroadcaster
             IsStarting = false; // Reset the starting state
             Started?.Invoke(this, EventArgs.Empty);
             StartTcs = null;
+        }
+    }
+
+    /// <summary>
+    ///     Handles permission requests based on the specified strategy in the broadcasting options.
+    ///     This method is called by <see cref="StartBroadcastingAsync" /> before starting the broadcaster to ensure necessary permissions are granted.
+    /// </summary>
+    /// <param name="strategy">The permission request strategy defined in the broadcasting options.</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the permission request operation.</param>
+    protected async virtual ValueTask HandlePermissions(PermissionRequestStrategy strategy, CancellationToken cancellationToken)
+    {
+        switch (strategy)
+        {
+            case PermissionRequestStrategy.RequestAutomatically:
+                await RequestBroadcasterPermissionsAsync(cancellationToken).ConfigureAwait(false);
+                break;
+
+            case PermissionRequestStrategy.ThrowIfNotGranted:
+                var hasPermissions = await HasBroadcasterPermissionsAsync().ConfigureAwait(false);
+                if (!hasPermissions)
+                {
+                    throw new BluetoothPermissionException("Broadcaster permissions not granted. Call broadcaster.RequestBroadcasterPermissionsAsync() before starting the broadcaster.");
+                }
+                break;
+
+            case PermissionRequestStrategy.AssumeGranted:
+                // Skip all permission checks
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(strategy), strategy, "Invalid permission request strategy.");
         }
     }
 
@@ -351,4 +391,5 @@ public abstract partial class BaseBluetoothBroadcaster
     protected abstract ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
+
 }

@@ -1,4 +1,5 @@
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
+using Bluetooth.Maui.Platforms.Droid.Permissions;
 using Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 
@@ -11,12 +12,10 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
 {
     /// <inheritdoc />
     public AndroidBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothPermissionManager permissionManager,
         IBluetoothDeviceFactory deviceFactory,
         ITicker ticker,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ILogger<IBluetoothScanner>? logger = null) : base(adapter,
-        permissionManager,
         deviceFactory,
         rssiToSignalStrengthConverter,
         ticker,
@@ -193,6 +192,94 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
 
         // Use base class method to handle advertisement (filtering, device creation, etc.)
         OnAdvertisementReceived(advertisement);
+    }
+
+    #endregion
+
+    #region Permission Methods
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     On Android, scanner permissions vary by API level:
+    ///     <list type="bullet">
+    ///         <item>API 31+ (Android 12+): Requires BLUETOOTH_SCAN permission</item>
+    ///         <item>API 29-30 (Android 10-11): Requires FINE_LOCATION permission</item>
+    ///         <item>Older versions: Requires COARSE_LOCATION permission</item>
+    ///     </list>
+    /// </remarks>
+    protected override async ValueTask<bool> NativeHasScannerPermissionsAsync()
+    {
+        try
+        {
+            // For API 31+ (Android 12+), need BLUETOOTH_SCAN only (not CONNECT)
+            if (OperatingSystem.IsAndroidVersionAtLeast(31))
+            {
+                var scanStatus = await AndroidBluetoothPermissions.BluetoothScanPermission.CheckStatusAsync().ConfigureAwait(false);
+                return scanStatus == PermissionStatus.Granted;
+            }
+
+            // For API 29-30 (Android 10-11), need FINE_LOCATION
+            if (OperatingSystem.IsAndroidVersionAtLeast(29))
+            {
+                var status = await AndroidBluetoothPermissions.FineLocationPermission.CheckStatusAsync().ConfigureAwait(false);
+                return status == PermissionStatus.Granted;
+            }
+
+            // For older versions, COARSE_LOCATION is sufficient
+            var coarseStatus = await AndroidBluetoothPermissions.CoarseLocationPermission.CheckStatusAsync().ConfigureAwait(false);
+            return coarseStatus == PermissionStatus.Granted;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     On Android, scanner permissions vary by API level:
+    ///     <list type="bullet">
+    ///         <item>API 31+ (Android 12+): Requests BLUETOOTH_SCAN permission</item>
+    ///         <item>API 29-30 (Android 10-11): Requests FINE_LOCATION (and optionally BACKGROUND_LOCATION)</item>
+    ///         <item>Older versions: Requests COARSE_LOCATION permission</item>
+    ///     </list>
+    ///     The <paramref name="requireBackgroundLocation"/> parameter only applies to API 29-30.
+    /// </remarks>
+    protected override async ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken)
+    {
+        await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
+
+        // For API 31+ (Android 12+), request BLUETOOTH_SCAN only (not CONNECT)
+        if (OperatingSystem.IsAndroidVersionAtLeast(31))
+        {
+            await AndroidBluetoothPermissions.BluetoothScanPermission.RequestIfNeededAsync().ConfigureAwait(false);
+            return;
+        }
+
+        // For API 29-30 (Android 10-11), request FINE_LOCATION and optionally BACKGROUND_LOCATION
+        if (OperatingSystem.IsAndroidVersionAtLeast(29))
+        {
+            await AndroidBluetoothPermissions.FineLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
+
+            // Optionally request background location if specified
+            if (requireBackgroundLocation)
+            {
+                try
+                {
+                    await AndroidBluetoothPermissions.BackgroundLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
+                }
+                catch
+                {
+                    // Background location is optional, continue without it
+                    // User can still scan in foreground
+                }
+            }
+
+            return;
+        }
+
+        // For older versions, request COARSE_LOCATION
+        await AndroidBluetoothPermissions.CoarseLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
     }
 
     #endregion

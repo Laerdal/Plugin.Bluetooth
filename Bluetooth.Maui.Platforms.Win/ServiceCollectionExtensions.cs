@@ -1,6 +1,5 @@
 using Bluetooth.Maui.Platforms.Win.Broadcasting;
 using Bluetooth.Maui.Platforms.Win.NativeObjects;
-using Bluetooth.Maui.Platforms.Win.Permissions;
 using Bluetooth.Maui.Platforms.Win.Scanning;
 
 namespace Bluetooth.Maui.Platforms.Win;
@@ -27,8 +26,7 @@ public static class ServiceCollectionExtensions
 
         // Platform-specific services
         services.AddSingleton<IBluetoothAdapter, WindowsBluetoothAdapter>();
-        services.AddSingleton<IBluetoothPermissionManager, BluetoothPermissionManager>();
-        
+
         services.AddSingleton<IBluetoothAdapterWrapper, BluetoothAdapterWrapper>();
         services.AddSingleton<IRadioWrapper, RadioWrapper>();
 

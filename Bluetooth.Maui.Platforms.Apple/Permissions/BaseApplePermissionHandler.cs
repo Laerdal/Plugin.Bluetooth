@@ -3,15 +3,15 @@ namespace Bluetooth.Maui.Platforms.Apple.Permissions;
 /// <summary>
 ///     Base class for iOS-specific permission handling.
 /// </summary>
-public abstract class BaseIosPermissionHandler : Microsoft.Maui.ApplicationModel.Permissions.BasePlatformPermission
+public abstract class BaseApplePermissionHandler : Microsoft.Maui.ApplicationModel.Permissions.BasePlatformPermission
 {
     private readonly string _infoPlistKey;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="BaseIosPermissionHandler" /> class.
+    ///     Initializes a new instance of the <see cref="BaseApplePermissionHandler" /> class.
     /// </summary>
     /// <param name="infoPlistKey">The Info.plist key associated with this permission.</param>
-    protected BaseIosPermissionHandler(string infoPlistKey)
+    protected BaseApplePermissionHandler(string infoPlistKey)
     {
         _infoPlistKey = infoPlistKey;
     }

@@ -5,6 +5,19 @@ namespace Bluetooth.Abstractions.Broadcasting.Options;
 /// </summary>
 public record BroadcastingOptions
 {
+    #region Permission Handling
+
+    /// <summary>
+    ///     Gets the permission request strategy for this broadcasting operation.
+    /// </summary>
+    /// <remarks>
+    ///     Defaults to <see cref="PermissionRequestStrategy.RequestAutomatically"/> which automatically
+    ///     requests permissions before starting broadcasting if not already granted.
+    /// </remarks>
+    public PermissionRequestStrategy PermissionStrategy { get; init; } = PermissionRequestStrategy.RequestAutomatically;
+
+    #endregion
+
     /// <summary>
     ///     Gets the local device name to be included in the advertisement.
     /// </summary>

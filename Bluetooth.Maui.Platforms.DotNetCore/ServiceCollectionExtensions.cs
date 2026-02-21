@@ -1,5 +1,4 @@
 using Bluetooth.Maui.Platforms.DotNetCore.Broadcasting;
-using Bluetooth.Maui.Platforms.DotNetCore.Permissions;
 using Bluetooth.Maui.Platforms.DotNetCore.Scanning;
 
 namespace Bluetooth.Maui.Platforms.DotNetCore;
@@ -19,7 +18,6 @@ public static class ServiceCollectionExtensions
     public static void AddBluetoothMauiDotNetServices(this IServiceCollection services)
     {
         services.AddSingleton<IBluetoothAdapter, DotNetBluetoothAdapter>();
-        services.AddSingleton<IBluetoothPermissionManager, BluetoothPermissionManager>();
 
         services.AddBluetoothMauiDotNetScanningServices();
         services.AddBluetoothMauiDotNetBroadcastingServices();

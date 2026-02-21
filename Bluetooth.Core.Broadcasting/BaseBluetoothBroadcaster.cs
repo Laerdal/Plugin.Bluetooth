@@ -17,27 +17,23 @@ public abstract partial class BaseBluetoothBroadcaster : BaseBindableObject, IBl
     /// <param name="adapter">The Bluetooth adapter to associate with this broadcaster.</param>
     /// <param name="localServiceFactory">The factory for creating broadcast services.</param>
     /// <param name="connectedDeviceFactory">The factory for creating broadcast client devices.</param>
-    /// <param name="permissionManager">The permission manager for handling Bluetooth permissions.</param>
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
     /// <param name="logger">The logger instance to use for logging.</param>
     protected BaseBluetoothBroadcaster(IBluetoothAdapter adapter,
         IBluetoothLocalServiceFactory localServiceFactory,
         IBluetoothConnectedDeviceFactory connectedDeviceFactory,
-        IBluetoothPermissionManager permissionManager,
         ITicker ticker,
         ILogger<IBluetoothBroadcaster>? logger = null) : base(logger)
     {
         ArgumentNullException.ThrowIfNull(adapter);
         ArgumentNullException.ThrowIfNull(localServiceFactory);
         ArgumentNullException.ThrowIfNull(connectedDeviceFactory);
-        ArgumentNullException.ThrowIfNull(permissionManager);
         ArgumentNullException.ThrowIfNull(ticker);
 
         _logger = logger ?? NullLogger<IBluetoothBroadcaster>.Instance;
         Adapter = adapter;
         LocalServiceFactory = localServiceFactory;
         ConnectedDeviceFactory = connectedDeviceFactory;
-        PermissionManager = permissionManager;
         _refreshSubscription = ticker.Register("Broadcaster Refresh Tick", TimeSpan.FromSeconds(2), RefreshAsync);
     }
 
@@ -88,10 +84,69 @@ public abstract partial class BaseBluetoothBroadcaster : BaseBindableObject, IBl
     /// </summary>
     protected IBluetoothConnectedDeviceFactory ConnectedDeviceFactory { get; }
 
-    /// <inheritdoc />
-    public IBluetoothPermissionManager PermissionManager { get; }
-
     private readonly IDisposable? _refreshSubscription;
+
+    #endregion
+
+    #region Abstract Permission Methods
+
+    /// <summary>
+    ///     Platform-specific implementation to check if broadcaster permissions are granted.
+    /// </summary>
+    /// <returns>True if permissions are granted, otherwise false.</returns>
+    /// <remarks>
+    ///     Implement platform-specific permission checks. Should NOT throw exceptions.
+    ///     Return false if permissions cannot be determined.
+    /// </remarks>
+    protected abstract ValueTask<bool> NativeHasBroadcasterPermissionsAsync();
+
+    /// <summary>
+    ///     Platform-specific implementation to request broadcaster permissions.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token to cancel the permission request operation.</param>
+    /// <exception cref="Exception">Throw platform-specific exceptions on failure.</exception>
+    /// <remarks>
+    ///     Implement platform-specific permission request dialogs.
+    ///     Throw native exceptions on failure - base class will wrap them in BluetoothPermissionException.
+    /// </remarks>
+    protected abstract ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken);
+
+    #endregion
+
+    #region IBluetoothBroadcaster Permission Methods
+
+    /// <inheritdoc />
+    public async ValueTask<bool> HasBroadcasterPermissionsAsync()
+    {
+        try
+        {
+            return await NativeHasBroadcasterPermissionsAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking broadcaster permissions");
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async ValueTask RequestBroadcasterPermissionsAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await NativeRequestBroadcasterPermissionsAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (BluetoothPermissionException)
+        {
+            throw; // Already wrapped, re-throw
+        }
+        catch (Exception ex)
+        {
+            throw new BluetoothPermissionException(
+                "Failed to request broadcaster permissions. Ensure required permissions are declared in your app manifest/Info.plist.",
+                ex);
+        }
+    }
 
     #endregion
 

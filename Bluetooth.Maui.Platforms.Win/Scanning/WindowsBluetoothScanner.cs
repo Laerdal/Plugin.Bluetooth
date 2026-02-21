@@ -27,12 +27,11 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
     /// <inheritdoc />
     public WindowsBluetoothScanner(
         IBluetoothAdapter adapter,
-        IBluetoothPermissionManager permissionManager,
         IBluetoothDeviceFactory deviceFactory,
         ITicker ticker,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ILogger<IBluetoothScanner>? logger = null)
-        : base(adapter, permissionManager, deviceFactory, rssiToSignalStrengthConverter, ticker, logger)
+        : base(adapter, deviceFactory, rssiToSignalStrengthConverter, ticker, logger)
     {
         _ticker = ticker;
     }
@@ -84,7 +83,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
     ///     Starts the Windows Bluetooth LE advertisement watcher.
     ///     The watcher will begin receiving advertisements and call <see cref="OnAdvertisementReceived" /> for each one.
     /// </remarks>
-    protected async override ValueTask NativeStartAsync(
+    protected override ValueTask NativeStartAsync(
         ScanningOptions scanningOptions,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
@@ -92,14 +91,24 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
         // Start watcher (status change callback will call OnStartSucceeded)
         try
         {
-            await PermissionManager.RequestBluetoothPermissionsAsync().ConfigureAwait(false);
             Watcher.BluetoothLeAdvertisementWatcher.Start();
         }
         catch (COMException e)
         {
-            // TODO : Handle Permission exceptions more gracefully
+            // Check if it's a permission-related error
+            const int E_ACCESSDENIED = unchecked((int)0x80070005);
+            if (e.HResult == E_ACCESSDENIED)
+            {
+                throw new BluetoothPermissionException(
+                    "Access denied when starting Bluetooth scanner. Ensure 'bluetooth' capability is declared in Package.appxmanifest and Bluetooth radio is enabled. " +
+                    "You may need to call IBluetoothPermissionManager.RequestBluetoothPermissionsAsync() to check and enable the radio.",
+                    e);
+            }
+
             throw new WindowsNativeBluetoothException("Failed to start Bluetooth LE advertisement watcher.", e);
         }
+
+        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />
@@ -129,6 +138,34 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
         }
 
         return new WindowsBluetoothDeviceFactoryRequest(windowsAdvertisement);
+    }
+
+    #endregion
+
+    #region Permission Methods
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     On Windows, Bluetooth permissions are capability-based and granted at install time
+    ///     if the 'bluetooth' capability is declared in Package.appxmanifest.
+    ///     This method always returns true.
+    /// </remarks>
+    protected override ValueTask<bool> NativeHasScannerPermissionsAsync()
+    {
+        // On Windows, Bluetooth permissions are capability-based and granted at install time
+        return ValueTask.FromResult(true);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     On Windows, no runtime permission request is needed. Bluetooth permissions are
+    ///     declared in Package.appxmanifest and granted at install time.
+    ///     The <paramref name="requireBackgroundLocation"/> parameter is ignored on Windows.
+    /// </remarks>
+    protected override ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken)
+    {
+        // No runtime request needed on Windows - permissions are declared at install time
+        return ValueTask.CompletedTask;
     }
 
     #endregion

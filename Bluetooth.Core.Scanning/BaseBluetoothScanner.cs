@@ -9,27 +9,23 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     ///     Initializes a new instance of the <see cref="BaseBluetoothScanner" /> class.
     /// </summary>
     /// <param name="adapter">The Bluetooth adapter associated with this scanner.</param>
-    /// <param name="permissionManager">The permission manager for handling Bluetooth permissions.</param>
     /// <param name="deviceFactory">The factory for creating Bluetooth devices.</param>
     /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
     /// <param name="logger">The logger instance to use for logging.</param>
     protected BaseBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothPermissionManager permissionManager,
         IBluetoothDeviceFactory deviceFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ITicker ticker,
         ILogger<IBluetoothScanner>? logger = null) : base(logger)
     {
         ArgumentNullException.ThrowIfNull(adapter);
-        ArgumentNullException.ThrowIfNull(permissionManager);
         ArgumentNullException.ThrowIfNull(deviceFactory);
         ArgumentNullException.ThrowIfNull(rssiToSignalStrengthConverter);
         ArgumentNullException.ThrowIfNull(ticker);
 
         _logger = logger ?? NullLogger<IBluetoothScanner>.Instance;
         Adapter = adapter;
-        PermissionManager = permissionManager;
         DeviceFactory = deviceFactory;
         RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
         _refreshSubscription = ticker.Register("Scanner Refresh Tick", TimeSpan.FromSeconds(2), RefreshAsync);
@@ -83,16 +79,74 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     protected IBluetoothDeviceFactory DeviceFactory { get; }
 
     /// <summary>
-    ///     The manager responsible for handling Bluetooth permissions required for scanning and device interactions.
-    /// </summary>
-    protected IBluetoothPermissionManager PermissionManager { get; }
-
-    /// <summary>
     ///     The converter responsible for translating RSSI values to signal strength levels, which can be used for filtering and sorting devices based on signal quality.
     /// </summary>
     protected IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
 
     private readonly IDisposable? _refreshSubscription;
+
+    #endregion
+
+    #region Abstract Permission Methods
+
+    /// <summary>
+    ///     Platform-specific implementation to check if scanner permissions are granted.
+    /// </summary>
+    /// <returns>True if permissions are granted, otherwise false.</returns>
+    /// <remarks>
+    ///     Implement platform-specific permission checks. Should NOT throw exceptions.
+    ///     Return false if permissions cannot be determined.
+    /// </remarks>
+    protected abstract ValueTask<bool> NativeHasScannerPermissionsAsync();
+
+    /// <summary>
+    ///     Platform-specific implementation to request scanner permissions.
+    /// </summary>
+    /// <param name="requireBackgroundLocation">Android-only: whether to request background location.</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the permission request operation.</param>
+    /// <exception cref="Exception">Throw platform-specific exceptions (SecurityException, COMException, etc.) on failure.</exception>
+    /// <remarks>
+    ///     Implement platform-specific permission request dialogs.
+    ///     Throw native exceptions on failure - base class will wrap them in BluetoothPermissionException.
+    /// </remarks>
+    protected abstract ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken);
+
+    #endregion
+
+    #region IBluetoothScanner Permission Methods
+
+    /// <inheritdoc />
+    public async ValueTask<bool> HasScannerPermissionsAsync()
+    {
+        try
+        {
+            return await NativeHasScannerPermissionsAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking scanner permissions");
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async ValueTask RequestScannerPermissionsAsync(bool requireBackgroundLocation = false, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await NativeRequestScannerPermissionsAsync(requireBackgroundLocation, cancellationToken).ConfigureAwait(false);
+        }
+        catch (BluetoothPermissionException)
+        {
+            throw; // Already wrapped, re-throw
+        }
+        catch (Exception ex)
+        {
+            throw new BluetoothPermissionException(
+                "Failed to request scanner permissions. Ensure required permissions are declared in your app manifest/Info.plist.",
+                ex);
+        }
+    }
 
     #endregion
 

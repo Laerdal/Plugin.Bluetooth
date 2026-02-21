@@ -1,3 +1,4 @@
+using Bluetooth.Maui.Platforms.Apple.Permissions;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
@@ -8,14 +9,12 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
 {
     /// <inheritdoc />
     public AppleBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothPermissionManager permissionManager,
         IBluetoothDeviceFactory deviceFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         IOptions<CBCentralInitOptions> options,
         IDispatchQueueProvider dispatchQueueProvider,
         ITicker ticker,
         ILogger<IBluetoothScanner>? logger = null) : base(adapter,
-        permissionManager,
         deviceFactory,
         rssiToSignalStrengthConverter,
         ticker,
@@ -161,6 +160,55 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         return device is AppleBluetoothRemoteDevice sharedDevice
                && sharedDevice.CbPeripheralWrapper.CbPeripheral.Identifier.Equals(peripheral.Identifier)
                && sharedDevice.CbPeripheralWrapper.CbPeripheral.Handle.Handle == peripheral.Handle.Handle;
+    }
+
+    #endregion
+
+    #region Permission Methods
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     On iOS/macOS, scanner permissions are unified with general Bluetooth permissions:
+    ///     <list type="bullet">
+    ///         <item>iOS 13+/Mac Catalyst 10.15+: Requires "Bluetooth Always" permission</item>
+    ///         <item>Older versions: Bluetooth permissions automatically granted</item>
+    ///     </list>
+    /// </remarks>
+    protected override async ValueTask<bool> NativeHasScannerPermissionsAsync()
+    {
+        if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(10, 15))
+        {
+            var status = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<ApplePermissionForBluetoothAlways>().ConfigureAwait(false);
+            return status == PermissionStatus.Granted;
+        }
+
+        // On older iOS versions, Bluetooth permissions are automatically granted
+        return true;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     On iOS/macOS, scanner permissions are unified with general Bluetooth permissions:
+    ///     <list type="bullet">
+    ///         <item>iOS 13+/Mac Catalyst 10.15+: Requests "Bluetooth Always" permission</item>
+    ///         <item>Older versions: No permission request needed</item>
+    ///     </list>
+    ///     The <paramref name="requireBackgroundLocation"/> parameter is ignored on iOS (background permissions handled by Info.plist).
+    /// </remarks>
+    protected override async ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken)
+    {
+        if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(10, 15))
+        {
+            var status = await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<ApplePermissionForBluetoothAlways>().ConfigureAwait(false);
+            if (status != PermissionStatus.Granted)
+            {
+                throw new BluetoothPermissionException(
+                    "Bluetooth permission denied on iOS. User must enable Bluetooth permissions in Settings app. " +
+                    "Ensure NSBluetoothAlwaysUsageDescription is set in Info.plist.");
+            }
+        }
+
+        // On older iOS versions, Bluetooth permissions are automatically granted
     }
 
     #endregion

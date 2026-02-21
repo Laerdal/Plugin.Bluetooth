@@ -1,5 +1,6 @@
 using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
+using Bluetooth.Maui.Platforms.Droid.Permissions;
 using Bluetooth.Maui.Platforms.Droid.Tools;
 
 using ServiceNotFoundException = Bluetooth.Abstractions.Broadcasting.Exceptions.ServiceNotFoundException;
@@ -19,10 +20,9 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
         IBluetoothAdapter adapter,
         IBluetoothLocalServiceFactory localServiceFactory,
         IBluetoothConnectedDeviceFactory connectedDeviceFactory,
-        IBluetoothPermissionManager permissionManager,
         ITicker ticker,
         ILogger<IBluetoothBroadcaster>? logger = null)
-        : base(adapter, localServiceFactory, connectedDeviceFactory, permissionManager, ticker, logger)
+        : base(adapter, localServiceFactory, connectedDeviceFactory, ticker, logger)
     {
     }
 
@@ -241,4 +241,58 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
 
         return ValueTask.CompletedTask;*/
     }
+
+    #region Permission Methods
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     On Android, broadcaster permissions vary by API level:
+    ///     <list type="bullet">
+    ///         <item>API 31+ (Android 12+): Requires BLUETOOTH_ADVERTISE permission</item>
+    ///         <item>Older versions: No special permissions required for advertising</item>
+    ///     </list>
+    /// </remarks>
+    protected override async ValueTask<bool> NativeHasBroadcasterPermissionsAsync()
+    {
+        try
+        {
+            // For API 31+ (Android 12+), need BLUETOOTH_ADVERTISE only (not CONNECT)
+            if (OperatingSystem.IsAndroidVersionAtLeast(31))
+            {
+                var status = await AndroidBluetoothPermissions.BluetoothAdvertisePermission.CheckStatusAsync().ConfigureAwait(false);
+                return status == PermissionStatus.Granted;
+            }
+
+            // For older versions, advertising doesn't need special permissions beyond basic Bluetooth
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     On Android, broadcaster permissions vary by API level:
+    ///     <list type="bullet">
+    ///         <item>API 31+ (Android 12+): Requests BLUETOOTH_ADVERTISE permission</item>
+    ///         <item>Older versions: No special permissions required for advertising</item>
+    ///     </list>
+    /// </remarks>
+    protected override async ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken)
+    {
+        await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
+
+        // For API 31+ (Android 12+), request BLUETOOTH_ADVERTISE only (not CONNECT)
+        if (OperatingSystem.IsAndroidVersionAtLeast(31))
+        {
+            await AndroidBluetoothPermissions.BluetoothAdvertisePermission.RequestIfNeededAsync().ConfigureAwait(false);
+            return;
+        }
+
+        // For older versions, no special permissions needed
+    }
+
+    #endregion
 }

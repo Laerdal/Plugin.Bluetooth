@@ -1,5 +1,4 @@
 using Bluetooth.Maui.Platforms.Apple.Broadcasting;
-using Bluetooth.Maui.Platforms.Apple.Permissions;
 using Bluetooth.Maui.Platforms.Apple.Scanning;
 
 namespace Bluetooth.Maui.Platforms.Apple;
@@ -26,7 +25,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IDispatchQueueProvider, DispatchQueueProvider>();
 
         services.AddSingleton<IBluetoothAdapter, AppleBluetoothAdapter>();
-        services.AddSingleton<IBluetoothPermissionManager, BluetoothPermissionManager>();
 
         services.AddSingleton<IBluetoothScanner, AppleBluetoothScanner>();
         services.AddSingleton<IBluetoothBroadcaster, AppleBluetoothBroadcaster>();

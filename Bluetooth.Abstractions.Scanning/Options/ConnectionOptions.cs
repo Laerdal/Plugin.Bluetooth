@@ -5,6 +5,19 @@ namespace Bluetooth.Abstractions.Scanning.Options;
 /// </summary>
 public record ConnectionOptions
 {
+    #region Permission Handling
+
+    /// <summary>
+    ///     Gets the permission request strategy for this connection operation.
+    /// </summary>
+    /// <remarks>
+    ///     Defaults to <see cref="PermissionRequestStrategy.RequestAutomatically"/> which automatically
+    ///     requests BLUETOOTH_CONNECT permission (Android 12+) before connecting if not already granted.
+    /// </remarks>
+    public PermissionRequestStrategy PermissionStrategy { get; init; } = PermissionRequestStrategy.RequestAutomatically;
+
+    #endregion
+
     /// <summary>
     ///     Gets a value indicating whether to wait for an advertisement before connecting to the device.
     /// </summary>

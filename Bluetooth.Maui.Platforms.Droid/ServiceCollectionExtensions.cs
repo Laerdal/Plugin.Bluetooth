@@ -1,6 +1,5 @@
 using Bluetooth.Maui.Platforms.Droid.Broadcasting;
 using Bluetooth.Maui.Platforms.Droid.NativeObjects;
-using Bluetooth.Maui.Platforms.Droid.Permissions;
 using Bluetooth.Maui.Platforms.Droid.Scanning;
 
 namespace Bluetooth.Maui.Platforms.Droid;
@@ -27,7 +26,6 @@ public static class ServiceCollectionExtensions
 
         // Platform-specific services
         services.AddSingleton<IBluetoothAdapter, AndroidBluetoothAdapter>();
-        services.AddSingleton<IBluetoothPermissionManager, BluetoothPermissionManager>();
 
         services.AddSingleton<IBluetoothScanner, AndroidBluetoothScanner>();
         services.AddSingleton<IBluetoothBroadcaster, AndroidBluetoothBroadcaster>();
