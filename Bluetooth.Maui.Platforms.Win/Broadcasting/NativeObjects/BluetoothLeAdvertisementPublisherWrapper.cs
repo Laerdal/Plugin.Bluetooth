@@ -8,19 +8,21 @@ public sealed partial class BluetoothLeAdvertisementPublisherWrapper : BaseBinda
 {
     private BluetoothLEAdvertisementPublisher? _publisher;
     private readonly IBluetoothLeAdvertisementPublisherProxyDelegate _delegate;
-    private readonly ITicker? _ticker;
+    private readonly ITicker _ticker;
+    private readonly object _lock = new object();
     private IDisposable? _refreshSubscription;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BluetoothLeAdvertisementPublisherWrapper" /> class.
     /// </summary>
     /// <param name="delegate">The delegate for handling advertisement publisher events.</param>
-    /// <param name="ticker">Optional ticker for periodic property refresh.</param>
+    /// <param name="ticker">The ticker for periodic property refresh.</param>
     public BluetoothLeAdvertisementPublisherWrapper(
         IBluetoothLeAdvertisementPublisherProxyDelegate @delegate,
-        ITicker? ticker = null)
+        ITicker ticker)
     {
         ArgumentNullException.ThrowIfNull(@delegate);
+        ArgumentNullException.ThrowIfNull(ticker);
         _delegate = @delegate;
         _ticker = ticker;
     }
@@ -35,15 +37,21 @@ public sealed partial class BluetoothLeAdvertisementPublisherWrapper : BaseBinda
         {
             if (_publisher == null)
             {
-                _publisher = new BluetoothLEAdvertisementPublisher();
-                _publisher.StatusChanged += BluetoothLEAdvertisementPublisher_StatusChanged;
+                lock (_lock)
+                {
+                    if (_publisher == null)
+                    {
+                        _publisher = new BluetoothLEAdvertisementPublisher();
+                        _publisher.StatusChanged += BluetoothLEAdvertisementPublisher_StatusChanged;
 
-                // Start ticker for property refresh
-                _refreshSubscription = _ticker?.Register(
-                    "BluetoothLeAdvertisementPublisherWrapper",
-                    TimeSpan.FromSeconds(1),
-                    RefreshValues,
-                    runImmediately: true);
+                        // Start ticker for property refresh
+                        _refreshSubscription = _ticker.Register(
+                            "BluetoothLeAdvertisementPublisherWrapper",
+                            TimeSpan.FromSeconds(1),
+                            RefreshValues,
+                            runImmediately: true);
+                    }
+                }
             }
 
             return _publisher;

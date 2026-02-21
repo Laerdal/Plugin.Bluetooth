@@ -14,6 +14,7 @@ public class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAdapterWrap
     private readonly IBluetoothManagerWrapper _bluetoothManagerWrapper;
 
     private readonly ITicker _ticker;
+    private readonly object _lock = new object();
     private Android.Bluetooth.BluetoothAdapter? _bluetoothAdapter;
 
     private IDisposable? _refreshSubscription;
@@ -67,13 +68,19 @@ public class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAdapterWrap
         {
             if (_bluetoothAdapter == null)
             {
-                _bluetoothAdapter = _bluetoothManagerWrapper.BluetoothManager.Adapter;
-                if (_bluetoothAdapter == null)
+                lock (_lock)
                 {
-                    throw new InvalidOperationException("BluetoothAdapter is null - ensure Bluetooth is available on this device");
-                }
+                    if (_bluetoothAdapter == null)
+                    {
+                        _bluetoothAdapter = _bluetoothManagerWrapper.BluetoothManager.Adapter;
+                        if (_bluetoothAdapter == null)
+                        {
+                            throw new InvalidOperationException("BluetoothAdapter is null - ensure Bluetooth is available on this device");
+                        }
 
-                _refreshSubscription = _ticker?.Register("bluetooth_adapter_wrapper_refresh", TimeSpan.FromSeconds(1), RefreshAdapterProperties, true);
+                        _refreshSubscription = _ticker?.Register("bluetooth_adapter_wrapper_refresh", TimeSpan.FromSeconds(1), RefreshAdapterProperties, true);
+                    }
+                }
             }
 
             return _bluetoothAdapter;

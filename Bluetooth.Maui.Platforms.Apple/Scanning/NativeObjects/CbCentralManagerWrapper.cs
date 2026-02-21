@@ -13,6 +13,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
     private readonly CBCentralInitOptions _options;
 
     private readonly ITicker _ticker;
+    private readonly object _lock = new object();
     private CBCentralManager? _cbCentralManager;
 
     private IDisposable? _refreshSubscription;
@@ -47,11 +48,17 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
         {
             if (_cbCentralManager == null)
             {
-                _cbCentralManager = new CBCentralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
+                lock (_lock)
                 {
-                    Delegate = this
-                };
-                _refreshSubscription = _ticker.Register("refresh_central_manager_properties", TimeSpan.FromSeconds(1), RefreshIsScanning, true);
+                    if (_cbCentralManager == null)
+                    {
+                        _cbCentralManager = new CBCentralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
+                        {
+                            Delegate = this
+                        };
+                        _refreshSubscription = _ticker.Register("refresh_central_manager_properties", TimeSpan.FromSeconds(1), RefreshIsScanning, true);
+                    }
+                }
             }
 
             return _cbCentralManager;
@@ -65,9 +72,14 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
 
     private void RefreshIsScanning()
     {
-        if (CbCentralManager.IsScanning != CbCentralManagerIsScanning)
+        if (_cbCentralManager == null)
         {
-            CbCentralManagerIsScanning = CbCentralManager.IsScanning;
+            return;
+        }
+
+        if (_cbCentralManager.IsScanning != CbCentralManagerIsScanning)
+        {
+            CbCentralManagerIsScanning = _cbCentralManager.IsScanning;
             if (CbCentralManagerIsScanning)
             {
                 ScanningStarted();

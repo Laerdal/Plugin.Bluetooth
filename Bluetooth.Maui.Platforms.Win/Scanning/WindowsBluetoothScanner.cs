@@ -16,12 +16,13 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
     NativeObjects.BluetoothLeAdvertisementWatcherWrapper.IBluetoothLeAdvertisementWatcherProxyDelegate
 {
     private NativeObjects.BluetoothLeAdvertisementWatcherWrapper? _watcher;
+    private readonly ITicker _ticker;
 
     /// <summary>
     ///     Gets the advertisement watcher wrapper, creating it lazily with this scanner as the delegate.
     /// </summary>
     private NativeObjects.BluetoothLeAdvertisementWatcherWrapper Watcher =>
-        _watcher ??= new NativeObjects.BluetoothLeAdvertisementWatcherWrapper(this);
+        _watcher ??= new NativeObjects.BluetoothLeAdvertisementWatcherWrapper(this, _ticker);
 
     /// <inheritdoc />
     public WindowsBluetoothScanner(
@@ -33,6 +34,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
         ILogger<IBluetoothScanner>? logger = null)
         : base(adapter, permissionManager, deviceFactory, rssiToSignalStrengthConverter, ticker, logger)
     {
+        _ticker = ticker;
     }
 
     #region Delegate Callbacks

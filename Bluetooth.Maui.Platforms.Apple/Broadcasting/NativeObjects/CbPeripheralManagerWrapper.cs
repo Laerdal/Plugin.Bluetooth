@@ -10,6 +10,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
     private readonly IDispatchQueueProvider _dispatchQueueProvider;
     private readonly CbPeripheralManagerOptions _options;
     private readonly ITicker _ticker;
+    private readonly object _lock = new object();
     private CBPeripheralManager? _cbPeripheralManager;
     private IDisposable? _refreshSubscription;
 
@@ -46,11 +47,17 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
         {
             if (_cbPeripheralManager == null)
             {
-                _cbPeripheralManager = new CBPeripheralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
+                lock (_lock)
                 {
-                    Delegate = this
-                };
-                _refreshSubscription = _ticker.Register("refresh_peripheral_manager_properties", TimeSpan.FromSeconds(1), RefreshIsAdvertising, true);
+                    if (_cbPeripheralManager == null)
+                    {
+                        _cbPeripheralManager = new CBPeripheralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
+                        {
+                            Delegate = this
+                        };
+                        _refreshSubscription = _ticker.Register("refresh_peripheral_manager_properties", TimeSpan.FromSeconds(1), RefreshIsAdvertising, true);
+                    }
+                }
             }
 
             return _cbPeripheralManager;
@@ -64,10 +71,15 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
 
     private void RefreshIsAdvertising()
     {
-        if (CbPeripheralManagerIsAdvertising != CbPeripheralManager.Advertising) // Advertising changed
+        if (_cbPeripheralManager == null)
         {
-            CbPeripheralManagerIsAdvertising = CbPeripheralManager.Advertising;
-            if (!CbPeripheralManagerIsAdvertising) // Advertising stopped
+            return;
+        }
+
+        if (CbPeripheralManagerIsAdvertising != _cbPeripheralManager.Advertising)
+        {
+            CbPeripheralManagerIsAdvertising = _cbPeripheralManager.Advertising;
+            if (!CbPeripheralManagerIsAdvertising)
             {
                 AdvertisingStopped();
             }

@@ -8,6 +8,7 @@ namespace Bluetooth.Maui.Platforms.Droid.NativeObjects;
 /// </summary>
 public class BluetoothManagerWrapper : IBluetoothManagerWrapper, IDisposable
 {
+    private readonly object _lock = new object();
     private BluetoothManager? _bluetoothManager;
 
     /// <summary>
@@ -20,10 +21,16 @@ public class BluetoothManagerWrapper : IBluetoothManagerWrapper, IDisposable
         {
             if (_bluetoothManager == null)
             {
-                _bluetoothManager = Application.Context.GetSystemService(Context.BluetoothService) as BluetoothManager;
-                if (_bluetoothManager == null)
+                lock (_lock)
                 {
-                    throw new InvalidOperationException("BluetoothManager is null - ensure Bluetooth is available on this device");
+                    if (_bluetoothManager == null)
+                    {
+                        _bluetoothManager = Application.Context.GetSystemService(Context.BluetoothService) as BluetoothManager;
+                        if (_bluetoothManager == null)
+                        {
+                            throw new InvalidOperationException("BluetoothManager is null - ensure Bluetooth is available on this device");
+                        }
+                    }
                 }
             }
 
@@ -35,7 +42,6 @@ public class BluetoothManagerWrapper : IBluetoothManagerWrapper, IDisposable
     public void Dispose()
     {
         Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     /// <summary>
