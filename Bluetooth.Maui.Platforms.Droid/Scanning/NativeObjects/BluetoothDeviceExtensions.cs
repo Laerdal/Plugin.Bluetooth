@@ -1,5 +1,5 @@
 using Application = Android.App.Application;
-using ConnectionOptions = Bluetooth.Maui.Platforms.Droid.Scanning.Options.ConnectionOptions;
+using ConnectionOptions = Bluetooth.Abstractions.Scanning.Options.ConnectionOptions;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 
@@ -22,23 +22,28 @@ public static class BluetoothDeviceExtensions
         ArgumentNullException.ThrowIfNull(nativeDevice);
         connectionOptions ??= new ConnectionOptions();
 
-        if (OperatingSystem.IsAndroidVersionAtLeast(26) && (connectionOptions.PreferredPhy.HasValue))
+        // Extract Android-specific options (with defaults)
+        var autoConnect = connectionOptions.Android?.AutoConnect ?? false;
+        var transportType = connectionOptions.Android?.TransportType ?? BluetoothTransportType.Auto;
+        var preferredPhy = connectionOptions.Android?.PreferredPhy as Android.Bluetooth.BluetoothPhy?;
+
+        if (OperatingSystem.IsAndroidVersionAtLeast(26) && preferredPhy.HasValue)
         {
             // https://developer.android.com/reference/android/bluetooth/BluetoothDevice.html#connectGatt(android.content.Context,%20boolean,%20android.bluetooth.BluetoothGattCallback,%20int,%20int)
             return nativeDevice.ConnectGatt(Application.Context,
-                connectionOptions.AutoConnect,
+                autoConnect,
                 bluetoothGattCallback,
-                (BluetoothTransports) connectionOptions.TransportType,
-                connectionOptions.PreferredPhy.Value);
+                (BluetoothTransports) transportType,
+                preferredPhy.Value);
         }
 
         if (OperatingSystem.IsAndroidVersionAtLeast(23))
         {
             // https://developer.android.com/reference/android/bluetooth/BluetoothDevice.html#connectGatt(android.content.Context,%20boolean,%20android.bluetooth.BluetoothGattCallback,%20int)
-            return nativeDevice.ConnectGatt(Application.Context, connectionOptions.AutoConnect, bluetoothGattCallback, (BluetoothTransports) connectionOptions.TransportType);
+            return nativeDevice.ConnectGatt(Application.Context, autoConnect, bluetoothGattCallback, (BluetoothTransports) transportType);
         }
 
         // https://developer.android.com/reference/android/bluetooth/BluetoothDevice.html#connectGatt(android.content.Context,%20boolean,%20android.bluetooth.BluetoothGattCallback)
-        return nativeDevice.ConnectGatt(Application.Context, connectionOptions.AutoConnect, bluetoothGattCallback);
+        return nativeDevice.ConnectGatt(Application.Context, autoConnect, bluetoothGattCallback);
     }
 }

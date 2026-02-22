@@ -113,8 +113,9 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <inheritdoc />
-    public async virtual ValueTask ConnectIfNeededAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async virtual ValueTask ConnectIfNeededAsync(ConnectionOptions? connectionOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        connectionOptions ??= new ConnectionOptions();
         NativeRefreshIsConnected();
         if (IsConnected)
         {
@@ -125,7 +126,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <inheritdoc />
-    public async virtual ValueTask ConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async virtual ValueTask ConnectAsync(ConnectionOptions? connectionOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure we are not already connected
         if (IsConnected)
@@ -134,7 +135,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
 
         DeviceIsAlreadyConnectedException.ThrowIfAlreadyConnected(this);
-        ArgumentNullException.ThrowIfNull(connectionOptions);
+        connectionOptions ??= new ConnectionOptions();
 
         // Prevents multiple calls to ConnectAsync, if already starting, we merge the calls
         if (ConnectionTcs is { Task.IsCompleted: false })

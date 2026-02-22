@@ -22,14 +22,14 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
     ///     Initializes a new instance of the <see cref="BluetoothGattProxy" /> class.
     /// </summary>
     /// <param name="bluetoothGattDelegate">The device instance that will receive callback events.</param>
-    /// <param name="connectionOptions">The connection options for the GATT connection.</param>
+    /// <param name="connectionOptions">The connection options for the GATT connection. If null, default options will be used.</param>
     /// <param name="nativeDevice">The native Android Bluetooth device.</param>
-    /// <exception cref="ArgumentNullException">Thrown when any parameter is null or when GATT connection fails.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when bluetoothGattDelegate or nativeDevice is null, or when GATT connection fails.</exception>
     public BluetoothGattProxy(IBluetoothGattDelegate bluetoothGattDelegate, ConnectionOptions? connectionOptions, BluetoothDevice nativeDevice)
     {
         ArgumentNullException.ThrowIfNull(bluetoothGattDelegate);
-        ArgumentNullException.ThrowIfNull(connectionOptions);
         ArgumentNullException.ThrowIfNull(nativeDevice);
+        connectionOptions ??= new ConnectionOptions();
 
         BluetoothGattDelegate = bluetoothGattDelegate;
         BluetoothGatt = nativeDevice.ConnectGatt(connectionOptions, this) ?? throw new InvalidOperationException("Failed to create GATT connection");

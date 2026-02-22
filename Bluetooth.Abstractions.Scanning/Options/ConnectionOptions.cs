@@ -23,48 +23,33 @@ public record ConnectionOptions
     /// </summary>
     public bool WaitForAdvertisementBeforeConnecting { get; init; }
 
-    /// <summary>
-    ///     Gets a value indicating whether to automatically reconnect if the connection is lost.
-    /// </summary>
-    /// <remarks>
-    ///     <b>Platform Support:</b>
-    ///     <list type="bullet">
-    ///         <item><b>Android</b>: Full support via autoConnect parameter in connectGatt</item>
-    ///         <item><b>iOS/macOS</b>: Reconnection is application-managed, not automatic</item>
-    ///         <item><b>Windows</b>: Partial support, depends on device behavior</item>
-    ///     </list>
-    ///     <para>
-    ///         When enabled on Android, the system will automatically reconnect when the device becomes available.
-    ///         This may result in longer initial connection times but provides automatic reconnection.
-    ///     </para>
-    /// </remarks>
-    public bool AutoConnect { get; init; }
+    #region Platform-Specific Options
 
     /// <summary>
-    ///     Gets the preferred connection priority/performance mode.
+    ///     Gets the Apple platform-specific connection options.
     /// </summary>
     /// <remarks>
-    ///     <b>Platform Support:</b>
-    ///     <list type="bullet">
-    ///         <item><b>Android</b>: Full support via requestConnectionPriority</item>
-    ///         <item><b>iOS/macOS</b>: Connection parameters negotiated automatically</item>
-    ///         <item><b>Windows</b>: Connection parameters negotiated automatically</item>
-    ///     </list>
+    ///     These options are only used on iOS/macOS platforms and are ignored on other platforms.
     /// </remarks>
-    public BluetoothConnectionPriority ConnectionPriority { get; init; } = BluetoothConnectionPriority.Balanced;
+    public AppleConnectionOptions? Apple { get; init; }
 
     /// <summary>
-    ///     Gets the preferred transport type for the connection.
+    ///     Gets the Android platform-specific connection options.
     /// </summary>
     /// <remarks>
-    ///     <b>Platform Support:</b>
-    ///     <list type="bullet">
-    ///         <item><b>Android</b>: Full support (Auto, LE, or BR/EDR)</item>
-    ///         <item><b>iOS/macOS</b>: Only LE supported (always uses LE transport)</item>
-    ///         <item><b>Windows</b>: Determined automatically based on device capabilities</item>
-    ///     </list>
+    ///     These options are only used on Android platforms and are ignored on other platforms.
     /// </remarks>
-    public BluetoothTransportType TransportType { get; init; } = BluetoothTransportType.Auto;
+    public AndroidConnectionOptions? Android { get; init; }
+
+    /// <summary>
+    ///     Gets the Windows platform-specific connection options.
+    /// </summary>
+    /// <remarks>
+    ///     These options are only used on Windows platforms and are ignored on other platforms.
+    /// </remarks>
+    public WindowsConnectionOptions? Windows { get; init; }
+
+    #endregion
 }
 
 /// <summary>
@@ -133,3 +118,120 @@ public enum BluetoothTransportType
     /// </remarks>
     BrEdr = 1
 }
+
+#region Platform-Specific Connection Options
+
+/// <summary>
+///     Apple (iOS/macOS) platform-specific connection options.
+/// </summary>
+public record AppleConnectionOptions
+{
+    /// <summary>
+    ///     Gets a value indicating whether to notify on connection events.
+    /// </summary>
+    /// <remarks>
+    ///     Corresponds to CBConnectPeripheralOptionNotifyOnConnectionKey.
+    ///     When true, the system will display an alert when the peripheral connects while
+    ///     the app is suspended.
+    /// </remarks>
+    public bool? NotifyOnConnection { get; init; }
+
+    /// <summary>
+    ///     Gets a value indicating whether to notify on disconnection events.
+    /// </summary>
+    /// <remarks>
+    ///     Corresponds to CBConnectPeripheralOptionNotifyOnDisconnectionKey.
+    ///     When true, the system will display an alert when the peripheral disconnects while
+    ///     the app is suspended.
+    /// </remarks>
+    public bool? NotifyOnDisconnection { get; init; }
+
+    /// <summary>
+    ///     Gets a value indicating whether to notify on notification events.
+    /// </summary>
+    /// <remarks>
+    ///     Corresponds to CBConnectPeripheralOptionNotifyOnNotificationKey.
+    ///     When true, the system will display an alert for incoming notifications while
+    ///     the app is suspended.
+    /// </remarks>
+    public bool? NotifyOnNotification { get; init; }
+
+    /// <summary>
+    ///     Gets a value indicating whether to enable transport bridging (iOS 13+).
+    /// </summary>
+    /// <remarks>
+    ///     Corresponds to CBConnectPeripheralOptionEnableTransportBridgingKey.
+    ///     When true, allows the peripheral to be used over both Classic and LE transports.
+    ///     Available on iOS 13.0+ and tvOS 13.0+.
+    /// </remarks>
+    public bool? EnableTransportBridging { get; init; }
+
+    /// <summary>
+    ///     Gets a value indicating whether to require ANCS (Apple Notification Center Service) support (iOS 13+).
+    /// </summary>
+    /// <remarks>
+    ///     Corresponds to CBConnectPeripheralOptionRequiresANCS.
+    ///     When true, the connection will only succeed if the peripheral supports ANCS.
+    ///     Available on iOS 13.0+ and tvOS 13.0+.
+    /// </remarks>
+    public bool? RequiresAncs { get; init; }
+}
+
+/// <summary>
+///     Android platform-specific connection options.
+/// </summary>
+public record AndroidConnectionOptions
+{
+    /// <summary>
+    ///     Gets a value indicating whether to automatically reconnect if the connection is lost.
+    /// </summary>
+    /// <remarks>
+    ///     Maps to the autoConnect parameter in BluetoothDevice.connectGatt().
+    ///     When true, the system will automatically reconnect when the device becomes available.
+    ///     This may result in longer initial connection times but provides automatic reconnection.
+    /// </remarks>
+    public bool? AutoConnect { get; init; }
+
+    /// <summary>
+    ///     Gets the preferred connection priority/performance mode.
+    /// </summary>
+    /// <remarks>
+    ///     Sets the preferred connection parameters via BluetoothGatt.requestConnectionPriority().
+    ///     This affects latency, throughput, and power consumption.
+    /// </remarks>
+    public BluetoothConnectionPriority? ConnectionPriority { get; init; }
+
+    /// <summary>
+    ///     Gets the preferred transport type for the connection.
+    /// </summary>
+    /// <remarks>
+    ///     Maps to the transport parameter in BluetoothDevice.connectGatt().
+    ///     Controls whether to use LE, BR/EDR, or automatic transport selection.
+    /// </remarks>
+    public BluetoothTransportType? TransportType { get; init; }
+
+    /// <summary>
+    ///     Gets the preferred PHY (Physical Layer) for the connection (Android 8.0+).
+    /// </summary>
+    /// <remarks>
+    ///     Specifies the preferred PHY for connections on Android 8.0 (API 26) and higher.
+    ///     Common values: LE_1M, LE_2M, LE_CODED.
+    ///     Requires explicit platform type due to native Android enum.
+    /// </remarks>
+    public object? PreferredPhy { get; init; } // Object type to avoid direct Android dependency in abstractions
+}
+
+/// <summary>
+///     Windows platform-specific connection options.
+/// </summary>
+/// <remarks>
+///     Windows currently does not expose connection options through the WinRT API.
+///     Connection parameters are managed automatically by the Windows Bluetooth stack.
+///     This class is provided for consistency and future extensibility.
+/// </remarks>
+public record WindowsConnectionOptions
+{
+    // Reserved for future Windows-specific connection options
+}
+
+#endregion

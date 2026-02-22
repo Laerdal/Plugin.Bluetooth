@@ -58,27 +58,26 @@ public partial interface IBluetoothBroadcaster
     /// <summary>
     ///     Asynchronously starts the Bluetooth activity with an optional timeout.
     /// </summary>
-    /// <param name="options">The broadcasting options to use when starting the broadcaster.</param>
+    /// <param name="options">The broadcasting options to use when starting the broadcaster. If null, default options will be used.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous start operation.</returns>
     /// <remarks>Ensures that the Bluetooth activity is initialized and ready for use.</remarks>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options" /> is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when broadcasting is already active.</exception>
     /// <exception cref="PlatformNotSupportedException">Thrown when the platform doesn't support peripheral mode.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
-    ValueTask StartBroadcastingAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask StartBroadcastingAsync(BroadcastingOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Asynchronously starts the Bluetooth activity if it is not already running, with an optional timeout.
     /// </summary>
-    /// <param name="options">The broadcasting options to use when starting the broadcaster if needed.</param>
+    /// <param name="options">The broadcasting options to use when starting the broadcaster if needed. If null, default options will be used.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous start operation.</returns>
     /// <remarks>Checks if the Bluetooth activity is already running before attempting to start it.</remarks>
-    ValueTask StartBroadcastingIfNeededAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask StartBroadcastingIfNeededAsync(BroadcastingOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 

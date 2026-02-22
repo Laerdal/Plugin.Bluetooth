@@ -109,18 +109,30 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     protected override ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(connectionOptions);
+
         NativeRefreshIsConnected();
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
         }
 
-        if (connectionOptions is not Options.ConnectionOptions iosConnectionOptions)
+        // Convert abstract ConnectionOptions to Apple-specific options
+        var appleOptions = new Options.ConnectionOptions
         {
-            throw new ArgumentException($"Connection options must be of type {nameof(PeripheralConnectionOptions)} for iOS platform.", nameof(connectionOptions));
-        }
+            // Copy common properties
+            PermissionStrategy = connectionOptions.PermissionStrategy,
+            WaitForAdvertisementBeforeConnecting = connectionOptions.WaitForAdvertisementBeforeConnecting,
 
-        scanner.CbCentralManagerWrapper.CbCentralManager.ConnectPeripheral(CbPeripheralWrapper.CbPeripheral, iosConnectionOptions);
+            // Read Apple-specific sub-options (or use defaults if not provided)
+            NotifyOnConnection = connectionOptions.Apple?.NotifyOnConnection ?? true,
+            NotifyOnDisconnection = connectionOptions.Apple?.NotifyOnDisconnection ?? true,
+            NotifyOnNotification = connectionOptions.Apple?.NotifyOnNotification ?? true,
+            EnableTransportBridging = connectionOptions.Apple?.EnableTransportBridging,
+            RequiresAncs = connectionOptions.Apple?.RequiresAncs
+        };
+
+        scanner.CbCentralManagerWrapper.CbCentralManager.ConnectPeripheral(CbPeripheralWrapper.CbPeripheral, appleOptions);
         return ValueTask.CompletedTask;
     }
 

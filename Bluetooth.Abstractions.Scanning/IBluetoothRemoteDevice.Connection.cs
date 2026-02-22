@@ -84,25 +84,24 @@ public partial interface IBluetoothRemoteDevice
     /// <summary>
     ///     Connects to the device if it is not already connected asynchronously.
     /// </summary>
-    /// <param name="connectionOptions">The connection options to use.</param>
+    /// <param name="connectionOptions">The connection options to use. If null, default options will be used.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="TimeoutException">Thrown if the connection attempt times out.</exception>
-    ValueTask ConnectIfNeededAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask ConnectIfNeededAsync(ConnectionOptions? connectionOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Connects to the device asynchronously.
     /// </summary>
-    /// <param name="connectionOptions">The connection options to use.</param>
+    /// <param name="connectionOptions">The connection options to use. If null, default options will be used.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="connectionOptions" /> is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the device is already connected.</exception>
     /// <exception cref="TimeoutException">Thrown if the connection attempt times out.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
-    ValueTask ConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask ConnectAsync(ConnectionOptions? connectionOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 

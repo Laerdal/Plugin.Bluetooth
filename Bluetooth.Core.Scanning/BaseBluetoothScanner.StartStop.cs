@@ -155,15 +155,16 @@ public abstract partial class BaseBluetoothScanner
     }
 
     /// <inheritdoc />
-    public ValueTask StartScanningIfNeededAsync(ScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask StartScanningIfNeededAsync(ScanningOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        options ??= DefaultScanningOptions;
         return IsRunning && options == CurrentScanningOptions ? ValueTask.CompletedTask : new ValueTask(StartScanningAsync(options, timeout, cancellationToken));
     }
 
     /// <inheritdoc />
-    public async Task StartScanningAsync(ScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async Task StartScanningAsync(ScanningOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(options);
+        options ??= DefaultScanningOptions;
 
         // Ensure we are not already started
         if (IsRunning)

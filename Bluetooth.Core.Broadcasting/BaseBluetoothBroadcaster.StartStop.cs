@@ -37,7 +37,7 @@ public abstract partial class BaseBluetoothBroadcaster
     ///     The default broadcasting options used when starting the broadcaster without specifying options.
     ///     This can be overridden by derived classes to provide platform-specific default options.
     /// </summary>
-    private static BroadcastingOptions DefaultBroadcastingOptions { get; } = new BroadcastingOptions();
+    public static BroadcastingOptions DefaultBroadcastingOptions { get; } = new BroadcastingOptions();
 
     /// <inheritdoc />
     public BroadcastingOptions CurrentBroadcastingOptions
@@ -160,9 +160,9 @@ public abstract partial class BaseBluetoothBroadcaster
     }
 
     /// <inheritdoc />
-    public async ValueTask StartBroadcastingAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask StartBroadcastingAsync(BroadcastingOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(options);
+        options ??= DefaultBroadcastingOptions;
 
         // Ensure we are not already started
         BroadcasterIsAlreadyStartedException.ThrowIfIsStarted(this);
@@ -249,8 +249,9 @@ public abstract partial class BaseBluetoothBroadcaster
     }
 
     /// <inheritdoc />
-    public ValueTask StartBroadcastingIfNeededAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask StartBroadcastingIfNeededAsync(BroadcastingOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        options ??= DefaultBroadcastingOptions;
         return IsRunning && options == CurrentBroadcastingOptions ? ValueTask.CompletedTask : StartBroadcastingAsync(options, timeout, cancellationToken);
     }
 
