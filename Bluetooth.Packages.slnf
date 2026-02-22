@@ -1,0 +1,18 @@
+{
+  "solution": {
+    "path": "Bluetooth.sln",
+    "projects": [
+      "Bluetooth.Abstractions\\Bluetooth.Abstractions.csproj",
+      "Bluetooth.Abstractions.Broadcasting\\Bluetooth.Abstractions.Broadcasting.csproj",
+      "Bluetooth.Abstractions.Scanning\\Bluetooth.Abstractions.Scanning.csproj",
+      "Bluetooth.Core\\Bluetooth.Core.csproj",
+      "Bluetooth.Core.Broadcasting\\Bluetooth.Core.Broadcasting.csproj",
+      "Bluetooth.Core.Scanning\\Bluetooth.Core.Scanning.csproj",
+      "Bluetooth.Maui\\Bluetooth.Maui.csproj",
+      "Bluetooth.Maui.Platforms.Apple\\Bluetooth.Maui.Platforms.Apple.csproj",
+      "Bluetooth.Maui.Platforms.DotNetCore\\Bluetooth.Maui.Platforms.DotNetCore.csproj",
+      "Bluetooth.Maui.Platforms.Droid\\Bluetooth.Maui.Platforms.Droid.csproj",
+      "Bluetooth.Maui.Platforms.Win\\Bluetooth.Maui.Platforms.Win.csproj"
+    ]
+  }
+}
