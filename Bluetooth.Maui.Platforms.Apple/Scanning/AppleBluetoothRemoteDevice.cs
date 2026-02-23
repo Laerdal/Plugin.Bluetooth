@@ -112,6 +112,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     #region Connect
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1518766-connect">iOS CBCentralManager.connect</seealso>
     protected override ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(connectionOptions);
@@ -172,6 +173,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     #region Disconnection
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1518952-cancelperipheralconnection">iOS CBCentralManager.cancelPeripheralConnection</seealso>
     protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogDisconnecting(Id);
@@ -283,6 +285,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     #region Services
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbperipheral/1518706-discoverservices">iOS CBPeripheral.discoverServices</seealso>
     protected override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogServiceDiscoveryStarting(Id);

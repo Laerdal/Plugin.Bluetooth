@@ -58,6 +58,7 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     #region Read
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#readCharacteristic(android.bluetooth.BluetoothGattCharacteristic)">Android BluetoothGatt.readCharacteristic()</seealso>
     protected override ValueTask NativeReadValueAsync()
     {
         var success = BluetoothGattProxy.BluetoothGatt.ReadCharacteristic(NativeCharacteristic);
@@ -80,6 +81,7 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     #region Write
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#writeCharacteristic(android.bluetooth.BluetoothGattCharacteristic)">Android BluetoothGatt.writeCharacteristic()</seealso>
     protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
         // Get retry options from device connection options, or use default
@@ -210,6 +212,7 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     }
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#setCharacteristicNotification(android.bluetooth.BluetoothGattCharacteristic,%20boolean)">Android BluetoothGatt.setCharacteristicNotification()</seealso>
     protected async override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
         // First, enable/disable notifications locally on the GATT object

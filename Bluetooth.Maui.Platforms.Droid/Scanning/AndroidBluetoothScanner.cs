@@ -74,6 +74,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// <remarks>
     ///     Starts BLE scanning using the Android BluetoothLeScanner.
     /// </remarks>
+    /// <seealso href="https://developer.android.com/reference/android/bluetooth/le/BluetoothLeScanner">Android BluetoothLeScanner</seealso>
     protected async override ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(BluetoothLeScanner);
@@ -167,6 +168,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// <remarks>
     ///     Stops BLE scanning using the Android BluetoothLeScanner.
     /// </remarks>
+    /// <seealso href="https://developer.android.com/reference/android/bluetooth/le/BluetoothLeScanner">Android BluetoothLeScanner</seealso>
     protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(BluetoothLeScanner);

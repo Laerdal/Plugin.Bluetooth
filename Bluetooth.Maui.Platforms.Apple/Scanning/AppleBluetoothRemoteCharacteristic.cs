@@ -41,6 +41,7 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     #region Read
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbperipheral/1518759-readvalue">iOS CBPeripheral.readValue</seealso>
     protected override ValueTask NativeReadValueAsync()
     {
         Logger?.LogCharacteristicRead(Id, RemoteService.Device.Id);
@@ -87,6 +88,7 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     #region Write
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbperipheral/1518747-writevalue">iOS CBPeripheral.writeValue</seealso>
     protected override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
         Logger?.LogCharacteristicWrite(Id, RemoteService.Device.Id, value.Length);
@@ -163,6 +165,7 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     }
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbperipheral/1518949-setnotifyvalue">iOS CBPeripheral.setNotifyValue</seealso>
     protected override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
         var action = shouldBeListening ? "Enabling" : "Disabling";

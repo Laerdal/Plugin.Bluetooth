@@ -169,6 +169,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     #region Connection Priority
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#requestConnectionPriority(int)">Android BluetoothGatt.requestConnectionPriority(int)</seealso>
     protected override ValueTask NativeRequestConnectionPriorityAsync(
         BluetoothConnectionPriority priority,
         TimeSpan? timeout = null,
@@ -266,6 +267,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#connect()">Android BluetoothGatt.connect()</seealso>
     protected override async ValueTask NativeConnectAsync(
         ConnectionOptions connectionOptions,
         TimeSpan? timeout = null,
@@ -387,6 +389,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#disconnect()">Android BluetoothGatt.disconnect()</seealso>
     protected override async ValueTask NativeDisconnectAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
@@ -464,6 +467,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     #region Service Discovery
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#discoverServices()">Android BluetoothGatt.discoverServices()</seealso>
     protected override async ValueTask NativeServicesExplorationAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)

@@ -70,6 +70,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     #region Start
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1518986-scanforperipherals">iOS CBCentralManager.scanForPeripherals</seealso>
     protected override ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogScanStarting(scanningOptions.ScanMode, scanningOptions.CallbackType);
@@ -92,6 +93,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     #region Stop
 
     /// <inheritdoc />
+    /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1518984-stopscan">iOS CBCentralManager.stopScan</seealso>
     protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogScanStopping();
