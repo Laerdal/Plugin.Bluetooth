@@ -16,12 +16,11 @@ public partial class RadioWrapper : BaseBindableObject, IRadioWrapper, IDisposab
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="RadioWrapper" /> class.
-    ///     This constructor is private; instances should be created through a factory method.
     /// </summary>
     /// <param name="bluetoothAdapterWrapper">The Bluetooth adapter wrapper to retrieve the radio from.</param>
     /// <param name="ticker">The ticker for scheduling periodic updates of radio properties.</param>
     /// <param name="logger">An optional logger for logging radio operations and errors.</param>
-    private RadioWrapper(IBluetoothAdapterWrapper bluetoothAdapterWrapper, ITicker ticker, ILogger<IBluetoothAdapterWrapper>? logger = null) : base(logger)
+    public RadioWrapper(IBluetoothAdapterWrapper bluetoothAdapterWrapper, ITicker ticker, ILogger<IRadioWrapper>? logger = null) : base(logger)
     {
         ArgumentNullException.ThrowIfNull(ticker);
         ArgumentNullException.ThrowIfNull(bluetoothAdapterWrapper);

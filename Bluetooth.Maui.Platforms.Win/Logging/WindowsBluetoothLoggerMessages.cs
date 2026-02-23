@@ -449,4 +449,48 @@ internal static partial class WindowsBluetoothLoggerMessages
         Exception exception);
 
     #endregion
+
+    #region Adapter Initialization Logging
+
+    [LoggerMessage(
+        EventId = 7000,
+        Level = LogLevel.Debug,
+        Message = "Initializing BluetoothAdapterWrapper")]
+    public static partial void LogAdapterWrapperInitializing(this ILogger logger);
+
+    [LoggerMessage(
+        EventId = 7001,
+        Level = LogLevel.Information,
+        Message = "BluetoothAdapterWrapper initialized successfully")]
+    public static partial void LogAdapterWrapperInitialized(this ILogger logger);
+
+    [LoggerMessage(
+        EventId = 7002,
+        Level = LogLevel.Error,
+        Message = "Failed to initialize BluetoothAdapterWrapper")]
+    public static partial void LogAdapterWrapperInitializationFailed(
+        this ILogger logger,
+        Exception exception);
+
+    [LoggerMessage(
+        EventId = 7003,
+        Level = LogLevel.Debug,
+        Message = "Initializing RadioWrapper")]
+    public static partial void LogRadioWrapperInitializing(this ILogger logger);
+
+    [LoggerMessage(
+        EventId = 7004,
+        Level = LogLevel.Information,
+        Message = "RadioWrapper initialized successfully")]
+    public static partial void LogRadioWrapperInitialized(this ILogger logger);
+
+    [LoggerMessage(
+        EventId = 7005,
+        Level = LogLevel.Error,
+        Message = "Failed to initialize RadioWrapper")]
+    public static partial void LogRadioWrapperInitializationFailed(
+        this ILogger logger,
+        Exception exception);
+
+    #endregion
 }
