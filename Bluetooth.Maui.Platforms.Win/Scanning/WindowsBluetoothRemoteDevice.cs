@@ -132,9 +132,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <inheritdoc />
     protected override void NativeRefreshIsConnected()
     {
-        SetValue(
-            BluetoothLeDeviceProxy?.BluetoothLeDevice is { ConnectionStatus: BluetoothConnectionStatus.Connected },
-            nameof(IsConnected));
+        IsConnected = BluetoothLeDeviceProxy?.BluetoothLeDevice is { ConnectionStatus: BluetoothConnectionStatus.Connected };
     }
 
     /// <inheritdoc />
@@ -164,7 +162,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             }
 
             // Update cached name
-            SetValue(BluetoothLeDeviceProxy.BluetoothLeDevice.Name, nameof(Name));
+            CachedName = BluetoothLeDeviceProxy.BluetoothLeDevice.Name;
 
             // Create GATT session for reliable connection
             GattSessionProxy = await NativeObjects.GattSessionWrapper.GetInstanceAsync(
@@ -298,7 +296,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <param name="senderName">The new device name.</param>
     public void OnNameChanged(string senderName)
     {
-        SetValue(senderName, nameof(Name));
+        CachedName = senderName;
     }
 
     /// <summary>

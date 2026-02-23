@@ -91,7 +91,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             // On Android, we only get feedback on "StartScanFailed" and on "AdvertisementReceived"
             // If no devices are around and scan started successfully, we don't receive anything
             // In timeout case, assume scan started successfully
-            SetValue(true, nameof(IsRunning));
+            IsRunning = true;
         }
     }
 

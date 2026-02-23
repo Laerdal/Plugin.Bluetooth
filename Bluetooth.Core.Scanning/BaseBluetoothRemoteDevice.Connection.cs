@@ -17,7 +17,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     public bool IsConnected
     {
         get => GetValue(false);
-        private set
+        protected set
         {
             if (SetValue(value))
             {

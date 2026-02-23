@@ -43,7 +43,11 @@ public class ScannerViewModel : BaseViewModel
     /// <summary>
     ///     Gets a value indicating whether scanning is currently active.
     /// </summary>
-    public bool IsScanning => GetValue(false);
+    public bool IsScanning
+    {
+        get => GetValue(false);
+        private set => SetValue(value);
+    }
 
     /// <summary>
     ///     Gets the number of discovered devices.
@@ -158,7 +162,7 @@ public class ScannerViewModel : BaseViewModel
     /// </summary>
     private void OnRunningStateChanged(object? sender, EventArgs e)
     {
-        SetValue(_scanner.IsRunning, nameof(IsScanning));
+        IsScanning = _scanner.IsRunning;
         StartScanCommand.NotifyCanExecuteChanged();
         StopScanCommand.NotifyCanExecuteChanged();
     }

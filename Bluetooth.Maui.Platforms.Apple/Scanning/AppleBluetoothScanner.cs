@@ -1,11 +1,12 @@
 using Bluetooth.Maui.Platforms.Apple.Permissions;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
+using Bluetooth.Maui.Platforms.Apple.Threading;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
 /// <inheritdoc cref="BaseBluetoothScanner" />
-public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapper.ICbCentralManagerDelegate, IDisposable
+public partial class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapper.ICbCentralManagerDelegate, IDisposable
 {
     /// <inheritdoc />
     public AppleBluetoothScanner(IBluetoothAdapter adapter,
@@ -77,8 +78,10 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <inheritdoc />
     public virtual void ScanningStarted()
     {
-        IsRunning = true;
-        OnStartSucceeded();
+        MainThreadDispatcher.BeginInvokeOnMainThread(() => {
+            IsRunning = true;
+            OnStartSucceeded();
+        });
     }
 
     #endregion
@@ -95,8 +98,10 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <inheritdoc />
     public virtual void ScanningStopped()
     {
-        IsRunning = false;
-        OnStopSucceeded();
+        MainThreadDispatcher.BeginInvokeOnMainThread(() => {
+            IsRunning = false;
+            OnStopSucceeded();
+        });
     }
 
     #endregion
@@ -118,7 +123,9 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <inheritdoc />
     public virtual void UpdatedState(CBManagerState centralState)
     {
-        State = centralState;
+        MainThreadDispatcher.BeginInvokeOnMainThread(() => {
+            State = centralState;
+        });
     }
 
     /// <inheritdoc />
@@ -134,8 +141,14 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <inheritdoc />
     public virtual void DiscoveredPeripheral(CBPeripheral peripheral, NSDictionary advertisementData, NSNumber rssi)
     {
-        IsRunning = CbCentralManagerWrapper.CbCentralManager.IsScanning;
-        OnAdvertisementReceived(new AppleBluetoothAdvertisement(peripheral, advertisementData, rssi));
+        // Capture values before dispatching to avoid referencing native objects across threads
+        var advertisement = new AppleBluetoothAdvertisement(peripheral, advertisementData, rssi);
+        var isScanning = CbCentralManagerWrapper.CbCentralManager.IsScanning;
+
+        MainThreadDispatcher.BeginInvokeOnMainThread(() => {
+            IsRunning = isScanning;
+            OnAdvertisementReceived(advertisement);
+        });
     }
 
     /// <inheritdoc />

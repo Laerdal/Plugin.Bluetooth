@@ -231,7 +231,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
                 _gattServerProxy = null;
             }
 
-            SetValue(false, nameof(IsRunning));
+            IsRunning = false;
         }
         catch (Exception ex)
         {

@@ -1,5 +1,6 @@
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
+using Bluetooth.Maui.Platforms.Apple.Threading;
 
 using MultipleServicesFoundException = Bluetooth.Abstractions.Scanning.Exceptions.MultipleServicesFoundException;
 using ServiceNotFoundException = Bluetooth.Abstractions.Scanning.Exceptions.ServiceNotFoundException;
@@ -7,7 +8,7 @@ using ServiceNotFoundException = Bluetooth.Abstractions.Scanning.Exceptions.Serv
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
 /// <inheritdoc cref="BaseBluetoothRemoteDevice" />
-public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeripheralWrapper.ICbPeripheralDelegate, CbCentralManagerWrapper.ICbPeripheralDelegate
+public partial class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeripheralWrapper.ICbPeripheralDelegate, CbCentralManagerWrapper.ICbPeripheralDelegate
 {
     /// <inheritdoc />
     public AppleBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request, IBluetoothServiceFactory serviceFactory,
@@ -95,7 +96,9 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     protected override void NativeRefreshIsConnected()
     {
-        SetValue(CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected, nameof(IsConnected));
+        MainThreadDispatcher.BeginInvokeOnMainThread(() => {
+            IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
+        });
     }
 
     /// <inheritdoc />
