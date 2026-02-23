@@ -18,12 +18,9 @@ public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject,
         LocalCharacteristic = localCharacteristic;
 
         Id = request.Id;
-        Permissions = request.Permissions;
         Value = request.InitialValue ?? ReadOnlyMemory<byte>.Empty;
     }
 
-    /// <inheritdoc />
-    public BluetoothDescriptorPermissions Permissions { get; init; }
 
     /// <inheritdoc />
     public IBluetoothLocalCharacteristic LocalCharacteristic { get; }

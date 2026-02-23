@@ -12,9 +12,7 @@ public record AppleBluetoothDescriptorSpec : IBluetoothLocalDescriptorFactory.Bl
     /// <remarks>
     ///     iOS CBMutableDescriptor does not expose permissions or value after creation, so they are set to defaults (Read/Write, no initial value).
     /// </remarks>
-    public AppleBluetoothDescriptorSpec(CBMutableDescriptor cbDescriptor) : base(
-                                                                                    cbDescriptor?.UUID.ToGuid() ?? throw new ArgumentNullException(nameof(cbDescriptor)),
-                                                                                    BluetoothDescriptorPermissions.Read | BluetoothDescriptorPermissions.Write)
+    public AppleBluetoothDescriptorSpec(CBMutableDescriptor cbDescriptor) : base(cbDescriptor?.UUID.ToGuid() ?? throw new ArgumentNullException(nameof(cbDescriptor)))
     {
         CbDescriptor = cbDescriptor;
     }

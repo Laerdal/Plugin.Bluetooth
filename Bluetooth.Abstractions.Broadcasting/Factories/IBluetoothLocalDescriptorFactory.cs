@@ -24,15 +24,12 @@ public interface IBluetoothLocalDescriptorFactory
         ///     Initializes a new instance of the <see cref="BluetoothLocalDescriptorSpec" /> record.
         /// </summary>
         /// <param name="id">The unique identifier (UUID) of the descriptor.</param>
-        /// <param name="permissions">The access permissions for the descriptor value.</param>
         /// <param name="initialValue">Optional initial value for the descriptor.</param>
         public BluetoothLocalDescriptorSpec(
             Guid id,
-            BluetoothDescriptorPermissions permissions,
             ReadOnlyMemory<byte>? initialValue = null)
         {
             Id = id;
-            Permissions = permissions;
             InitialValue = initialValue;
         }
 
@@ -40,11 +37,6 @@ public interface IBluetoothLocalDescriptorFactory
         ///     The unique identifier (UUID) of the descriptor.
         /// </summary>
         public Guid Id { get; init; }
-
-        /// <summary>
-        ///     Access permissions for the descriptor value.
-        /// </summary>
-        public BluetoothDescriptorPermissions Permissions { get; init; }
 
         /// <summary>
         ///     Optional initial value for the descriptor.
