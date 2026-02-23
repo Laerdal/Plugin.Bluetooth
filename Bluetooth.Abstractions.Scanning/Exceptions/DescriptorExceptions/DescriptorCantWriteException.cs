@@ -13,4 +13,17 @@ public class DescriptorCantWriteException : DescriptorException
         : base(remoteDescriptor, $"Descriptor {remoteDescriptor} does not support write operations.")
     {
     }
+
+    /// <summary>
+    ///     Throws a <see cref="DescriptorCantWriteException" /> if the specified descriptor cannot be written to.
+    /// </summary>
+    /// <param name="remoteDescriptor">The Bluetooth descriptor to check.</param>
+    public static void ThrowIfCantWrite(IBluetoothRemoteDescriptor remoteDescriptor)
+    {
+        ArgumentNullException.ThrowIfNull(remoteDescriptor);
+        if (!remoteDescriptor.CanWrite)
+        {
+            throw new DescriptorCantWriteException(remoteDescriptor);
+        }
+    }
 }
