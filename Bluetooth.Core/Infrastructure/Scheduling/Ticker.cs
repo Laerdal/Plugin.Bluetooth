@@ -5,9 +5,9 @@ namespace Bluetooth.Core.Infrastructure.Scheduling;
 /// </summary>
 public sealed partial class Ticker : ITicker, IDisposable
 {
-    private readonly object _gate = new();
+    private readonly Lock _gate = new Lock();
     private readonly ILogger<Ticker> _logger;
-    private readonly Dictionary<Guid, Registration> _registrations = new();
+    private readonly Dictionary<Guid, Registration> _registrations = new Dictionary<Guid, Registration>();
     private readonly TimeSpan _resolution;
     private CancellationTokenSource? _cts;
     private Task? _loopTask;

@@ -32,7 +32,7 @@ public abstract partial class BaseBluetoothScanner
     /// <summary>
     ///     Gets the default scanning options used when starting the scanner without specifying options.
     /// </summary>
-    public static ScanningOptions DefaultScanningOptions { get; } = new();
+    public static ScanningOptions DefaultScanningOptions { get; } = new ScanningOptions();
 
     /// <inheritdoc />
     public ScanningOptions CurrentScanningOptions

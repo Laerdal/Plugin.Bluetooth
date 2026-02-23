@@ -275,7 +275,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     ///     Semaphore used to ensure only one write listening operation can occur at a time.
     ///     This prevents concurrent write operations that could interfere with each other.
     /// </summary>
-    private SemaphoreSlim WriteIsListeningSemaphoreSlim { get; } = new(1, 1);
+    private SemaphoreSlim WriteIsListeningSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
 
     /// <summary>
     ///     Gets or sets a value indicating whether a write listening operation is currently in progress.

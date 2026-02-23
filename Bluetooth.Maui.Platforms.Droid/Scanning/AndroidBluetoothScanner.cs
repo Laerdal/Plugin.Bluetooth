@@ -48,7 +48,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// <summary>
     ///     Event to signal when scan start result is received.
     /// </summary>
-    private AutoResetEvent InternalAndroidStartScanResultReceived { get; } = new(false);
+    private AutoResetEvent InternalAndroidStartScanResultReceived { get; } = new AutoResetEvent(false);
 
     /// <summary>
     ///     Timeout for waiting for scan to start. Defaults to 2 seconds.

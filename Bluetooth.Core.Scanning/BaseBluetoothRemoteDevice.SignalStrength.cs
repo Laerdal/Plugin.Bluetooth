@@ -53,7 +53,7 @@ public abstract partial class BaseBluetoothRemoteDevice
 
     #region Properties
 
-    private readonly ConcurrentQueue<int> _rssiHistory = new();
+    private readonly ConcurrentQueue<int> _rssiHistory = new ConcurrentQueue<int>();
 
     /// <inheritdoc />
     public int SignalStrengthDbm

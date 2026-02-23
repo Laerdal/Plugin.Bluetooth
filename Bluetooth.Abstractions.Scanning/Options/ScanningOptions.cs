@@ -88,7 +88,7 @@ public record ScanningOptions
     /// <summary>
     ///     Gets the options for smoothing signal strength jitter.
     /// </summary>
-    public SignalStrengthSmoothingOptions SignalStrengthJitterSmoothing { get; init; } = new();
+    public SignalStrengthSmoothingOptions SignalStrengthJitterSmoothing { get; init; } = new SignalStrengthSmoothingOptions();
 
     #endregion
 

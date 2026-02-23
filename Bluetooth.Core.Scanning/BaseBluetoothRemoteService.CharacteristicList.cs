@@ -103,6 +103,89 @@ public abstract partial class BaseBluetoothRemoteService
     }
 
     /// <summary>
+    ///     Explores descriptors for all characteristics matching the filter.
+    /// </summary>
+    private async Task ExploreDescriptorsForCharacteristicsAsync(CharacteristicExplorationOptions options, TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        var descriptorOptions = new DescriptorExplorationOptions
+        {
+            UseCache = options.UseCache
+        };
+
+        var filteredCharacteristicCount = Characteristics.Count(c => options.CharacteristicUuidFilter == null || options.CharacteristicUuidFilter(c.Id));
+        if (filteredCharacteristicCount > 0)
+        {
+            LogCascadingToDescriptors(Id, Device.Id, filteredCharacteristicCount);
+        }
+
+        foreach (var characteristic in Characteristics.ToList())
+        {
+            if (ShouldSkipCharacteristic(characteristic, options))
+            {
+                continue;
+            }
+
+            await characteristic.ExploreDescriptorsAsync(descriptorOptions, timeout, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    ///     Determines if a characteristic should be skipped based on the filter.
+    /// </summary>
+    private static bool ShouldSkipCharacteristic(IBluetoothRemoteCharacteristic characteristic, CharacteristicExplorationOptions options)
+    {
+        return options.CharacteristicUuidFilter != null && !options.CharacteristicUuidFilter(characteristic.Id);
+    }
+
+    /// <summary>
+    ///     Handles characteristic exploration when cached characteristics are available.
+    /// </summary>
+    /// <returns>True if cached characteristics were used, false if fresh exploration is needed.</returns>
+    private async Task<bool> TryUseCachedCharacteristicsAsync(CharacteristicExplorationOptions options, TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        if (!options.UseCache || !Characteristics.Any())
+        {
+            return false;
+        }
+
+        LogUsingCachedCharacteristics(Id, Device.Id, Characteristics.Count);
+
+        if (options.ExploreDescriptors)
+        {
+            await ExploreDescriptorsForCharacteristicsAsync(options, timeout, cancellationToken).ConfigureAwait(false);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Waits for an ongoing characteristic exploration to complete.
+    /// </summary>
+    /// <returns>True if waiting for an ongoing exploration, false if no exploration is in progress.</returns>
+    private async Task<bool> TryAwaitOngoingCharacteristicExplorationAsync()
+    {
+        if (CharacteristicsExplorationTcs is { Task.IsCompleted: false })
+        {
+            LogMergingCharacteristicExploration(Id, Device.Id);
+            await CharacteristicsExplorationTcs.Task.ConfigureAwait(false);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Performs the native characteristic exploration and waits for completion.
+    /// </summary>
+    private async Task PerformCharacteristicExplorationAsync(TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        DeviceNotConnectedException.ThrowIfNotConnected(Device);
+
+        LogExploringCharacteristics(Id, Device.Id);
+        await NativeCharacteristicsExplorationAsync(timeout, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     ///     Called when characteristic exploration succeeds. Updates the Characteristics collection and completes the exploration task.
     /// </summary>
     /// <typeparam name="TNativeCharacteristicType">The platform-specific characteristic type.</typeparam>
@@ -169,60 +252,27 @@ public abstract partial class BaseBluetoothRemoteService
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
     public async ValueTask ExploreCharacteristicsAsync(CharacteristicExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        // Use default options if none provided
         options ??= new CharacteristicExplorationOptions();
 
-        // If caching enabled and characteristics already exist, handle cascading exploration only
-        if (options.UseCache && Characteristics.Any())
+        // Check if we can use cached characteristics
+        if (await TryUseCachedCharacteristicsAsync(options, timeout, cancellationToken).ConfigureAwait(false))
         {
-            LogUsingCachedCharacteristics(Id, Device.Id, Characteristics.Count);
-            // Characteristics already explored, but may need to explore descriptors
-            if (options.ExploreDescriptors)
-            {
-                var descriptorOptions = new DescriptorExplorationOptions
-                {
-                    UseCache = options.UseCache
-                };
-
-                var filteredCharacteristicCount = Characteristics.Count(c => options.CharacteristicUuidFilter == null || options.CharacteristicUuidFilter(c.Id));
-                if (filteredCharacteristicCount > 0)
-                {
-                    LogCascadingToDescriptors(Id, Device.Id, filteredCharacteristicCount);
-                }
-
-                foreach (var characteristic in Characteristics.ToList())
-                {
-                    // Apply characteristic filter if present
-                    if (options.CharacteristicUuidFilter != null && !options.CharacteristicUuidFilter(characteristic.Id))
-                    {
-                        continue;
-                    }
-
-                    await characteristic.ExploreDescriptorsAsync(descriptorOptions, timeout, cancellationToken).ConfigureAwait(false);
-                }
-            }
-
             return;
         }
 
-        // Prevent multiple concurrent exploration calls
-        if (CharacteristicsExplorationTcs is { Task.IsCompleted: false })
+        // Check if exploration is already in progress
+        if (await TryAwaitOngoingCharacteristicExplorationAsync().ConfigureAwait(false))
         {
-            LogMergingCharacteristicExploration(Id, Device.Id);
-            await CharacteristicsExplorationTcs.Task.ConfigureAwait(false);
             return;
         }
 
+        // Start new exploration
         CharacteristicsExplorationTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         IsExploringCharacteristics = true;
 
         try
         {
-            // Ensure device is connected
-            DeviceNotConnectedException.ThrowIfNotConnected(Device);
-
-            LogExploringCharacteristics(Id, Device.Id);
-            await NativeCharacteristicsExplorationAsync(timeout, cancellationToken).ConfigureAwait(false);
+            await PerformCharacteristicExplorationAsync(timeout, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -231,33 +281,11 @@ public abstract partial class BaseBluetoothRemoteService
 
         try
         {
-            // Wait for exploration to complete
             await CharacteristicsExplorationTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
 
-            // Cascade to descriptors if requested
             if (options.ExploreDescriptors)
             {
-                var descriptorOptions = new DescriptorExplorationOptions
-                {
-                    UseCache = options.UseCache
-                };
-
-                var filteredCharacteristicCount = Characteristics.Count(c => options.CharacteristicUuidFilter == null || options.CharacteristicUuidFilter(c.Id));
-                if (filteredCharacteristicCount > 0)
-                {
-                    LogCascadingToDescriptors(Id, Device.Id, filteredCharacteristicCount);
-                }
-
-                foreach (var characteristic in Characteristics.ToList())
-                {
-                    // Apply characteristic filter if present
-                    if (options.CharacteristicUuidFilter != null && !options.CharacteristicUuidFilter(characteristic.Id))
-                    {
-                        continue;
-                    }
-
-                    await characteristic.ExploreDescriptorsAsync(descriptorOptions, timeout, cancellationToken).ConfigureAwait(false);
-                }
+                await ExploreDescriptorsForCharacteristicsAsync(options, timeout, cancellationToken).ConfigureAwait(false);
             }
         }
         finally

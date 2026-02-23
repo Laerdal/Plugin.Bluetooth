@@ -7,7 +7,7 @@ namespace Bluetooth.Core;
 /// </summary>
 public abstract partial class BaseBindableObject : INotifyPropertyChanged
 {
-    private readonly ConcurrentDictionary<string, object?> _values = new();
+    private readonly ConcurrentDictionary<string, object?> _values = new ConcurrentDictionary<string, object?>();
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBindableObject" /> class.

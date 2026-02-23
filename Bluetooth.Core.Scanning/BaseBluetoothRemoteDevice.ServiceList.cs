@@ -91,6 +91,94 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
+    ///     Explores characteristics for all services matching the filter.
+    /// </summary>
+    private async Task ExploreCharacteristicsForServicesAsync(ServiceExplorationOptions options, TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        var characteristicOptions = new CharacteristicExplorationOptions
+        {
+            ExploreDescriptors = options.ExploreDescriptors,
+            UseCache = options.UseCache
+        };
+
+        var filteredServiceCount = Services.Count(s => options.ServiceUuidFilter == null || options.ServiceUuidFilter(s.Id));
+        if (filteredServiceCount > 0)
+        {
+            LogCascadingToCharacteristics(Id, filteredServiceCount);
+        }
+
+        foreach (var service in Services.ToList())
+        {
+            if (ShouldSkipService(service, options))
+            {
+                continue;
+            }
+
+            await service.ExploreCharacteristicsAsync(characteristicOptions, timeout, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    ///     Determines if a service should be skipped based on the filter.
+    /// </summary>
+    private static bool ShouldSkipService(IBluetoothRemoteService service, ServiceExplorationOptions options)
+    {
+        return options.ServiceUuidFilter != null && !options.ServiceUuidFilter(service.Id);
+    }
+
+    /// <summary>
+    ///     Handles service exploration when cached services are available.
+    /// </summary>
+    /// <returns>True if cached services were used, false if fresh exploration is needed.</returns>
+    private async Task<bool> TryUseCachedServicesAsync(ServiceExplorationOptions options, TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        if (!options.UseCache || !Services.Any())
+        {
+            return false;
+        }
+
+        LogUsingCachedServices(Id, Services.Count);
+
+        if (options.ExploreCharacteristics)
+        {
+            await ExploreCharacteristicsForServicesAsync(options, timeout, cancellationToken).ConfigureAwait(false);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Waits for an ongoing service exploration to complete.
+    /// </summary>
+    /// <returns>True if waiting for an ongoing exploration, false if no exploration is in progress.</returns>
+    private async Task<bool> TryAwaitOngoingExplorationAsync()
+    {
+        if (ServicesExplorationTcs is { Task.IsCompleted: false })
+        {
+            LogMergingServiceExploration(Id);
+            await ServicesExplorationTcs.Task.ConfigureAwait(false);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Performs the native service exploration and waits for completion.
+    /// </summary>
+    private async Task PerformServiceExplorationAsync(TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        if (!IsConnected)
+        {
+            LogServiceExplorationNotConnected(Id);
+            throw new DeviceNotConnectedException(this, "Device must be connected to explore services.");
+        }
+
+        LogExploringServices(Id);
+        await NativeServicesExplorationAsync(timeout, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     ///     Called when service exploration succeeds. Updates the Services collection and completes the exploration task.
     /// </summary>
     /// <typeparam name="TNativeServiceType">The platform-specific service type.</typeparam>
@@ -143,65 +231,27 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async Task ExploreServicesAsync(ServiceExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        // Use default options if none provided
         options ??= new ServiceExplorationOptions();
 
-        // If caching enabled and services already exist, handle cascading exploration only
-        if (options.UseCache && Services.Any())
+        // Check if we can use cached services
+        if (await TryUseCachedServicesAsync(options, timeout, cancellationToken).ConfigureAwait(false))
         {
-            LogUsingCachedServices(Id, Services.Count);
-            // Services already explored, but may need to explore children
-            if (options.ExploreCharacteristics)
-            {
-                var characteristicOptions = new CharacteristicExplorationOptions
-                {
-                    ExploreDescriptors = options.ExploreDescriptors,
-                    UseCache = options.UseCache
-                };
-
-                var filteredServiceCount = Services.Count(s => options.ServiceUuidFilter == null || options.ServiceUuidFilter(s.Id));
-                if (filteredServiceCount > 0)
-                {
-                    LogCascadingToCharacteristics(Id, filteredServiceCount);
-                }
-
-                foreach (var service in Services.ToList())
-                {
-                    // Apply service filter if present
-                    if (options.ServiceUuidFilter != null && !options.ServiceUuidFilter(service.Id))
-                    {
-                        continue;
-                    }
-
-                    await service.ExploreCharacteristicsAsync(characteristicOptions, timeout, cancellationToken).ConfigureAwait(false);
-                }
-            }
-
             return;
         }
 
-        // Prevent multiple concurrent exploration calls
-        if (ServicesExplorationTcs is { Task.IsCompleted: false })
+        // Check if exploration is already in progress
+        if (await TryAwaitOngoingExplorationAsync().ConfigureAwait(false))
         {
-            LogMergingServiceExploration(Id);
-            await ServicesExplorationTcs.Task.ConfigureAwait(false);
             return;
         }
 
+        // Start new exploration
         ServicesExplorationTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         IsExploringServices = true;
 
         try
         {
-            // Ensure device is connected
-            if (!IsConnected)
-            {
-                LogServiceExplorationNotConnected(Id);
-                throw new DeviceNotConnectedException(this, "Device must be connected to explore services.");
-            }
-
-            LogExploringServices(Id);
-            await NativeServicesExplorationAsync(timeout, cancellationToken).ConfigureAwait(false);
+            await PerformServiceExplorationAsync(timeout, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -210,34 +260,11 @@ public abstract partial class BaseBluetoothRemoteDevice
 
         try
         {
-            // Wait for exploration to complete
             await ServicesExplorationTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
 
-            // Cascade to characteristics if requested
             if (options.ExploreCharacteristics)
             {
-                var characteristicOptions = new CharacteristicExplorationOptions
-                {
-                    ExploreDescriptors = options.ExploreDescriptors,
-                    UseCache = options.UseCache
-                };
-
-                var filteredServiceCount = Services.Count(s => options.ServiceUuidFilter == null || options.ServiceUuidFilter(s.Id));
-                if (filteredServiceCount > 0)
-                {
-                    LogCascadingToCharacteristics(Id, filteredServiceCount);
-                }
-
-                foreach (var service in Services.ToList())
-                {
-                    // Apply service filter if present
-                    if (options.ServiceUuidFilter != null && !options.ServiceUuidFilter(service.Id))
-                    {
-                        continue;
-                    }
-
-                    await service.ExploreCharacteristicsAsync(characteristicOptions, timeout, cancellationToken).ConfigureAwait(false);
-                }
+                await ExploreCharacteristicsForServicesAsync(options, timeout, cancellationToken).ConfigureAwait(false);
             }
         }
         finally
