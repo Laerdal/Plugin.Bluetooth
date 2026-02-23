@@ -44,8 +44,8 @@ public partial interface IBluetoothRemoteService
     /// </summary>
     /// <param name="options">
     ///     Optional exploration configuration. If null, uses default options (characteristics only, with caching enabled).
-    ///     Use <see cref="Options.CharacteristicExplorationOptions.CharacteristicsOnly" /> for basic exploration,
-    ///     or <see cref="Options.CharacteristicExplorationOptions.Full" /> to include descriptors.
+    ///     Use <see cref="CharacteristicExplorationOptions.CharacteristicsOnly" /> for basic exploration,
+    ///     or <see cref="CharacteristicExplorationOptions.Full" /> to include descriptors.
     ///     Set <c>UseCache = false</c> to force re-exploration even if characteristics were previously discovered.
     /// </param>
     /// <param name="timeout">The timeout for this operation</param>

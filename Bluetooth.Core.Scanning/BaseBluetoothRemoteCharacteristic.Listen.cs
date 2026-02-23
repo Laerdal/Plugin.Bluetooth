@@ -161,7 +161,12 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         set => SetValue(value);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Reads the current listening state of the characteristic asynchronously, ensuring that only one read operation is in progress at a time.
+    /// </summary>
+    /// <param name="timeout">The timeout for this operation.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
     /// <exception cref="CharacteristicCantListenException">Thrown when the characteristic does not support notifications or indications.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
@@ -292,7 +297,14 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         set => SetValue(value);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Writes the desired listening state to the characteristic. This method ensures that only one write operation can occur at a time
+    ///     and handles the asynchronous flow of starting the write operation and waiting for its completion.
+    /// </summary>
+    /// <param name="shouldBeListening">True to enable notifications/indications, false to disable them.</param>
+    /// <param name="timeout">The timeout for this operation.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="DeviceNotConnectedException">Thrown when the device is not connected.</exception>
     /// <exception cref="CharacteristicCantListenException">Thrown when the characteristic does not support notifications or indications.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>

@@ -36,7 +36,7 @@ namespace Bluetooth.Abstractions.Scanning.Converters;
 /// </code>
 ///     <para>
 ///         <b>Note:</b> This converter operates on smoothed RSSI values (after jitter smoothing configured via
-///         <see cref="Options.SignalStrengthSmoothingOptions" />). The smoothing happens before conversion.
+///         <see cref="SignalStrengthSmoothingOptions" />). The smoothing happens before conversion.
 ///     </para>
 /// </remarks>
 public interface IBluetoothRssiToSignalStrengthConverter

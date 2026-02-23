@@ -5,8 +5,6 @@ namespace Bluetooth.Abstractions.Scanning;
 /// </summary>
 public partial interface IBluetoothRemoteCharacteristic
 {
-    #region Listen
-
     /// <summary>
     ///     Gets a value indicating whether the characteristic supports notifications.
     /// </summary>
@@ -44,6 +42,4 @@ public partial interface IBluetoothRemoteCharacteristic
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
     ValueTask StopListeningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
-
-    #endregion
 }

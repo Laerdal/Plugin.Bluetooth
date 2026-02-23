@@ -45,9 +45,9 @@ public partial interface IBluetoothRemoteDevice
     /// </summary>
     /// <param name="options">
     ///     Optional exploration configuration. If null, uses default options (services only, with caching enabled).
-    ///     Use <see cref="Options.ServiceExplorationOptions.ServicesOnly" /> for services-only exploration,
-    ///     <see cref="Options.ServiceExplorationOptions.WithCharacteristics" /> to include characteristics,
-    ///     or <see cref="Options.ServiceExplorationOptions.Full" /> for full discovery (services + characteristics + descriptors).
+    ///     Use <see cref="ServiceExplorationOptions.ServicesOnly" /> for services-only exploration,
+    ///     <see cref="ServiceExplorationOptions.WithCharacteristics" /> to include characteristics,
+    ///     or <see cref="ServiceExplorationOptions.Full" /> for full discovery (services + characteristics + descriptors).
     ///     Set <c>UseCache = false</c> to force re-exploration even if services were previously discovered.
     /// </param>
     /// <param name="timeout">The timeout for this operation</param>
