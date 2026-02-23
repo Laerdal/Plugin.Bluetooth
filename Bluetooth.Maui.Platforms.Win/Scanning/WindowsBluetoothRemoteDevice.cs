@@ -1,4 +1,5 @@
 using Bluetooth.Maui.Platforms.Win.Exceptions;
+using Bluetooth.Maui.Platforms.Win.Logging;
 using Bluetooth.Maui.Platforms.Win.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Win.Scanning.NativeObjects;
 
@@ -9,6 +10,10 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning;
 ///     This class wraps Windows's BluetoothLEDevice and GattSession, providing platform-specific
 ///     implementations for device connection, service discovery, and device property management.
 /// </summary>
+/// <remarks>
+///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.bluetoothledevice">BluetoothLEDevice</seealso>
+///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession">GattSession</seealso>
+/// </remarks>
 public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     BluetoothLeDeviceProxy.IBluetoothLeDeviceProxyDelegate,
     NativeObjects.GattSessionWrapper.IGattSessionDelegate
@@ -68,6 +73,10 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     #region MTU
 
     /// <inheritdoc />
+    /// <remarks>
+    ///     Windows does not support requesting MTU changes. MTU is negotiated automatically by the platform.
+    ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession.maxpdusize">GattSession.MaxPduSize</seealso>
+    /// </remarks>
     protected override ValueTask NativeRequestMtuAsync(int requestedMtu)
     {
         // Windows doesn't support requesting MTU changes
@@ -80,6 +89,10 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     #region Connection Priority
 
     /// <inheritdoc />
+    /// <remarks>
+    ///     Windows does not support connection priority requests. Connection parameters are managed automatically by the platform.
+    ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession">GattSession</seealso>
+    /// </remarks>
     protected override ValueTask NativeRequestConnectionPriorityAsync(
         BluetoothConnectionPriority priority,
         TimeSpan? timeout = null,
@@ -141,6 +154,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
+        Logger?.LogConnecting(Id);
         NativeRefreshIsConnected();
 
         try
@@ -192,9 +206,12 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             var services = await BluetoothLeDeviceProxy.ReadGattServicesAsync(
                 BluetoothCacheMode.Uncached,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            Logger?.LogConnected(Id);
         }
         catch (Exception e)
         {
+            Logger?.LogConnectionFailed(Id, 1, e);
             OnConnectFailed(e);
             throw;
         }
@@ -205,6 +222,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
+        Logger?.LogDisconnecting(Id);
         NativeRefreshIsConnected();
 
         try
@@ -227,6 +245,8 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 GattSessionProxy.Dispose();
                 GattSessionProxy = null;
             }
+
+            Logger?.LogDisconnected(Id);
         }
         catch (Exception e)
         {
@@ -244,6 +264,8 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
+        Logger?.LogServiceDiscoveryStarting(Id);
+
         try
         {
             if (BluetoothLeDeviceProxy == null)
@@ -255,11 +277,14 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 BluetoothCacheMode.Uncached,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
+            Logger?.LogServiceDiscoveryCompleted(Id, services.Count);
+
             // Call OnServicesExplorationSucceeded with conversion function
             OnServicesExplorationSucceeded(services, AreRepresentingTheSameObject, ConvertNativeServiceToService);
         }
         catch (Exception ex)
         {
+            Logger?.LogServiceDiscoveryError(Id, ex.Message, ex);
             OnServicesExplorationFailed(ex);
         }
     }
@@ -296,6 +321,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <param name="senderName">The new device name.</param>
     public void OnNameChanged(string senderName)
     {
+        Logger?.LogDeviceNameUpdated(Id, senderName);
         CachedName = senderName;
     }
 
@@ -326,6 +352,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <param name="newConnectionStatus">The new connection status.</param>
     public void OnConnectionStatusChanged(BluetoothConnectionStatus newConnectionStatus)
     {
+        Logger?.LogConnectionStatusChanged(Id, newConnectionStatus.ToString());
         BluetoothConnectionStatus = newConnectionStatus;
         NativeRefreshIsConnected();
 

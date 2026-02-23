@@ -1,4 +1,5 @@
 using Bluetooth.Maui.Platforms.Win.Exceptions;
+using Bluetooth.Maui.Platforms.Win.Logging;
 using Bluetooth.Maui.Platforms.Win.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Win.Scanning.NativeObjects;
 
@@ -8,6 +9,10 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning;
 ///     Windows implementation of the Bluetooth service using Windows.Devices.Bluetooth APIs.
 ///     This implementation wraps Windows's GattDeviceService to provide access to GATT characteristics.
 /// </summary>
+/// <remarks>
+///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattdeviceservice">GattDeviceService</seealso>
+///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattcharacteristicsresult">GattCharacteristicsResult</seealso>
+/// </remarks>
 public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDeviceServiceProxy.IBluetoothServiceProxyDelegate
 {
     /// <summary>
@@ -66,6 +71,8 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
+        Logger?.LogCharacteristicDiscoveryStarting(Id, Device.Id);
+
         try
         {
             var result = await NativeServiceProxy.GattDeviceService
@@ -75,6 +82,8 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
+            Logger?.LogCharacteristicDiscoveryCompleted(Id, Device.Id, result.Characteristics.Count);
+
             // Call OnCharacteristicsExplorationSucceeded with conversion function
             OnCharacteristicsExplorationSucceeded(
                 result.Characteristics.ToList(),
@@ -83,6 +92,7 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
         }
         catch (Exception e)
         {
+            Logger?.LogCharacteristicDiscoveryError(Id, Device.Id, e.Message, e);
             OnCharacteristicsExplorationFailed(e);
         }
     }

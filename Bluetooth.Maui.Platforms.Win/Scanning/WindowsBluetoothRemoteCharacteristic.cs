@@ -1,4 +1,5 @@
 using Bluetooth.Maui.Platforms.Win.Exceptions;
+using Bluetooth.Maui.Platforms.Win.Logging;
 using Bluetooth.Maui.Platforms.Win.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Win.Scanning.NativeObjects;
 
@@ -11,6 +12,11 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning;
 ///     This class wraps Windows's GattCharacteristic, providing platform-specific
 ///     implementations for reading, writing, and listening to characteristic values.
 /// </summary>
+/// <remarks>
+///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattcharacteristic">GattCharacteristic</seealso>
+///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattreadresult">GattReadResult</seealso>
+///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattwriteresult">GattWriteResult</seealso>
+/// </remarks>
 public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteristic,
     GattCharacteristicProxy.IBluetoothCharacteristicProxyDelegate
 {
@@ -50,6 +56,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <param name="argsTimestamp">The timestamp when the value changed.</param>
     public void OnValueChanged(byte[] value, DateTimeOffset argsTimestamp)
     {
+        Logger?.LogNotificationReceived(Id, RemoteService.Device.Id, value.Length);
         OnReadValueSucceeded(value);
     }
 
@@ -60,6 +67,8 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <inheritdoc />
     protected async override ValueTask NativeReadValueAsync()
     {
+        Logger?.LogCharacteristicRead(Id, RemoteService.Device.Id);
+
         try
         {
             var result = await NativeCharacteristicProxy.GattCharacteristic
@@ -74,15 +83,18 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
                 var data = new byte[buffer.Length];
                 using var reader = DataReader.FromBuffer(buffer);
                 reader.ReadBytes(data);
+                Logger?.LogCharacteristicReadCompleted(Id, RemoteService.Device.Id, data.Length);
                 OnReadValueSucceeded(data);
             }
             else
             {
+                Logger?.LogCharacteristicReadCompleted(Id, RemoteService.Device.Id, 0);
                 OnReadValueSucceeded(Array.Empty<byte>());
             }
         }
         catch (Exception ex)
         {
+            Logger?.LogCharacteristicReadError(Id, RemoteService.Device.Id, ex.Message, ex);
             OnReadValueFailed(ex);
         }
     }
@@ -101,6 +113,8 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <inheritdoc />
     protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
+        Logger?.LogCharacteristicWrite(Id, RemoteService.Device.Id, value.Length);
+
         try
         {
             // Choose write option based on characteristic properties
@@ -136,10 +150,12 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
+            Logger?.LogCharacteristicWriteCompleted(Id, RemoteService.Device.Id);
             OnWriteValueSucceeded();
         }
         catch (Exception ex)
         {
+            Logger?.LogCharacteristicWriteError(Id, RemoteService.Device.Id, ex.Message, ex);
             OnWriteValueFailed(ex);
         }
     }
@@ -181,6 +197,9 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <inheritdoc />
     protected async override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
+        var action = shouldBeListening ? "Enabling" : "Disabling";
+        Logger?.LogNotificationStateChange(action, Id, RemoteService.Device.Id);
+
         try
         {
             GattClientCharacteristicConfigurationDescriptorValue cccdValue;
@@ -221,6 +240,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
         }
         catch (Exception ex)
         {
+            Logger?.LogNotificationStateChangeError(Id, RemoteService.Device.Id, ex.Message, ex);
             OnWriteIsListeningFailed(ex);
         }
     }

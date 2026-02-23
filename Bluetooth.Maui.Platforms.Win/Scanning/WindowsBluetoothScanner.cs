@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 
 using Bluetooth.Maui.Platforms.Win.Exceptions;
+using Bluetooth.Maui.Platforms.Win.Logging;
 using Bluetooth.Maui.Platforms.Win.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.Win.Scanning;
@@ -10,6 +11,8 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning;
 /// </summary>
 /// <remarks>
 ///     This implementation uses <see cref="BluetoothLEAdvertisementWatcher" /> to monitor BLE advertisements.
+///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementwatcher">BluetoothLEAdvertisementWatcher</seealso>
+///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs">BluetoothLEAdvertisementReceivedEventArgs</seealso>
 /// </remarks>
 public class WindowsBluetoothScanner : BaseBluetoothScanner,
     NativeObjects.BluetoothLeAdvertisementWatcherWrapper.IBluetoothLeAdvertisementWatcherProxyDelegate
@@ -44,6 +47,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
     public void OnAdvertisementReceived(BluetoothLEAdvertisementReceivedEventArgs argsAdvertisement)
     {
         var advertisement = new WindowsBluetoothAdvertisement(argsAdvertisement);
+        Logger?.LogDeviceDiscovered(advertisement.BluetoothAddress, advertisement.RawSignalStrengthInDBm);
         OnAdvertisementReceived(advertisement); // Base class method
     }
 
@@ -55,10 +59,12 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
     {
         if (argsError != BluetoothError.Success)
         {
+            Logger?.LogScanError(argsError.ToString(), new WindowsNativeBluetoothErrorException(argsError));
             OnStopFailed(new WindowsNativeBluetoothErrorException(argsError));
         }
         else
         {
+            Logger?.LogScanStopped();
             OnStopSucceeded();
         }
     }
@@ -87,10 +93,13 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
+        Logger?.LogScanStarting(scanningOptions.ScanMode, scanningOptions.CallbackType);
+
         // Start watcher (status change callback will call OnStartSucceeded)
         try
         {
             Watcher.BluetoothLeAdvertisementWatcher.Start();
+            Logger?.LogScanStarted();
         }
         catch (COMException e)
         {
@@ -118,6 +127,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
+        Logger?.LogScanStopping();
         _watcher?.BluetoothLeAdvertisementWatcher.Stop();
         return ValueTask.CompletedTask;
     }
