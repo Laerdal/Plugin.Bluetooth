@@ -76,6 +76,9 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         _nativeDevice?.Dispose();
         _nativeDevice = null;
 
+        // Dispose AutoResetEvent to prevent memory leak
+        ReliableWriteCompleted?.Dispose();
+
         await base.DisposeAsync().ConfigureAwait(false);
 
         return;
