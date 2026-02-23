@@ -469,4 +469,113 @@ internal static partial class AppleBluetoothLoggerMessages
         Exception exception);
 
     #endregion
+
+    #region L2CAP Channel Logging
+
+    [LoggerMessage(
+        EventId = 8000,
+        Level = LogLevel.Information,
+        Message = "Opening L2CAP channel to PSM {Psm} for device {DeviceId}")]
+    public static partial void LogL2CapChannelOpening(
+        this ILogger logger,
+        int psm,
+        string deviceId);
+
+    [LoggerMessage(
+        EventId = 8001,
+        Level = LogLevel.Information,
+        Message = "L2CAP channel opened successfully to PSM {Psm}, MTU: {Mtu}")]
+    public static partial void LogL2CapChannelOpened(
+        this ILogger logger,
+        int psm,
+        int mtu);
+
+    [LoggerMessage(
+        EventId = 8002,
+        Level = LogLevel.Error,
+        Message = "Failed to open L2CAP channel to PSM {Psm}")]
+    public static partial void LogL2CapChannelOpenFailed(
+        this ILogger logger,
+        int psm,
+        Exception exception);
+
+    [LoggerMessage(
+        EventId = 8003,
+        Level = LogLevel.Debug,
+        Message = "Closing L2CAP channel for PSM {Psm}")]
+    public static partial void LogL2CapChannelClosing(
+        this ILogger logger,
+        int psm);
+
+    [LoggerMessage(
+        EventId = 8004,
+        Level = LogLevel.Information,
+        Message = "L2CAP channel closed successfully for PSM {Psm}")]
+    public static partial void LogL2CapChannelClosed(
+        this ILogger logger,
+        int psm);
+
+    [LoggerMessage(
+        EventId = 8005,
+        Level = LogLevel.Debug,
+        Message = "Reading from L2CAP channel PSM {Psm}, buffer size: {BufferSize}")]
+    public static partial void LogL2CapChannelReading(
+        this ILogger logger,
+        int psm,
+        int bufferSize);
+
+    [LoggerMessage(
+        EventId = 8006,
+        Level = LogLevel.Debug,
+        Message = "Read {BytesRead} bytes from L2CAP channel PSM {Psm}")]
+    public static partial void LogL2CapChannelRead(
+        this ILogger logger,
+        int psm,
+        int bytesRead);
+
+    [LoggerMessage(
+        EventId = 8007,
+        Level = LogLevel.Debug,
+        Message = "Writing {DataLength} bytes to L2CAP channel PSM {Psm}")]
+    public static partial void LogL2CapChannelWriting(
+        this ILogger logger,
+        int psm,
+        int dataLength);
+
+    [LoggerMessage(
+        EventId = 8008,
+        Level = LogLevel.Debug,
+        Message = "Wrote successfully to L2CAP channel PSM {Psm}")]
+    public static partial void LogL2CapChannelWritten(
+        this ILogger logger,
+        int psm);
+
+    [LoggerMessage(
+        EventId = 8009,
+        Level = LogLevel.Debug,
+        Message = "Data received on L2CAP channel PSM {Psm}, {BytesReceived} bytes")]
+    public static partial void LogL2CapDataReceived(
+        this ILogger logger,
+        int psm,
+        int bytesReceived);
+
+    [LoggerMessage(
+        EventId = 8010,
+        Level = LogLevel.Error,
+        Message = "Error in L2CAP stream delegate for PSM {Psm}")]
+    public static partial void LogL2CapStreamError(
+        this ILogger logger,
+        int psm,
+        Exception exception);
+
+    [LoggerMessage(
+        EventId = 8011,
+        Level = LogLevel.Error,
+        Message = "Error closing L2CAP channel for PSM {Psm}")]
+    public static partial void LogL2CapChannelCloseError(
+        this ILogger logger,
+        int psm,
+        Exception exception);
+
+    #endregion
 }

@@ -244,9 +244,34 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <inheritdoc />
     protected override ValueTask NativeOpenL2CapChannelAsync(int psm)
     {
-        throw new PlatformNotSupportedException(
-            "L2CAP channel support is not implemented for Android. " +
-            "Android provides L2CAP APIs starting from API 29, but integration is not yet available.");
+        if (!OperatingSystem.IsAndroidVersionAtLeast(29))
+        {
+            throw new PlatformNotSupportedException(
+                "L2CAP channels require Android 10+ (API 29). Current version does not support this feature.");
+        }
+
+        if (_nativeDevice == null)
+        {
+            throw new InvalidOperationException("Native device is null");
+        }
+
+        var channel = new AndroidBluetoothL2CapChannel(this, _nativeDevice, psm, Logger);
+
+        // Open the channel which will trigger the callback
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await channel.OpenAsync().ConfigureAwait(false);
+                OnL2CapChannelOpened(channel);
+            }
+            catch (Exception e)
+            {
+                OnOpenL2CapChannelFailed(e);
+            }
+        });
+
+        return ValueTask.CompletedTask;
     }
 
     #endregion
