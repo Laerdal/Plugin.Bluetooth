@@ -121,6 +121,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
         return droidService;
     }
 
+    /// <inheritdoc />
     protected override void NativeRefreshIsRunning()
     {
         // On Android, there is no direct way to check if advertising is running.
@@ -128,18 +129,20 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     }
 
     /// <inheritdoc />
-    protected async override ValueTask NativeStartAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeStartAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(BluetoothManager.Adapter);
-        _advertiser ??= BluetoothManager.Adapter.BluetoothLeAdvertiser
-                        ?? throw new InvalidOperationException("Bluetooth LE Advertiser not available");
+        try
+        {
+            ArgumentNullException.ThrowIfNull(BluetoothManager.Adapter);
+            _advertiser ??= BluetoothManager.Adapter.BluetoothLeAdvertiser
+                         ?? throw new InvalidOperationException("Bluetooth LE Advertiser not available");
 
-        _advertiseProxy ??= new AdvertiseCallbackProxy(this);
+            _advertiseProxy ??= new AdvertiseCallbackProxy(this);
 
-        _gattServerProxy ??= new BluetoothGattServerCallbackProxy(this, BluetoothManager);
+            _gattServerProxy ??= new BluetoothGattServerCallbackProxy(this, BluetoothManager);
 
-        throw new NotImplementedException("AndroidBluetoothBroadcaster is not yet implemented on Android.");
-        /*
+            throw new NotImplementedException("AndroidBluetoothBroadcaster is not yet implemented on Android.");
+            /*
         // Initialize GATT server proxy
         _gattServerProxy = new BluetoothGattServerCallbackProxy(this, BluetoothManager);
 
@@ -207,6 +210,11 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
         }
 
         SetValue(true, nameof(IsRunning));*/
+        }
+        catch (Exception exception)
+        {
+            return ValueTask.FromException(exception);
+        }
     }
 
     /// <inheritdoc />

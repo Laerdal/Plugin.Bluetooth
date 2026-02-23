@@ -2,9 +2,9 @@ using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 
-/// <inheritdoc />
+/// <inheritdoc cref="BaseBluetoothConnectedDevice" />
 public class AndroidBluetoothConnectedDevice : BaseBluetoothConnectedDevice,
-    BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate
+                                               BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate
 {
     /// <inheritdoc />
     public AndroidBluetoothConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec request) : base(broadcaster, request)

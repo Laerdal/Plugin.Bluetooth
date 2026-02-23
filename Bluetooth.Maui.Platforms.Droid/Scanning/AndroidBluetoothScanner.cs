@@ -7,7 +7,7 @@ using ScanMode = Android.Bluetooth.LE.ScanMode;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning;
 
-/// <inheritdoc />
+/// <inheritdoc cref="BaseBluetoothScanner" />
 public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.IScanCallbackProxyDelegate
 {
     /// <inheritdoc />

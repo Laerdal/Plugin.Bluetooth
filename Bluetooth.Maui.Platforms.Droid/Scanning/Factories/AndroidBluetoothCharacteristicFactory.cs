@@ -6,16 +6,16 @@ namespace Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 public class AndroidBluetoothCharacteristicFactory : BaseBluetoothCharacteristicFactory
 {
     /// <inheritdoc />
-    /// <exception cref="PlatformNotSupportedException"></exception>
-    public AndroidBluetoothCharacteristicFactory(IBluetoothDescriptorFactory descriptorFactory) : base(descriptorFactory)
+    public AndroidBluetoothCharacteristicFactory(IBluetoothDescriptorFactory descriptorFactory)
+        : base(descriptorFactory)
     {
-        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc />
-    /// <exception cref="PlatformNotSupportedException"></exception>
-    public override IBluetoothRemoteCharacteristic CreateCharacteristic(IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request)
+    public override IBluetoothRemoteCharacteristic CreateCharacteristic(
+        IBluetoothRemoteService remoteService,
+        IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request)
     {
-        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+        return new AndroidBluetoothRemoteCharacteristic(remoteService, request, DescriptorFactory);
     }
 }
