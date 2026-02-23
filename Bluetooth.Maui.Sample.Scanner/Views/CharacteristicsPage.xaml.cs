@@ -3,7 +3,7 @@ namespace Bluetooth.Maui.Sample.Scanner.Views;
 /// <summary>
 ///     Characteristics page displaying service details and GATT characteristics.
 /// </summary>
-public partial class CharacteristicsPage : BaseContentPage<CharacteristicsViewModel>, IQueryAttributable
+public partial class CharacteristicsPage : IQueryAttributable
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="CharacteristicsPage" /> class.

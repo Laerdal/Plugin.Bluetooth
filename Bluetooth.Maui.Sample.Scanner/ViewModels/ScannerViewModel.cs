@@ -6,6 +6,7 @@ namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 public class ScannerViewModel : BaseViewModel
 {
     private readonly INavigationService _navigation;
+
     private readonly IBluetoothScanner _scanner;
 
     /// <summary>
@@ -34,10 +35,13 @@ public class ScannerViewModel : BaseViewModel
     /// </summary>
     public ObservableCollection<IBluetoothRemoteDevice> Devices { get; } = new ObservableCollection<IBluetoothRemoteDevice>();
 
+    /// <summary>
+    ///     Gets or sets the currently selected Bluetooth device.
+    /// </summary>
     public IBluetoothRemoteDevice? SelectedDevice
     {
         get => GetValue<IBluetoothRemoteDevice?>(null);
-        set => SetValue(value);
+        private set => SetValue(value);
     }
 
     /// <summary>
@@ -96,6 +100,7 @@ public class ScannerViewModel : BaseViewModel
             var options = new ScanningOptions
             {
                 IgnoreNamelessAdvertisements = true
+
                 // Using defaults - scans for all devices
             };
 
@@ -107,10 +112,7 @@ public class ScannerViewModel : BaseViewModel
             var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
             if (mainPage != null)
             {
-                await mainPage.DisplayAlertAsync(
-                    "Scan Error",
-                    $"Failed to start scanning: {ex.Message}",
-                    "OK");
+                await mainPage.DisplayAlertAsync("Scan Error", $"Failed to start scanning: {ex.Message}", "OK");
             }
         }
     }
@@ -129,10 +131,7 @@ public class ScannerViewModel : BaseViewModel
             var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
             if (mainPage != null)
             {
-                await mainPage.DisplayAlertAsync(
-                    "Stop Error",
-                    $"Failed to stop scanning: {ex.Message}",
-                    "OK");
+                await mainPage.DisplayAlertAsync("Stop Error", $"Failed to stop scanning: {ex.Message}", "OK");
             }
         }
     }

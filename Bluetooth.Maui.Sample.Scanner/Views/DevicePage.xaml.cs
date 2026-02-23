@@ -3,7 +3,7 @@ namespace Bluetooth.Maui.Sample.Scanner.Views;
 /// <summary>
 ///     Device detail page displaying connection controls and GATT services.
 /// </summary>
-public partial class DevicePage : BaseContentPage<DeviceViewModel>, IQueryAttributable
+public partial class DevicePage : IQueryAttributable
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="DevicePage" /> class.

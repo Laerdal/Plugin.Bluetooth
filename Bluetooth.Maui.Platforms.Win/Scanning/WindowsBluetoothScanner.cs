@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 
 using Bluetooth.Maui.Platforms.Win.Exceptions;
-using Bluetooth.Maui.Platforms.Win.NativeObjects;
 using Bluetooth.Maui.Platforms.Win.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.Win.Scanning;

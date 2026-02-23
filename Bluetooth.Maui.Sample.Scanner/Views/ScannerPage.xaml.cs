@@ -3,7 +3,7 @@ namespace Bluetooth.Maui.Sample.Scanner.Views;
 /// <summary>
 ///     Scanner page for discovering BLE devices.
 /// </summary>
-public partial class ScannerPage : BaseContentPage<ScannerViewModel>
+public partial class ScannerPage
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="ScannerPage" /> class.

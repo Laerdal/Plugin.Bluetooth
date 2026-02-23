@@ -2,7 +2,7 @@ using Bluetooth.Core.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.DotNetCore.Scanning.Factories;
 
-/// <inheritdoc />
+/// <inheritdoc cref="BaseBluetoothServiceFactory" />
 public class DotNetCoreBluetoothServiceFactory : BaseBluetoothServiceFactory, IBluetoothServiceFactory
 {
     /// <inheritdoc />
