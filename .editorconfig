@@ -4,7 +4,7 @@ root = true
 [*]
 charset = utf-8
 end_of_line = crlf
-insert_final_newline = false
+insert_final_newline = true
 trim_trailing_whitespace = false
 max_line_length = 240
 max_empty_lines = 1
@@ -419,7 +419,7 @@ dotnet_naming_symbols.constants_symbols.required_modifiers = const
 dotnet_naming_symbols.constants_symbols.resharper_applicable_kinds = constant_field
 dotnet_naming_symbols.constants_symbols.resharper_required_modifiers = any
 dotnet_naming_symbols.enum_member_symbols.applicable_accessibilities = *
-dotnet_naming_symbols.enum_member_symbols.applicable_kinds = 
+dotnet_naming_symbols.enum_member_symbols.applicable_kinds =
 dotnet_naming_symbols.enum_member_symbols.resharper_applicable_kinds = enum_member
 dotnet_naming_symbols.enum_member_symbols.resharper_required_modifiers = any
 dotnet_naming_symbols.event_symbols.applicable_accessibilities = *
@@ -509,7 +509,7 @@ dotnet_style_qualification_for_field = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
-file_header_template = 
+file_header_template =
 
 # C# files
 [*.cs]

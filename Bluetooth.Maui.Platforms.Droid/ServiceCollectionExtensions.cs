@@ -20,7 +20,7 @@ public static class ServiceCollectionExtensions
     {
         // Platform-specific services
         services.AddSingleton<IBluetoothAdapter, AndroidBluetoothAdapter>();
-        
+
         services.AddSingleton<IBluetoothAdapterWrapper, BluetoothAdapterWrapper>();
         services.AddSingleton<IBluetoothManagerWrapper, BluetoothManagerWrapper>();
 

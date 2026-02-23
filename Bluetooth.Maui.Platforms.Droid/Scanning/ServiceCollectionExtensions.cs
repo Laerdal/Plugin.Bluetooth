@@ -17,7 +17,7 @@ public static class ServiceCollectionExtensions
     public static void AddBluetoothMauiAndroidScanningServices(this IServiceCollection services)
     {
         services.AddSingleton<IBluetoothScanner, AndroidBluetoothScanner>();
-        
+
         services.AddSingleton<IBluetoothDeviceFactory, AndroidBluetoothDeviceFactory>();
         services.AddSingleton<IBluetoothServiceFactory, AndroidBluetoothServiceFactory>();
         services.AddSingleton<IBluetoothCharacteristicFactory, AndroidBluetoothCharacteristicFactory>();

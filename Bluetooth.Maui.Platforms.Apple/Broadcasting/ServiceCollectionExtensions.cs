@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
     public static void AddBluetoothMauiAppleBroadcastingServices(this IServiceCollection services)
     {
         services.AddSingleton<IBluetoothBroadcaster, AppleBluetoothBroadcaster>();
-        
+
         services.AddSingleton<IBluetoothLocalCharacteristicFactory, AppleBluetoothLocalCharacteristicFactory>();
         services.AddSingleton<IBluetoothLocalServiceFactory, AppleBluetoothLocalServiceFactory>();
         services.AddSingleton<IBluetoothLocalDescriptorFactory, AppleBluetoothLocalDescriptorFactory>();

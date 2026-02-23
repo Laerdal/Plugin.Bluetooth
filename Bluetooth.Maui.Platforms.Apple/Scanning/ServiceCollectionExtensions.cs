@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
     public static void AddBluetoothMauiAppleScanningServices(this IServiceCollection services)
     {
         services.AddSingleton<IBluetoothScanner, AppleBluetoothScanner>();
-        
+
         services.AddSingleton<IBluetoothCharacteristicFactory, AppleBluetoothCharacteristicFactory>();
         services.AddSingleton<IBluetoothServiceFactory, AppleBluetoothServiceFactory>();
         services.AddSingleton<IBluetoothDescriptorFactory, AppleBluetoothDescriptorFactory>();
