@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 
 /// <inheritdoc />

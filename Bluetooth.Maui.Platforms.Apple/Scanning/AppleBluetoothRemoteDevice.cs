@@ -8,7 +8,7 @@ using ServiceNotFoundException = Bluetooth.Abstractions.Scanning.Exceptions.Serv
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
 /// <inheritdoc cref="BaseBluetoothRemoteDevice" />
-public partial class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeripheralWrapper.ICbPeripheralDelegate, CbCentralManagerWrapper.ICbPeripheralDelegate
+public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeripheralWrapper.ICbPeripheralDelegate, CbCentralManagerWrapper.ICbPeripheralDelegate
 {
     /// <inheritdoc />
     public AppleBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request, IBluetoothServiceFactory serviceFactory,
@@ -338,7 +338,7 @@ public partial class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbP
     /// <summary>
     ///     Gets the auto-reset event used to signal when the peripheral is ready to send write-without-response commands.
     /// </summary>
-    private AutoResetEvent ReadyToSendWriteWithoutResponse { get; } = new(false);
+    private AutoResetEvent ReadyToSendWriteWithoutResponse { get; } = new AutoResetEvent(false);
 
     /// <summary>
     ///     Called when the peripheral is ready to send more write-without-response commands on the iOS platform.

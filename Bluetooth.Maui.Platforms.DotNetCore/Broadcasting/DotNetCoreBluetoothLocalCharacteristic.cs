@@ -15,7 +15,7 @@ public class DotNetCoreBluetoothLocalCharacteristic : Core.Broadcasting.BaseBlue
 
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    protected async override ValueTask NativeUpdateValueAsync(ReadOnlyMemory<byte> value, bool notifyClients, TimeSpan? timeout, CancellationToken cancellationToken)
+    protected async override ValueTask NativeUpdateValueAsync(ReadOnlyMemory<byte> value, bool notifyClients, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

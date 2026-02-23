@@ -108,7 +108,7 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
     }
 
     /// <inheritdoc />
-    protected override ValueTask NativeUpdateValueAsync(ReadOnlyMemory<byte> value, bool notifyClients, TimeSpan? timeout, CancellationToken cancellationToken)
+    protected override ValueTask NativeUpdateValueAsync(ReadOnlyMemory<byte> value, bool notifyClients, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         var nsData = value.ToNSData();
         var centralsToNotify = notifyClients ? SubscribedDevices.Cast<AppleBluetoothConnectedDevice>().Select(d => d.CbCentral).ToArray() : null;

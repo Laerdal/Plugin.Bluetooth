@@ -6,7 +6,7 @@ using Bluetooth.Maui.Platforms.Apple.Threading;
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
 /// <inheritdoc cref="BaseBluetoothScanner" />
-public partial class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapper.ICbCentralManagerDelegate, IDisposable
+public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapper.ICbCentralManagerDelegate, IDisposable
 {
     /// <inheritdoc />
     public AppleBluetoothScanner(IBluetoothAdapter adapter,

@@ -32,7 +32,7 @@ public class ScannerViewModel : BaseViewModel
     ///     Collection of discovered Bluetooth devices.
     ///     Automatically updated when devices are discovered or removed.
     /// </summary>
-    public ObservableCollection<IBluetoothRemoteDevice> Devices { get; } = new();
+    public ObservableCollection<IBluetoothRemoteDevice> Devices { get; } = new ObservableCollection<IBluetoothRemoteDevice>();
 
     public IBluetoothRemoteDevice? SelectedDevice
     {

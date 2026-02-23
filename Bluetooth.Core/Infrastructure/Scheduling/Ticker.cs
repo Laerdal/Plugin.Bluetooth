@@ -42,7 +42,7 @@ public sealed partial class Ticker : ITicker, IDisposable
     /// <inheritdoc />
     public IDisposable Register(string name, TimeSpan period, Action tick, bool runImmediately = false)
     {
-        return Register(name, period, ct => {
+        return Register(name, period, _ => {
             tick();
             return Task.CompletedTask;
         }, runImmediately);

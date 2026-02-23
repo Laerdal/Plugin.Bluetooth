@@ -331,9 +331,9 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
             return propertyInfo == null ? throw new ArgumentException($"Property '{propertyName}' not found on type '{obj.GetType().FullName}'") : propertyInfo;
         }
 
-        static Tp? GetPropertyValue<Tp>(object obj, PropertyInfo propertyInfo)
+        static TP? GetPropertyValue<TP>(object obj, PropertyInfo propertyInfo)
         {
-            return (Tp?) propertyInfo.GetValue(obj, null);
+            return (TP?) propertyInfo.GetValue(obj, null);
         }
     }
 
@@ -395,9 +395,9 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
             return propertyInfo == null ? throw new ArgumentException($"Property '{propertyName}' not found on type '{obj.GetType().FullName}'") : propertyInfo;
         }
 
-        static Tp? GetPropertyValue<Tp>(object obj, PropertyInfo propertyInfo)
+        static TP? GetPropertyValue<TP>(object obj, PropertyInfo propertyInfo)
         {
-            return (Tp?) propertyInfo.GetValue(obj, null);
+            return (TP?) propertyInfo.GetValue(obj, null);
         }
     }
 

@@ -69,7 +69,7 @@ public class DeviceViewModel : BaseViewModel
     /// <summary>
     ///     Gets the collection of discovered services.
     /// </summary>
-    public ObservableCollection<IBluetoothRemoteService> Services { get; } = new();
+    public ObservableCollection<IBluetoothRemoteService> Services { get; } = new ObservableCollection<IBluetoothRemoteService>();
 
     /// <summary>
     ///     Gets the number of discovered services.

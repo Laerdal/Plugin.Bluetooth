@@ -16,17 +16,26 @@ public abstract class BaseAndroidPermissionHandler : Microsoft.Maui.ApplicationM
         PermissionIsRuntime = permissionIsRuntime;
     }
 
+    /// <summary>
+    ///     Gets the Android permission name.
+    /// </summary>
     protected string PermissionName { get; }
 
+    /// <summary>
+    ///     Gets a value indicating whether this is a runtime permission that requires user approval.
+    /// </summary>
     protected bool PermissionIsRuntime { get; }
 
+    /// <summary>
+    ///     Gets the list of required Android permissions with their runtime status.
+    /// </summary>
     public override (string androidPermission, bool isRuntime)[] RequiredPermissions => [(PermissionName, PermissionIsRuntime)];
 
     /// <summary>
-    ///     Requests the permission if needed asynchronously.
+    ///     Requests the permission from the user if it has not already been granted.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    /// <exception cref="PermissionException"></exception>
+    /// <exception cref="PermissionException">Thrown when the permission is not granted after the request.</exception>
     public async Task RequestIfNeededAsync()
     {
         if (await CheckStatusAsync().ConfigureAwait(false) == PermissionStatus.Granted)

@@ -53,7 +53,7 @@ public class CharacteristicsViewModel : BaseViewModel
     /// <summary>
     ///     Gets the collection of discovered characteristics.
     /// </summary>
-    public ObservableCollection<IBluetoothRemoteCharacteristic> Characteristics { get; } = new();
+    public ObservableCollection<IBluetoothRemoteCharacteristic> Characteristics { get; } = new ObservableCollection<IBluetoothRemoteCharacteristic>();
 
     /// <summary>
     ///     Gets the number of discovered characteristics.

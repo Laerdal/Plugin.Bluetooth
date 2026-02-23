@@ -18,6 +18,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     ///     Initializes a new instance of the <see cref="BluetoothGattServerCallbackProxy" /> class.
     /// </summary>
     /// <param name="bluetoothGattServerCallbackProxyDelegate">The delegate instance that will receive callback events.</param>
+    /// <param name="bluetoothManager">The Bluetooth manager used to open the GATT server.</param>
     /// <exception cref="InvalidOperationException">Thrown when the GATT server cannot be opened.</exception>
     public BluetoothGattServerCallbackProxy(IBluetoothGattServerCallbackProxyDelegate bluetoothGattServerCallbackProxyDelegate, BluetoothManager bluetoothManager)
     {

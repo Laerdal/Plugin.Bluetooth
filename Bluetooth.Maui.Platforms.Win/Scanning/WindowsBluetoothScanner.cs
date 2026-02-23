@@ -96,8 +96,8 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
         catch (COMException e)
         {
             // Check if it's a permission-related error
-            const int E_ACCESSDENIED = unchecked((int) 0x80070005);
-            if (e.HResult == E_ACCESSDENIED)
+            const int eAccessdenied = unchecked((int) 0x80070005);
+            if (e.HResult == eAccessdenied)
             {
                 throw new BluetoothPermissionException(
                     "Access denied when starting Bluetooth scanner. Ensure 'bluetooth' capability is declared in Package.appxmanifest and Bluetooth radio is enabled. " +

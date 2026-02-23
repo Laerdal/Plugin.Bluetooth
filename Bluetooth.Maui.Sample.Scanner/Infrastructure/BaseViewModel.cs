@@ -6,7 +6,7 @@ namespace Bluetooth.Maui.Sample.Scanner.Infrastructure;
 /// </summary>
 public abstract partial class BaseViewModel : INotifyPropertyChanged
 {
-    private readonly ConcurrentDictionary<string, object?> _values = new();
+    private readonly ConcurrentDictionary<string, object?> _values = new ConcurrentDictionary<string, object?>();
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseViewModel" /> class.
@@ -330,9 +330,9 @@ public abstract partial class BaseViewModel : INotifyPropertyChanged
             return propertyInfo == null ? throw new ArgumentException($"Property '{propertyName}' not found on type '{obj.GetType().FullName}'") : propertyInfo;
         }
 
-        static Tp? GetPropertyValue<Tp>(object obj, PropertyInfo propertyInfo)
+        static TP? GetPropertyValue<TP>(object obj, PropertyInfo propertyInfo)
         {
-            return (Tp?) propertyInfo.GetValue(obj, null);
+            return (TP?) propertyInfo.GetValue(obj, null);
         }
     }
 
@@ -394,9 +394,9 @@ public abstract partial class BaseViewModel : INotifyPropertyChanged
             return propertyInfo == null ? throw new ArgumentException($"Property '{propertyName}' not found on type '{obj.GetType().FullName}'") : propertyInfo;
         }
 
-        static Tp? GetPropertyValue<Tp>(object obj, PropertyInfo propertyInfo)
+        static TP? GetPropertyValue<TP>(object obj, PropertyInfo propertyInfo)
         {
-            return (Tp?) propertyInfo.GetValue(obj, null);
+            return (TP?) propertyInfo.GetValue(obj, null);
         }
     }
 
