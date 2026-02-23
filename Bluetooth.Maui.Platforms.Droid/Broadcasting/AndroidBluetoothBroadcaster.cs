@@ -1,5 +1,6 @@
 using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
+using Bluetooth.Maui.Platforms.Droid.Logging;
 using Bluetooth.Maui.Platforms.Droid.Permissions;
 using Bluetooth.Maui.Platforms.Droid.Tools;
 
@@ -243,7 +244,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
         }
         catch (Exception ex)
         {
-            Logger?.LogError(ex, "Error stopping broadcaster");
+            Logger?.LogBroadcasterStopError(ex);
             throw;
         }
 

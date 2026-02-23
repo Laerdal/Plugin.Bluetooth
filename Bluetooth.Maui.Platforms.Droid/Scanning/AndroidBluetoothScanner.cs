@@ -1,6 +1,7 @@
 using Bluetooth.Abstractions.Options;
 using Bluetooth.Core.Infrastructure.Retries;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
+using Bluetooth.Maui.Platforms.Droid.Logging;
 using Bluetooth.Maui.Platforms.Droid.Permissions;
 using Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
@@ -78,21 +79,58 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         ArgumentNullException.ThrowIfNull(BluetoothLeScanner);
         ArgumentNullException.ThrowIfNull(scanningOptions);
 
+        Logger?.LogScanStarting(scanningOptions.ScanMode, scanningOptions.CallbackType);
+
         var retryOptions = scanningOptions.ScanStartRetry ?? RetryOptions.None;
 
         if (retryOptions.MaxRetries > 0)
         {
             // Use retry logic for scan start
-            await RetryTools.RunWithRetriesAsync(
-                () => StartScanInternal(scanningOptions, cancellationToken),
-                retryOptions,
-                cancellationToken
-            ).ConfigureAwait(false);
+            var attempt = 0;
+            try
+            {
+                await RetryTools.RunWithRetriesAsync(
+                    async () =>
+                    {
+                        attempt++;
+                        try
+                        {
+                            await StartScanInternal(scanningOptions, cancellationToken).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (attempt < retryOptions.MaxRetries)
+                            {
+                                Logger?.LogScanStartRetry(attempt, retryOptions.MaxRetries, ex);
+                            }
+                            throw;
+                        }
+                    },
+                    retryOptions,
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                Logger?.LogScanStarted();
+            }
+            catch (AggregateException ex)
+            {
+                Logger?.LogScanStartFailed(attempt, ex);
+                throw;
+            }
         }
         else
         {
             // No retries, single attempt
-            await StartScanInternal(scanningOptions, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await StartScanInternal(scanningOptions, cancellationToken).ConfigureAwait(false);
+                Logger?.LogScanStarted();
+            }
+            catch (Exception ex)
+            {
+                Logger?.LogScanStartFailed(1, ex);
+                throw;
+            }
         }
     }
 
@@ -132,7 +170,9 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(BluetoothLeScanner);
+        Logger?.LogScanStopping();
         BluetoothLeScanner.StopScan(ScanCallbackProxy);
+        Logger?.LogScanStopped();
         return ValueTask.CompletedTask;
     }
 
@@ -165,10 +205,10 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             }
 
             // Number of matches (API 23+)
-            if (OperatingSystem.IsAndroidVersionAtLeast(23) && androidOptions.NumOfMatches.HasValue)
+            if (OperatingSystem.IsAndroidVersionAtLeast(23) && androidOptions.ScanMatchNumber.HasValue)
             {
-                var numMatches = androidOptions.NumOfMatches.Value.ToAndroidNumOfMatches();
-                builder.SetNumOfMatches(numMatches);
+                var numMatches = androidOptions.ScanMatchNumber.Value.ToAndroidNumOfMatches();
+                builder.SetNumOfMatches((int)numMatches);
             }
 
             // Report delay (API 23+)
@@ -197,7 +237,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// <summary>
     ///     Builds Android scan filters from the scanner options.
     /// </summary>
-    private static IList<ScanFilter>? BuildScanFilters(ScanningOptions options)
+    private static List<ScanFilter>? BuildScanFilters(ScanningOptions options)
     {
         // Return null if no service UUIDs specified (no filters needed)
         if (options.ServiceUuids == null || options.ServiceUuids.Count == 0)
@@ -215,7 +255,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             var javaUuid = Java.Util.UUID.FromString(serviceUuid.ToString());
             if (javaUuid != null)
             {
-                var parcelUuid = new ParcelUuid(javaUuid);
+                using var parcelUuid = new ParcelUuid(javaUuid);
                 builder.SetServiceUuid(parcelUuid);
 
                 var filter = builder.Build();
@@ -242,6 +282,8 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// </summary>
     public void OnScanFailed(ScanFailure errorCode)
     {
+        Logger?.LogScanFailure(errorCode.ToString());
+
         if (errorCode == ScanFailure.AlreadyStarted)
         {
             IsRunning = true;
@@ -282,6 +324,8 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         {
             return;
         }
+
+        Logger?.LogDeviceDiscovered(nativeDevice.Address ?? "Unknown", result.Rssi);
 
         var advertisement = new AndroidBluetoothAdvertisement(result);
 

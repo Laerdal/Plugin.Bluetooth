@@ -2,6 +2,7 @@ using Bluetooth.Abstractions.Options;
 using Bluetooth.Core.Infrastructure.Retries;
 using Bluetooth.Maui.Platforms.Droid.Enums;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
+using Bluetooth.Maui.Platforms.Droid.Logging;
 using Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 using Bluetooth.Maui.Platforms.Droid.Tools;
@@ -280,14 +281,32 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
 
         NativeRefreshIsConnected();
 
+        Logger?.LogConnecting(Id);
+
         var retryOptions = connectionOptions.ConnectionRetry ?? RetryOptions.None;
+        var attempt = 0;
 
         try
         {
             if (retryOptions.MaxRetries > 0)
             {
                 await RetryTools.RunWithRetriesAsync(
-                    async () => await ConnectInternalAsync(connectionOptions, cancellationToken).ConfigureAwait(false),
+                    async () =>
+                    {
+                        attempt++;
+                        try
+                        {
+                            await ConnectInternalAsync(connectionOptions, cancellationToken).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (attempt < retryOptions.MaxRetries)
+                            {
+                                Logger?.LogConnectionRetry(attempt, retryOptions.MaxRetries, Id, ex);
+                            }
+                            throw;
+                        }
+                    },
                     retryOptions,
                     cancellationToken
                 ).ConfigureAwait(false);
@@ -296,6 +315,8 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             {
                 await ConnectInternalAsync(connectionOptions, cancellationToken).ConfigureAwait(false);
             }
+
+            Logger?.LogConnected(Id);
 
             // Auto-apply ConnectionPriority after successful connection if specified
             if (connectionOptions.Android?.ConnectionPriority.HasValue == true)
@@ -307,18 +328,24 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                         timeout,
                         cancellationToken
                     ).ConfigureAwait(false);
+
+                    Logger?.LogConnectionPriorityApplied(
+                        connectionOptions.Android.ConnectionPriority.Value,
+                        Id);
                 }
                 catch (Exception ex)
                 {
                     // Log but don't fail the connection if priority request fails
-                    Logger?.LogWarning(ex,
-                        "Failed to auto-apply ConnectionPriority {Priority} after connection. Connection remains active.",
-                        connectionOptions.Android.ConnectionPriority.Value);
+                    Logger?.LogConnectionPriorityFailed(
+                        connectionOptions.Android.ConnectionPriority.Value,
+                        Id,
+                        ex);
                 }
             }
         }
         catch (Exception e)
         {
+            Logger?.LogConnectionFailed(Id, Math.Max(attempt, 1), e);
             OnConnectFailed(e);
             throw;
         }
@@ -369,16 +396,20 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     {
         NativeRefreshIsConnected();
 
+        Logger?.LogDisconnecting(Id);
+
         try
         {
             if (_bluetoothGattProxy != null)
             {
                 _bluetoothGattProxy.BluetoothGatt.Disconnect();
                 // Note: OnConnectionStateChange callback will handle setting IsConnected = false
+                Logger?.LogDisconnected(Id);
             }
         }
         catch (Exception e)
         {
+            Logger?.LogDisconnectError(Id, e);
             OnDisconnect(e);
             throw;
         }
@@ -445,19 +476,47 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             throw new AndroidNativeBluetoothException("Device not connected - GATT proxy is null");
         }
 
-        var retryOptions = _connectionOptions?.Android?.ServiceDiscoveryRetry ?? RetryOptions.None;
+        Logger?.LogServiceDiscoveryStarting(Id);
 
-        if (retryOptions.MaxRetries > 0)
+        var retryOptions = _connectionOptions?.Android?.ServiceDiscoveryRetry ?? RetryOptions.None;
+        var attempt = 0;
+
+        try
         {
-            await RetryTools.RunWithRetriesAsync(
-                () => DiscoverServicesInternal(),
-                retryOptions,
-                cancellationToken
-            ).ConfigureAwait(false);
+            if (retryOptions.MaxRetries > 0)
+            {
+                await RetryTools.RunWithRetriesAsync(
+                    () =>
+                    {
+                        attempt++;
+                        try
+                        {
+                            return DiscoverServicesInternal();
+                        }
+                        catch (Exception ex)
+                        {
+                            if (attempt < retryOptions.MaxRetries)
+                            {
+                                Logger?.LogServiceDiscoveryRetry(attempt, retryOptions.MaxRetries, Id, ex);
+                            }
+                            throw;
+                        }
+                    },
+                    retryOptions,
+                    cancellationToken
+                ).ConfigureAwait(false);
+            }
+            else
+            {
+                await DiscoverServicesInternal().ConfigureAwait(false);
+            }
+
+            // Log success in OnServicesDiscovered callback where we know the count
         }
-        else
+        catch (AggregateException ex)
         {
-            await DiscoverServicesInternal().ConfigureAwait(false);
+            Logger?.LogServiceDiscoveryFailed(Id, Math.Max(attempt, 1), ex);
+            throw;
         }
     }
 
@@ -527,6 +586,8 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             {
                 throw new InvalidOperationException("Services list is null");
             }
+
+            Logger?.LogServiceDiscoveryCompleted(Id, services.Count);
 
             OnServicesExplorationSucceeded(services, AreRepresentingTheSameObject, FromInputTypeToOutputTypeConversion);
         }

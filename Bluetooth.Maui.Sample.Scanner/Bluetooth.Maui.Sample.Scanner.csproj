@@ -63,7 +63,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <!-- App Icon 
+        <!-- App Icon
         <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />-->
 
         <!-- Splash Screen
@@ -83,15 +83,6 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.Maui.Controls" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <AndroidResource Include="Resources\Images\dotnet_bot.png">
-        <Generator>MSBuild:UpdateGeneratedFiles</Generator>
-      </AndroidResource>
-      <AndroidResource Include="Resources\Raw\AboutAssets.txt">
-        <Generator>MSBuild:UpdateGeneratedFiles</Generator>
-      </AndroidResource>
     </ItemGroup>
 
     <ItemGroup>
