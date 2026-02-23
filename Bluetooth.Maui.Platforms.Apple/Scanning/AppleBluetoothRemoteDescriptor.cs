@@ -1,3 +1,4 @@
+using Bluetooth.Maui.Platforms.Apple.Logging;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
@@ -42,10 +43,13 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
             AppleNativeBluetoothException.ThrowIfError(error);
             ArgumentNullException.ThrowIfNull(descriptor);
 
-            OnReadValueSucceeded(descriptor.Value.ToReadOnlyMemoryBytes());
+            var data = descriptor.Value.ToReadOnlyMemoryBytes();
+            Logger?.LogDescriptorReadCompleted(Id, RemoteCharacteristic.RemoteService.Device.Id, data.Length);
+            OnReadValueSucceeded(data);
         }
         catch (Exception e)
         {
+            Logger?.LogDescriptorReadError(Id, RemoteCharacteristic.RemoteService.Device.Id, e.Message, e);
             OnReadValueFailed(e);
         }
     }
@@ -56,6 +60,7 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
+            Logger?.LogDescriptorWriteCompleted(Id, RemoteCharacteristic.RemoteService.Device.Id);
             OnWriteValueSucceeded();
         }
         catch (Exception e)
@@ -66,6 +71,7 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
                 _canWrite = false;
             }
 
+            Logger?.LogDescriptorWriteError(Id, RemoteCharacteristic.RemoteService.Device.Id, e.Message, e);
             OnWriteValueFailed(e);
         }
     }
@@ -73,6 +79,7 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
     /// <inheritdoc />
     protected override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
+        Logger?.LogDescriptorWrite(Id, RemoteCharacteristic.RemoteService.Device.Id, value.Length);
         AppleBluetoothRemoteCharacteristic.AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.WriteValue(value.ToNSData(), CbDescriptor);
         return ValueTask.CompletedTask;
     }
@@ -86,6 +93,7 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
     /// <inheritdoc />
     protected override ValueTask NativeReadValueAsync()
     {
+        Logger?.LogDescriptorRead(Id, RemoteCharacteristic.RemoteService.Device.Id);
         AppleBluetoothRemoteCharacteristic.AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.ReadValue(CbDescriptor);
         return ValueTask.CompletedTask;
     }

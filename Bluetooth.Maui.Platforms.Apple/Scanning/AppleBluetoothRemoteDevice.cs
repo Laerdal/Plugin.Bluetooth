@@ -1,3 +1,4 @@
+using Bluetooth.Maui.Platforms.Apple.Logging;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 using Bluetooth.Maui.Platforms.Apple.Threading;
@@ -39,6 +40,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     {
         if (CbPeripheralWrapper.CbPeripheral.Name != null)
         {
+            Logger?.LogDeviceNameUpdated(Id, CbPeripheralWrapper.CbPeripheral.Name);
             CachedName = CbPeripheralWrapper.CbPeripheral.Name;
         }
     }
@@ -114,6 +116,8 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     {
         ArgumentNullException.ThrowIfNull(connectionOptions);
 
+        Logger?.LogConnecting(Id);
+
         NativeRefreshIsConnected();
         if (Scanner is not AppleBluetoothScanner scanner)
         {
@@ -150,6 +154,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         }
         catch (Exception e)
         {
+            Logger?.LogConnectionFailed(Id, 1, e);
             OnConnectFailed(e);
         }
     }
@@ -158,6 +163,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     public void ConnectedPeripheral()
     {
         NativeRefreshIsConnected();
+        Logger?.LogConnected(Id);
         OnConnectSucceeded();
     }
 
@@ -168,6 +174,8 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        Logger?.LogDisconnecting(Id);
+
         NativeRefreshIsConnected();
         if (Scanner is not AppleBluetoothScanner scanner)
         {
@@ -185,10 +193,12 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
+            Logger?.LogDisconnected(Id);
             OnDisconnect();
         }
         catch (Exception e)
         {
+            Logger?.LogDisconnected(Id);
             OnDisconnect(e);
         }
     }
@@ -275,6 +285,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     protected override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        Logger?.LogServiceDiscoveryStarting(Id);
         CbPeripheralWrapper.CbPeripheral.DiscoverServices();
         return ValueTask.CompletedTask;
     }
@@ -286,10 +297,12 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         {
             AppleNativeBluetoothException.ThrowIfError(error);
             var services = CbPeripheralWrapper.CbPeripheral.Services ?? [];
+            Logger?.LogServiceDiscoveryCompleted(Id, services.Length);
             OnServicesExplorationSucceeded(services, AreRepresentingTheSameObject, FromInputTypeToOutputTypeConversion);
         }
         catch (Exception e)
         {
+            Logger?.LogServiceDiscoveryError(Id, e.Message, e);
             OnServicesExplorationFailed(e);
         }
 
@@ -309,6 +322,8 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         {
             return;
         }
+
+        Logger?.LogServicesModified(Id, services.Length);
 
         foreach (var nativeService in services)
         {
@@ -357,6 +372,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// </summary>
     public void IsReadyToSendWriteWithoutResponse()
     {
+        Logger?.LogReadyToSendWriteWithoutResponse(Id);
         ReadyToSendWriteWithoutResponse.Set();
     }
 

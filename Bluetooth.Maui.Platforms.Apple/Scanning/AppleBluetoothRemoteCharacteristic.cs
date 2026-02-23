@@ -1,3 +1,4 @@
+using Bluetooth.Maui.Platforms.Apple.Logging;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
@@ -42,6 +43,7 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     /// <inheritdoc />
     protected override ValueTask NativeReadValueAsync()
     {
+        Logger?.LogCharacteristicRead(Id, RemoteService.Device.Id);
         AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.ReadValue(CbCharacteristic);
         return ValueTask.CompletedTask;
     }
@@ -59,10 +61,23 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
         {
             ArgumentNullException.ThrowIfNull(characteristic);
             AppleNativeBluetoothException.ThrowIfError(error);
-            OnReadValueSucceeded(characteristic.Value?.ToArray() ?? []);
+            var data = characteristic.Value?.ToArray() ?? [];
+
+            // Check if this is a notification/indication or a read response
+            if (characteristic.IsNotifying)
+            {
+                Logger?.LogNotificationReceived(Id, RemoteService.Device.Id, data.Length);
+            }
+            else
+            {
+                Logger?.LogCharacteristicReadCompleted(Id, RemoteService.Device.Id, data.Length);
+            }
+
+            OnReadValueSucceeded(data);
         }
         catch (Exception e)
         {
+            Logger?.LogCharacteristicReadError(Id, RemoteService.Device.Id, e.Message, e);
             OnReadValueFailed(e);
         }
     }
@@ -74,6 +89,7 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     /// <inheritdoc />
     protected override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
+        Logger?.LogCharacteristicWrite(Id, RemoteService.Device.Id, value.Length);
         AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.WriteValue(value.ToNSData(),
             CbCharacteristic,
             CbCharacteristic.Properties.HasFlag(CBCharacteristicProperties.WriteWithoutResponse) ? CBCharacteristicWriteType.WithoutResponse : CBCharacteristicWriteType.WithResponse);
@@ -92,10 +108,12 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
+            Logger?.LogCharacteristicWriteCompleted(Id, RemoteService.Device.Id);
             OnWriteValueSucceeded();
         }
         catch (Exception e)
         {
+            Logger?.LogCharacteristicWriteError(Id, RemoteService.Device.Id, e.Message, e);
             OnWriteValueFailed(e);
         }
     }
@@ -147,6 +165,8 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     /// <inheritdoc />
     protected override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
+        var action = shouldBeListening ? "Enabling" : "Disabling";
+        Logger?.LogNotificationStateChange(action, Id, RemoteService.Device.Id);
         AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.SetNotifyValue(shouldBeListening, CbCharacteristic);
         return ValueTask.CompletedTask;
     }

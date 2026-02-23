@@ -1,3 +1,4 @@
+using Bluetooth.Maui.Platforms.Apple.Logging;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
@@ -46,10 +47,12 @@ public class AppleBluetoothRemoteService : BaseBluetoothRemoteService, CbPeriphe
 
             AppleNativeBluetoothException.ThrowIfError(error);
 
+            Logger?.LogCharacteristicDiscoveryCompleted(Id, Device.Id, CbService.Characteristics.Length);
             OnCharacteristicsExplorationSucceeded(CbService.Characteristics, FromInputTypeToOutputTypeConversion, AreRepresentingTheSameObject);
         }
         catch (Exception e)
         {
+            Logger?.LogCharacteristicDiscoveryError(Id, Device.Id, e.Message, e);
             OnCharacteristicsExplorationFailed(e);
         }
 
@@ -86,6 +89,7 @@ public class AppleBluetoothRemoteService : BaseBluetoothRemoteService, CbPeriphe
     protected override ValueTask NativeCharacteristicsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(CbService.Peripheral);
+        Logger?.LogCharacteristicDiscoveryStarting(Id, Device.Id);
         CbService.Peripheral.DiscoverCharacteristics(CbService);
         return ValueTask.CompletedTask;
     }

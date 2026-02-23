@@ -1,3 +1,4 @@
+using Bluetooth.Maui.Platforms.Apple.Logging;
 using Bluetooth.Maui.Platforms.Apple.Permissions;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
@@ -71,6 +72,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <inheritdoc />
     protected override ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        Logger?.LogScanStarting(scanningOptions.ScanMode, scanningOptions.CallbackType);
         CbCentralManagerWrapper.CbCentralManager.ScanForPeripherals(scanningOptions);
         return ValueTask.CompletedTask;
     }
@@ -79,6 +81,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     public virtual void ScanningStarted()
     {
         MainThreadDispatcher.BeginInvokeOnMainThread(() => {
+            Logger?.LogScanStarted();
             IsRunning = true;
             OnStartSucceeded();
         });
@@ -91,6 +94,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <inheritdoc />
     protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        Logger?.LogScanStopping();
         CbCentralManagerWrapper.CbCentralManager.StopScan();
         return ValueTask.CompletedTask;
     }
@@ -99,6 +103,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     public virtual void ScanningStopped()
     {
         MainThreadDispatcher.BeginInvokeOnMainThread(() => {
+            Logger?.LogScanStopped();
             IsRunning = false;
             OnStopSucceeded();
         });
@@ -124,6 +129,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     public virtual void UpdatedState(CBManagerState centralState)
     {
         MainThreadDispatcher.BeginInvokeOnMainThread(() => {
+            Logger?.LogCentralManagerStateChanged(centralState.ToString());
             State = centralState;
         });
     }
@@ -144,8 +150,11 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         // Capture values before dispatching to avoid referencing native objects across threads
         var advertisement = new AppleBluetoothAdvertisement(peripheral, advertisementData, rssi);
         var isScanning = CbCentralManagerWrapper.CbCentralManager.IsScanning;
+        var deviceIdStr = peripheral.Identifier.ToString();
+        var rssiValue = rssi.Int32Value;
 
         MainThreadDispatcher.BeginInvokeOnMainThread(() => {
+            Logger?.LogDeviceDiscovered(deviceIdStr, rssiValue);
             IsRunning = isScanning;
             OnAdvertisementReceived(advertisement);
         });
