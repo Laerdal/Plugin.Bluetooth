@@ -305,9 +305,21 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     public void ModifiedServices(CBService[] services)
     {
-        // TODO : Implement if needed. This method is called when the services of the peripheral are modified.
-        // If your application needs to handle service modifications (e.g., if the peripheral's services can change dynamically), you may want to implement this method to update your application's state accordingly.
-        // Placeholder for future implementation
+        if (services == null)
+        {
+            return;
+        }
+
+        foreach (var nativeService in services)
+        {
+            var matchingService = GetServiceOrDefault(service => AreRepresentingTheSameObject(nativeService, service));
+            if (matchingService != null)
+            {
+                // TODO :
+                // Update the matching service with the new native service information
+                //matchingService.Update(nativeService);
+            }
+        }
     }
 
     /// <inheritdoc />
