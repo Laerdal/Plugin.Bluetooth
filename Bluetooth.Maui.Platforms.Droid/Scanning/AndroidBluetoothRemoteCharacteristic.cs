@@ -1,3 +1,4 @@
+using Bluetooth.Abstractions.Options;
 using Bluetooth.Core.Infrastructure.Retries;
 using Bluetooth.Maui.Platforms.Droid.Enums;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
@@ -81,8 +82,16 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <inheritdoc />
     protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
-        // Call ReadCharacteristic and Handle return value
-        await RetryTools.RunWithRetriesAsync(() => BluetoothGattCharacteristicWrite(value), maxRetries: 3, delayBetweenRetries: TimeSpan.FromMilliseconds(200)).ConfigureAwait(false);
+        // Get retry options from device connection options, or use default
+        var retryOptions = AndroidBluetoothRemoteService.AndroidBluetoothRemoteDevice.ConnectionOptions?.Android?.GattWriteRetry
+                           ?? RetryOptions.Default;
+
+        // Call with configurable retry
+        await RetryTools.RunWithRetriesAsync(
+            () => BluetoothGattCharacteristicWrite(value),
+            retryOptions,
+            CancellationToken.None
+        ).ConfigureAwait(false);
     }
 
     private void BluetoothGattCharacteristicWrite(ReadOnlyMemory<byte> value)

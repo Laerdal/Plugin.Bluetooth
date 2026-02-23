@@ -1,7 +1,10 @@
+using Bluetooth.Abstractions.Options;
+using Bluetooth.Core.Infrastructure.Retries;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
 using Bluetooth.Maui.Platforms.Droid.Permissions;
 using Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
+using Bluetooth.Maui.Platforms.Droid.Tools;
 
 using ScanMode = Android.Bluetooth.LE.ScanMode;
 
@@ -75,11 +78,38 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         ArgumentNullException.ThrowIfNull(BluetoothLeScanner);
         ArgumentNullException.ThrowIfNull(scanningOptions);
 
+        var retryOptions = scanningOptions.ScanStartRetry ?? RetryOptions.None;
+
+        if (retryOptions.MaxRetries > 0)
+        {
+            // Use retry logic for scan start
+            await RetryTools.RunWithRetriesAsync(
+                () => StartScanInternal(scanningOptions, cancellationToken),
+                retryOptions,
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+        else
+        {
+            // No retries, single attempt
+            await StartScanInternal(scanningOptions, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    ///     Internal method for starting the BLE scan. Extracted for retry logic.
+    /// </summary>
+    private async Task StartScanInternal(ScanningOptions scanningOptions, CancellationToken cancellationToken)
+    {
+        // Reset the event before starting scan
+        InternalAndroidStartScanResultReceived.Reset();
+
         // Build scan settings and filters
         var settings = BuildScanSettings(scanningOptions);
         var filters = BuildScanFilters(scanningOptions);
 
-        BluetoothLeScanner.StartScan(filters, settings, ScanCallbackProxy);
+        // Start the scan
+        BluetoothLeScanner?.StartScan(filters, settings, ScanCallbackProxy);
 
         try
         {
@@ -113,12 +143,79 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     {
         using var builder = new ScanSettings.Builder();
 
-        // Set scan mode for balanced power/performance
-        builder.SetScanMode(ScanMode.Balanced);
+        // Map abstract ScanMode to Android ScanMode
+        var scanMode = options.ScanMode switch
+        {
+            BluetoothScanMode.LowPower => ScanMode.LowPower,
+            BluetoothScanMode.Balanced => ScanMode.Balanced,
+            BluetoothScanMode.LowLatency => ScanMode.LowLatency,
+            BluetoothScanMode.Opportunistic when OperatingSystem.IsAndroidVersionAtLeast(24) => ScanMode.Opportunistic,
+            BluetoothScanMode.Opportunistic => ScanMode.Balanced, // Fallback for API < 24
+            _ => ScanMode.Balanced
+        };
+        builder.SetScanMode(scanMode);
 
+        // Map abstract CallbackType to Android ScanCallbackType (API 23+)
         if (OperatingSystem.IsAndroidVersionAtLeast(23))
         {
-            builder.SetCallbackType(ScanCallbackType.AllMatches);
+            var callbackType = options.CallbackType switch
+            {
+                BluetoothScanCallbackType.AllMatches => ScanCallbackType.AllMatches,
+                BluetoothScanCallbackType.FirstMatch => ScanCallbackType.FirstMatch,
+                BluetoothScanCallbackType.MatchLost => ScanCallbackType.MatchLost,
+                BluetoothScanCallbackType.FirstMatchAndMatchLost => ScanCallbackType.FirstMatch | ScanCallbackType.MatchLost,
+                _ => ScanCallbackType.AllMatches
+            };
+            builder.SetCallbackType(callbackType);
+        }
+
+        // Apply Android-specific options if provided
+        if (options.Android is Options.AndroidScanningOptions androidOptions)
+        {
+            // Match mode (API 23+)
+            if (OperatingSystem.IsAndroidVersionAtLeast(23) && androidOptions.MatchMode.HasValue)
+            {
+                var matchModeValue = androidOptions.MatchMode.Value switch
+                {
+                    Options.ScanMatchMode.Aggressive => 1, // MATCH_MODE_AGGRESSIVE
+                    Options.ScanMatchMode.Sticky => 2,     // MATCH_MODE_STICKY
+                    _ => 1
+                };
+                builder.SetMatchMode((Android.Bluetooth.LE.BluetoothScanMatchMode)matchModeValue);
+            }
+
+            // Number of matches (API 23+)
+            if (OperatingSystem.IsAndroidVersionAtLeast(23) && androidOptions.NumOfMatches.HasValue)
+            {
+                var numMatchesValue = androidOptions.NumOfMatches.Value switch
+                {
+                    Options.ScanMatchCount.OneAdvertisement => 1,   // MATCH_NUM_ONE_ADVERTISEMENT
+                    Options.ScanMatchCount.FewAdvertisements => 2,  // MATCH_NUM_FEW_ADVERTISEMENT
+                    Options.ScanMatchCount.MaxAdvertisements => 3,  // MATCH_NUM_MAX_ADVERTISEMENT
+                    _ => 1
+                };
+                builder.SetNumOfMatches(numMatchesValue);
+            }
+
+            // Report delay (API 23+)
+            if (OperatingSystem.IsAndroidVersionAtLeast(23) && androidOptions.ReportDelay.HasValue)
+            {
+                builder.SetReportDelay((long)androidOptions.ReportDelay.Value.TotalMilliseconds);
+            }
+
+            // PHY (API 26+)
+            if (OperatingSystem.IsAndroidVersionAtLeast(26) && androidOptions.Phy.HasValue)
+            {
+                // Use PhyModeConverter to convert ScanPhy to Android.Bluetooth.BluetoothPhy
+                var phy = androidOptions.Phy.Value.ToAndroidBluetoothPhy();
+                builder.SetPhy(phy);
+            }
+
+            // Legacy (API 26+)
+            if (OperatingSystem.IsAndroidVersionAtLeast(26) && androidOptions.Legacy.HasValue)
+            {
+                builder.SetLegacy(androidOptions.Legacy.Value);
+            }
         }
 
         return builder.Build() ?? throw new InvalidOperationException("Failed to build ScanSettings");
@@ -129,9 +226,34 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// </summary>
     private static IList<ScanFilter>? BuildScanFilters(ScanningOptions options)
     {
-        // No service UUID filtering in base interface, so return null for now
-        // This can be extended if needed
-        return null;
+        // Return null if no service UUIDs specified (no filters needed)
+        if (options.ServiceUuids == null || options.ServiceUuids.Count == 0)
+        {
+            return null;
+        }
+
+        // Build a scan filter for each service UUID
+        var filters = new List<ScanFilter>(options.ServiceUuids.Count);
+        foreach (var serviceUuid in options.ServiceUuids)
+        {
+            using var builder = new ScanFilter.Builder();
+
+            // Convert Guid to ParcelUuid (Android UUID wrapper)
+            var javaUuid = Java.Util.UUID.FromString(serviceUuid.ToString());
+            if (javaUuid != null)
+            {
+                var parcelUuid = new ParcelUuid(javaUuid);
+                builder.SetServiceUuid(parcelUuid);
+
+                var filter = builder.Build();
+                if (filter != null)
+                {
+                    filters.Add(filter);
+                }
+            }
+        }
+
+        return filters.Count > 0 ? filters : null;
     }
 
     /// <inheritdoc />

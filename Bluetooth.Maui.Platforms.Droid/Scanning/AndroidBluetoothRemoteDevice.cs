@@ -1,3 +1,5 @@
+using Bluetooth.Abstractions.Options;
+using Bluetooth.Core.Infrastructure.Retries;
 using Bluetooth.Maui.Platforms.Droid.Enums;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
 using Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
@@ -21,6 +23,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
 {
     private BluetoothGattProxy? _bluetoothGattProxy;
     private BluetoothDevice? _nativeDevice;
+    private ConnectionOptions? _connectionOptions;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="AndroidBluetoothRemoteDevice" /> class.
@@ -53,6 +56,12 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     ///     This is initialized when connecting to the device.
     /// </summary>
     public BluetoothGattProxy? BluetoothGattProxy => _bluetoothGattProxy;
+
+    /// <summary>
+    ///     Gets the connection options used when connecting to this device.
+    ///     This is set during the connection process and can be used by GATT operations.
+    /// </summary>
+    public ConnectionOptions? ConnectionOptions => _connectionOptions;
 
     /// <inheritdoc />
     public async new ValueTask DisposeAsync()
@@ -266,44 +275,91 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     {
         ArgumentNullException.ThrowIfNull(connectionOptions);
 
+        // Store connection options for GATT operations
+        _connectionOptions = connectionOptions;
+
         NativeRefreshIsConnected();
+
+        var retryOptions = connectionOptions.ConnectionRetry ?? RetryOptions.None;
 
         try
         {
-            // Get native device if not already available
-            if (_nativeDevice == null)
+            if (retryOptions.MaxRetries > 0)
             {
-                var androidScanner = (AndroidBluetoothScanner) Scanner;
-                var androidAdapter = (AndroidBluetoothAdapter) androidScanner.Adapter;
-                _nativeDevice = androidAdapter.NativeBluetoothAdapter.GetRemoteDevice(Id);
-                if (_nativeDevice == null)
-                {
-                    throw new InvalidOperationException($"Failed to get native device for address: {Id}");
-                }
+                await RetryTools.RunWithRetriesAsync(
+                    async () => await ConnectInternalAsync(connectionOptions, cancellationToken).ConfigureAwait(false),
+                    retryOptions,
+                    cancellationToken
+                ).ConfigureAwait(false);
+            }
+            else
+            {
+                await ConnectInternalAsync(connectionOptions, cancellationToken).ConfigureAwait(false);
             }
 
-            // Convert to Droid-specific connectionOptions which adds PreferredPhy property
-            var droidConnectionOptions = new Options.ConnectionOptions
+            // Auto-apply ConnectionPriority after successful connection if specified
+            if (connectionOptions.Android?.ConnectionPriority.HasValue == true)
             {
-                // Copy properties from abstract ConnectionOptions
-                PermissionStrategy = connectionOptions.PermissionStrategy,
-                WaitForAdvertisementBeforeConnecting = connectionOptions.WaitForAdvertisementBeforeConnecting,
-                Apple = connectionOptions.Apple,
-                Android = connectionOptions.Android,
-                Windows = connectionOptions.Windows,
-
-                // Add Droid-specific PreferredPhy (extracted from Android sub-options)
-                PreferredPhy = connectionOptions.Android?.PreferredPhy as BluetoothPhy?
-            };
-
-            // Create GATT connection
-            _bluetoothGattProxy = new BluetoothGattProxy(this, droidConnectionOptions, _nativeDevice);
+                try
+                {
+                    await RequestConnectionPriorityAsync(
+                        connectionOptions.Android.ConnectionPriority.Value,
+                        timeout,
+                        cancellationToken
+                    ).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // Log but don't fail the connection if priority request fails
+                    Logger?.LogWarning(ex,
+                        "Failed to auto-apply ConnectionPriority {Priority} after connection. Connection remains active.",
+                        connectionOptions.Android.ConnectionPriority.Value);
+                }
+            }
         }
         catch (Exception e)
         {
             OnConnectFailed(e);
             throw;
         }
+    }
+
+    /// <summary>
+    ///     Internal method that performs the actual connection to the device.
+    ///     Separated from NativeConnectAsync to support retry logic.
+    /// </summary>
+    private async Task ConnectInternalAsync(ConnectionOptions connectionOptions, CancellationToken cancellationToken)
+    {
+        // Get native device if not already available
+        if (_nativeDevice == null)
+        {
+            var androidScanner = (AndroidBluetoothScanner) Scanner;
+            var androidAdapter = (AndroidBluetoothAdapter) androidScanner.Adapter;
+            _nativeDevice = androidAdapter.NativeBluetoothAdapter.GetRemoteDevice(Id);
+            if (_nativeDevice == null)
+            {
+                throw new InvalidOperationException($"Failed to get native device for address: {Id}");
+            }
+        }
+
+        // Convert to Droid-specific connectionOptions which adds PreferredPhy property
+        var droidConnectionOptions = new Options.ConnectionOptions
+        {
+            // Copy properties from abstract ConnectionOptions
+            PermissionStrategy = connectionOptions.PermissionStrategy,
+            WaitForAdvertisementBeforeConnecting = connectionOptions.WaitForAdvertisementBeforeConnecting,
+            Apple = connectionOptions.Apple,
+            Android = connectionOptions.Android,
+            Windows = connectionOptions.Windows,
+
+            // Add Droid-specific PreferredPhy (extracted from Android sub-options)
+            PreferredPhy = connectionOptions.Android?.PreferredPhy as BluetoothPhy?
+        };
+
+        // Create GATT connection
+        _bluetoothGattProxy = new BluetoothGattProxy(this, droidConnectionOptions, _nativeDevice);
+
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -380,9 +436,36 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     #region Service Discovery
 
     /// <inheritdoc />
-    protected override ValueTask NativeServicesExplorationAsync(
+    protected override async ValueTask NativeServicesExplorationAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
+    {
+        if (_bluetoothGattProxy == null)
+        {
+            throw new AndroidNativeBluetoothException("Device not connected - GATT proxy is null");
+        }
+
+        var retryOptions = _connectionOptions?.Android?.ServiceDiscoveryRetry ?? RetryOptions.None;
+
+        if (retryOptions.MaxRetries > 0)
+        {
+            await RetryTools.RunWithRetriesAsync(
+                () => DiscoverServicesInternal(),
+                retryOptions,
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+        else
+        {
+            await DiscoverServicesInternal().ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    ///     Internal method that initiates service discovery.
+    ///     Separated from NativeServicesExplorationAsync to support retry logic.
+    /// </summary>
+    private Task DiscoverServicesInternal()
     {
         if (_bluetoothGattProxy == null)
         {
@@ -395,7 +478,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             throw new AndroidNativeBluetoothException("Failed to initiate service discovery");
         }
 
-        return ValueTask.CompletedTask;
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc />

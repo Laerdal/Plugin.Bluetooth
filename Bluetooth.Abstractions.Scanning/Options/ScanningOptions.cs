@@ -1,3 +1,5 @@
+using Bluetooth.Abstractions.Options;
+
 namespace Bluetooth.Abstractions.Scanning.Options;
 
 /// <summary>
@@ -92,6 +94,31 @@ public record ScanningOptions
 
     #endregion
 
+    #region Retry Configuration
+
+    /// <summary>
+    ///     Gets the retry configuration for scan start operations.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Retry configuration applied when starting the BLE scanner fails due to transient issues
+    ///         such as adapter busy, scan already started, or throttling errors.
+    ///     </para>
+    ///     <b>Platform Support:</b>
+    ///     <list type="bullet">
+    ///         <item><b>Android</b>: Retries on ScanFailure errors (except AlreadyStarted)</item>
+    ///         <item><b>iOS/macOS</b>: Retries on CBCentralManager state issues</item>
+    ///         <item><b>Windows</b>: Retries on scanner start failures</item>
+    ///     </list>
+    ///     <para>
+    ///         Defaults to <see cref="RetryOptions.Default"/> (3 retries with 200ms delay).
+    ///         Set to <see cref="RetryOptions.None"/> to disable retry logic.
+    ///     </para>
+    /// </remarks>
+    public RetryOptions? ScanStartRetry { get; init; } = RetryOptions.Default;
+
+    #endregion
+
     #region Scan Mode / Power Settings
 
     /// <summary>
@@ -144,6 +171,31 @@ public record ScanningOptions
     ///     <para>Typical values: -100 (very weak) to -30 (very strong)</para>
     /// </remarks>
     public int? RssiThreshold { get; init; }
+
+    #endregion
+
+    #region Platform-Specific Scanning Options
+
+    /// <summary>
+    ///     Gets the Android platform-specific scanning options.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Should be an instance of <c>Bluetooth.Maui.Platforms.Droid.Scanning.Options.AndroidScanningOptions</c>.
+    ///         These options are only used on Android platforms and are ignored on other platforms.
+    ///     </para>
+    ///     <para>
+    ///         Provides access to Android-specific scan settings such as:
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item><b>MatchMode</b>: Control aggressive vs sticky matching (API 23+)</item>
+    ///         <item><b>NumOfMatches</b>: Set advertisement match count before reporting (API 23+)</item>
+    ///         <item><b>ReportDelay</b>: Batch scan results for power savings (API 23+)</item>
+    ///         <item><b>Phy</b>: Select Bluetooth 5.0 PHY layers (API 26+)</item>
+    ///         <item><b>Legacy</b>: Filter for legacy-only advertisements (API 26+)</item>
+    ///     </list>
+    /// </remarks>
+    public object? Android { get; init; }
 
     #endregion
 }

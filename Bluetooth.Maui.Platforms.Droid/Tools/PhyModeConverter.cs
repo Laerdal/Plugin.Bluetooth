@@ -1,3 +1,5 @@
+using Bluetooth.Maui.Platforms.Droid.Scanning.Options;
+
 namespace Bluetooth.Maui.Platforms.Droid.Tools;
 
 /// <summary>
@@ -41,6 +43,31 @@ public static class PhyModeConverter
             PhyMode.Le2M => Android.Bluetooth.BluetoothPhy.Le2m,
             PhyMode.LeCoded => Android.Bluetooth.BluetoothPhy.LeCoded,
             _ => throw new ArgumentOutOfRangeException(nameof(phyMode), $"Unsupported PHY mode: {phyMode}")
+        };
+    }
+
+    /// <summary>
+    ///     Converts a <see cref="ScanPhy" /> value to the corresponding Android <see cref="Android.Bluetooth.BluetoothPhy" /> value.
+    /// </summary>
+    /// <remarks>
+    ///     Used for converting scanning PHY preferences to native Android PHY types.
+    ///     This method handles single PHY values. For combined flags (e.g., Le1M | Le2M),
+    ///     only the first matching flag will be used.
+    /// </remarks>
+    public static Android.Bluetooth.BluetoothPhy ToAndroidBluetoothPhy(this ScanPhy scanPhy)
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(26))
+        {
+            throw new PlatformNotSupportedException("PHY scanning requires Android 8.0 (API 26) or higher");
+        }
+
+        return scanPhy switch
+        {
+            ScanPhy.AllSupported => Android.Bluetooth.BluetoothPhy.Le1m, // Default to 1M for compatibility
+            ScanPhy.Le1M => Android.Bluetooth.BluetoothPhy.Le1m,
+            ScanPhy.Le2M => Android.Bluetooth.BluetoothPhy.Le2m,
+            ScanPhy.LeCoded => Android.Bluetooth.BluetoothPhy.LeCoded,
+            _ => Android.Bluetooth.BluetoothPhy.Le1m // For combined flags or unexpected values, default to 1M
         };
     }
 }

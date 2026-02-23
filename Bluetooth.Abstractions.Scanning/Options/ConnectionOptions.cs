@@ -1,3 +1,5 @@
+using Bluetooth.Abstractions.Options;
+
 namespace Bluetooth.Abstractions.Scanning.Options;
 
 /// <summary>
@@ -22,6 +24,32 @@ public record ConnectionOptions
     ///     Gets a value indicating whether to wait for an advertisement before connecting to the device.
     /// </summary>
     public bool WaitForAdvertisementBeforeConnecting { get; init; }
+
+    #region Retry Configuration
+
+    /// <summary>
+    ///     Gets the retry configuration for device connection operations.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Retry configuration applied when initial connection attempts fail due to transient issues.
+    ///         Critical for Android GATT error 133 (connection failures), which is common and often
+    ///         resolves with retry.
+    ///     </para>
+    ///     <b>Platform Support:</b>
+    ///     <list type="bullet">
+    ///         <item><b>Android</b>: Retries critical for GATT error 133 (connection failures)</item>
+    ///         <item><b>iOS/macOS</b>: Retries on connection timeout or peripheral unavailable</item>
+    ///         <item><b>Windows</b>: Retries on device connection failures</item>
+    ///     </list>
+    ///     <para>
+    ///         Defaults to <see cref="RetryOptions.Default"/> (3 retries with 200ms delay).
+    ///         Set to <see cref="RetryOptions.None"/> to disable retry logic.
+    ///     </para>
+    /// </remarks>
+    public RetryOptions? ConnectionRetry { get; init; } = RetryOptions.Default;
+
+    #endregion
 
     #region Platform-Specific Options
 
@@ -219,6 +247,45 @@ public record AndroidConnectionOptions
     ///     Requires explicit platform type due to native Android enum.
     /// </remarks>
     public object? PreferredPhy { get; init; } // Object type to avoid direct Android dependency in abstractions
+
+    #region GATT Operation Retry Configuration
+
+    /// <summary>
+    ///     Gets the retry configuration for service discovery operations.
+    /// </summary>
+    /// <remarks>
+    ///     Used when DiscoverServices fails or times out.
+    ///     Android BLE stack can fail service discovery due to timing issues.
+    ///     Defaults to 2 retries with 300ms delay.
+    /// </remarks>
+    public RetryOptions? ServiceDiscoveryRetry { get; init; } = new RetryOptions
+    {
+        MaxRetries = 2,
+        DelayBetweenRetries = TimeSpan.FromMilliseconds(300)
+    };
+
+    /// <summary>
+    ///     Gets the retry configuration for GATT write operations.
+    /// </summary>
+    /// <remarks>
+    ///     Replaces hardcoded 3 retries with 200ms delay in AndroidBluetoothRemoteCharacteristic.
+    ///     Defaults to <see cref="RetryOptions.Default"/> (3 retries with 200ms delay).
+    /// </remarks>
+    public RetryOptions? GattWriteRetry { get; init; } = RetryOptions.Default;
+
+    /// <summary>
+    ///     Gets the retry configuration for GATT read operations.
+    /// </summary>
+    /// <remarks>
+    ///     Defaults to 2 retries with 100ms delay.
+    /// </remarks>
+    public RetryOptions? GattReadRetry { get; init; } = new RetryOptions
+    {
+        MaxRetries = 2,
+        DelayBetweenRetries = TimeSpan.FromMilliseconds(100)
+    };
+
+    #endregion
 }
 
 /// <summary>
