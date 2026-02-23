@@ -10,7 +10,7 @@ public record AppleBluetoothDeviceFactoryRequest : IBluetoothDeviceFactory.Bluet
     /// </summary>
     /// <param name="peripheral">The native iOS Core Bluetooth peripheral.</param>
     /// <param name="manufacturer">The manufacturer of the Bluetooth device, if known.</param>
-    public AppleBluetoothDeviceFactoryRequest([NotNull] CBPeripheral peripheral, Manufacturer manufacturer = Manufacturer.None) : base(peripheral.Identifier.ToString(), manufacturer)
+    public AppleBluetoothDeviceFactoryRequest(CBPeripheral peripheral, Manufacturer manufacturer = Manufacturer.None) : base(peripheral?.Identifier.ToString() ?? throw new ArgumentNullException(nameof(peripheral)), manufacturer)
     {
         CbPeripheral = peripheral;
     }

@@ -11,7 +11,7 @@ public record AppleBluetoothConnectedDeviceSpec : IBluetoothConnectedDeviceFacto
     ///     Initializes a new instance of the <see cref="AppleBluetoothConnectedDeviceSpec" /> record.
     /// </summary>
     /// <param name="cbCentral">The native iOS Core Bluetooth central device.</param>
-    public AppleBluetoothConnectedDeviceSpec([NotNull] CBCentral cbCentral) : base(cbCentral.Identifier.ToString())
+    public AppleBluetoothConnectedDeviceSpec(CBCentral cbCentral) : base(cbCentral?.Identifier.ToString() ?? throw new ArgumentNullException(nameof(cbCentral)))
     {
         CbCentral = cbCentral;
         MaxUpdateValueLength = (int) cbCentral.MaximumUpdateValueLength;

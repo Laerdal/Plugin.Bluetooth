@@ -9,8 +9,8 @@ public record AppleBluetoothCharacteristicSpec : IBluetoothLocalCharacteristicFa
     ///     Initializes a new instance of the <see cref="AppleBluetoothCharacteristicSpec" /> class with the specified Core Bluetooth mutable characteristic.
     /// </summary>
     /// <param name="cbCharacteristic">The native iOS Core Bluetooth mutable characteristic from which to create the factory request.</param>
-    public AppleBluetoothCharacteristicSpec([NotNull] CBMutableCharacteristic cbCharacteristic) : base(cbCharacteristic.UUID.ToGuid(), cbCharacteristic.Properties.ToCharacteristicProperties(),
-        cbCharacteristic.Permissions.ToCharacteristicPermissions())
+    public AppleBluetoothCharacteristicSpec(CBMutableCharacteristic cbCharacteristic) : base(cbCharacteristic?.UUID.ToGuid() ?? throw new ArgumentNullException(nameof(cbCharacteristic)), cbCharacteristic.Properties.ToCharacteristicProperties(),
+                                                                                                cbCharacteristic.Permissions.ToCharacteristicPermissions())
     {
         CbCharacteristic = cbCharacteristic;
     }

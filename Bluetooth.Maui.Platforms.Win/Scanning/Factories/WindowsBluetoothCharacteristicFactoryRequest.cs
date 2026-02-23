@@ -11,8 +11,8 @@ public record WindowsBluetoothCharacteristicFactoryRequest : IBluetoothCharacter
     ///     Initializes a new instance of the <see cref="WindowsBluetoothCharacteristicFactoryRequest" /> record.
     /// </summary>
     /// <param name="nativeCharacteristic">The native Windows GATT characteristic.</param>
-    public WindowsBluetoothCharacteristicFactoryRequest([NotNull] GattCharacteristic nativeCharacteristic)
-        : base(nativeCharacteristic.Uuid)
+    public WindowsBluetoothCharacteristicFactoryRequest(GattCharacteristic nativeCharacteristic)
+        : base(nativeCharacteristic?.Uuid ?? throw new ArgumentNullException(nameof(nativeCharacteristic)))
     {
         ArgumentNullException.ThrowIfNull(nativeCharacteristic);
         NativeCharacteristic = nativeCharacteristic;

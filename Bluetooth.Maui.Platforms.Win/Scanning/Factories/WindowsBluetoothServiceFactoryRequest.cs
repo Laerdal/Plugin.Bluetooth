@@ -11,8 +11,8 @@ public record WindowsBluetoothServiceFactoryRequest : IBluetoothServiceFactory.B
     ///     Initializes a new instance of the <see cref="WindowsBluetoothServiceFactoryRequest" /> record.
     /// </summary>
     /// <param name="nativeService">The native Windows GATT device service.</param>
-    public WindowsBluetoothServiceFactoryRequest([NotNull] GattDeviceService nativeService)
-        : base(nativeService.Uuid)
+    public WindowsBluetoothServiceFactoryRequest(GattDeviceService nativeService)
+        : base(nativeService?.Uuid ?? throw new ArgumentNullException(nameof(nativeService)))
     {
         ArgumentNullException.ThrowIfNull(nativeService);
         NativeService = nativeService;

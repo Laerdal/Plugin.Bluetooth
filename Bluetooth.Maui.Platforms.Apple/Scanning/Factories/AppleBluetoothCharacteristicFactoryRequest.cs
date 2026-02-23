@@ -9,7 +9,7 @@ public record AppleBluetoothCharacteristicFactoryRequest : IBluetoothCharacteris
     ///     Initializes a new instance of the <see cref="AppleBluetoothCharacteristicFactoryRequest" /> class with the specified Core Bluetooth characteristic.
     /// </summary>
     /// <param name="cbCharacteristic">The native iOS Core Bluetooth characteristic from which to create the factory request.</param>
-    public AppleBluetoothCharacteristicFactoryRequest([NotNull] CBCharacteristic cbCharacteristic) : base(cbCharacteristic.UUID.ToGuid())
+    public AppleBluetoothCharacteristicFactoryRequest(CBCharacteristic cbCharacteristic) : base(cbCharacteristic?.UUID.ToGuid() ?? throw new ArgumentNullException(nameof(cbCharacteristic)))
     {
         CbCharacteristic = cbCharacteristic;
     }

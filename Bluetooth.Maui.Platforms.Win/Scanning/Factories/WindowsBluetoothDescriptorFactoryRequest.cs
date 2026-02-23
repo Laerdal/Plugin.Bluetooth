@@ -11,8 +11,8 @@ public record WindowsBluetoothDescriptorFactoryRequest : IBluetoothDescriptorFac
     ///     Initializes a new instance of the <see cref="WindowsBluetoothDescriptorFactoryRequest" /> record.
     /// </summary>
     /// <param name="nativeDescriptor">The native Windows GATT descriptor.</param>
-    public WindowsBluetoothDescriptorFactoryRequest([NotNull] GattDescriptor nativeDescriptor)
-        : base(nativeDescriptor.Uuid)
+    public WindowsBluetoothDescriptorFactoryRequest(GattDescriptor nativeDescriptor)
+        : base(nativeDescriptor?.Uuid ?? throw new ArgumentNullException(nameof(nativeDescriptor)))
     {
         ArgumentNullException.ThrowIfNull(nativeDescriptor);
         NativeDescriptor = nativeDescriptor;

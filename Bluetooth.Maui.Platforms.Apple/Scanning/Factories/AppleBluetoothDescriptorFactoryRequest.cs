@@ -8,7 +8,7 @@ public record AppleBluetoothDescriptorFactoryRequest : IBluetoothDescriptorFacto
     /// <summary>
     ///     Initializes a new instance of the <see cref="AppleBluetoothDescriptorFactoryRequest" /> class with the specified Core Bluetooth descriptor.
     /// </summary>
-    public AppleBluetoothDescriptorFactoryRequest([NotNull] CBDescriptor cbDescriptor) : base(cbDescriptor.UUID.ToGuid())
+    public AppleBluetoothDescriptorFactoryRequest(CBDescriptor cbDescriptor) : base(cbDescriptor?.UUID.ToGuid() ?? throw new ArgumentNullException(nameof(cbDescriptor)))
     {
         CbDescriptor = cbDescriptor;
     }

@@ -8,7 +8,7 @@ public record AppleBluetoothServiceFactoryRequest : IBluetoothLocalServiceFactor
     /// <summary>
     ///     Initializes a new instance of the <see cref="AppleBluetoothServiceFactoryRequest" /> class with the specified Core Bluetooth service.
     /// </summary>
-    public AppleBluetoothServiceFactoryRequest([NotNull] CBService nativeService) : base(nativeService.UUID.ToGuid(), nativeService.Primary)
+    public AppleBluetoothServiceFactoryRequest(CBService nativeService) : base(nativeService?.UUID.ToGuid() ?? throw new ArgumentNullException(nameof(nativeService)), nativeService.Primary)
     {
         NativeService = nativeService;
     }
