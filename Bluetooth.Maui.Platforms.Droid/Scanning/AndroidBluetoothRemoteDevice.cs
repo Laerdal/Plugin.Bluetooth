@@ -179,14 +179,8 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             throw new InvalidOperationException("Device not connected - GATT proxy is null");
         }
 
-        // Map abstract priority to Android GattConnectionPriority
-        var androidPriority = priority switch
-        {
-            BluetoothConnectionPriority.High => GattConnectionPriority.High,
-            BluetoothConnectionPriority.Balanced => GattConnectionPriority.Balanced,
-            BluetoothConnectionPriority.LowPower => GattConnectionPriority.LowPower,
-            _ => throw new ArgumentOutOfRangeException(nameof(priority), priority, "Invalid connection priority")
-        };
+        // Convert abstract priority to Android GattConnectionPriority using converter
+        var androidPriority = priority.ToAndroidGattConnectionPriority();
 
         var success = _bluetoothGattProxy.BluetoothGatt.RequestConnectionPriority(androidPriority);
         if (!success)
