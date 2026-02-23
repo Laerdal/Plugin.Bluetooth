@@ -1,0 +1,196 @@
+using Android.Bluetooth;
+using Bluetooth.Core.Scanning;
+using Bluetooth.Maui.Platforms.Droid.Exceptions;
+using Bluetooth.Maui.Platforms.Droid.Logging;
+
+namespace Bluetooth.Maui.Platforms.Droid.Scanning;
+
+/// <summary>
+///     Android implementation of <see cref="IBluetoothL2CapChannel"/> using BluetoothSocket.
+///     Provides stream-based I/O for L2CAP channels with automatic background reading for DataReceived events.
+/// </summary>
+/// <remarks>
+///     Requires Android API 29+ (Android 10+) for L2CAP channel support.
+///     Uses a background read loop to enable push-based DataReceived events.
+/// </remarks>
+public class AndroidBluetoothL2CapChannel : BaseBluetoothL2CapChannel, IAsyncDisposable
+{
+    private readonly BluetoothDevice _nativeDevice;
+    private BluetoothSocket? _socket;
+    private Stream? _inputStream;
+    private Stream? _outputStream;
+    private CancellationTokenSource? _readLoopCts;
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AndroidBluetoothL2CapChannel"/> class.
+    /// </summary>
+    /// <param name="device">The Bluetooth device this channel belongs to.</param>
+    /// <param name="nativeDevice">The native Android BluetoothDevice.</param>
+    /// <param name="psm">The Protocol/Service Multiplexer (PSM) for this channel.</param>
+    /// <param name="logger">Optional logger for logging channel operations.</param>
+    public AndroidBluetoothL2CapChannel(
+        IBluetoothRemoteDevice device,
+        BluetoothDevice nativeDevice,
+        int psm,
+        ILogger? logger = null)
+        : base(device, psm, logger)
+    {
+        ArgumentNullException.ThrowIfNull(nativeDevice);
+        _nativeDevice = nativeDevice;
+    }
+
+    /// <inheritdoc />
+    protected override async ValueTask NativeOpenAsync()
+    {
+        // API 29+ required for L2CAP channels
+        if (!OperatingSystem.IsAndroidVersionAtLeast(29))
+        {
+            throw new PlatformNotSupportedException(
+                "L2CAP channels require Android 10+ (API 29). Current version does not support this feature.");
+        }
+
+        Logger?.LogL2CapChannelOpening(Psm, Device.Id);
+
+        try
+        {
+            // Create L2CAP socket
+            _socket = _nativeDevice.CreateL2capChannel(Psm)
+                ?? throw new AndroidNativeBluetoothException("Failed to create L2CAP channel");
+
+            // Connect to the socket (blocking operation, wrap in Task.Run)
+            await Task.Run(() => _socket.Connect(), CancellationToken.None).ConfigureAwait(false);
+
+            // Get streams - Android streams are already .NET Stream objects
+            _inputStream = _socket.InputStream
+                ?? throw new AndroidNativeBluetoothException("Input stream is null");
+            _outputStream = _socket.OutputStream
+                ?? throw new AndroidNativeBluetoothException("Output stream is null");
+
+            // Get MTU from socket
+            // Note: MaxTransmitPacketSize available API 33+, fallback to default L2CAP MTU
+            Mtu = OperatingSystem.IsAndroidVersionAtLeast(33)
+                ? _socket.MaxTransmitPacketSize
+                : 672; // Default L2CAP MTU (minimum guaranteed)
+
+            IsOpen = true;
+            Logger?.LogL2CapChannelOpened(Psm, Mtu);
+
+            // Start background read loop for DataReceived events
+            _readLoopCts = new CancellationTokenSource();
+            _ = Task.Run(() => ReadLoopAsync(_readLoopCts.Token), _readLoopCts.Token);
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogL2CapChannelOpenFailed(Psm, ex);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    protected override async ValueTask<int> NativeReadAsync(Memory<byte> buffer)
+    {
+        if (_inputStream == null || !IsOpen)
+        {
+            throw new InvalidOperationException("Channel not open");
+        }
+
+        Logger?.LogL2CapChannelReading(Psm, buffer.Length);
+
+        var bytesRead = await _inputStream.ReadAsync(buffer, CancellationToken.None).ConfigureAwait(false);
+
+        Logger?.LogL2CapChannelRead(Psm, bytesRead);
+        return bytesRead;
+    }
+
+    /// <inheritdoc />
+    protected override async ValueTask NativeWriteAsync(ReadOnlyMemory<byte> data)
+    {
+        if (_outputStream == null || !IsOpen)
+        {
+            throw new InvalidOperationException("Channel not open");
+        }
+
+        Logger?.LogL2CapChannelWriting(Psm, data.Length);
+
+        await _outputStream.WriteAsync(data, CancellationToken.None).ConfigureAwait(false);
+        await _outputStream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
+
+        Logger?.LogL2CapChannelWritten(Psm);
+    }
+
+    /// <summary>
+    ///     Background read loop that continuously reads from the input stream and raises DataReceived events.
+    /// </summary>
+    /// <param name="ct">Cancellation token to stop the read loop.</param>
+    private async Task ReadLoopAsync(CancellationToken ct)
+    {
+        var buffer = new byte[Mtu];
+        try
+        {
+            while (!ct.IsCancellationRequested && IsOpen)
+            {
+                var bytesRead = await _inputStream!.ReadAsync(buffer, ct).ConfigureAwait(false);
+                if (bytesRead > 0)
+                {
+                    Logger?.LogL2CapDataReceived(Psm, bytesRead);
+                    OnDataReceived(buffer.AsMemory(0, bytesRead));
+                }
+                else if (bytesRead == 0)
+                {
+                    // End of stream, channel closed remotely
+                    IsOpen = false;
+                    break;
+                }
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            // Expected during close
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogL2CapReadLoopError(Psm, ex);
+        }
+    }
+
+    /// <inheritdoc />
+    protected override ValueTask NativeCloseAsync()
+    {
+        Logger?.LogL2CapChannelClosing(Psm);
+
+        _readLoopCts?.Cancel();
+
+        try
+        {
+            _inputStream?.Dispose();
+            _outputStream?.Dispose();
+            _socket?.Close();
+            _socket?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogError(ex, "Error closing L2CAP channel");
+        }
+        finally
+        {
+            IsOpen = false;
+            Logger?.LogL2CapChannelClosed(Psm);
+        }
+
+        return ValueTask.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public new async ValueTask DisposeAsync()
+    {
+        if (IsOpen)
+        {
+            await NativeCloseAsync().ConfigureAwait(false);
+        }
+
+        _readLoopCts?.Dispose();
+
+        // Call base disposal
+        await base.DisposeAsync().ConfigureAwait(false);
+    }
+}

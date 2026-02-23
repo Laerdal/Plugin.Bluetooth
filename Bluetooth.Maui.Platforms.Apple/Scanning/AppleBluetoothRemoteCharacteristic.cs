@@ -195,19 +195,28 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     /// <inheritdoc />
     protected override ValueTask NativeBeginReliableWriteAsync()
     {
-        throw new NotImplementedException();
+        // CoreBluetooth doesn't support reliable write transactions
+        throw new NotSupportedException(
+            "Reliable write transactions are not supported on iOS/macOS platforms. " +
+            "CoreBluetooth does not provide native transaction support for characteristic writes.");
     }
 
     /// <inheritdoc />
     protected override ValueTask NativeExecuteReliableWriteAsync()
     {
-        throw new NotImplementedException();
+        // CoreBluetooth doesn't support reliable write transactions
+        throw new NotSupportedException(
+            "Reliable write transactions are not supported on iOS/macOS platforms. " +
+            "CoreBluetooth does not provide native transaction support for characteristic writes.");
     }
 
     /// <inheritdoc />
     protected override ValueTask NativeAbortReliableWriteAsync()
     {
-        throw new NotImplementedException();
+        // CoreBluetooth doesn't support reliable write transactions
+        throw new NotSupportedException(
+            "Reliable write transactions are not supported on iOS/macOS platforms. " +
+            "CoreBluetooth does not provide native transaction support for characteristic writes.");
     }
 
     #endregion

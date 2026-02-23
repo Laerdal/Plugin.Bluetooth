@@ -82,8 +82,13 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         {
             AppleNativeBluetoothException.ThrowIfError(error);
 
-            // TODO : Implement BluetoothL2CapChannel and return it in the event args. This requires implementing the read/write operations and handling the channel lifecycle, which is non-trivial and may require significant additional code to manage correctly.
-            // OnL2CapChannelOpened(new BluetoothL2CapChannel(this, channel));
+            if (channel == null)
+            {
+                throw new IOException("L2CAP channel is null");
+            }
+
+            var wrappedChannel = new AppleBluetoothL2CapChannel(this, channel, Logger);
+            OnL2CapChannelOpened(wrappedChannel);
         }
         catch (Exception e)
         {
