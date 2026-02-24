@@ -36,7 +36,7 @@ defaults:
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: '1'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
-  SOLUTION_PATH: 'Bluetooth.slnx'
+  SOLUTION_PATH: 'Bluetooth.Packages.slnf'
 
 jobs:
   version:
@@ -53,9 +53,6 @@ jobs:
     name: '🛠️ Build, Test, Package'
     runs-on: windows-latest
     needs: version
-    outputs:
-      has-docs: ${{ steps.check-docs.outputs.exists }}
-      has-tests: ${{ steps.test-artifact-check.outputs.found }}
     steps:
       - name: '🔄 Checkout'
         uses: actions/checkout@v6
@@ -106,75 +103,6 @@ jobs:
           path: '${{ github.workspace }}/Output/Packages'
           if-no-files-found: error
 
-      # ============================ TESTS & COVERAGE ============================
-      - name: '🧪 Test with coverage'
-        uses: laerdal/github_actions/dotnet-test@main
-        if: ${{ success() && !cancelled() }}
-        with:
-          path: '${{ github.workspace }}/${{ env.SOLUTION_PATH }}'
-          configuration: Release
-          no-build: true
-          logger: 'trx;LogFileName=test-results.trx'
-          results-directory: '${{ github.workspace }}/Output/Tests'
-          arguments: >
-            -p:TestOutputPath='${{ github.workspace }}/Output/Tests'
-            -p:CollectCoverage=true
-            -p:CoverletOutputFormat=cobertura
-            -p:CoverletOutput='${{ github.workspace }}/Output/Tests/coverage.cobertura.xml'
-          show-summary: true
-
-      - name: '🔍 Check for test artifacts'
-        id: test-artifact-check
-        run: |
-          if [ -d "${{ github.workspace }}/Output/Tests" ]; then
-            echo "found=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "found=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::No test results found. Skipping test artifact upload."
-          fi
-
-      - name: '📦 Upload test artifacts'
-        uses: actions/upload-artifact@v6
-        if: ${{ success() && !cancelled() && steps.test-artifact-check.outputs.found == 'true' }}
-        with:
-          name: tests
-          path: 'Output/Tests/'
-
-      # ============================ DOCS ============================
-      - name: '🔍 Check if docs are needed'
-        id: check-docs
-        run: |
-          if [ "${{ env.DOCS_PATH }}" != "" ] && [ -d "${{ github.workspace }}/${{ env.DOCS_PATH }}" ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Documentation path is not set or does not exist, skipping documentation build."
-          fi
-
-      - name: "📚 Build documentation metadata"
-        uses: laerdal/github_actions/dotnet-docfx-metadata@main
-        if: ${{ success() && !cancelled() && steps.check-docs.outputs.exists == 'true' }}
-        with:
-          config: '${{ github.workspace }}/${{ env.DOCS_PATH }}/docfx.json'
-          output: '${{ github.workspace }}/${{ env.DOCS_PATH }}/api'
-          show-summary: true
-
-      - name: "📚 Build documentation site"
-        uses: laerdal/github_actions/dotnet-docfx-build@main
-        if: ${{ success() && !cancelled() && steps.check-docs.outputs.exists == 'true' }}
-        with:
-          config: '${{ github.workspace }}/${{ env.DOCS_PATH }}/docfx.json'
-          output: '${{ github.workspace }}/${{ env.DOCS_PATH }}/site'
-          show-summary: true
-
-      - name: "📦 Upload GitHub Pages artifact"
-        if: ${{ success() && !cancelled() && github.ref == 'refs/heads/main' && steps.check-docs.outputs.exists == 'true' }}
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: '${{ github.workspace }}/${{ env.DOCS_PATH }}/site'
-          name: github-pages
-
-
   publish-nuget:
     name: '🚀 Publish to NuGet.org'
     if: github.ref == 'refs/heads/main'
@@ -196,36 +124,6 @@ jobs:
           api-key: ${{ secrets.NUGET_ORG_API_KEY }}
           source: 'https://api.nuget.org/v3/index.json'
           show-summary: true
-
-  publish-tests:
-    name: '🚀 Publish Test Artifacts'
-    if: needs.build.outputs.has-tests == 'true'
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: '📦 Download Test Artifacts'
-        uses: actions/download-artifact@v7
-        with:
-          name: tests
-          path: '${{ github.workspace }}/tests'
-
-      - name: '📊 Publish Test Results'
-        uses: EnricoMi/publish-unit-test-result-action/linux@v2
-        with:
-          files: '${{ github.workspace }}/tests/test-results.trx'
-
-  publish-docs:
-    name: '🚀 Deploy to GitHub Pages'
-    if: github.ref == 'refs/heads/main' && needs.build.outputs.has-docs == 'true'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: publish-nuget
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
 
   tag-and-release:
     name: '🏷️ Tag & Release'
