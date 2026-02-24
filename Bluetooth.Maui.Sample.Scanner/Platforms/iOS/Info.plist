@@ -33,5 +33,10 @@
 	<string>This app needs Bluetooth to scan for BLE devices</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>This app needs Bluetooth to scan for BLE devices</string>
+	<!-- Background modes for Bluetooth state restoration -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+	</array>
 </dict>
 </plist>
