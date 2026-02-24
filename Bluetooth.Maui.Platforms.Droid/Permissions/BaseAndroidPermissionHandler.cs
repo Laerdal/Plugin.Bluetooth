@@ -35,7 +35,7 @@ public abstract class BaseAndroidPermissionHandler : Microsoft.Maui.ApplicationM
     ///     Requests the permission from the user if it has not already been granted.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    /// <exception cref="PermissionException">Thrown when the permission is not granted after the request.</exception>
+    /// <exception cref="PermissionException">Thrown when the permission is not granted after the spec.</exception>
     public async Task RequestIfNeededAsync()
     {
         if (await CheckStatusAsync().ConfigureAwait(false) == PermissionStatus.Granted)

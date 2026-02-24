@@ -6,8 +6,8 @@ public class DotNetCoreBluetoothConnectedDevice : BaseBluetoothConnectedDevice
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     public DotNetCoreBluetoothConnectedDevice(IBluetoothBroadcaster broadcaster,
-        IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec request,
-        ILogger<IBluetoothConnectedDevice>? logger = null) : base(broadcaster, request, logger)
+        IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec,
+        ILogger<IBluetoothConnectedDevice>? logger = null) : base(broadcaster, spec, logger)
     {
     }
 

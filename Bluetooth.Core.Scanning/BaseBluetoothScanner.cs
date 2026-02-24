@@ -14,7 +14,7 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
     /// <param name="logger">The logger instance to use for logging.</param>
     protected BaseBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothDeviceFactory deviceFactory,
+        IBluetoothRemoteDeviceFactory deviceFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ITicker ticker,
         ILogger<IBluetoothScanner>? logger = null) : base(logger)
@@ -76,7 +76,7 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     /// <summary>
     ///     The factory responsible for creating Bluetooth devices managed by this scanner.
     /// </summary>
-    protected IBluetoothDeviceFactory DeviceFactory { get; }
+    protected IBluetoothRemoteDeviceFactory DeviceFactory { get; }
 
     /// <summary>
     ///     The converter responsible for translating RSSI values to signal strength levels, which can be used for filtering and sorting devices based on signal quality.

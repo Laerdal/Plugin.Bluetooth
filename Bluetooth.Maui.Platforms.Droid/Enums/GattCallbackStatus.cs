@@ -142,7 +142,7 @@ public enum GattCallbackStatus
     GATT_DB_FULL = 0x83,
 
     /// <summary>
-    ///     The GATT server is busy processing another request.
+    ///     The GATT server is busy processing another spec.
     /// </summary>
     GATT_BUSY = 0x84,
 

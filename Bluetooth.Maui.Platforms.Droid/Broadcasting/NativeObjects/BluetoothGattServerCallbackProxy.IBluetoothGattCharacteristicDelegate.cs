@@ -15,7 +15,7 @@ public partial class BluetoothGattServerCallbackProxy
         ///     Called when a remote device has requested to read a characteristic.
         /// </summary>
         /// <param name="sharedBluetoothDeviceDelegate">The device delegate for the requesting device.</param>
-        /// <param name="requestId">The ID of the read request.</param>
+        /// <param name="requestId">The ID of the read spec.</param>
         /// <param name="offset">The offset from which to read the characteristic value.</param>
         void OnCharacteristicReadRequest(IBluetoothDeviceDelegate sharedBluetoothDeviceDelegate, int requestId, int offset);
 
@@ -23,7 +23,7 @@ public partial class BluetoothGattServerCallbackProxy
         ///     Called when a remote device has requested to write to a characteristic.
         /// </summary>
         /// <param name="sharedBluetoothDeviceDelegate">The device delegate for the requesting device.</param>
-        /// <param name="requestId">The ID of the write request.</param>
+        /// <param name="requestId">The ID of the write spec.</param>
         /// <param name="preparedWrite">Whether this is a prepared write operation.</param>
         /// <param name="responseNeeded">Whether the remote device requires a response.</param>
         /// <param name="offset">The offset at which to write the characteristic value.</param>

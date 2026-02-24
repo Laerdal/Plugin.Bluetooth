@@ -10,15 +10,15 @@ public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject,
     /// </summary>
     protected BaseBluetoothLocalDescriptor(
         IBluetoothLocalCharacteristic localCharacteristic,
-        IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec request)
+        IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
     {
         ArgumentNullException.ThrowIfNull(localCharacteristic);
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
 
         LocalCharacteristic = localCharacteristic;
 
-        Id = request.Id;
-        Value = request.InitialValue ?? ReadOnlyMemory<byte>.Empty;
+        Id = spec.Id;
+        Value = spec.InitialValue ?? ReadOnlyMemory<byte>.Empty;
     }
 
 

@@ -11,10 +11,10 @@ public class WindowsBluetoothDescriptorFactory : BaseBluetoothDescriptorFactory
     }
 
     /// <inheritdoc/>
-    public override Abstractions.Scanning.IBluetoothRemoteDescriptor CreateDescriptor(
+    public override Abstractions.Scanning.IBluetoothRemoteDescriptor Create(
         Abstractions.Scanning.IBluetoothRemoteCharacteristic remoteCharacteristic,
-        IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest request)
+        IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec spec)
     {
-        return new WindowsBluetoothRemoteDescriptor(remoteCharacteristic, request);
+        return new WindowsBluetoothRemoteDescriptor(remoteCharacteristic, spec);
     }
 }

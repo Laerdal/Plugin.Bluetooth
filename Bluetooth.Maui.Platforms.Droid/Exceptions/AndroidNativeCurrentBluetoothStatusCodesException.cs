@@ -53,7 +53,7 @@ public class AndroidNativeCurrentBluetoothStatusCodesException : AndroidNativeBl
             11 => "Feature is not supported.",
             30 => "Feature is not configured.",
             200 => "Error: GATT write is not allowed.",
-            201 => "Error: GATT write request is busy.",
+            201 => "Error: GATT write spec is busy.",
             2147483647 => "Error: Unknown error occurred.",
             _ => "Unknown Bluetooth status code."
         };

@@ -16,7 +16,7 @@ public abstract class BaseBluetoothRemoteL2CapChannelFactory : IBluetoothRemoteL
     }
 
     /// <inheritdoc />
-    public abstract IBluetoothL2CapChannel CreateL2CapChannel(
+    public abstract IBluetoothL2CapChannel Create(
         IBluetoothRemoteDevice device,
-        IBluetoothRemoteL2CapChannelFactory.BluetoothRemoteL2CapChannelFactoryRequest request);
+        IBluetoothRemoteL2CapChannelFactory.BluetoothRemoteL2CapChannelFactorySpec spec);
 }

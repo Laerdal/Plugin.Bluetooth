@@ -25,9 +25,9 @@ public partial class CbPeripheralManagerWrapper
         void CharacteristicUnsubscribed(CBCentral central, CBCharacteristic characteristic);
 
         /// <summary>
-        ///     Called when a read request is received from a central.
+        ///     Called when a read spec is received from a central.
         /// </summary>
-        /// <param name="request">The read request from the central.</param>
+        /// <param name="request">The read spec from the central.</param>
         void ReadRequestReceived(CBATTRequest request);
 
         /// <summary>

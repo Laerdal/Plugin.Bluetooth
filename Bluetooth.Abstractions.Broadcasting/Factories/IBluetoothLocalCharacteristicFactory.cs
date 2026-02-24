@@ -11,7 +11,7 @@ public interface IBluetoothLocalCharacteristicFactory
     /// <param name="localService">The local Bluetooth service that will expose the characteristic.</param>
     /// <param name="spec">The specification describing the characteristic to create.</param>
     /// <returns>The created local Bluetooth characteristic instance.</returns>
-    IBluetoothLocalCharacteristic CreateCharacteristic(
+    IBluetoothLocalCharacteristic Create(
         IBluetoothLocalService localService,
         BluetoothLocalCharacteristicSpec spec);
 

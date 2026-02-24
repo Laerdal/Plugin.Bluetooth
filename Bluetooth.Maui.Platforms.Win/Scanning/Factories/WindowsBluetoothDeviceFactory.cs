@@ -6,14 +6,14 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning.Factories;
 public class WindowsBluetoothDeviceFactory : BaseBluetoothDeviceFactory
 {
     /// <inheritdoc/>
-    public WindowsBluetoothDeviceFactory(IBluetoothServiceFactory serviceFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter)
+    public WindowsBluetoothDeviceFactory(IBluetoothRemoteServiceFactory serviceFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter)
         : base(serviceFactory, rssiToSignalStrengthConverter)
     {
     }
 
     /// <inheritdoc/>
-    public override IBluetoothRemoteDevice CreateDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request)
+    public override IBluetoothRemoteDevice Create(IBluetoothScanner scanner, IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec)
     {
-        return new WindowsBluetoothRemoteDevice(scanner, request, ServiceFactory, RssiToSignalStrengthConverter);
+        return new WindowsBluetoothRemoteDevice(scanner, spec, ServiceFactory, RssiToSignalStrengthConverter);
     }
 }

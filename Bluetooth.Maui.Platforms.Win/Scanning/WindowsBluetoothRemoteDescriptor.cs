@@ -22,16 +22,16 @@ public class WindowsBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
     ///     Initializes a new instance of the Windows <see cref="WindowsBluetoothRemoteDescriptor" /> class.
     /// </summary>
     /// <param name="characteristic">The Bluetooth characteristic that contains this descriptor.</param>
-    /// <param name="request">The descriptor factory request containing descriptor information.</param>
-    public WindowsBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic characteristic, IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest request) : base(characteristic, request)
+    /// <param name="spec">The descriptor factory spec containing descriptor information.</param>
+    public WindowsBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic characteristic, IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec spec) : base(characteristic, spec)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not WindowsBluetoothDescriptorFactoryRequest windowsRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not WindowsBluetoothRemoteDescriptorFactorySpec nativeSpec)
         {
-            throw new ArgumentException($"Expected request of type {typeof(WindowsBluetoothDescriptorFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(WindowsBluetoothRemoteDescriptorFactorySpec)}, but got {spec.GetType()}");
         }
 
-        NativeDescriptor = windowsRequest.NativeDescriptor;
+        NativeDescriptor = nativeSpec.NativeDescriptor;
     }
 
     /// <summary>

@@ -19,22 +19,18 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
     ///     Initializes a new instance of the <see cref="WindowsBluetoothRemoteService" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with this service.</param>
-    /// <param name="request">The factory request containing service information.</param>
+    /// <param name="spec">The factory spec containing service information.</param>
     /// <param name="characteristicFactory">The factory for creating characteristics.</param>
-    public WindowsBluetoothRemoteService(
-        IBluetoothRemoteDevice device,
-        IBluetoothServiceFactory.BluetoothServiceFactoryRequest request,
-        IBluetoothCharacteristicFactory characteristicFactory)
-        : base(device, request, characteristicFactory)
+    public WindowsBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory) :
+        base(device, spec, characteristicFactory)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not WindowsBluetoothServiceFactoryRequest windowsRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not WindowsBluetoothRemoteServiceFactorySpec nativeSpec)
         {
-            throw new ArgumentException(
-                $"Expected request of type {typeof(WindowsBluetoothServiceFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(WindowsBluetoothRemoteServiceFactorySpec)}, but got {spec.GetType()}");
         }
 
-        NativeServiceProxy = new NativeObjects.GattDeviceServiceProxy(windowsRequest.NativeService, this);
+        NativeServiceProxy = new NativeObjects.GattDeviceServiceProxy(nativeSpec.NativeService, this);
     }
 
     /// <summary>
@@ -67,40 +63,33 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
     #region Characteristic Exploration
 
     /// <inheritdoc />
-    protected async override ValueTask NativeCharacteristicsExplorationAsync(
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+    protected async override ValueTask NativeCharacteristicsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogCharacteristicDiscoveryStarting(Id, Device.Id);
 
         try
         {
-            var result = await NativeServiceProxy.GattDeviceService
-                .GetCharacteristicsAsync(BluetoothCacheMode.Uncached)
-                .AsTask(cancellationToken)
-                .ConfigureAwait(false);
+            var result = await NativeServiceProxy.GattDeviceService.GetCharacteristicsAsync(BluetoothCacheMode.Uncached).AsTask(cancellationToken).ConfigureAwait(false);
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
             Logger?.LogCharacteristicDiscoveryCompleted(Id, Device.Id, result.Characteristics.Count);
 
             // Call OnCharacteristicsExplorationSucceeded with conversion function
-            OnCharacteristicsExplorationSucceeded(
-                result.Characteristics.ToList(),
-                ConvertNativeCharacteristicToCharacteristic,
-                AreRepresentingTheSameObject);
+            OnCharacteristicsExplorationSucceeded(result.Characteristics.ToList(), AreRepresentingTheSameObject, FromInputTypeToOutputTypeConversion);
         }
         catch (Exception e)
         {
             Logger?.LogCharacteristicDiscoveryError(Id, Device.Id, e.Message, e);
             OnCharacteristicsExplorationFailed(e);
         }
-    }
+        return;
 
-    private IBluetoothRemoteCharacteristic ConvertNativeCharacteristicToCharacteristic(GattCharacteristic nativeCharacteristic)
-    {
-        var characteristicRequest = new WindowsBluetoothCharacteristicFactoryRequest(nativeCharacteristic);
-        return CharacteristicFactory.CreateCharacteristic(this, characteristicRequest);
+        IBluetoothRemoteCharacteristic FromInputTypeToOutputTypeConversion(GattCharacteristic nativeCharacteristic)
+        {
+            var spec = new WindowsBluetoothRemoteCharacteristicFactorySpec(nativeCharacteristic);
+            return CharacteristicFactory.Create(this, spec);
+        }
     }
 
     private static bool AreRepresentingTheSameObject(GattCharacteristic native, IBluetoothRemoteCharacteristic shared)
@@ -110,4 +99,5 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
     }
 
     #endregion
+
 }

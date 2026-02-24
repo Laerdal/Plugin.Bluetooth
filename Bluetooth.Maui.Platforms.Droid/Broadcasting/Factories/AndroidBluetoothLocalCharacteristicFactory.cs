@@ -11,7 +11,7 @@ public class AndroidBluetoothLocalCharacteristicFactory : BaseBluetoothLocalChar
     }
 
     /// <inheritdoc />
-    public override IBluetoothLocalCharacteristic CreateCharacteristic(IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec)
+    public override IBluetoothLocalCharacteristic Create(IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec)
     {
         throw new NotImplementedException();
     }

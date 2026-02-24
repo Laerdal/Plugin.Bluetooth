@@ -162,10 +162,10 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     }
 
     /// <summary>
-    ///     Handles custom pairing request events and forwards them to the delegate.
+    ///     Handles custom pairing spec events and forwards them to the delegate.
     /// </summary>
     /// <param name="sender">The custom pairing object that requested pairing.</param>
-    /// <param name="args">The pairing request event arguments.</param>
+    /// <param name="args">The pairing spec event arguments.</param>
     private void OnCustomPairingRequested(DeviceInformationCustomPairing sender, DevicePairingRequestedEventArgs args)
     {
         try

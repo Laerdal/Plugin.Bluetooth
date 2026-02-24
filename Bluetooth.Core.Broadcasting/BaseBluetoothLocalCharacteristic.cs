@@ -14,21 +14,21 @@ public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObj
     ///     Initializes a new instance of the <see cref="BaseBluetoothLocalCharacteristic" /> class.
     /// </summary>
     protected BaseBluetoothLocalCharacteristic(IBluetoothLocalService localService,
-        IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request,
+        IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec,
         IBluetoothLocalDescriptorFactory localDescriptorRepository,
         ILogger<IBluetoothLocalCharacteristic>? logger = null)
     {
         ArgumentNullException.ThrowIfNull(localService);
         ArgumentNullException.ThrowIfNull(localDescriptorRepository);
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
 
         _logger = logger ?? NullLogger<IBluetoothLocalCharacteristic>.Instance;
         LocalService = localService;
         LocalDescriptorFactory = localDescriptorRepository;
-        Id = request.Id;
-        Value = request.InitialValue ?? new ReadOnlyMemory<byte>([]);
-        Properties = request.Properties;
-        Permissions = request.Permissions;
+        Id = spec.Id;
+        Value = spec.InitialValue ?? new ReadOnlyMemory<byte>([]);
+        Properties = spec.Properties;
+        Permissions = spec.Permissions;
     }
 
     /// <summary>

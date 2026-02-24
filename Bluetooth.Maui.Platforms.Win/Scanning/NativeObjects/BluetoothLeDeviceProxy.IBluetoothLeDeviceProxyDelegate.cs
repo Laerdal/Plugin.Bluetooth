@@ -38,7 +38,7 @@ public partial class BluetoothLeDeviceProxy
         /// <summary>
         ///     Called when a custom pairing is requested for the device.
         /// </summary>
-        /// <param name="args">The pairing request event arguments.</param>
+        /// <param name="args">The pairing spec event arguments.</param>
         void OnCustomPairingRequested(DevicePairingRequestedEventArgs args);
     }
 }

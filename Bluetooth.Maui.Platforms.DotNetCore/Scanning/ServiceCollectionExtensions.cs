@@ -17,10 +17,10 @@ public static class ServiceCollectionExtensions
     public static void AddBluetoothMauiDotNetScanningServices(this IServiceCollection services)
     {
         services.AddSingleton<IBluetoothScanner, DotNetCoreBluetoothScanner>();
-        services.AddSingleton<IBluetoothDeviceFactory, DotNetCoreBluetoothDeviceFactory>();
-        services.AddSingleton<IBluetoothServiceFactory, DotNetCoreBluetoothServiceFactory>();
-        services.AddSingleton<IBluetoothCharacteristicFactory, DotNetCoreBluetoothCharacteristicFactory>();
-        services.AddSingleton<IBluetoothDescriptorFactory, DotNetCoreBluetoothDescriptorFactory>();
+        services.AddSingleton<IBluetoothRemoteDeviceFactory, DotNetCoreBluetoothDeviceFactory>();
+        services.AddSingleton<IBluetoothRemoteServiceFactory, DotNetCoreBluetoothServiceFactory>();
+        services.AddSingleton<IBluetoothRemoteCharacteristicFactory, DotNetCoreBluetoothCharacteristicFactory>();
+        services.AddSingleton<IBluetoothRemoteDescriptorFactory, DotNetCoreBluetoothDescriptorFactory>();
 
 
     }

@@ -7,7 +7,7 @@ public class AndroidBluetoothConnectedDevice : BaseBluetoothConnectedDevice,
                                                BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate
 {
     /// <inheritdoc />
-    public AndroidBluetoothConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec request) : base(broadcaster, request)
+    public AndroidBluetoothConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec) : base(broadcaster, spec)
     {
     }
 
@@ -25,7 +25,7 @@ public class AndroidBluetoothConnectedDevice : BaseBluetoothConnectedDevice,
 
     void BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate.OnExecuteWrite(int requestId, bool execute)
     {
-        // Execute write request
+        // Execute write spec
         // This is part of the reliable write transaction
     }
 

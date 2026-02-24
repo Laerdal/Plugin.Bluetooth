@@ -263,13 +263,13 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     }
 
     /// <summary>
-    ///     Callback indicating a request to read a characteristic from a remote device.
+    ///     Callback indicating a spec to read a characteristic from a remote device.
     /// </summary>
     /// <param name="device">
     ///     The <see cref="BluetoothDevice" /> requesting to read the characteristic.
     /// </param>
     /// <param name="requestId">
-    ///     An integer identifying the read request.
+    ///     An integer identifying the read spec.
     /// </param>
     /// <param name="offset">
     ///     The offset within the characteristic value to read from.
@@ -279,7 +279,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     /// </param>
     /// <remarks>
     ///     This method is called when a remote device requests to read a characteristic. Applications
-    ///     can override this method to handle the read request and respond appropriately.
+    ///     can override this method to handle the read spec and respond appropriately.
     ///     For more information, see:
     ///     <list type="bullet">
     ///         <item>
@@ -314,13 +314,13 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     }
 
     /// <summary>
-    ///     Callback indicating a request to write to a characteristic from a remote device.
+    ///     Callback indicating a spec to write to a characteristic from a remote device.
     /// </summary>
     /// <param name="device">
     ///     The <see cref="BluetoothDevice" /> requesting to write the characteristic.
     /// </param>
     /// <param name="requestId">
-    ///     An integer identifying the write request.
+    ///     An integer identifying the write spec.
     /// </param>
     /// <param name="characteristic">
     ///     The <see cref="BluetoothGattCharacteristic" /> requested for writing.
@@ -329,7 +329,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     ///     A boolean indicating if this is a prepared write operation.
     /// </param>
     /// <param name="responseNeeded">
-    ///     A boolean indicating if a response is required for this write request.
+    ///     A boolean indicating if a response is required for this write spec.
     /// </param>
     /// <param name="offset">
     ///     The offset within the characteristic value where the write should begin.
@@ -339,7 +339,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     /// </param>
     /// <remarks>
     ///     This method is called when a remote device requests to write to a characteristic. Applications
-    ///     can override this method to handle the write request, respond appropriately, and process the provided value.
+    ///     can override this method to handle the write spec, respond appropriately, and process the provided value.
     ///     For more information, see:
     ///     <list type="bullet">
     ///         <item>
@@ -386,13 +386,13 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     }
 
     /// <summary>
-    ///     Callback indicating a request to read a descriptor from a remote device.
+    ///     Callback indicating a spec to read a descriptor from a remote device.
     /// </summary>
     /// <param name="device">
     ///     The <see cref="BluetoothDevice" /> requesting to read the descriptor.
     /// </param>
     /// <param name="requestId">
-    ///     An integer identifying the read request.
+    ///     An integer identifying the read spec.
     /// </param>
     /// <param name="offset">
     ///     The offset within the descriptor value to read from.
@@ -402,7 +402,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     /// </param>
     /// <remarks>
     ///     This method is called when a remote device requests to read a descriptor. Applications
-    ///     can override this method to handle the read request and respond appropriately.
+    ///     can override this method to handle the read spec and respond appropriately.
     ///     For more information, see:
     ///     <list type="bullet">
     ///         <item>
@@ -440,13 +440,13 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     }
 
     /// <summary>
-    ///     Callback indicating a request to write to a descriptor from a remote device.
+    ///     Callback indicating a spec to write to a descriptor from a remote device.
     /// </summary>
     /// <param name="device">
     ///     The <see cref="BluetoothDevice" /> requesting to write the descriptor.
     /// </param>
     /// <param name="requestId">
-    ///     An integer identifying the write request.
+    ///     An integer identifying the write spec.
     /// </param>
     /// <param name="descriptor">
     ///     The <see cref="BluetoothGattDescriptor" /> requested for writing.
@@ -455,7 +455,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     ///     A boolean indicating if this is a prepared write operation.
     /// </param>
     /// <param name="responseNeeded">
-    ///     A boolean indicating if a response is required for this write request.
+    ///     A boolean indicating if a response is required for this write spec.
     /// </param>
     /// <param name="offset">
     ///     The offset within the descriptor value where the write should begin.
@@ -465,7 +465,7 @@ public partial class BluetoothGattServerCallbackProxy : BluetoothGattServerCallb
     /// </param>
     /// <remarks>
     ///     This method is called when a remote device requests to write to a descriptor. Applications
-    ///     can override this method to handle the write request, respond appropriately, and process the provided value.
+    ///     can override this method to handle the write spec, respond appropriately, and process the provided value.
     ///     For more information, see:
     ///     <list type="bullet">
     ///         <item>

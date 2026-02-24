@@ -14,10 +14,10 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning;
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementwatcher">BluetoothLEAdvertisementWatcher</seealso>
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs">BluetoothLEAdvertisementReceivedEventArgs</seealso>
 /// </remarks>
-public class WindowsBluetoothScanner : BaseBluetoothScanner,
-    NativeObjects.BluetoothLeAdvertisementWatcherWrapper.IBluetoothLeAdvertisementWatcherProxyDelegate
+public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.BluetoothLeAdvertisementWatcherWrapper.IBluetoothLeAdvertisementWatcherProxyDelegate
 {
     private NativeObjects.BluetoothLeAdvertisementWatcherWrapper? _watcher;
+
     private readonly ITicker _ticker;
 
     /// <summary>
@@ -27,13 +27,15 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
         _watcher ??= new NativeObjects.BluetoothLeAdvertisementWatcherWrapper(this, _ticker);
 
     /// <inheritdoc />
-    public WindowsBluetoothScanner(
-        IBluetoothAdapter adapter,
-        IBluetoothDeviceFactory deviceFactory,
+    public WindowsBluetoothScanner(IBluetoothAdapter adapter,
+        IBluetoothRemoteDeviceFactory deviceFactory,
         ITicker ticker,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
-        ILogger<IBluetoothScanner>? logger = null)
-        : base(adapter, deviceFactory, rssiToSignalStrengthConverter, ticker, logger)
+        ILogger<IBluetoothScanner>? logger = null) : base(adapter,
+                                                          deviceFactory,
+                                                          rssiToSignalStrengthConverter,
+                                                          ticker,
+                                                          logger)
     {
         _ticker = ticker;
     }
@@ -88,10 +90,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
     ///     Starts the Windows Bluetooth LE advertisement watcher.
     ///     The watcher will begin receiving advertisements and call <see cref="OnAdvertisementReceived" /> for each one.
     /// </remarks>
-    protected override ValueTask NativeStartAsync(
-        ScanningOptions scanningOptions,
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+    protected override ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogScanStarting(scanningOptions?.ScanMode, scanningOptions?.CallbackType);
 
@@ -107,10 +106,9 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
             const int eAccessdenied = unchecked((int) 0x80070005);
             if (e.HResult == eAccessdenied)
             {
-                throw new BluetoothPermissionException(
-                    "Access denied when starting Bluetooth scanner. Ensure 'bluetooth' capability is declared in Package.appxmanifest and Bluetooth radio is enabled. " +
-                    "You may need to call IBluetoothPermissionManager.RequestBluetoothPermissionsAsync() to check and enable the radio.",
-                    e);
+                throw new BluetoothPermissionException("Access denied when starting Bluetooth scanner. Ensure 'bluetooth' capability is declared in Package.appxmanifest and Bluetooth radio is enabled. "
+                                                     + "You may need to call IBluetoothPermissionManager.RequestBluetoothPermissionsAsync() to check and enable the radio.",
+                                                       e);
             }
 
             throw new WindowsNativeBluetoothException("Failed to start Bluetooth LE advertisement watcher.", e);
@@ -123,9 +121,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
     /// <remarks>
     ///     Stops the Windows Bluetooth LE advertisement watcher.
     /// </remarks>
-    protected override ValueTask NativeStopAsync(
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+    protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogScanStopping();
         _watcher?.BluetoothLeAdvertisementWatcher.Stop();
@@ -134,19 +130,16 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
 
     /// <inheritdoc />
     /// <remarks>
-    ///     Creates a Windows-specific device factory request from the advertisement.
+    ///     Creates a Windows-specific device factory spec from the advertisement.
     /// </remarks>
-    protected override IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest
-        CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
+    protected override IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
         if (advertisement is not WindowsBluetoothAdvertisement windowsAdvertisement)
         {
-            throw new ArgumentException(
-                $"Expected advertisement of type {typeof(WindowsBluetoothAdvertisement)}",
-                nameof(advertisement));
+            throw new ArgumentException($"Expected advertisement of type {typeof(WindowsBluetoothAdvertisement)}", nameof(advertisement));
         }
 
-        return new WindowsBluetoothDeviceFactoryRequest(windowsAdvertisement);
+        return new WindowsBluetoothRemoteDeviceFactorySpec(windowsAdvertisement);
     }
 
     #endregion
@@ -167,15 +160,16 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
 
     /// <inheritdoc />
     /// <remarks>
-    ///     On Windows, no runtime permission request is needed. Bluetooth permissions are
+    ///     On Windows, no runtime permission spec is needed. Bluetooth permissions are
     ///     declared in Package.appxmanifest and granted at install time.
     ///     The <paramref name="requireBackgroundLocation"/> parameter is ignored on Windows.
     /// </remarks>
     protected override ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken)
     {
-        // No runtime request needed on Windows - permissions are declared at install time
+        // No runtime spec needed on Windows - permissions are declared at install time
         return ValueTask.CompletedTask;
     }
 
     #endregion
+
 }

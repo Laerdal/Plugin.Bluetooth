@@ -8,14 +8,14 @@ public class AppleBluetoothDeviceFactory : BaseBluetoothDeviceFactory
     private readonly IBluetoothRemoteL2CapChannelFactory _l2CapChannelFactory;
 
     /// <inheritdoc />
-    public AppleBluetoothDeviceFactory(IBluetoothServiceFactory serviceFactory, IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) : base(serviceFactory, rssiToSignalStrengthConverter)
+    public AppleBluetoothDeviceFactory(IBluetoothRemoteServiceFactory serviceFactory, IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) : base(serviceFactory, rssiToSignalStrengthConverter)
     {
         _l2CapChannelFactory = l2CapChannelFactory;
     }
 
     /// <inheritdoc />
-    public override IBluetoothRemoteDevice CreateDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request)
+    public override IBluetoothRemoteDevice Create(IBluetoothScanner scanner, IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec)
     {
-        return new AppleBluetoothRemoteDevice(scanner, request, ServiceFactory, _l2CapChannelFactory, RssiToSignalStrengthConverter);
+        return new AppleBluetoothRemoteDevice(scanner, spec, ServiceFactory, _l2CapChannelFactory, RssiToSignalStrengthConverter);
     }
 }

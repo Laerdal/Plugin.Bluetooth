@@ -6,8 +6,8 @@ namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 public class AndroidBluetoothLocalService : BaseBluetoothLocalService, BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate
 {
     /// <inheritdoc />
-    public AndroidBluetoothLocalService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec request, IBluetoothLocalCharacteristicFactory characteristicFactory) :
-        base(broadcaster, request, characteristicFactory)
+    public AndroidBluetoothLocalService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec, IBluetoothLocalCharacteristicFactory characteristicFactory) :
+        base(broadcaster, spec, characteristicFactory)
     {
         throw new NotImplementedException("AndroidBluetoothLocalService is not yet implemented on Android.");
     }

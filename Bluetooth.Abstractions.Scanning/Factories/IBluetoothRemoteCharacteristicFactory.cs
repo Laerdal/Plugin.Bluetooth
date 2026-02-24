@@ -1,28 +1,28 @@
 namespace Bluetooth.Abstractions.Scanning.Factories;
 
 /// <summary>
-///     Factory interface for creating Bluetooth characteristic instances.
+///     Factory interface for creating Bluetooth remote characteristic instances.
 /// </summary>
-public interface IBluetoothCharacteristicFactory
+public interface IBluetoothRemoteCharacteristicFactory
 {
     /// <summary>
     ///     Creates a new instance of a Bluetooth characteristic.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service to which the characteristic belongs.</param>
-    /// <param name="request">The request containing information needed to create the characteristic.</param>
+    /// <param name="spec">The spec containing information needed to create the characteristic.</param>
     /// <returns>A new instance of <see cref="IBluetoothRemoteCharacteristic" />.</returns>
-    IBluetoothRemoteCharacteristic CreateCharacteristic(IBluetoothRemoteService remoteService, BluetoothCharacteristicFactoryRequest request);
+    IBluetoothRemoteCharacteristic Create(IBluetoothRemoteService remoteService, BluetoothRemoteCharacteristicFactorySpec spec);
 
     /// <summary>
-    ///     Request object for creating Bluetooth characteristic instances.
+    ///     Request object for creating Bluetooth remote characteristic instances.
     /// </summary>
-    record BluetoothCharacteristicFactoryRequest
+    record BluetoothRemoteCharacteristicFactorySpec
     {
         /// <summary>
-        ///     Initializes a new instance of the <see cref="BluetoothCharacteristicFactoryRequest" /> class with the specified characteristic identifier.
+        ///     Initializes a new instance of the <see cref="BluetoothRemoteCharacteristicFactorySpec" /> class with the specified characteristic identifier.
         /// </summary>
         /// <param name="characteristicId">The unique identifier (UUID) of the Bluetooth characteristic to be created.</param>
-        protected BluetoothCharacteristicFactoryRequest(Guid characteristicId)
+        protected BluetoothRemoteCharacteristicFactorySpec(Guid characteristicId)
         {
             CharacteristicId = characteristicId;
         }

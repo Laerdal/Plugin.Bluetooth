@@ -6,16 +6,16 @@ namespace Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 public class AndroidBluetoothCharacteristicFactory : BaseBluetoothCharacteristicFactory
 {
     /// <inheritdoc />
-    public AndroidBluetoothCharacteristicFactory(IBluetoothDescriptorFactory descriptorFactory)
+    public AndroidBluetoothCharacteristicFactory(IBluetoothRemoteDescriptorFactory descriptorFactory)
         : base(descriptorFactory)
     {
     }
 
     /// <inheritdoc />
-    public override IBluetoothRemoteCharacteristic CreateCharacteristic(
+    public override IBluetoothRemoteCharacteristic Create(
         IBluetoothRemoteService remoteService,
-        IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request)
+        IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec)
     {
-        return new AndroidBluetoothRemoteCharacteristic(remoteService, request, DescriptorFactory);
+        return new AndroidBluetoothRemoteCharacteristic(remoteService, spec, DescriptorFactory);
     }
 }

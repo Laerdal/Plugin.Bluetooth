@@ -31,29 +31,29 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     ///     Initializes a new instance of the <see cref="AndroidBluetoothRemoteDevice" /> class.
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner associated with this device.</param>
-    /// <param name="request">The factory request containing device information.</param>
+    /// <param name="spec">The factory spec containing device information.</param>
     /// <param name="serviceFactory">The factory for creating Bluetooth services.</param>
     /// <param name="l2CapChannelFactory">The factory for creating L2CAP channels.</param>
     /// <param name="rssiToSignalStrengthConverter">Converter for RSSI to signal strength.</param>
     /// <param name="logger">An optional logger for logging device operations.</param>
     public AndroidBluetoothRemoteDevice(
         IBluetoothScanner scanner,
-        IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request,
-        IBluetoothServiceFactory serviceFactory,
+        IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec,
+        IBluetoothRemoteServiceFactory serviceFactory,
         IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ILogger<IBluetoothRemoteDevice>? logger = null)
-        : base(scanner, request, serviceFactory, rssiToSignalStrengthConverter, logger)
+        : base(scanner, spec, serviceFactory, rssiToSignalStrengthConverter, logger)
     {
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(l2CapChannelFactory);
-        if (request is not AndroidBluetoothDeviceFactoryRequest androidRequest)
+        if (spec is not AndroidBluetoothRemoteDeviceFactorySpec nativeSpec)
         {
             throw new ArgumentException(
-                $"Expected request of type {typeof(AndroidBluetoothDeviceFactoryRequest)}, but got {request.GetType()}");
+                $"Expected spec of type {typeof(AndroidBluetoothRemoteDeviceFactorySpec)}, but got {spec.GetType()}");
         }
 
-        _nativeDevice = androidRequest.NativeDevice;
+        _nativeDevice = nativeSpec.NativeDevice;
         _l2CapChannelFactory = l2CapChannelFactory;
     }
 
@@ -150,7 +150,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         var success = _bluetoothGattProxy.BluetoothGatt.RequestMtu(requestedMtu);
         if (!success)
         {
-            throw new InvalidOperationException("Failed to initiate MTU request");
+            throw new InvalidOperationException("Failed to initiate MTU spec");
         }
 
         return ValueTask.CompletedTask;
@@ -191,7 +191,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         var success = _bluetoothGattProxy.BluetoothGatt.RequestConnectionPriority(androidPriority);
         if (!success)
         {
-            throw new InvalidOperationException($"Failed to request connection priority: {priority}");
+            throw new InvalidOperationException($"Failed to spec connection priority: {priority}");
         }
 
         return ValueTask.CompletedTask;
@@ -261,8 +261,8 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         }
 
         // Create channel using factory
-        var request = new AndroidBluetoothRemoteL2CapChannelFactoryRequest(psm, _nativeDevice);
-        var channel = _l2CapChannelFactory.CreateL2CapChannel(this, request);
+        var spec = new AndroidBluetoothRemoteL2CapChannelFactorySpec(psm, _nativeDevice);
+        var channel = _l2CapChannelFactory.Create(this, spec);
 
         // Open the channel which will trigger the callback
         _ = Task.Run(async () =>
@@ -366,7 +366,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 }
                 catch (Exception ex)
                 {
-                    // Log but don't fail the connection if priority request fails
+                    // Log but don't fail the connection if priority spec fails
                     Logger?.LogConnectionPriorityFailed(
                         connectionOptions.Android.ConnectionPriority.Value,
                         Id,
@@ -632,8 +632,8 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
 
         IBluetoothRemoteService FromInputTypeToOutputTypeConversion(BluetoothGattService nativeService)
         {
-            var request = new AndroidBluetoothServiceFactoryRequest(nativeService);
-            return ServiceFactory.CreateService(this, request);
+            var spec = new AndroidBluetoothRemoteServiceFactorySpec(nativeService);
+            return ServiceFactory.Create(this, spec);
         }
     }
 

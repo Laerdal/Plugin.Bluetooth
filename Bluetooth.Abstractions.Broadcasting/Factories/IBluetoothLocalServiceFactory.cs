@@ -11,7 +11,7 @@ public interface IBluetoothLocalServiceFactory
     /// <param name="broadcaster">The local GATT server that will expose the service.</param>
     /// <param name="spec">The specification describing the service to create.</param>
     /// <returns>The created local Bluetooth service instance.</returns>
-    IBluetoothLocalService CreateService(
+    IBluetoothLocalService Create(
         IBluetoothBroadcaster broadcaster,
         BluetoothLocalServiceSpec spec);
 

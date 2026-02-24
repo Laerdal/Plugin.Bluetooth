@@ -19,21 +19,21 @@ public abstract partial class BaseBluetoothBroadcaster
     #region Services - Add
 
     /// <inheritdoc />
-    public ValueTask<IBluetoothLocalService> CreateServiceAsync(IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec request, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask<IBluetoothLocalService> CreateServiceAsync(IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
 
-        var existingService = GetServiceOrDefault(request.Id);
+        var existingService = GetServiceOrDefault(spec.Id);
         if (existingService != null)
         {
-            LogServiceAlreadyExists(request.Id);
-            throw new ServiceAlreadyExistsException(this, request.Id, existingService);
+            LogServiceAlreadyExists(spec.Id);
+            throw new ServiceAlreadyExistsException(this, spec.Id, existingService);
         }
 
-        LogAddingService(request.Id);
-        var newService = LocalServiceFactory.CreateService(this, request);
+        LogAddingService(spec.Id);
+        var newService = LocalServiceFactory.Create(this, spec);
         Services.Add(newService);
-        LogServiceAdded(request.Id);
+        LogServiceAdded(spec.Id);
 
         return new ValueTask<IBluetoothLocalService>(newService);
     }

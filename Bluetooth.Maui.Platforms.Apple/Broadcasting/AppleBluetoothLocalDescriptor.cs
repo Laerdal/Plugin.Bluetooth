@@ -6,19 +6,19 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 public class AppleBluetoothLocalDescriptor : BaseBluetoothLocalDescriptor
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothLocalDescriptor" /> class with the specified characteristic and factory request.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothLocalDescriptor" /> class with the specified characteristic and factory spec.
     /// </summary>
     /// <param name="localCharacteristic">The Bluetooth characteristic to which this descriptor belongs.</param>
-    /// <param name="request">The factory request containing the native Core Bluetooth descriptor.</param>
-    public AppleBluetoothLocalDescriptor(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec request) : base(localCharacteristic, request)
+    /// <param name="spec">The factory spec containing the native Core Bluetooth descriptor.</param>
+    public AppleBluetoothLocalDescriptor(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec) : base(localCharacteristic, spec)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not AppleBluetoothDescriptorSpec appleRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not AppleBluetoothLocalDescriptorSpec nativeSpec)
         {
-            throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothDescriptorSpec)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothLocalDescriptorSpec)}, but got {spec.GetType()}");
         }
 
-        CbDescriptor = appleRequest.CbDescriptor;
+        CbDescriptor = nativeSpec.CbDescriptor;
     }
 
     /// <summary>

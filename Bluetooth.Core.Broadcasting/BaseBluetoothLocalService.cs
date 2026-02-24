@@ -14,23 +14,23 @@ public abstract partial class BaseBluetoothLocalService : BaseBindableObject, IB
     ///     Initializes a new instance of the <see cref="BaseBluetoothLocalService" /> class.
     /// </summary>
     /// <param name="broadcaster">The broadcaster that owns this service.</param>
-    /// <param name="request">The request for creating the service.</param>
+    /// <param name="spec">The spec for creating the service.</param>
     /// <param name="localCharacteristicFactory">The factory for creating characteristics.</param>
     /// <param name="logger">The logger instance to use for logging (optional).</param>
     protected BaseBluetoothLocalService(IBluetoothBroadcaster broadcaster,
-        IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec request,
+        IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec,
         IBluetoothLocalCharacteristicFactory localCharacteristicFactory,
         ILogger<IBluetoothLocalService>? logger = null)
     {
         ArgumentNullException.ThrowIfNull(broadcaster);
         ArgumentNullException.ThrowIfNull(localCharacteristicFactory);
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
 
         _logger = logger ?? NullLogger<IBluetoothLocalService>.Instance;
         Broadcaster = broadcaster;
         LocalCharacteristicFactory = localCharacteristicFactory;
-        Id = request.Id;
-        IsPrimary = request.IsPrimary;
+        Id = spec.Id;
+        IsPrimary = spec.IsPrimary;
     }
 
     /// <summary>

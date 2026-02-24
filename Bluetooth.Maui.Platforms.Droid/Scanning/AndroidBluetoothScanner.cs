@@ -16,7 +16,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
 {
     /// <inheritdoc />
     public AndroidBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothDeviceFactory deviceFactory,
+        IBluetoothRemoteDeviceFactory deviceFactory,
         ITicker ticker,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ILogger<IBluetoothScanner>? logger = null) : base(adapter,
@@ -272,9 +272,9 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     }
 
     /// <inheritdoc />
-    protected override IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
+    protected override IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
-        return new AndroidBluetoothDeviceFactoryRequest(advertisement);
+        return new AndroidBluetoothRemoteDeviceFactorySpec(advertisement);
     }
 
     #region ScanCallbackProxy.IScanCallbackProxyDelegate Implementation
@@ -390,19 +390,19 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     {
         await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
 
-        // For API 31+ (Android 12+), request BLUETOOTH_SCAN only (not CONNECT)
+        // For API 31+ (Android 12+), spec BLUETOOTH_SCAN only (not CONNECT)
         if (OperatingSystem.IsAndroidVersionAtLeast(31))
         {
             await AndroidBluetoothPermissions.BluetoothScanPermission.RequestIfNeededAsync().ConfigureAwait(false);
             return;
         }
 
-        // For API 29-30 (Android 10-11), request FINE_LOCATION and optionally BACKGROUND_LOCATION
+        // For API 29-30 (Android 10-11), spec FINE_LOCATION and optionally BACKGROUND_LOCATION
         if (OperatingSystem.IsAndroidVersionAtLeast(29))
         {
             await AndroidBluetoothPermissions.FineLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
 
-            // Optionally request background location if specified
+            // Optionally spec background location if specified
             if (requireBackgroundLocation)
             {
                 try
@@ -419,7 +419,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             return;
         }
 
-        // For older versions, request COARSE_LOCATION
+        // For older versions, spec COARSE_LOCATION
         await AndroidBluetoothPermissions.CoarseLocationPermission.RequestIfNeededAsync().ConfigureAwait(false);
     }
 

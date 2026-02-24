@@ -6,13 +6,13 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 public class AppleBluetoothServiceFactory : BaseBluetoothServiceFactory
 {
     /// <inheritdoc />
-    public AppleBluetoothServiceFactory(IBluetoothCharacteristicFactory characteristicFactory) : base(characteristicFactory)
+    public AppleBluetoothServiceFactory(IBluetoothRemoteCharacteristicFactory characteristicFactory) : base(characteristicFactory)
     {
     }
 
     /// <inheritdoc />
-    public override IBluetoothRemoteService CreateService(IBluetoothRemoteDevice device, IBluetoothServiceFactory.BluetoothServiceFactoryRequest request)
+    public override IBluetoothRemoteService Create(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec)
     {
-        return new AppleBluetoothRemoteService(device, request, CharacteristicFactory);
+        return new AppleBluetoothRemoteService(device, spec, CharacteristicFactory);
     }
 }

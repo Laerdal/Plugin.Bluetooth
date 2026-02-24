@@ -10,19 +10,19 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
     private bool _canWrite = true; // iOS doesn't provide explicit write permissions for descriptors, so we optimistically assume we can write until we get an error.
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteDescriptor" /> class with the specified characteristic and factory request.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteDescriptor" /> class with the specified characteristic and factory spec.
     /// </summary>
     /// <param name="remoteCharacteristic">The Bluetooth characteristic to which this descriptor belongs.</param>
-    /// <param name="request">The factory request containing the native Core Bluetooth descriptor.</param>
-    public AppleBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic remoteCharacteristic, IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest request) : base(remoteCharacteristic, request)
+    /// <param name="spec">The factory spec containing the native Core Bluetooth descriptor.</param>
+    public AppleBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic remoteCharacteristic, IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec spec) : base(remoteCharacteristic, spec)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not AppleBluetoothDescriptorFactoryRequest appleRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not AppleBluetoothRemoteDescriptorFactorySpec nativeSpec)
         {
-            throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothDescriptorFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothRemoteDescriptorFactorySpec)}, but got {spec.GetType()}");
         }
 
-        CbDescriptor = appleRequest.CbDescriptor;
+        CbDescriptor = nativeSpec.CbDescriptor;
     }
 
     /// <summary>

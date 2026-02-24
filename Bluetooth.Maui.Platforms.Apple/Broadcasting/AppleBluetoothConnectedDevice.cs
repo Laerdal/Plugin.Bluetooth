@@ -6,19 +6,19 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 public class AppleBluetoothConnectedDevice : BaseBluetoothConnectedDevice
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothConnectedDevice" /> class with the specified broadcaster and factory request.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothConnectedDevice" /> class with the specified broadcaster and factory spec.
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster to which this client device is connected.</param>
-    /// <param name="request">The factory request containing the information needed to create this client device.</param>
-    public AppleBluetoothConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec request) : base(broadcaster, request)
+    /// <param name="spec">The factory spec containing the information needed to create this client device.</param>
+    public AppleBluetoothConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec) : base(broadcaster, spec)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not AppleBluetoothConnectedDeviceSpec appleRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not AppleBluetoothConnectedDeviceSpec nativeSpec)
         {
-            throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothConnectedDeviceSpec)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothConnectedDeviceSpec)}, but got {spec.GetType()}");
         }
 
-        CbCentral = appleRequest.CbCentral;
+        CbCentral = nativeSpec.CbCentral;
     }
 
     /// <summary>

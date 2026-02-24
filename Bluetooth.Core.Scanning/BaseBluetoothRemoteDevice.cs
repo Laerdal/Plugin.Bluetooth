@@ -12,34 +12,34 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteDevice" /> class.
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner associated with this device.</param>
-    /// <param name="request">The factory request containing device information.</param>
+    /// <param name="spec">The factory spec containing device information.</param>
     /// <param name="serviceFactory">The factory for creating Bluetooth services.</param>
     /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
     /// <param name="logger">The logger instance to use for logging.</param>
-    protected BaseBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request, IBluetoothServiceFactory serviceFactory,
+    protected BaseBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec, IBluetoothRemoteServiceFactory serviceFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter, ILogger<IBluetoothRemoteDevice>? logger = null)
     {
         ArgumentNullException.ThrowIfNull(scanner);
         ArgumentNullException.ThrowIfNull(serviceFactory);
         ArgumentNullException.ThrowIfNull(rssiToSignalStrengthConverter);
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
 
         _logger = logger ?? NullLogger<IBluetoothRemoteDevice>.Instance;
         Scanner = scanner;
         ServiceFactory = serviceFactory;
         RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
-        Id = request.DeviceId;
-        Manufacturer = request.Manufacturer;
-        if (request.Advertisement != null)
+        Id = spec.DeviceId;
+        Manufacturer = spec.Manufacturer;
+        if (spec.Advertisement != null)
         {
-            OnAdvertisementReceived(request.Advertisement);
+            OnAdvertisementReceived(spec.Advertisement);
         }
     }
 
     /// <summary>
     ///     The factory responsible for creating services associated with this device.
     /// </summary>
-    protected IBluetoothServiceFactory ServiceFactory { get; }
+    protected IBluetoothRemoteServiceFactory ServiceFactory { get; }
 
     /// <summary>
     ///     The converter responsible for translating RSSI values to signal strength levels, which can be used for filtering and sorting devices based on signal quality.

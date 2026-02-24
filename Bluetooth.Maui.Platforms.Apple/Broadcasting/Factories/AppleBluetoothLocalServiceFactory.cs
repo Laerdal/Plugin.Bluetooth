@@ -11,7 +11,7 @@ public class AppleBluetoothLocalServiceFactory : BaseBluetoothLocalServiceFactor
     }
 
     /// <inheritdoc />
-    public override IBluetoothLocalService CreateService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec)
+    public override IBluetoothLocalService Create(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec)
     {
         return new AppleBluetoothLocalService(broadcaster, spec, LocalCharacteristicFactory);
     }

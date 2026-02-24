@@ -73,10 +73,10 @@ Threading/            -- Main thread dispatchers (Apple only)
 | Android | `AndroidBluetooth{Entity}` | `AndroidBluetoothScanner` |
 | Windows | `WindowsBluetooth{Entity}` | `WindowsBluetoothScanner` |
 | DotNetCore | `DotNetCoreBluetooth{Entity}` | `DotNetCoreBluetoothScanner` |
-| Factory Interface | `IBluetooth{Entity}Factory` | `IBluetoothDeviceFactory` |
+| Factory Interface | `IBluetooth{Entity}Factory` | `IBluetoothRemoteDeviceFactory` |
 | Base Factory | `BaseBluetooth{Entity}Factory` | `BaseBluetoothDeviceFactory` |
 | Platform Factory | `{Platform}Bluetooth{Entity}Factory` | `AppleBluetoothDeviceFactory` |
-| Factory Request | `{Platform}Bluetooth{Entity}FactoryRequest` | `AppleBluetoothDeviceFactoryRequest` |
+| Factory Request | `{Platform}Bluetooth{Entity}FactoryRequest` | `AppleBluetoothRemoteDeviceFactoryRequest` |
 | Exception | `{Domain}{Action}Exception` | `ScannerFailedToStartException` |
 | EventArgs | `{Domain}{Event}EventArgs` | `DeviceListChangedEventArgs` |
 | Options | `{Feature}Options` | `ScanningOptions` |
@@ -189,35 +189,35 @@ IBluetoothScanner → BaseBluetoothScanner → AppleBluetoothScanner
 
 ```csharp
 // 1. Interface with nested request record (Abstractions)
-public interface IBluetoothDeviceFactory
+public interface IBluetoothRemoteDeviceFactory
 {
     IBluetoothRemoteDevice CreateDevice(
         IBluetoothScanner scanner,
-        BluetoothDeviceFactoryRequest request);
+        BluetoothRemoteDeviceFactoryRequest request);
 
-    record BluetoothDeviceFactoryRequest
+    record BluetoothRemoteDeviceFactoryRequest
     {
-        protected BluetoothDeviceFactoryRequest(string id, string? name) { ... }
+        protected BluetoothRemoteDeviceFactoryRequest(string id, string? name) { ... }
         public string Id { get; }
         public string? Name { get; }
     }
 }
 
 // 2. Base factory (Core)
-public abstract class BaseBluetoothDeviceFactory : IBluetoothDeviceFactory
+public abstract class BaseBluetoothDeviceFactory : IBluetoothRemoteDeviceFactory
 {
-    protected IBluetoothServiceFactory ServiceFactory { get; }
+    protected IBluetoothRemoteServiceFactory ServiceFactory { get; }
     protected IBluetoothRssiToSignalStrengthConverter RssiConverter { get; }
 
     public abstract IBluetoothRemoteDevice CreateDevice(...);
 }
 
 // 3. Platform request (extends nested record) (Platform)
-public sealed record AppleBluetoothDeviceFactoryRequest(
+public sealed record AppleBluetoothRemoteDeviceFactoryRequest(
     string Id,
     string? Name,
     CBPeripheral NativePeripheral)  // Platform-specific!
-    : IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest(Id, Name);
+    : IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactoryRequest(Id, Name);
 
 // 4. Platform factory (Platform)
 public class AppleBluetoothDeviceFactory : BaseBluetoothDeviceFactory
@@ -226,9 +226,9 @@ public class AppleBluetoothDeviceFactory : BaseBluetoothDeviceFactory
 
     public override IBluetoothRemoteDevice CreateDevice(
         IBluetoothScanner scanner,
-        IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request)
+        IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactoryRequest request)
     {
-        if (request is not AppleBluetoothDeviceFactoryRequest appleRequest)
+        if (request is not AppleBluetoothRemoteDeviceFactoryRequest appleRequest)
             throw new ArgumentException("Must be Apple request");
 
         return new AppleBluetoothRemoteDevice(

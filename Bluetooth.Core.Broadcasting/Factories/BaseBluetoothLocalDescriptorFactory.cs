@@ -4,5 +4,5 @@ namespace Bluetooth.Core.Broadcasting.Factories;
 public abstract class BaseBluetoothLocalDescriptorFactory : IBluetoothLocalDescriptorFactory
 {
     /// <inheritdoc />
-    public abstract IBluetoothLocalDescriptor CreateDescriptor(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec);
+    public abstract IBluetoothLocalDescriptor Create(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec);
 }

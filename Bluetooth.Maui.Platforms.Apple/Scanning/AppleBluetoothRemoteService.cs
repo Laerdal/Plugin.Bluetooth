@@ -11,15 +11,15 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 public class AppleBluetoothRemoteService : BaseBluetoothRemoteService, CbPeripheralWrapper.ICbServiceDelegate
 {
     /// <inheritdoc />
-    public AppleBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothServiceFactory.BluetoothServiceFactoryRequest request, IBluetoothCharacteristicFactory characteristicFactory) : base(device, request, characteristicFactory)
+    public AppleBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory) : base(device, spec, characteristicFactory)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not AppleBluetoothServiceFactoryRequest appleRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not AppleBluetoothRemoteServiceFactorySpec nativeSpec)
         {
-            throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothServiceFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothRemoteServiceFactorySpec)}, but got {spec.GetType()}");
         }
 
-        CbService = appleRequest.CbService;
+        CbService = nativeSpec.CbService;
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public class AppleBluetoothRemoteService : BaseBluetoothRemoteService, CbPeriphe
             AppleNativeBluetoothException.ThrowIfError(error);
 
             Logger?.LogCharacteristicDiscoveryCompleted(Id, Device.Id, CbService.Characteristics.Length);
-            OnCharacteristicsExplorationSucceeded(CbService.Characteristics, FromInputTypeToOutputTypeConversion, AreRepresentingTheSameObject);
+            OnCharacteristicsExplorationSucceeded(CbService.Characteristics, AreRepresentingTheSameObject, FromInputTypeToOutputTypeConversion);
         }
         catch (Exception e)
         {
@@ -60,8 +60,8 @@ public class AppleBluetoothRemoteService : BaseBluetoothRemoteService, CbPeriphe
 
         IBluetoothRemoteCharacteristic FromInputTypeToOutputTypeConversion(CBCharacteristic native)
         {
-            var request = new AppleBluetoothCharacteristicFactoryRequest(native);
-            return CharacteristicFactory.CreateCharacteristic(this, request);
+            var spec = new AppleBluetoothRemoteCharacteristicFactorySpec(native);
+            return CharacteristicFactory.Create(this, spec);
         }
     }
 

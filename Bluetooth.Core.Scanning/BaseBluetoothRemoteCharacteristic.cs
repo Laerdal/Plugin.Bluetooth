@@ -12,21 +12,21 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteCharacteristic" /> class.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service associated with this characteristic.</param>
-    /// <param name="request">The factory request containing characteristic information.</param>
+    /// <param name="spec">The factory spec containing characteristic information.</param>
     /// <param name="descriptorFactory">The factory for creating descriptors for this characteristic.</param>
     /// <param name="logger">The logger instance to use for logging (optional).</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="remoteService" /> is null.</exception>
-    protected BaseBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request, IBluetoothDescriptorFactory descriptorFactory,
+    protected BaseBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec, IBluetoothRemoteDescriptorFactory descriptorFactory,
         ILogger<IBluetoothRemoteCharacteristic>? logger = null)
     {
         ArgumentNullException.ThrowIfNull(remoteService);
         ArgumentNullException.ThrowIfNull(descriptorFactory);
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
 
         _logger = logger ?? NullLogger<IBluetoothRemoteCharacteristic>.Instance;
         RemoteService = remoteService;
         DescriptorFactory = descriptorFactory;
-        Id = request.CharacteristicId;
+        Id = spec.CharacteristicId;
 
         LazyCanRead = new Lazy<bool>(NativeCanRead);
         LazyCanWrite = new Lazy<bool>(NativeCanWrite);
@@ -36,7 +36,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
     /// <summary>
     ///     The factory responsible for creating descriptors associated with this characteristic.
     /// </summary>
-    protected IBluetoothDescriptorFactory DescriptorFactory { get; }
+    protected IBluetoothRemoteDescriptorFactory DescriptorFactory { get; }
 
     /// <inheritdoc />
     public IBluetoothRemoteService RemoteService { get; }

@@ -11,7 +11,7 @@ public interface IBluetoothConnectedDeviceFactory
     /// <param name="broadcaster">The local GATT server that the client is connected to.</param>
     /// <param name="spec">The specification describing the connected client.</param>
     /// <returns>A connected client device instance.</returns>
-    IBluetoothConnectedDevice CreateConnectedDevice(
+    IBluetoothConnectedDevice Create(
         IBluetoothBroadcaster broadcaster,
         BluetoothConnectedDeviceSpec spec);
 

@@ -9,7 +9,7 @@ public class AndroidBluetoothDeviceFactory : BaseBluetoothDeviceFactory
 
     /// <inheritdoc />
     public AndroidBluetoothDeviceFactory(
-        IBluetoothServiceFactory serviceFactory,
+        IBluetoothRemoteServiceFactory serviceFactory,
         IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter)
         : base(serviceFactory, rssiToSignalStrengthConverter)
@@ -18,10 +18,10 @@ public class AndroidBluetoothDeviceFactory : BaseBluetoothDeviceFactory
     }
 
     /// <inheritdoc />
-    public override IBluetoothRemoteDevice CreateDevice(
+    public override IBluetoothRemoteDevice Create(
         IBluetoothScanner scanner,
-        IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request)
+        IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec)
     {
-        return new AndroidBluetoothRemoteDevice(scanner, request, ServiceFactory, _l2CapChannelFactory, RssiToSignalStrengthConverter);
+        return new AndroidBluetoothRemoteDevice(scanner, spec, ServiceFactory, _l2CapChannelFactory, RssiToSignalStrengthConverter);
     }
 }

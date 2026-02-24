@@ -11,7 +11,7 @@ public interface IBluetoothLocalDescriptorFactory
     /// <param name="localCharacteristic">The local characteristic that will expose the descriptor.</param>
     /// <param name="spec">The specification describing the descriptor to create.</param>
     /// <returns>The created local Bluetooth descriptor instance.</returns>
-    IBluetoothLocalDescriptor CreateDescriptor(
+    IBluetoothLocalDescriptor Create(
         IBluetoothLocalCharacteristic localCharacteristic,
         BluetoothLocalDescriptorSpec spec);
 

@@ -19,10 +19,10 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IBluetoothScanner, AppleBluetoothScanner>();
 
-        services.AddSingleton<IBluetoothCharacteristicFactory, AppleBluetoothCharacteristicFactory>();
-        services.AddSingleton<IBluetoothServiceFactory, AppleBluetoothServiceFactory>();
-        services.AddSingleton<IBluetoothDescriptorFactory, AppleBluetoothDescriptorFactory>();
-        services.AddSingleton<IBluetoothDeviceFactory, AppleBluetoothDeviceFactory>();
+        services.AddSingleton<IBluetoothRemoteCharacteristicFactory, AppleBluetoothCharacteristicFactory>();
+        services.AddSingleton<IBluetoothRemoteServiceFactory, AppleBluetoothServiceFactory>();
+        services.AddSingleton<IBluetoothRemoteDescriptorFactory, AppleBluetoothDescriptorFactory>();
+        services.AddSingleton<IBluetoothRemoteDeviceFactory, AppleBluetoothDeviceFactory>();
         services.AddSingleton<IBluetoothRemoteL2CapChannelFactory, AppleBluetoothRemoteL2CapChannelFactory>();
 
         services.AddSingleton<CbCentralManagerWrapper>();

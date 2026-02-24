@@ -10,21 +10,21 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 public class AppleBluetoothLocalService : BaseBluetoothLocalService, CbPeripheralManagerWrapper.ICbServiceDelegate
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothLocalService" /> class with the specified broadcaster, factory request, and characteristic factory.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothLocalService" /> class with the specified broadcaster, factory spec, and characteristic factory.
     /// </summary>
     /// <param name="broadcaster">The Bluetooth broadcaster to which this service belongs.</param>
-    /// <param name="request">The factory request containing the information needed to create this service.</param>
+    /// <param name="spec">The factory spec containing the information needed to create this service.</param>
     /// <param name="localCharacteristicFactory">The factory used to create characteristics for this service.</param>
-    public AppleBluetoothLocalService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec request, IBluetoothLocalCharacteristicFactory localCharacteristicFactory) : base(broadcaster, request,
+    public AppleBluetoothLocalService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec, IBluetoothLocalCharacteristicFactory localCharacteristicFactory) : base(broadcaster, spec,
         localCharacteristicFactory)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not AppleBluetoothServiceFactoryRequest appleRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not AppleBluetoothLocalServiceSpec nativeSpec)
         {
-            throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothServiceFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothLocalServiceSpec)}, but got {spec.GetType()}");
         }
 
-        CbService = appleRequest.NativeService;
+        CbService = nativeSpec.NativeService;
     }
 
     /// <summary>

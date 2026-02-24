@@ -14,18 +14,18 @@ public abstract partial class BaseBluetoothConnectedDevice : BaseBindableObject,
     ///     Initializes a new instance of the <see cref="BaseBluetoothConnectedDevice" /> class.
     /// </summary>
     /// <param name="broadcaster">The broadcaster that owns this client device.</param>
-    /// <param name="request">The request for creating the client device.</param>
+    /// <param name="spec">The spec for creating the client device.</param>
     /// <param name="logger">The logger for logging operations.</param>
     protected BaseBluetoothConnectedDevice(IBluetoothBroadcaster broadcaster,
-        IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec request,
+        IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec,
         ILogger<IBluetoothConnectedDevice>? logger = null) : base(logger)
     {
         ArgumentNullException.ThrowIfNull(broadcaster);
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
 
         _logger = logger ?? NullLogger<IBluetoothConnectedDevice>.Instance;
         Broadcaster = broadcaster;
-        Id = request.ClientId;
+        Id = spec.ClientId;
     }
 
     /// <inheritdoc />

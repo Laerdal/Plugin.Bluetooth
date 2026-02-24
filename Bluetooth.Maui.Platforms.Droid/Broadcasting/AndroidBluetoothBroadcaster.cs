@@ -293,7 +293,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     {
         await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
 
-        // For API 31+ (Android 12+), request BLUETOOTH_ADVERTISE only (not CONNECT)
+        // For API 31+ (Android 12+), spec BLUETOOTH_ADVERTISE only (not CONNECT)
         if (OperatingSystem.IsAndroidVersionAtLeast(31))
         {
             await AndroidBluetoothPermissions.BluetoothAdvertisePermission.RequestIfNeededAsync().ConfigureAwait(false);

@@ -11,21 +11,21 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteristic, CbPeripheralWrapper.ICbCharacteristicDelegate
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteCharacteristic" /> class with the specified service, factory request, and descriptor factory.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteCharacteristic" /> class with the specified service, factory spec, and descriptor factory.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service to which this characteristic belongs.</param>
-    /// <param name="request">The factory request containing the information needed to create this characteristic.</param>
+    /// <param name="spec">The factory spec containing the information needed to create this characteristic.</param>
     /// <param name="descriptorFactory">The factory used to create descriptors for this characteristic.</param>
-    public AppleBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request, IBluetoothDescriptorFactory descriptorFactory) :
-        base(remoteService, request, descriptorFactory)
+    public AppleBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec, IBluetoothRemoteDescriptorFactory descriptorFactory) :
+        base(remoteService, spec, descriptorFactory)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not AppleBluetoothCharacteristicFactoryRequest appleRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not AppleBluetoothRemoteCharacteristicFactorySpec nativeSpec)
         {
-            throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothCharacteristicFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothRemoteCharacteristicFactorySpec)}, but got {spec.GetType()}");
         }
 
-        CbCharacteristic = appleRequest.CbCharacteristic;
+        CbCharacteristic = nativeSpec.CbCharacteristic;
     }
 
     /// <summary>
@@ -237,7 +237,7 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
         {
             AppleNativeBluetoothException.ThrowIfError(error);
             var descriptors = CbCharacteristic.Descriptors ?? [];
-            OnDescriptorsExplorationSucceeded(descriptors, FromInputTypeToOutputTypeConversion, AreRepresentingTheSameObject);
+            OnDescriptorsExplorationSucceeded(descriptors, AreRepresentingTheSameObject, FromInputTypeToOutputTypeConversion);
         }
         catch (Exception e)
         {
@@ -248,8 +248,8 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
 
         IBluetoothRemoteDescriptor FromInputTypeToOutputTypeConversion(CBDescriptor native)
         {
-            var request = new AppleBluetoothDescriptorFactoryRequest(native);
-            return DescriptorFactory.CreateDescriptor(this, request);
+            var spec = new AppleBluetoothRemoteDescriptorFactorySpec(native);
+            return DescriptorFactory.Create(this, spec);
         }
     }
 

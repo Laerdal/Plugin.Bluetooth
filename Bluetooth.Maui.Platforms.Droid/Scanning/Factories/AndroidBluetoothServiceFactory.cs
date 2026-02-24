@@ -3,19 +3,19 @@ using Bluetooth.Core.Scanning.Factories;
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 
 /// <inheritdoc />
-public class AndroidBluetoothServiceFactory : BaseBluetoothServiceFactory, IBluetoothServiceFactory
+public class AndroidBluetoothServiceFactory : BaseBluetoothServiceFactory, IBluetoothRemoteServiceFactory
 {
     /// <inheritdoc />
-    public AndroidBluetoothServiceFactory(IBluetoothCharacteristicFactory characteristicFactory)
+    public AndroidBluetoothServiceFactory(IBluetoothRemoteCharacteristicFactory characteristicFactory)
         : base(characteristicFactory)
     {
     }
 
     /// <inheritdoc />
-    public override IBluetoothRemoteService CreateService(
+    public override IBluetoothRemoteService Create(
         IBluetoothRemoteDevice device,
-        IBluetoothServiceFactory.BluetoothServiceFactoryRequest request)
+        IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec)
     {
-        return new AndroidBluetoothRemoteService(device, request, CharacteristicFactory);
+        return new AndroidBluetoothRemoteService(device, spec, CharacteristicFactory);
     }
 }

@@ -11,10 +11,10 @@ public class AndroidBluetoothDescriptorFactory : BaseBluetoothDescriptorFactory
     }
 
     /// <inheritdoc />
-    public override IBluetoothRemoteDescriptor CreateDescriptor(
+    public override IBluetoothRemoteDescriptor Create(
         IBluetoothRemoteCharacteristic remoteCharacteristic,
-        IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest request)
+        IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec spec)
     {
-        return new AndroidBluetoothRemoteDescriptor(remoteCharacteristic, request);
+        return new AndroidBluetoothRemoteDescriptor(remoteCharacteristic, spec);
     }
 }

@@ -11,7 +11,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
 {
     /// <inheritdoc />
     public AppleBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothDeviceFactory deviceFactory,
+        IBluetoothRemoteDeviceFactory deviceFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         IOptions<CBCentralInitOptions> options,
         IDispatchQueueProvider dispatchQueueProvider,
@@ -50,7 +50,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     }
 
     /// <inheritdoc />
-    protected override IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
+    protected override IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
         ArgumentNullException.ThrowIfNull(advertisement);
         if (advertisement is not AppleBluetoothAdvertisement appleAdvertisement)
@@ -58,7 +58,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
             throw new ArgumentException($"Expected advertisement of type {typeof(AppleBluetoothAdvertisement)}, but got {advertisement.GetType()}");
         }
 
-        return new AppleBluetoothDeviceFactoryRequest(appleAdvertisement);
+        return new AppleBluetoothRemoteDeviceFactorySpec(appleAdvertisement);
     }
 
     /// <inheritdoc />
@@ -216,7 +216,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     ///     On iOS/macOS, scanner permissions are unified with general Bluetooth permissions:
     ///     <list type="bullet">
     ///         <item>iOS 13+/Mac Catalyst 10.15+: Requests "Bluetooth Always" permission</item>
-    ///         <item>Older versions: No permission request needed</item>
+    ///         <item>Older versions: No permission spec needed</item>
     ///     </list>
     ///     The <paramref name="requireBackgroundLocation"/> parameter is ignored on iOS (background permissions handled by Info.plist).
     /// </remarks>

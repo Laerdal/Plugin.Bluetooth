@@ -13,29 +13,24 @@ namespace Bluetooth.Maui.Platforms.Droid.Scanning;
 ///     This class wraps Android's BluetoothGattService, providing platform-specific
 ///     implementations for characteristic discovery and management.
 /// </summary>
-public class AndroidBluetoothRemoteService : BaseBluetoothRemoteService,
-    BluetoothGattProxy.IBluetoothGattServiceDelegate
+public class AndroidBluetoothRemoteService : BaseBluetoothRemoteService, BluetoothGattProxy.IBluetoothGattServiceDelegate
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="AndroidBluetoothRemoteService" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device that owns this service.</param>
-    /// <param name="request">The factory request containing service information.</param>
+    /// <param name="spec">The factory spec containing service information.</param>
     /// <param name="characteristicFactory">The factory for creating characteristics.</param>
-    public AndroidBluetoothRemoteService(
-        IBluetoothRemoteDevice device,
-        IBluetoothServiceFactory.BluetoothServiceFactoryRequest request,
-        IBluetoothCharacteristicFactory characteristicFactory)
-        : base(device, request, characteristicFactory)
+    public AndroidBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory) :
+        base(device, spec, characteristicFactory)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not AndroidBluetoothServiceFactoryRequest androidRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not AndroidBluetoothRemoteServiceFactorySpec nativeSpec)
         {
-            throw new ArgumentException(
-                $"Expected request of type {typeof(AndroidBluetoothServiceFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(AndroidBluetoothRemoteServiceFactorySpec)}, but got {spec.GetType()}");
         }
 
-        NativeService = androidRequest.NativeService;
+        NativeService = nativeSpec.NativeService;
     }
 
     /// <summary>
@@ -52,8 +47,7 @@ public class AndroidBluetoothRemoteService : BaseBluetoothRemoteService,
     #region BluetoothGattProxy.IBluetoothGattServiceDelegate Implementation
 
     /// <inheritdoc />
-    public BluetoothGattProxy.IBluetoothGattCharacteristicDelegate GetCharacteristic(
-        BluetoothGattCharacteristic? nativeCharacteristic)
+    public BluetoothGattProxy.IBluetoothGattCharacteristicDelegate GetCharacteristic(BluetoothGattCharacteristic? nativeCharacteristic)
     {
         if (nativeCharacteristic == null)
         {
@@ -62,25 +56,19 @@ public class AndroidBluetoothRemoteService : BaseBluetoothRemoteService,
 
         try
         {
-            var match = GetCharacteristic(characteristic =>
-                AreRepresentingTheSameObject(nativeCharacteristic, characteristic));
-            return match as BluetoothGattProxy.IBluetoothGattCharacteristicDelegate
-                   ?? throw new CharacteristicNotFoundException(this, nativeCharacteristic.Uuid.ToGuid());
+            var match = GetCharacteristic(characteristic => AreRepresentingTheSameObject(nativeCharacteristic, characteristic));
+            return match as BluetoothGattProxy.IBluetoothGattCharacteristicDelegate ?? throw new CharacteristicNotFoundException(this, nativeCharacteristic.Uuid.ToGuid());
         }
         catch (InvalidOperationException e)
         {
-            var matches = GetCharacteristics(characteristic =>
-                AreRepresentingTheSameObject(nativeCharacteristic, characteristic)).ToArray();
+            var matches = GetCharacteristics(characteristic => AreRepresentingTheSameObject(nativeCharacteristic, characteristic)).ToArray();
             throw new MultipleCharacteristicsFoundException(this, matches, e);
         }
     }
 
-    private static bool AreRepresentingTheSameObject(
-        BluetoothGattCharacteristic native,
-        IBluetoothRemoteCharacteristic shared)
+    private static bool AreRepresentingTheSameObject(BluetoothGattCharacteristic native, IBluetoothRemoteCharacteristic shared)
     {
-        return shared is AndroidBluetoothRemoteCharacteristic androidCharacteristic
-               && native.Uuid?.Equals(androidCharacteristic.NativeCharacteristic.Uuid) == true;
+        return shared is AndroidBluetoothRemoteCharacteristic androidCharacteristic && native.Uuid?.Equals(androidCharacteristic.NativeCharacteristic.Uuid) == true;
     }
 
     #endregion
@@ -88,30 +76,14 @@ public class AndroidBluetoothRemoteService : BaseBluetoothRemoteService,
     #region Characteristic Discovery
 
     /// <inheritdoc />
-    protected override ValueTask NativeCharacteristicsExplorationAsync(
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+    protected override ValueTask NativeCharacteristicsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         try
         {
             // On Android, characteristics are discovered along with services
             // The NativeService.Characteristics property should already contain all characteristics
-            var characteristics = NativeService.Characteristics;
-            if (characteristics == null || characteristics.Count == 0)
-            {
-                // No characteristics for this service
-                OnCharacteristicsExplorationSucceeded(
-                    System.Array.Empty<BluetoothGattCharacteristic>(),
-                    ConvertNativeCharacteristicToCharacteristic,
-                    AreRepresentingTheSameObject);
-            }
-            else
-            {
-                OnCharacteristicsExplorationSucceeded(
-                    characteristics,
-                    ConvertNativeCharacteristicToCharacteristic,
-                    AreRepresentingTheSameObject);
-            }
+            var characteristics = NativeService.Characteristics ?? new List<BluetoothGattCharacteristic>();
+            OnCharacteristicsExplorationSucceeded(characteristics, AreRepresentingTheSameObject, FromInputTypeToOutputTypeConversion);
         }
         catch (Exception ex)
         {
@@ -119,14 +91,14 @@ public class AndroidBluetoothRemoteService : BaseBluetoothRemoteService,
         }
 
         return ValueTask.CompletedTask;
-    }
 
-    private IBluetoothRemoteCharacteristic ConvertNativeCharacteristicToCharacteristic(
-        BluetoothGattCharacteristic nativeCharacteristic)
-    {
-        var characteristicRequest = new AndroidBluetoothCharacteristicFactoryRequest(nativeCharacteristic);
-        return CharacteristicFactory.CreateCharacteristic(this, characteristicRequest);
+        IBluetoothRemoteCharacteristic FromInputTypeToOutputTypeConversion(BluetoothGattCharacteristic nativeCharacteristic)
+        {
+            var spec = new AndroidBluetoothRemoteCharacteristicFactorySpec(nativeCharacteristic);
+            return CharacteristicFactory.Create(this, spec);
+        }
     }
 
     #endregion
+
 }

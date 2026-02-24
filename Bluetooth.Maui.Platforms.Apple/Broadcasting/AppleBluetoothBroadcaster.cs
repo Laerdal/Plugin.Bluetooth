@@ -80,8 +80,8 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
 
         if (device == null)
         {
-            var request = new AppleBluetoothConnectedDeviceSpec(central);
-            device = ConnectedDeviceFactory.CreateConnectedDevice(this, request);
+            var spec = new AppleBluetoothConnectedDeviceSpec(central);
+            device = ConnectedDeviceFactory.Create(this, spec);
             AddClientDevice(device);
         }
 
@@ -276,7 +276,7 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     ///     On iOS/macOS, broadcaster permissions require both general Bluetooth and Peripheral permissions:
     ///     <list type="bullet">
     ///         <item>iOS 13+/Mac Catalyst 10.15+: Requests both "Bluetooth Always" and "Peripheral" permissions</item>
-    ///         <item>Older versions: No permission request needed</item>
+    ///         <item>Older versions: No permission spec needed</item>
     ///     </list>
     /// </remarks>
     protected override async ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken)

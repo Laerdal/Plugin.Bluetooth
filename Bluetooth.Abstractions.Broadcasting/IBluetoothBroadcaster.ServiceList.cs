@@ -7,11 +7,11 @@ public partial interface IBluetoothBroadcaster
     /// <summary>
     ///     Adds a GATT service to be hosted by the broadcaster.
     /// </summary>
-    /// <param name="request">The request containing the service details.</param>
+    /// <param name="spec">The spec containing the service details.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>The added service.</returns>
-    ValueTask<IBluetoothLocalService> CreateServiceAsync(IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec request, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<IBluetoothLocalService> CreateServiceAsync(IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 

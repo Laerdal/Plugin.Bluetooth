@@ -7,21 +7,21 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristic, CbPeripheralManagerWrapper.ICbCharacteristicDelegate
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothLocalCharacteristic" /> class with the specified service, factory request, and descriptor factory.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothLocalCharacteristic" /> class with the specified service, factory spec, and descriptor factory.
     /// </summary>
     /// <param name="localService">The Bluetooth service to which this characteristic belongs.</param>
-    /// <param name="request">The factory request containing the information needed to create this characteristic.</param>
+    /// <param name="spec">The factory spec containing the information needed to create this characteristic.</param>
     /// <param name="localDescriptorFactory">The factory used to create descriptors for this characteristic.</param>
-    public AppleBluetoothLocalCharacteristic(IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request, IBluetoothLocalDescriptorFactory localDescriptorFactory) : base(localService,
-        request, localDescriptorFactory)
+    public AppleBluetoothLocalCharacteristic(IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec, IBluetoothLocalDescriptorFactory localDescriptorFactory) : base(localService,
+        spec, localDescriptorFactory)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not AppleBluetoothCharacteristicSpec appleRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not AppleBluetoothLocalCharacteristicSpec nativeSpec)
         {
-            throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothCharacteristicSpec)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothLocalCharacteristicSpec)}, but got {spec.GetType()}");
         }
 
-        CbCharacteristic = appleRequest.CbCharacteristic;
+        CbCharacteristic = nativeSpec.CbCharacteristic;
     }
 
     /// <summary>

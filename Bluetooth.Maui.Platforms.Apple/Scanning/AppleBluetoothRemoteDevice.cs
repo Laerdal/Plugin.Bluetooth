@@ -14,19 +14,19 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     private readonly IBluetoothRemoteL2CapChannelFactory _l2CapChannelFactory;
 
     /// <inheritdoc />
-    public AppleBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request, IBluetoothServiceFactory serviceFactory,
+    public AppleBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec, IBluetoothRemoteServiceFactory serviceFactory,
         IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) :
-        base(scanner, request, serviceFactory, rssiToSignalStrengthConverter)
+        base(scanner, spec, serviceFactory, rssiToSignalStrengthConverter)
     {
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(l2CapChannelFactory);
-        if (request is not AppleBluetoothDeviceFactoryRequest appleRequest)
+        if (spec is not AppleBluetoothRemoteDeviceFactorySpec nativeSpec)
         {
-            throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothDeviceFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothRemoteDeviceFactorySpec)}, but got {spec.GetType()}");
         }
 
-        CbPeripheralWrapper = new CbPeripheralWrapper(this, appleRequest.CbPeripheral);
+        CbPeripheralWrapper = new CbPeripheralWrapper(this, nativeSpec.CbPeripheral);
         _l2CapChannelFactory = l2CapChannelFactory;
     }
 
@@ -94,8 +94,8 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
             // Create channel using factory
             var psm = (int)channel.Psm;
-            var request = new AppleBluetoothRemoteL2CapChannelFactoryRequest(psm, channel);
-            var wrappedChannel = _l2CapChannelFactory.CreateL2CapChannel(this, request);
+            var spec = new AppleBluetoothRemoteL2CapChannelFactorySpec(psm, channel);
+            var wrappedChannel = _l2CapChannelFactory.Create(this, spec);
 
             OnL2CapChannelOpened(wrappedChannel);
         }
@@ -327,8 +327,8 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
         IBluetoothRemoteService FromInputTypeToOutputTypeConversion(CBService native)
         {
-            var request = new AppleBluetoothServiceFactoryRequest(native);
-            return ServiceFactory.CreateService(this, request);
+            var spec = new AppleBluetoothRemoteServiceFactorySpec(native);
+            return ServiceFactory.Create(this, spec);
         }
     }
 

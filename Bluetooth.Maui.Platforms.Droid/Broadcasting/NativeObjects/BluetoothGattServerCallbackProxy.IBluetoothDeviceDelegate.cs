@@ -20,7 +20,7 @@ public partial class BluetoothGattServerCallbackProxy
         /// <summary>
         ///     Called when a remote device has requested to execute a prepared write.
         /// </summary>
-        /// <param name="requestId">The ID of the request.</param>
+        /// <param name="requestId">The ID of the spec.</param>
         /// <param name="execute">Whether to execute (true) or cancel (false) the prepared writes.</param>
         void OnExecuteWrite(int requestId, bool execute);
 

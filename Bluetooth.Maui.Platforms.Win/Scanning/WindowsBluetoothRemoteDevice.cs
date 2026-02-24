@@ -14,29 +14,24 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning;
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.bluetoothledevice">BluetoothLEDevice</seealso>
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession">GattSession</seealso>
 /// </remarks>
-public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
-    BluetoothLeDeviceProxy.IBluetoothLeDeviceProxyDelegate,
-    NativeObjects.GattSessionWrapper.IGattSessionDelegate
+public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, BluetoothLeDeviceProxy.IBluetoothLeDeviceProxyDelegate, NativeObjects.GattSessionWrapper.IGattSessionDelegate
 {
     /// <summary>
     ///     Initializes a new instance of the Windows <see cref="WindowsBluetoothRemoteDevice" /> class.
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner associated with this device.</param>
-    /// <param name="request">The device factory request containing device information.</param>
+    /// <param name="spec">The device factory spec containing device information.</param>
     /// <param name="serviceFactory">The factory for creating Bluetooth services.</param>
     /// <param name="rssiToSignalStrengthConverter">Converter for RSSI to signal strength.</param>
-    public WindowsBluetoothRemoteDevice(
-        IBluetoothScanner scanner,
-        IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request,
-        IBluetoothServiceFactory serviceFactory,
-        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter)
-        : base(scanner, request, serviceFactory, rssiToSignalStrengthConverter)
+    public WindowsBluetoothRemoteDevice(IBluetoothScanner scanner,
+        IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec,
+        IBluetoothRemoteServiceFactory serviceFactory,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) : base(scanner, spec, serviceFactory, rssiToSignalStrengthConverter)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not WindowsBluetoothDeviceFactoryRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not WindowsBluetoothRemoteDeviceFactorySpec)
         {
-            throw new ArgumentException(
-                $"Expected request of type {typeof(WindowsBluetoothDeviceFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(WindowsBluetoothRemoteDeviceFactorySpec)}, but got {spec.GetType()}");
         }
     }
 
@@ -93,10 +88,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     ///     Windows does not support connection priority requests. Connection parameters are managed automatically by the platform.
     ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession">GattSession</seealso>
     /// </remarks>
-    protected override ValueTask NativeRequestConnectionPriorityAsync(
-        BluetoothConnectionPriority priority,
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+    protected override ValueTask NativeRequestConnectionPriorityAsync(BluetoothConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Windows doesn't support connection priority requests
         // Connection parameters are managed automatically by the platform
@@ -149,10 +141,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <inheritdoc />
-    protected async override ValueTask NativeConnectAsync(
-        ConnectionOptions connectionOptions,
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+    protected async override ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogConnecting(Id);
         NativeRefreshIsConnected();
@@ -167,8 +156,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             }
 
             // Create BluetoothLEDevice proxy
-            BluetoothLeDeviceProxy = await BluetoothLeDeviceProxy.GetInstanceAsync(
-                address, this, cancellationToken).ConfigureAwait(false);
+            BluetoothLeDeviceProxy = await BluetoothLeDeviceProxy.GetInstanceAsync(address, this, cancellationToken).ConfigureAwait(false);
 
             if (BluetoothLeDeviceProxy?.BluetoothLeDevice == null)
             {
@@ -179,8 +167,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             CachedName = BluetoothLeDeviceProxy.BluetoothLeDevice.Name;
 
             // Create GATT session for reliable connection
-            GattSessionProxy = await NativeObjects.GattSessionWrapper.GetInstanceAsync(
-                BluetoothLeDeviceProxy.BluetoothLeDevice, this, cancellationToken).ConfigureAwait(false);
+            GattSessionProxy = await NativeObjects.GattSessionWrapper.GetInstanceAsync(BluetoothLeDeviceProxy.BluetoothLeDevice, this, cancellationToken).ConfigureAwait(false);
 
             if (GattSessionProxy != null && GattSessionProxy.GattSession.CanMaintainConnection)
             {
@@ -188,14 +175,10 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             }
 
             // Wait for session to become active
-            await WaitForPropertyToBeOfValue(nameof(GattSessionStatus), GattSessionStatus.Active, timeout, cancellationToken)
-                .ConfigureAwait(false);
+            await WaitForPropertyToBeOfValue(nameof(GattSessionStatus), GattSessionStatus.Active, timeout, cancellationToken).ConfigureAwait(false);
 
             // Request device access (permissions)
-            var accessStatus = await BluetoothLeDeviceProxy.BluetoothLeDevice
-                .RequestAccessAsync()
-                .AsTask(cancellationToken)
-                .ConfigureAwait(false);
+            var accessStatus = await BluetoothLeDeviceProxy.BluetoothLeDevice.RequestAccessAsync().AsTask(cancellationToken).ConfigureAwait(false);
 
             if (accessStatus != DeviceAccessStatus.Allowed)
             {
@@ -203,9 +186,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             }
 
             // Kick the connection by reading services
-            var services = await BluetoothLeDeviceProxy.ReadGattServicesAsync(
-                BluetoothCacheMode.Uncached,
-                cancellationToken: cancellationToken).ConfigureAwait(false);
+            var services = await BluetoothLeDeviceProxy.ReadGattServicesAsync(BluetoothCacheMode.Uncached, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             Logger?.LogConnected(Id);
         }
@@ -218,9 +199,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <inheritdoc />
-    protected async override ValueTask NativeDisconnectAsync(
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+    protected async override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogDisconnecting(Id);
         NativeRefreshIsConnected();
@@ -239,8 +218,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                     GattSessionProxy.GattSession.MaintainConnection = false;
                 }
 
-                await WaitForPropertyToBeOfValue(nameof(GattSessionStatus), GattSessionStatus.Closed, timeout, cancellationToken)
-                    .ConfigureAwait(false);
+                await WaitForPropertyToBeOfValue(nameof(GattSessionStatus), GattSessionStatus.Closed, timeout, cancellationToken).ConfigureAwait(false);
 
                 GattSessionProxy.Dispose();
                 GattSessionProxy = null;
@@ -260,9 +238,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     #region Service Discovery
 
     /// <inheritdoc />
-    protected async override ValueTask NativeServicesExplorationAsync(
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+    protected async override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogServiceDiscoveryStarting(Id);
 
@@ -273,26 +249,25 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 throw new InvalidOperationException("Device not connected");
             }
 
-            var services = await BluetoothLeDeviceProxy.ReadGattServicesAsync(
-                BluetoothCacheMode.Uncached,
-                cancellationToken: cancellationToken).ConfigureAwait(false);
+            var services = await BluetoothLeDeviceProxy.ReadGattServicesAsync(BluetoothCacheMode.Uncached, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             Logger?.LogServiceDiscoveryCompleted(Id, services.Count);
 
             // Call OnServicesExplorationSucceeded with conversion function
-            OnServicesExplorationSucceeded(services, AreRepresentingTheSameObject, ConvertNativeServiceToService);
+            OnServicesExplorationSucceeded(services, AreRepresentingTheSameObject, FromInputTypeToOutputTypeConversion);
         }
         catch (Exception ex)
         {
             Logger?.LogServiceDiscoveryError(Id, ex.Message, ex);
             OnServicesExplorationFailed(ex);
         }
-    }
+        return;
 
-    private IBluetoothRemoteService ConvertNativeServiceToService(GattDeviceService nativeService)
-    {
-        var serviceRequest = new WindowsBluetoothServiceFactoryRequest(nativeService);
-        return ServiceFactory.CreateService(this, serviceRequest);
+        IBluetoothRemoteService FromInputTypeToOutputTypeConversion(GattDeviceService nativeService)
+        {
+            var spec = new WindowsBluetoothRemoteServiceFactorySpec(nativeService);
+            return ServiceFactory.Create(this, spec);
+        }
     }
 
     private static bool AreRepresentingTheSameObject(GattDeviceService native, IBluetoothRemoteService shared)
@@ -339,7 +314,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <summary>
     ///     Called when custom pairing is requested for the device on the Windows platform.
     /// </summary>
-    /// <param name="args">The pairing request event arguments.</param>
+    /// <param name="args">The pairing spec event arguments.</param>
     public void OnCustomPairingRequested(DevicePairingRequestedEventArgs args)
     {
         // Handle pairing requests if needed
@@ -391,4 +366,5 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     }
 
     #endregion
+
 }

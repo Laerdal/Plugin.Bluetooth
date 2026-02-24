@@ -9,13 +9,13 @@ public class AppleBluetoothCharacteristicFactory : BaseBluetoothCharacteristicFa
     ///     Initializes a new instance of the <see cref="AppleBluetoothCharacteristicFactory" /> class.
     /// </summary>
     /// <param name="descriptorFactory">The descriptor factory to pass to the new Characteristic.</param>
-    public AppleBluetoothCharacteristicFactory(IBluetoothDescriptorFactory descriptorFactory) : base(descriptorFactory)
+    public AppleBluetoothCharacteristicFactory(IBluetoothRemoteDescriptorFactory descriptorFactory) : base(descriptorFactory)
     {
     }
 
     /// <inheritdoc />
-    public override IBluetoothRemoteCharacteristic CreateCharacteristic(IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request)
+    public override IBluetoothRemoteCharacteristic Create(IBluetoothRemoteService remoteService, IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec)
     {
-        return new AppleBluetoothRemoteCharacteristic(remoteService, request, DescriptorFactory);
+        return new AppleBluetoothRemoteCharacteristic(remoteService, spec, DescriptorFactory);
     }
 }

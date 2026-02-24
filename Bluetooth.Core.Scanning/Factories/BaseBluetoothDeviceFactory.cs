@@ -1,12 +1,12 @@
 namespace Bluetooth.Core.Scanning.Factories;
 
 /// <inheritdoc />
-public abstract class BaseBluetoothDeviceFactory : IBluetoothDeviceFactory
+public abstract class BaseBluetoothDeviceFactory : IBluetoothRemoteDeviceFactory
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothDeviceFactory" /> class.
     /// </summary>
-    protected BaseBluetoothDeviceFactory(IBluetoothServiceFactory serviceFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter)
+    protected BaseBluetoothDeviceFactory(IBluetoothRemoteServiceFactory serviceFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter)
     {
         ServiceFactory = serviceFactory;
         RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
@@ -15,7 +15,7 @@ public abstract class BaseBluetoothDeviceFactory : IBluetoothDeviceFactory
     /// <summary>
     ///     Gets the service factory to pass to the new Device.
     /// </summary>
-    protected IBluetoothServiceFactory ServiceFactory { get; }
+    protected IBluetoothRemoteServiceFactory ServiceFactory { get; }
 
     /// <summary>
     ///     Gets the RSSI to signal strength converter to pass to the new Device.
@@ -23,5 +23,5 @@ public abstract class BaseBluetoothDeviceFactory : IBluetoothDeviceFactory
     protected IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
 
     /// <inheritdoc />
-    public abstract IBluetoothRemoteDevice CreateDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request);
+    public abstract IBluetoothRemoteDevice Create(IBluetoothScanner scanner, IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec);
 }

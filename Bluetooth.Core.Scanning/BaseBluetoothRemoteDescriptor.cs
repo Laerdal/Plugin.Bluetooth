@@ -7,15 +7,15 @@ public abstract partial class BaseBluetoothRemoteDescriptor : BaseBindableObject
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteDescriptor" /> class.
     /// </summary>
     /// <param name="remoteCharacteristic">The Bluetooth characteristic associated with this descriptor.</param>
-    /// <param name="request">The factory request containing initialization data for the descriptor.</param>
+    /// <param name="spec">The factory spec containing initialization data for the descriptor.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="remoteCharacteristic" /> is null.</exception>
-    protected BaseBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic remoteCharacteristic, IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest request)
+    protected BaseBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic remoteCharacteristic, IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec spec)
     {
         ArgumentNullException.ThrowIfNull(remoteCharacteristic);
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
 
         RemoteCharacteristic = remoteCharacteristic;
-        Id = request.DescriptorId;
+        Id = spec.DescriptorId;
 
         LazyCanRead = new Lazy<bool>(NativeCanRead);
         LazyCanWrite = new Lazy<bool>(NativeCanWrite);

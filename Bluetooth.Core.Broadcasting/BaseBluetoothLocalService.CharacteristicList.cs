@@ -17,23 +17,23 @@ public abstract partial class BaseBluetoothLocalService
     #region Characteristics - Add
 
     /// <inheritdoc />
-    public ValueTask<IBluetoothLocalCharacteristic> AddCharacteristicAsync(IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request,
+    public ValueTask<IBluetoothLocalCharacteristic> AddCharacteristicAsync(IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
 
-        var existingCharacteristic = GetCharacteristicOrDefault(request.Id);
+        var existingCharacteristic = GetCharacteristicOrDefault(spec.Id);
         if (existingCharacteristic != null)
         {
-            LogCharacteristicAlreadyExists(Id, request.Id);
-            throw new CharacteristicAlreadyExistsException(this, request.Id, existingCharacteristic);
+            LogCharacteristicAlreadyExists(Id, spec.Id);
+            throw new CharacteristicAlreadyExistsException(this, spec.Id, existingCharacteristic);
         }
 
-        LogAddingCharacteristic(Id, request.Id);
-        var newCharacteristic = LocalCharacteristicFactory.CreateCharacteristic(this, request);
+        LogAddingCharacteristic(Id, spec.Id);
+        var newCharacteristic = LocalCharacteristicFactory.Create(this, spec);
         Characteristics.Add(newCharacteristic);
-        LogCharacteristicAdded(Id, request.Id);
+        LogCharacteristicAdded(Id, spec.Id);
 
         return ValueTask.FromResult(newCharacteristic);
     }

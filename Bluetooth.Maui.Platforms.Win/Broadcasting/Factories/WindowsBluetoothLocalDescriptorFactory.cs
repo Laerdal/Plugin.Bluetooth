@@ -6,7 +6,7 @@ namespace Bluetooth.Maui.Platforms.Win.Broadcasting.Factories;
 public class WindowsBluetoothLocalDescriptorFactory : BaseBluetoothLocalDescriptorFactory
 {
     /// <inheritdoc />
-    public override IBluetoothLocalDescriptor CreateDescriptor(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
+    public override IBluetoothLocalDescriptor Create(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
     {
         throw new NotImplementedException();
     }

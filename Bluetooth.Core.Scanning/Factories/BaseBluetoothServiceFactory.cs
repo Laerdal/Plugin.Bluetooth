@@ -1,13 +1,13 @@
 namespace Bluetooth.Core.Scanning.Factories;
 
 /// <inheritdoc />
-public abstract class BaseBluetoothServiceFactory : IBluetoothServiceFactory
+public abstract class BaseBluetoothServiceFactory : IBluetoothRemoteServiceFactory
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothServiceFactory" /> class.
     /// </summary>
     /// <param name="characteristicFactory">The characteristic factory to pass to the new Service.</param>
-    protected BaseBluetoothServiceFactory(IBluetoothCharacteristicFactory characteristicFactory)
+    protected BaseBluetoothServiceFactory(IBluetoothRemoteCharacteristicFactory characteristicFactory)
     {
         CharacteristicFactory = characteristicFactory;
     }
@@ -15,8 +15,8 @@ public abstract class BaseBluetoothServiceFactory : IBluetoothServiceFactory
     /// <summary>
     ///     Gets the characteristic factory to pass to the new Service.
     /// </summary>
-    protected IBluetoothCharacteristicFactory CharacteristicFactory { get; }
+    protected IBluetoothRemoteCharacteristicFactory CharacteristicFactory { get; }
 
     /// <inheritdoc />
-    public abstract IBluetoothRemoteService CreateService(IBluetoothRemoteDevice device, IBluetoothServiceFactory.BluetoothServiceFactoryRequest request);
+    public abstract IBluetoothRemoteService Create(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec);
 }

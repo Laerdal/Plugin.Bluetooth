@@ -6,7 +6,7 @@ public class DotNetCoreBluetoothScanner : BaseBluetoothScanner
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     public DotNetCoreBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothDeviceFactory deviceFactory,
+        IBluetoothRemoteDeviceFactory deviceFactory,
         ITicker ticker,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ILogger<IBluetoothScanner>? logger = null) : base(adapter,
@@ -41,7 +41,7 @@ public class DotNetCoreBluetoothScanner : BaseBluetoothScanner
 
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    protected override IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
+    protected override IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

@@ -18,8 +18,8 @@ public abstract partial class BaseBluetoothScanner
     /// <returns>The newly created and added <see cref="IBluetoothRemoteDevice" /> instance.</returns>
     protected virtual IBluetoothRemoteDevice AddDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
-        var newDeviceRequest = CreateDeviceFactoryRequestFromAdvertisement(advertisement);
-        var device = DeviceFactory.CreateDevice(this, newDeviceRequest);
+        var spec = CreateDeviceFactoryRequestFromAdvertisement(advertisement);
+        var device = DeviceFactory.Create(this, spec);
         lock (Devices)
         {
             Devices.Add(device);
@@ -33,7 +33,7 @@ public abstract partial class BaseBluetoothScanner
     /// </summary>
     /// <param name="advertisement">The received Bluetooth advertisement.</param>
     /// <returns>A factory request containing the necessary information to create a Bluetooth device.</returns>
-    protected abstract IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement);
+    protected abstract IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement);
 
     #endregion
 

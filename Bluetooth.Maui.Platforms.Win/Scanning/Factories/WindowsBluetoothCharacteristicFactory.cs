@@ -6,15 +6,15 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning.Factories;
 public class WindowsBluetoothCharacteristicFactory : BaseBluetoothCharacteristicFactory
 {
     /// <inheritdoc/>
-    public WindowsBluetoothCharacteristicFactory(IBluetoothDescriptorFactory descriptorFactory) : base(descriptorFactory)
+    public WindowsBluetoothCharacteristicFactory(IBluetoothRemoteDescriptorFactory descriptorFactory) : base(descriptorFactory)
     {
     }
 
     /// <inheritdoc/>
-    public override Abstractions.Scanning.IBluetoothRemoteCharacteristic CreateCharacteristic(
+    public override Abstractions.Scanning.IBluetoothRemoteCharacteristic Create(
         Abstractions.Scanning.IBluetoothRemoteService remoteService,
-        IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request)
+        IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec)
     {
-        return new WindowsBluetoothRemoteCharacteristic(remoteService, request, DescriptorFactory);
+        return new WindowsBluetoothRemoteCharacteristic(remoteService, spec, DescriptorFactory);
     }
 }

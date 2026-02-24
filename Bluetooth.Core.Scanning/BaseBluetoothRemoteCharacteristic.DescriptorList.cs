@@ -160,8 +160,8 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     ///     Called when descriptor exploration succeeds.
     /// </summary>
     protected void OnDescriptorsExplorationSucceeded<TNativeDescriptorType>(IList<TNativeDescriptorType> descriptors,
-        Func<TNativeDescriptorType, IBluetoothRemoteDescriptor> fromInputTypeToOutputTypeConversion,
-        Func<TNativeDescriptorType, IBluetoothRemoteDescriptor, bool> areRepresentingTheSameObject)
+        Func<TNativeDescriptorType, IBluetoothRemoteDescriptor, bool> areRepresentingTheSameObject,
+        Func<TNativeDescriptorType, IBluetoothRemoteDescriptor> fromInputTypeToOutputTypeConversion)
     {
         Descriptors.UpdateFrom(descriptors, areRepresentingTheSameObject, fromInputTypeToOutputTypeConversion);
 

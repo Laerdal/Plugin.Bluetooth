@@ -6,9 +6,9 @@ public class DotNetCoreBluetoothLocalCharacteristic : Core.Broadcasting.BaseBlue
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
     public DotNetCoreBluetoothLocalCharacteristic(IBluetoothLocalService localService,
-        IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request,
+        IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec,
         IBluetoothLocalDescriptorFactory localDescriptorRepository,
-        ILogger<IBluetoothLocalCharacteristic>? logger = null) : base(localService, request, localDescriptorRepository, logger)
+        ILogger<IBluetoothLocalCharacteristic>? logger = null) : base(localService, spec, localDescriptorRepository, logger)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

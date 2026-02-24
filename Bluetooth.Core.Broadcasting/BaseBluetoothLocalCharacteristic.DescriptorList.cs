@@ -17,18 +17,18 @@ public abstract partial class BaseBluetoothLocalCharacteristic
     #region Descriptors - Add
 
     /// <inheritdoc />
-    public ValueTask<IBluetoothLocalDescriptor> AddDescriptorAsync(IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec request, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask<IBluetoothLocalDescriptor> AddDescriptorAsync(IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        var existingDescriptor = GetDescriptorOrDefault(request.Id);
+        ArgumentNullException.ThrowIfNull(spec);
+        var existingDescriptor = GetDescriptorOrDefault(spec.Id);
         if (existingDescriptor != null)
         {
-            throw new DescriptorAlreadyExistsException(this, request.Id, existingDescriptor);
+            throw new DescriptorAlreadyExistsException(this, spec.Id, existingDescriptor);
         }
 
-        var newService = LocalDescriptorFactory.CreateDescriptor(this, request);
-        Descriptors.Add(newService);
-        return ValueTask.FromResult(newService);
+        var newDescriptor = LocalDescriptorFactory.Create(this, spec);
+        Descriptors.Add(newDescriptor);
+        return ValueTask.FromResult(newDescriptor);
     }
 
     #endregion

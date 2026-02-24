@@ -9,25 +9,27 @@ public interface IBluetoothRemoteL2CapChannelFactory
     ///     Creates a new instance of a Bluetooth L2CAP channel.
     /// </summary>
     /// <param name="device">The Bluetooth device to which the channel will be associated.</param>
-    /// <param name="request">The request containing information needed to create the channel.</param>
+    /// <param name="spec">The spec containing information needed to create the channel.</param>
     /// <returns>A new instance of <see cref="IBluetoothL2CapChannel" />.</returns>
-    IBluetoothL2CapChannel CreateL2CapChannel(
+    IBluetoothL2CapChannel Create(
         IBluetoothRemoteDevice device,
-        BluetoothRemoteL2CapChannelFactoryRequest request);
+        BluetoothRemoteL2CapChannelFactorySpec spec);
 
     /// <summary>
     ///     Request object for creating Bluetooth L2CAP channel instances.
     /// </summary>
-    record BluetoothRemoteL2CapChannelFactoryRequest
+    record BluetoothRemoteL2CapChannelFactorySpec
     {
         /// <summary>
-        ///     Initializes a new instance of the <see cref="BluetoothRemoteL2CapChannelFactoryRequest" /> class.
+        ///     Initializes a new instance of the <see cref="BluetoothRemoteL2CapChannelFactorySpec" /> class.
         /// </summary>
         /// <param name="psm">The Protocol/Service Multiplexer identifying the L2CAP service.</param>
-        protected BluetoothRemoteL2CapChannelFactoryRequest(int psm)
+        protected BluetoothRemoteL2CapChannelFactorySpec(int psm)
         {
             if (psm <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(psm), "PSM must be positive");
+            }
 
             Psm = psm;
         }

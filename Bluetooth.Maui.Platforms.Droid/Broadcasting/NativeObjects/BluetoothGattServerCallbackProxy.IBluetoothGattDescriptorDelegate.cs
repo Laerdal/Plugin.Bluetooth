@@ -15,7 +15,7 @@ public partial class BluetoothGattServerCallbackProxy
         ///     Called when a remote device has requested to read a descriptor.
         /// </summary>
         /// <param name="sharedBluetoothDeviceDelegate">The device delegate for the requesting device.</param>
-        /// <param name="requestId">The ID of the read request.</param>
+        /// <param name="requestId">The ID of the read spec.</param>
         /// <param name="offset">The offset from which to read the descriptor value.</param>
         /// <param name="descriptor">The descriptor being read.</param>
         void OnDescriptorReadRequest(IBluetoothDeviceDelegate sharedBluetoothDeviceDelegate, int requestId, int offset, BluetoothGattDescriptor? descriptor);
@@ -24,7 +24,7 @@ public partial class BluetoothGattServerCallbackProxy
         ///     Called when a remote device has requested to write to a descriptor.
         /// </summary>
         /// <param name="sharedBluetoothDeviceDelegate">The device delegate for the requesting device.</param>
-        /// <param name="requestId">The ID of the write request.</param>
+        /// <param name="requestId">The ID of the write spec.</param>
         /// <param name="descriptor">The descriptor being written to.</param>
         /// <param name="preparedWrite">Whether this is a prepared write operation.</param>
         /// <param name="responseNeeded">Whether the remote device requires a response.</param>

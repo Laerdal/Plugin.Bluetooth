@@ -7,7 +7,7 @@ public class AndroidBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteris
     BluetoothGattServerCallbackProxy.IBluetoothGattCharacteristicDelegate
 {
     /// <inheritdoc />
-    public AndroidBluetoothLocalCharacteristic(IBluetoothLocalService service, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request, IBluetoothLocalDescriptorFactory descriptorFactory) : base(service, request,
+    public AndroidBluetoothLocalCharacteristic(IBluetoothLocalService service, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec, IBluetoothLocalDescriptorFactory descriptorFactory) : base(service, spec,
         descriptorFactory)
     {
         throw new NotImplementedException("AndroidBluetoothLocalCharacteristic is not yet implemented on Android.");

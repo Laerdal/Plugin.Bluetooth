@@ -128,28 +128,28 @@ classDiagram
 
 ```mermaid
 classDiagram
-    class IBluetoothDeviceFactory {
+    class IBluetoothRemoteDeviceFactory {
         <<interface>>
         +CreateDevice(scanner, request)
     }
 
-    class BluetoothDeviceFactoryRequest {
+    class BluetoothRemoteDeviceFactoryRequest {
         <<record>>
-        #BluetoothDeviceFactoryRequest(id, name)
+        #BluetoothRemoteDeviceFactoryRequest(id, name)
         +string Id
         +string Name
     }
 
     class BaseBluetoothDeviceFactory {
         <<abstract>>
-        #IBluetoothServiceFactory ServiceFactory
+        #IBluetoothRemoteServiceFactory ServiceFactory
         #IBluetoothRssiConverter RssiConverter
         +abstract CreateDevice()
     }
 
-    class AppleBluetoothDeviceFactoryRequest {
+    class AppleBluetoothRemoteDeviceFactoryRequest {
         <<record>>
-        +AppleBluetoothDeviceFactoryRequest(id, name, peripheral)
+        +AppleBluetoothRemoteDeviceFactoryRequest(id, name, peripheral)
         +CBPeripheral NativePeripheral
     }
 
@@ -158,9 +158,9 @@ classDiagram
         +CreateDevice()
     }
 
-    class AndroidBluetoothDeviceFactoryRequest {
+    class AndroidBluetoothRemoteDeviceFactoryRequest {
         <<record>>
-        +AndroidBluetoothDeviceFactoryRequest(id, name, device)
+        +AndroidBluetoothRemoteDeviceFactoryRequest(id, name, device)
         +BluetoothDevice NativeDevice
     }
 
@@ -169,12 +169,12 @@ classDiagram
         +CreateDevice()
     }
 
-    IBluetoothDeviceFactory o-- BluetoothDeviceFactoryRequest : nested
-    IBluetoothDeviceFactory <|.. BaseBluetoothDeviceFactory : implements
+    IBluetoothRemoteDeviceFactory o-- BluetoothRemoteDeviceFactoryRequest : nested
+    IBluetoothRemoteDeviceFactory <|.. BaseBluetoothDeviceFactory : implements
     BaseBluetoothDeviceFactory <|-- AppleBluetoothDeviceFactory : extends
     BaseBluetoothDeviceFactory <|-- AndroidBluetoothDeviceFactory : extends
-    BluetoothDeviceFactoryRequest <|-- AppleBluetoothDeviceFactoryRequest : extends
-    BluetoothDeviceFactoryRequest <|-- AndroidBluetoothDeviceFactoryRequest : extends
+    BluetoothRemoteDeviceFactoryRequest <|-- AppleBluetoothRemoteDeviceFactoryRequest : extends
+    BluetoothRemoteDeviceFactoryRequest <|-- AndroidBluetoothRemoteDeviceFactoryRequest : extends
 ```
 
 ---
@@ -426,19 +426,19 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     participant Scanner
-    participant DeviceFactory as IBluetoothDeviceFactory
+    participant DeviceFactory as IBluetoothRemoteDeviceFactory
     participant PlatformFactory as AppleBluetoothDeviceFactory
-    participant ServiceFactory as IBluetoothServiceFactory
+    participant ServiceFactory as IBluetoothRemoteServiceFactory
     participant L2CapFactory as IBluetoothRemoteL2CapChannelFactory
     participant Device as AppleBluetoothRemoteDevice
 
     Scanner->>Scanner: Discover CBPeripheral
-    Scanner->>Scanner: Create AppleBluetoothDeviceFactoryRequest<br/>(id, name, CBPeripheral)
+    Scanner->>Scanner: Create AppleBluetoothRemoteDeviceFactoryRequest<br/>(id, name, CBPeripheral)
 
     Scanner->>DeviceFactory: CreateDevice(scanner, request)
     DeviceFactory->>PlatformFactory: CreateDevice(scanner, request)
 
-    PlatformFactory->>PlatformFactory: Validate request type<br/>(must be AppleBluetoothDeviceFactoryRequest)
+    PlatformFactory->>PlatformFactory: Validate request type<br/>(must be AppleBluetoothRemoteDeviceFactoryRequest)
 
     PlatformFactory->>Device: new AppleBluetoothRemoteDevice(<br/>scanner,<br/>request,<br/>ServiceFactory,<br/>L2CapFactory,<br/>RssiConverter)
 

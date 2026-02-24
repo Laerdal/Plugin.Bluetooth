@@ -48,12 +48,12 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster
 
     /// <inheritdoc />
     /// <remarks>
-    ///     On Windows, no runtime permission request is needed. Bluetooth permissions are
+    ///     On Windows, no runtime permission spec is needed. Bluetooth permissions are
     ///     declared in Package.appxmanifest and granted at install time.
     /// </remarks>
     protected override ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken)
     {
-        // No runtime request needed on Windows - permissions are declared at install time
+        // No runtime spec needed on Windows - permissions are declared at install time
         return ValueTask.CompletedTask;
     }
 

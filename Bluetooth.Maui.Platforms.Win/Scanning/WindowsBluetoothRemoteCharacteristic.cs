@@ -17,29 +17,24 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning;
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattreadresult">GattReadResult</seealso>
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattwriteresult">GattWriteResult</seealso>
 /// </remarks>
-public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteristic,
-    GattCharacteristicProxy.IBluetoothCharacteristicProxyDelegate
+public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteristic, GattCharacteristicProxy.IBluetoothCharacteristicProxyDelegate
 {
     /// <summary>
     ///     Initializes a new instance of the Windows <see cref="WindowsBluetoothRemoteCharacteristic" /> class.
     /// </summary>
     /// <param name="service">The Bluetooth service that contains this characteristic.</param>
-    /// <param name="request">The characteristic factory request containing characteristic information.</param>
+    /// <param name="spec">The characteristic factory spec containing characteristic information.</param>
     /// <param name="descriptorFactory">The factory for creating Bluetooth descriptors.</param>
-    public WindowsBluetoothRemoteCharacteristic(
-        IBluetoothRemoteService service,
-        IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request,
-        IBluetoothDescriptorFactory descriptorFactory)
-        : base(service, request, descriptorFactory)
+    public WindowsBluetoothRemoteCharacteristic(IBluetoothRemoteService service, IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec, IBluetoothRemoteDescriptorFactory descriptorFactory) :
+        base(service, spec, descriptorFactory)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not WindowsBluetoothCharacteristicFactoryRequest windowsRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not WindowsBluetoothRemoteCharacteristicFactorySpec nativeSpec)
         {
-            throw new ArgumentException(
-                $"Expected request of type {typeof(WindowsBluetoothCharacteristicFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(WindowsBluetoothRemoteCharacteristicFactorySpec)}, but got {spec.GetType()}");
         }
 
-        NativeCharacteristicProxy = new NativeObjects.GattCharacteristicProxy(windowsRequest.NativeCharacteristic, this);
+        NativeCharacteristicProxy = new NativeObjects.GattCharacteristicProxy(nativeSpec.NativeCharacteristic, this);
     }
 
     /// <summary>
@@ -71,10 +66,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
 
         try
         {
-            var result = await NativeCharacteristicProxy.GattCharacteristic
-                .ReadValueAsync(BluetoothCacheMode.Uncached)
-                .AsTask()
-                .ConfigureAwait(false);
+            var result = await NativeCharacteristicProxy.GattCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached).AsTask().ConfigureAwait(false);
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
@@ -102,8 +94,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <inheritdoc />
     protected override bool NativeCanRead()
     {
-        return NativeCharacteristicProxy.GattCharacteristic.CharacteristicProperties
-            .HasFlag(GattCharacteristicProperties.Read);
+        return NativeCharacteristicProxy.GattCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Read);
     }
 
     #endregion
@@ -124,15 +115,11 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
 
             if (!supportsWriteWithResponse && !supportsWriteWithoutResponse)
             {
-                throw new CharacteristicCantWriteException(
-                    this,
-                    "Characteristic doesn't support Write");
+                throw new CharacteristicCantWriteException(this, "Characteristic doesn't support Write");
             }
 
             // Prefer write with response if available
-            var writeOption = supportsWriteWithResponse
-                ? GattWriteOption.WriteWithResponse
-                : GattWriteOption.WriteWithoutResponse;
+            var writeOption = supportsWriteWithResponse ? GattWriteOption.WriteWithResponse : GattWriteOption.WriteWithoutResponse;
 
             // Create buffer
             IBuffer buffer;
@@ -143,10 +130,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
             }
 
             // Write with result check
-            var result = await NativeCharacteristicProxy.GattCharacteristic
-                .WriteValueWithResultAsync(buffer, writeOption)
-                .AsTask()
-                .ConfigureAwait(false);
+            var result = await NativeCharacteristicProxy.GattCharacteristic.WriteValueWithResultAsync(buffer, writeOption).AsTask().ConfigureAwait(false);
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
@@ -164,8 +148,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     protected override bool NativeCanWrite()
     {
         var properties = NativeCharacteristicProxy.GattCharacteristic.CharacteristicProperties;
-        return properties.HasFlag(GattCharacteristicProperties.Write) ||
-               properties.HasFlag(GattCharacteristicProperties.WriteWithoutResponse);
+        return properties.HasFlag(GattCharacteristicProperties.Write) || properties.HasFlag(GattCharacteristicProperties.WriteWithoutResponse);
     }
 
     #endregion
@@ -177,15 +160,11 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     {
         try
         {
-            var result = await NativeCharacteristicProxy.GattCharacteristic
-                .ReadClientCharacteristicConfigurationDescriptorAsync()
-                .AsTask()
-                .ConfigureAwait(false);
+            var result = await NativeCharacteristicProxy.GattCharacteristic.ReadClientCharacteristicConfigurationDescriptorAsync().AsTask().ConfigureAwait(false);
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
-            var isListening = result.ClientCharacteristicConfigurationDescriptor !=
-                              GattClientCharacteristicConfigurationDescriptorValue.None;
+            var isListening = result.ClientCharacteristicConfigurationDescriptor != GattClientCharacteristicConfigurationDescriptorValue.None;
             OnReadIsListeningSucceeded(isListening);
         }
         catch (Exception ex)
@@ -213,15 +192,11 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
 
                 if (!supportsNotify && !supportsIndicate)
                 {
-                    throw new CharacteristicCantListenException(
-                        this,
-                        "Characteristic doesn't support Notify or Indicate");
+                    throw new CharacteristicCantListenException(this, "Characteristic doesn't support Notify or Indicate");
                 }
 
                 // Prefer Notify over Indicate
-                cccdValue = supportsNotify
-                    ? GattClientCharacteristicConfigurationDescriptorValue.Notify
-                    : GattClientCharacteristicConfigurationDescriptorValue.Indicate;
+                cccdValue = supportsNotify ? GattClientCharacteristicConfigurationDescriptorValue.Notify : GattClientCharacteristicConfigurationDescriptorValue.Indicate;
             }
             else
             {
@@ -229,10 +204,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
             }
 
             // Write CCCD to enable/disable notifications
-            var result = await NativeCharacteristicProxy.GattCharacteristic
-                .WriteClientCharacteristicConfigurationDescriptorWithResultAsync(cccdValue)
-                .AsTask()
-                .ConfigureAwait(false);
+            var result = await NativeCharacteristicProxy.GattCharacteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync(cccdValue).AsTask().ConfigureAwait(false);
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
@@ -249,8 +221,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     protected override bool NativeCanListen()
     {
         var properties = NativeCharacteristicProxy.GattCharacteristic.CharacteristicProperties;
-        return properties.HasFlag(GattCharacteristicProperties.Notify) ||
-               properties.HasFlag(GattCharacteristicProperties.Indicate);
+        return properties.HasFlag(GattCharacteristicProperties.Notify) || properties.HasFlag(GattCharacteristicProperties.Indicate);
     }
 
     #endregion
@@ -283,34 +254,27 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     #region Descriptor Discovery
 
     /// <inheritdoc />
-    protected async override ValueTask NativeDescriptorsExplorationAsync(
-        TimeSpan? timeout = null,
-        CancellationToken cancellationToken = default)
+    protected async override ValueTask NativeDescriptorsExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         try
         {
-            var result = await NativeCharacteristicProxy.GattCharacteristic
-                .GetDescriptorsAsync(BluetoothCacheMode.Uncached)
-                .AsTask(cancellationToken)
-                .ConfigureAwait(false);
+            var result = await NativeCharacteristicProxy.GattCharacteristic.GetDescriptorsAsync(BluetoothCacheMode.Uncached).AsTask(cancellationToken).ConfigureAwait(false);
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
-            OnDescriptorsExplorationSucceeded(
-                result.Descriptors.ToList(),
-                ConvertNativeDescriptorToDescriptor,
-                AreRepresentingTheSameObject);
+            OnDescriptorsExplorationSucceeded(result.Descriptors.ToList(), AreRepresentingTheSameObject, FromInputTypeToOutputTypeConversion);
         }
         catch (Exception ex)
         {
             OnDescriptorsExplorationFailed(ex);
         }
-    }
+        return;
 
-    private IBluetoothRemoteDescriptor ConvertNativeDescriptorToDescriptor(GattDescriptor nativeDescriptor)
-    {
-        var descriptorRequest = new WindowsBluetoothDescriptorFactoryRequest(nativeDescriptor);
-        return DescriptorFactory.CreateDescriptor(this, descriptorRequest);
+        IBluetoothRemoteDescriptor FromInputTypeToOutputTypeConversion(GattDescriptor nativeDescriptor)
+        {
+            var spec = new WindowsBluetoothRemoteDescriptorFactorySpec(nativeDescriptor);
+            return DescriptorFactory.Create(this, spec);
+        }
     }
 
     private static bool AreRepresentingTheSameObject(GattDescriptor native, IBluetoothRemoteDescriptor shared)
@@ -319,4 +283,5 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     }
 
     #endregion
+
 }

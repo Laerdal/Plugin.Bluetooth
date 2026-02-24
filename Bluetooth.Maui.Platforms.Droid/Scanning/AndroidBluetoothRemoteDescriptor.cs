@@ -16,20 +16,20 @@ public class AndroidBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
     ///     Initializes a new instance of the <see cref="AndroidBluetoothRemoteDescriptor" /> class.
     /// </summary>
     /// <param name="characteristic">The Bluetooth characteristic that contains this descriptor.</param>
-    /// <param name="request">The descriptor factory request containing descriptor information.</param>
+    /// <param name="spec">The descriptor factory spec containing descriptor information.</param>
     public AndroidBluetoothRemoteDescriptor(
         IBluetoothRemoteCharacteristic characteristic,
-        IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest request)
-        : base(characteristic, request)
+        IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec spec)
+        : base(characteristic, spec)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not AndroidBluetoothDescriptorFactoryRequest androidRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not AndroidBluetoothRemoteDescriptorFactorySpec nativeSpec)
         {
             throw new ArgumentException(
-                $"Expected request of type {typeof(AndroidBluetoothDescriptorFactoryRequest)}, but got {request.GetType()}");
+                $"Expected spec of type {typeof(AndroidBluetoothRemoteDescriptorFactorySpec)}, but got {spec.GetType()}");
         }
 
-        NativeDescriptor = androidRequest.NativeDescriptor;
+        NativeDescriptor = nativeSpec.NativeDescriptor;
     }
 
     /// <summary>

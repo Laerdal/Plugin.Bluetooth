@@ -4,7 +4,7 @@
 namespace Bluetooth.Maui.Platforms.Droid.Enums;
 
 /// <summary>
-///     Represents GATT request and response status codes for GATT server operations on Android.
+///     Represents GATT spec and response status codes for GATT server operations on Android.
 /// </summary>
 /// <remarks>
 ///     These status codes are specifically used when responding to GATT requests in a GATT server or broadcaster role.
@@ -13,17 +13,17 @@ namespace Bluetooth.Maui.Platforms.Droid.Enums;
 public enum GattCallbackStatusRequestResponse
 {
     /// <summary>
-    ///     The request completed successfully.
+    ///     The spec completed successfully.
     /// </summary>
     GATT_SUCCESS = 0,
 
     /// <summary>
-    ///     Error response indicating the request failed.
+    ///     Error response indicating the spec failed.
     /// </summary>
     GATT_RSP_ERROR = 1,
 
     /// <summary>
-    ///     MTU (Maximum Transmission Unit) exchange request.
+    ///     MTU (Maximum Transmission Unit) exchange spec.
     /// </summary>
     GATT_REQ_MTU = 2,
 
@@ -33,7 +33,7 @@ public enum GattCallbackStatusRequestResponse
     GATT_RSP_MTU = 3,
 
     /// <summary>
-    ///     Find Information request to discover attribute handles and types.
+    ///     Find Information spec to discover attribute handles and types.
     /// </summary>
     GATT_REQ_FIND_INFO = 4,
 
@@ -43,7 +43,7 @@ public enum GattCallbackStatusRequestResponse
     GATT_RSP_FIND_INFO = 5,
 
     /// <summary>
-    ///     Find By Type Value request to discover attributes by type and value.
+    ///     Find By Type Value spec to discover attributes by type and value.
     /// </summary>
     GATT_REQ_FIND_TYPE_VALUE = 6,
 
@@ -53,7 +53,7 @@ public enum GattCallbackStatusRequestResponse
     GATT_RSP_FIND_TYPE_VALUE = 7,
 
     /// <summary>
-    ///     Read By Type request to read attribute values by their type.
+    ///     Read By Type spec to read attribute values by their type.
     /// </summary>
     GATT_REQ_READ_BY_TYPE = 8,
 
@@ -63,7 +63,7 @@ public enum GattCallbackStatusRequestResponse
     GATT_RSP_READ_BY_TYPE = 9,
 
     /// <summary>
-    ///     Read request to retrieve an attribute value.
+    ///     Read spec to retrieve an attribute value.
     /// </summary>
     GATT_REQ_READ = 10,
 
@@ -73,7 +73,7 @@ public enum GattCallbackStatusRequestResponse
     GATT_RSP_READ = 11,
 
     /// <summary>
-    ///     Read Blob request to read part of a long attribute value.
+    ///     Read Blob spec to read part of a long attribute value.
     /// </summary>
     GATT_REQ_READ_BLOB = 12,
 
@@ -83,7 +83,7 @@ public enum GattCallbackStatusRequestResponse
     GATT_RSP_READ_BLOB = 13,
 
     /// <summary>
-    ///     Read Multiple request to read multiple attribute values in one operation.
+    ///     Read Multiple spec to read multiple attribute values in one operation.
     /// </summary>
     GATT_REQ_READ_MULTI = 14,
 
@@ -93,7 +93,7 @@ public enum GattCallbackStatusRequestResponse
     GATT_RSP_READ_MULTI = 15,
 
     /// <summary>
-    ///     Read By Group Type request to read attributes grouped by type.
+    ///     Read By Group Type spec to read attributes grouped by type.
     /// </summary>
     GATT_REQ_READ_BY_GRP_TYPE = 16,
 
@@ -103,7 +103,7 @@ public enum GattCallbackStatusRequestResponse
     GATT_RSP_READ_BY_GRP_TYPE = 17,
 
     /// <summary>
-    ///     Write request to modify an attribute value.
+    ///     Write spec to modify an attribute value.
     /// </summary>
     GATT_REQ_WRITE = 18,
 
@@ -118,7 +118,7 @@ public enum GattCallbackStatusRequestResponse
     GATT_CMD_WRITE = 82,
 
     /// <summary>
-    ///     Prepare Write request to queue a write operation.
+    ///     Prepare Write spec to queue a write operation.
     /// </summary>
     GATT_REQ_PREPARE_WRITE = 22,
 
@@ -128,7 +128,7 @@ public enum GattCallbackStatusRequestResponse
     GATT_RSP_PREPARE_WRITE = 23,
 
     /// <summary>
-    ///     Execute Write request to commit or cancel queued write operations.
+    ///     Execute Write spec to commit or cancel queued write operations.
     /// </summary>
     GATT_REQ_EXEC_WRITE = 24,
 

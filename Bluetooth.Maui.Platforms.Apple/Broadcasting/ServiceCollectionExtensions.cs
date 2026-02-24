@@ -22,7 +22,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBluetoothLocalCharacteristicFactory, AppleBluetoothLocalCharacteristicFactory>();
         services.AddSingleton<IBluetoothLocalServiceFactory, AppleBluetoothLocalServiceFactory>();
         services.AddSingleton<IBluetoothLocalDescriptorFactory, AppleBluetoothLocalDescriptorFactory>();
-        services.AddSingleton<IBluetoothConnectedDeviceFactory, AppleBluetoothConnectedClientDeviceFactory>();
+        services.AddSingleton<IBluetoothConnectedDeviceFactory, AppleBluetoothConnectedDeviceFactory>();
 
         services.AddSingleton<CBPeripheralManagerDelegate, CbPeripheralManagerWrapper>();
         services.Configure<CbPeripheralManagerOptions>(options => {

@@ -21,6 +21,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBluetoothLocalCharacteristicFactory, AndroidBluetoothLocalCharacteristicFactory>();
         services.AddSingleton<IBluetoothLocalServiceFactory, AndroidBluetoothLocalServiceFactory>();
         services.AddSingleton<IBluetoothLocalDescriptorFactory, AndroidBluetoothLocalDescriptorFactory>();
-        services.AddSingleton<IBluetoothConnectedDeviceFactory, AndroidBluetoothConnectedClientDeviceFactory>();
+        services.AddSingleton<IBluetoothConnectedDeviceFactory, AndroidBluetoothConnectedDeviceFactory>();
     }
 }

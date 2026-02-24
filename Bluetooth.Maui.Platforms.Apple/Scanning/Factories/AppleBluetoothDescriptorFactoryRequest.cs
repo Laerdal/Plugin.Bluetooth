@@ -1,12 +1,12 @@
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 
 /// <inheritdoc />
-public record AppleBluetoothDescriptorFactoryRequest : IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest
+public record AppleBluetoothRemoteDescriptorFactorySpec : IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothDescriptorFactoryRequest" /> class with the specified Core Bluetooth descriptor.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteDescriptorFactorySpec" /> class with the specified Core Bluetooth descriptor.
     /// </summary>
-    public AppleBluetoothDescriptorFactoryRequest(CBDescriptor cbDescriptor) : base(cbDescriptor?.UUID.ToGuid() ?? throw new ArgumentNullException(nameof(cbDescriptor)))
+    public AppleBluetoothRemoteDescriptorFactorySpec(CBDescriptor cbDescriptor) : base(cbDescriptor?.UUID.ToGuid() ?? throw new ArgumentNullException(nameof(cbDescriptor)))
     {
         CbDescriptor = cbDescriptor;
     }

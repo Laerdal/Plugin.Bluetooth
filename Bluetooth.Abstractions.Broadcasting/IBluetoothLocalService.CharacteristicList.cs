@@ -9,11 +9,11 @@ public partial interface IBluetoothLocalService
     /// <summary>
     ///     Adds a GATT characteristic to be hosted by the broadcaster.
     /// </summary>
-    /// <param name="request">The request containing the characteristic details.</param>
+    /// <param name="spec">The spec containing the characteristic details.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>The added characteristic.</returns>
-    ValueTask<IBluetoothLocalCharacteristic> AddCharacteristicAsync(IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec request,
+    ValueTask<IBluetoothLocalCharacteristic> AddCharacteristicAsync(IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default);
 

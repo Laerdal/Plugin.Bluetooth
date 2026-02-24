@@ -11,7 +11,7 @@ public class AndroidBluetoothLocalServiceFactory : BaseBluetoothLocalServiceFact
     }
 
     /// <inheritdoc />
-    public override IBluetoothLocalService CreateService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec)
+    public override IBluetoothLocalService Create(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec)
     {
         throw new NotImplementedException();
     }

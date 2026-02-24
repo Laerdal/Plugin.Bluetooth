@@ -20,6 +20,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBluetoothLocalCharacteristicFactory, DotNetCoreBluetoothLocalCharacteristicFactory>();
         services.AddSingleton<IBluetoothLocalServiceFactory, DotNetCoreBluetoothLocalServiceFactory>();
         services.AddSingleton<IBluetoothLocalDescriptorFactory, DotNetCoreBluetoothLocalDescriptorFactory>();
-        services.AddSingleton<IBluetoothConnectedDeviceFactory, DotNetCoreBluetoothConnectedClientDeviceFactory>();
+        services.AddSingleton<IBluetoothConnectedDeviceFactory, DotNetCoreBluetoothConnectedDeviceFactory>();
     }
 }

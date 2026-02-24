@@ -190,12 +190,12 @@ public abstract partial class BaseBluetoothRemoteService
     /// </summary>
     /// <typeparam name="TNativeCharacteristicType">The platform-specific characteristic type.</typeparam>
     /// <param name="characteristics">The list of native characteristics discovered.</param>
-    /// <param name="fromInputTypeToOutputTypeConversion">Function to convert from native characteristic type to IBluetoothCharacteristic.</param>
     /// <param name="areRepresentingTheSameObject">Function to determine if a native characteristic and IBluetoothCharacteristic represent the same object.</param>
+    /// <param name="fromInputTypeToOutputTypeConversion">Function to convert from native characteristic type to IBluetoothCharacteristic.</param>
     /// <exception cref="UnexpectedCharacteristicExplorationException">Thrown when the task completion source is not in the expected state.</exception>
     protected void OnCharacteristicsExplorationSucceeded<TNativeCharacteristicType>(IList<TNativeCharacteristicType> characteristics,
-        Func<TNativeCharacteristicType, IBluetoothRemoteCharacteristic> fromInputTypeToOutputTypeConversion,
-        Func<TNativeCharacteristicType, IBluetoothRemoteCharacteristic, bool> areRepresentingTheSameObject)
+        Func<TNativeCharacteristicType, IBluetoothRemoteCharacteristic, bool> areRepresentingTheSameObject,
+        Func<TNativeCharacteristicType, IBluetoothRemoteCharacteristic> fromInputTypeToOutputTypeConversion)
     {
         Characteristics.UpdateFrom(characteristics, areRepresentingTheSameObject, fromInputTypeToOutputTypeConversion);
 

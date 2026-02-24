@@ -14,7 +14,7 @@ public class DotNetCoreBluetoothLocalDescriptorFactory : BaseBluetoothLocalDescr
 
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    public override IBluetoothLocalDescriptor CreateDescriptor(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
+    public override IBluetoothLocalDescriptor Create(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

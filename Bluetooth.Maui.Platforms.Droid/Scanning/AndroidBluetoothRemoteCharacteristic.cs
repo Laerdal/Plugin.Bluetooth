@@ -24,18 +24,18 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     ///     Initializes a new instance of the <see cref="AndroidBluetoothRemoteCharacteristic" /> class.
     /// </summary>
     /// <param name="remoteService">The Bluetooth service to which this characteristic belongs.</param>
-    /// <param name="request">The factory request containing characteristic information.</param>
+    /// <param name="spec">The factory spec containing characteristic information.</param>
     /// <param name="descriptorFactory">The factory for creating descriptors.</param>
-    public AndroidBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothCharacteristicFactory.BluetoothCharacteristicFactoryRequest request, IBluetoothDescriptorFactory descriptorFactory) :
-        base(remoteService, request, descriptorFactory)
+    public AndroidBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec, IBluetoothRemoteDescriptorFactory descriptorFactory) :
+        base(remoteService, spec, descriptorFactory)
     {
-        ArgumentNullException.ThrowIfNull(request);
-        if (request is not AndroidBluetoothCharacteristicFactoryRequest androidRequest)
+        ArgumentNullException.ThrowIfNull(spec);
+        if (spec is not AndroidBluetoothRemoteCharacteristicFactorySpec nativeSpec)
         {
-            throw new ArgumentException($"Expected request of type {typeof(AndroidBluetoothCharacteristicFactoryRequest)}, but got {request.GetType()}");
+            throw new ArgumentException($"Expected spec of type {typeof(AndroidBluetoothRemoteCharacteristicFactorySpec)}, but got {spec.GetType()}");
         }
 
-        NativeCharacteristic = androidRequest.NativeCharacteristic;
+        NativeCharacteristic = nativeSpec.NativeCharacteristic;
     }
 
     /// <summary>
@@ -85,15 +85,10 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
         // Get retry options from device connection options, or use default
-        var retryOptions = AndroidBluetoothRemoteService.AndroidBluetoothRemoteDevice.ConnectionOptions?.Android?.GattWriteRetry
-                           ?? RetryOptions.Default;
+        var retryOptions = AndroidBluetoothRemoteService.AndroidBluetoothRemoteDevice.ConnectionOptions?.Android?.GattWriteRetry ?? RetryOptions.Default;
 
         // Call with configurable retry
-        await RetryTools.RunWithRetriesAsync(
-            () => BluetoothGattCharacteristicWrite(value),
-            retryOptions,
-            CancellationToken.None
-        ).ConfigureAwait(false);
+        await RetryTools.RunWithRetriesAsync(() => BluetoothGattCharacteristicWrite(value), retryOptions, CancellationToken.None).ConfigureAwait(false);
     }
 
     private void BluetoothGattCharacteristicWrite(ReadOnlyMemory<byte> value)
@@ -317,16 +312,8 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
         {
             // On Android, descriptors are discovered along with characteristics
             // The NativeCharacteristic.Descriptors property should already contain all descriptors
-            var descriptors = NativeCharacteristic.Descriptors;
-            if (descriptors == null || descriptors.Count == 0)
-            {
-                // No descriptors for this characteristic
-                OnDescriptorsExplorationSucceeded(System.Array.Empty<BluetoothGattDescriptor>(), ConvertNativeDescriptorToDescriptor, AreRepresentingTheSameObject);
-            }
-            else
-            {
-                OnDescriptorsExplorationSucceeded(descriptors, ConvertNativeDescriptorToDescriptor, AreRepresentingTheSameObject);
-            }
+            var descriptors = NativeCharacteristic.Descriptors ?? new List<BluetoothGattDescriptor>();
+            OnDescriptorsExplorationSucceeded(descriptors, AreRepresentingTheSameObject, FromInputTypeToOutputTypeConversion);
         }
         catch (Exception ex)
         {
@@ -334,12 +321,12 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
         }
 
         return ValueTask.CompletedTask;
-    }
 
-    private IBluetoothRemoteDescriptor ConvertNativeDescriptorToDescriptor(BluetoothGattDescriptor nativeDescriptor)
-    {
-        var descriptorRequest = new AndroidBluetoothDescriptorFactoryRequest(nativeDescriptor);
-        return DescriptorFactory.CreateDescriptor(this, descriptorRequest);
+        IBluetoothRemoteDescriptor FromInputTypeToOutputTypeConversion(BluetoothGattDescriptor nativeDescriptor)
+        {
+            var spec = new AndroidBluetoothRemoteDescriptorFactorySpec(nativeDescriptor);
+            return DescriptorFactory.Create(this, spec);
+        }
     }
 
     private static bool AreRepresentingTheSameObject(BluetoothGattDescriptor native, IBluetoothRemoteDescriptor shared)

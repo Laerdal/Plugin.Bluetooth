@@ -6,8 +6,8 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 public class AppleBluetoothDescriptorFactory : BaseBluetoothDescriptorFactory
 {
     /// <inheritdoc />
-    public override IBluetoothRemoteDescriptor CreateDescriptor(IBluetoothRemoteCharacteristic remoteCharacteristic, IBluetoothDescriptorFactory.BluetoothDescriptorFactoryRequest request)
+    public override IBluetoothRemoteDescriptor Create(IBluetoothRemoteCharacteristic remoteCharacteristic, IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec spec)
     {
-        return new AppleBluetoothRemoteDescriptor(remoteCharacteristic, request);
+        return new AppleBluetoothRemoteDescriptor(remoteCharacteristic, spec);
     }
 }

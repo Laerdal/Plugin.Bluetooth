@@ -12,28 +12,28 @@ public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, I
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteService" /> class.
     /// </summary>
     /// <param name="device">The Bluetooth device associated with this service.</param>
-    /// <param name="request">The factory request containing service information.</param>
+    /// <param name="spec">The factory spec containing service information.</param>
     /// <param name="characteristicFactory">The factory for creating Bluetooth characteristics.</param>
     /// <param name="logger">The logger instance to use for logging (optional).</param>
     protected BaseBluetoothRemoteService(IBluetoothRemoteDevice device,
-        IBluetoothServiceFactory.BluetoothServiceFactoryRequest request,
-        IBluetoothCharacteristicFactory characteristicFactory,
+        IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec,
+        IBluetoothRemoteCharacteristicFactory characteristicFactory,
         ILogger<IBluetoothRemoteService>? logger = null)
     {
         ArgumentNullException.ThrowIfNull(device);
         ArgumentNullException.ThrowIfNull(characteristicFactory);
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(spec);
 
         _logger = logger ?? NullLogger<IBluetoothRemoteService>.Instance;
         Device = device;
         CharacteristicFactory = characteristicFactory;
-        Id = request.ServiceId;
+        Id = spec.ServiceId;
     }
 
     /// <summary>
     ///     The factory responsible for creating characteristics associated with this service.
     /// </summary>
-    protected IBluetoothCharacteristicFactory CharacteristicFactory { get; }
+    protected IBluetoothRemoteCharacteristicFactory CharacteristicFactory { get; }
 
     /// <inheritdoc />
     public IBluetoothRemoteDevice Device { get; }
