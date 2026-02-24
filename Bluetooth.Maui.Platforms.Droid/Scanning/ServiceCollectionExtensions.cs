@@ -22,5 +22,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBluetoothServiceFactory, AndroidBluetoothServiceFactory>();
         services.AddSingleton<IBluetoothCharacteristicFactory, AndroidBluetoothCharacteristicFactory>();
         services.AddSingleton<IBluetoothDescriptorFactory, AndroidBluetoothDescriptorFactory>();
+        services.AddSingleton<IBluetoothRemoteL2CapChannelFactory, AndroidBluetoothRemoteL2CapChannelFactory>();
     }
 }

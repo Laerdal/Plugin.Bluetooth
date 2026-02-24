@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBluetoothServiceFactory, AppleBluetoothServiceFactory>();
         services.AddSingleton<IBluetoothDescriptorFactory, AppleBluetoothDescriptorFactory>();
         services.AddSingleton<IBluetoothDeviceFactory, AppleBluetoothDeviceFactory>();
+        services.AddSingleton<IBluetoothRemoteL2CapChannelFactory, AppleBluetoothRemoteL2CapChannelFactory>();
 
         services.AddSingleton<CbCentralManagerWrapper>();
         services.Configure<CBCentralInitOptions>(options => {
