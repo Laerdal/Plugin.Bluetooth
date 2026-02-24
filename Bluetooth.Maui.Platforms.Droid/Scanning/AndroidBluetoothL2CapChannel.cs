@@ -154,30 +154,37 @@ public class AndroidBluetoothL2CapChannel : BaseBluetoothL2CapChannel, IAsyncDis
     }
 
     /// <inheritdoc />
-    protected override ValueTask NativeCloseAsync()
+    protected override async ValueTask NativeCloseAsync()
     {
         Logger?.LogL2CapChannelClosing(Psm);
 
-        _readLoopCts?.Cancel();
+        if (_readLoopCts != null && _readLoopCts.IsCancellationRequested == false)
+        {
+            await _readLoopCts.CancelAsync().ConfigureAwait(false);
+        }
 
         try
         {
-            _inputStream?.Dispose();
-            _outputStream?.Dispose();
+            if (_inputStream != null)
+            {
+                await _inputStream.DisposeAsync().ConfigureAwait(false);
+            }
+            if(_outputStream != null)
+            {
+                await _outputStream.DisposeAsync().ConfigureAwait(false);
+            }
             _socket?.Close();
             _socket?.Dispose();
         }
         catch (Exception ex)
         {
-            Logger?.LogError(ex, "Error closing L2CAP channel");
+            Logger?.LogL2CapChannelCloseError(Psm, ex);
         }
         finally
         {
             IsOpen = false;
             Logger?.LogL2CapChannelClosed(Psm);
         }
-
-        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />

@@ -346,6 +346,15 @@ internal static partial class AndroidBluetoothLoggerMessages
         int psm);
 
     [LoggerMessage(
+        EventId = 7011,
+        Level = LogLevel.Error,
+        Message = "Error closing L2CAP channel for PSM {Psm}")]
+    public static partial void LogL2CapChannelCloseError(
+        this ILogger logger,
+        int psm,
+        Exception exception);
+
+    [LoggerMessage(
         EventId = 7004,
         Level = LogLevel.Information,
         Message = "L2CAP channel closed successfully for PSM {Psm}")]

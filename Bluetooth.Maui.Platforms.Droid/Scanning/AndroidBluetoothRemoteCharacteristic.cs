@@ -266,11 +266,13 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
             throw new InvalidOperationException("Failed to begin reliable write");
         }
 
+        // BeginReliableWrite is synchronous - signal success immediately
+        OnBeginReliableWriteSucceeded();
         return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />
-    protected override ValueTask NativeExecuteReliableWriteAsync()
+    protected override async ValueTask NativeExecuteReliableWriteAsync()
     {
         var success = BluetoothGattProxy.BluetoothGatt.ExecuteReliableWrite();
         if (!success)
@@ -278,13 +280,29 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
             throw new InvalidOperationException("Failed to execute reliable write");
         }
 
-        return ValueTask.CompletedTask;
+        // ExecuteReliableWrite is asynchronous - wait for the device callback
+        var device = AndroidBluetoothRemoteService.AndroidBluetoothRemoteDevice;
+
+        // Use a reasonable timeout (e.g., 30 seconds) for the native callback
+        var timeout = TimeSpan.FromSeconds(30);
+        var waitSucceeded = await device.WaitForReliableWriteCompletedAsync(timeout).ConfigureAwait(false);
+
+        if (!waitSucceeded)
+        {
+            throw new TimeoutException("Reliable write execute operation timed out waiting for Android callback");
+        }
+
+        // Signal success to complete the base class TCS
+        OnExecuteReliableWriteSucceeded();
     }
 
     /// <inheritdoc />
     protected override ValueTask NativeAbortReliableWriteAsync()
     {
         BluetoothGattProxy.BluetoothGatt.AbortReliableWrite();
+
+        // AbortReliableWrite is synchronous and void - it always succeeds
+        OnAbortReliableWriteSucceeded();
         return ValueTask.CompletedTask;
     }
 

@@ -93,7 +93,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        Logger?.LogScanStarting(scanningOptions.ScanMode, scanningOptions.CallbackType);
+        Logger?.LogScanStarting(scanningOptions?.ScanMode, scanningOptions?.CallbackType);
 
         // Start watcher (status change callback will call OnStartSucceeded)
         try

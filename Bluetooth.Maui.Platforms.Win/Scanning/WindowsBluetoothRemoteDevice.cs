@@ -352,7 +352,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <param name="newConnectionStatus">The new connection status.</param>
     public void OnConnectionStatusChanged(BluetoothConnectionStatus newConnectionStatus)
     {
-        Logger?.LogConnectionStatusChanged(Id, newConnectionStatus.ToString());
+        Logger?.LogConnectionStatusChanged(Id, newConnectionStatus);
         BluetoothConnectionStatus = newConnectionStatus;
         NativeRefreshIsConnected();
 

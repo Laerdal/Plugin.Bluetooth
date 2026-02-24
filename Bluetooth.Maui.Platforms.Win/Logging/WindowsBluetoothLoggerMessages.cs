@@ -20,8 +20,8 @@ internal static partial class WindowsBluetoothLoggerMessages
         Message = "Starting BLE scan with mode: {ScanMode}, callback type: {CallbackType}")]
     public static partial void LogScanStarting(
         this ILogger logger,
-        BluetoothScanMode scanMode,
-        BluetoothScanCallbackType callbackType);
+        BluetoothScanMode? scanMode,
+        BluetoothScanCallbackType? callbackType);
 
     [LoggerMessage(
         EventId = 1001,
@@ -160,7 +160,7 @@ internal static partial class WindowsBluetoothLoggerMessages
     public static partial void LogConnectionStatusChanged(
         this ILogger logger,
         string deviceAddress,
-        string status);
+        BluetoothConnectionStatus status);
 
     [LoggerMessage(
         EventId = 2008,

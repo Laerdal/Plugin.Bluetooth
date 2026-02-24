@@ -242,7 +242,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     #region L2CAP
 
     /// <inheritdoc />
-    protected override ValueTask NativeOpenL2CapChannelAsync(int psm)
+    protected override async ValueTask NativeOpenL2CapChannelAsync(int psm)
     {
         if (!OperatingSystem.IsAndroidVersionAtLeast(29))
         {
@@ -268,10 +268,10 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             catch (Exception e)
             {
                 OnOpenL2CapChannelFailed(e);
+                await channel.CloseAsync().ConfigureAwait(false);
+                await channel.DisposeAsync().ConfigureAwait(false);
             }
         });
-
-        return ValueTask.CompletedTask;
     }
 
     #endregion
@@ -662,8 +662,8 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// </summary>
     /// <param name="timeout">The timeout for the operation.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A task that completes when the reliable write operation finishes.</returns>
-    public Task WaitForReliableWriteCompletedAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
+    /// <returns>A task that returns true if the operation completed within the timeout, false otherwise.</returns>
+    public Task<bool> WaitForReliableWriteCompletedAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
     {
         return Task.Run(() => ReliableWriteCompleted.WaitOne(timeout), cancellationToken);
     }

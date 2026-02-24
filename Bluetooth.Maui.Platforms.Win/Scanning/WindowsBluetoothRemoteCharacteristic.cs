@@ -56,7 +56,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <param name="argsTimestamp">The timestamp when the value changed.</param>
     public void OnValueChanged(byte[] value, DateTimeOffset argsTimestamp)
     {
-        Logger?.LogNotificationReceived(Id, RemoteService.Device.Id, value.Length);
+        Logger?.LogNotificationReceived(Id, RemoteService.Device.Id, value?.Length ?? 0);
         OnReadValueSucceeded(value);
     }
 
