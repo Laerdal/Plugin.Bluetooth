@@ -40,7 +40,7 @@ public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChanne
     }
 
     /// <inheritdoc />
-    protected override async ValueTask NativeOpenAsync()
+    protected async override ValueTask NativeOpenAsync()
     {
         // API 29+ required for L2CAP channels
         if (!OperatingSystem.IsAndroidVersionAtLeast(29))
@@ -87,7 +87,7 @@ public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChanne
     }
 
     /// <inheritdoc />
-    protected override async ValueTask<int> NativeReadAsync(Memory<byte> buffer)
+    protected async override ValueTask<int> NativeReadAsync(Memory<byte> buffer)
     {
         if (_inputStream == null || !IsOpen)
         {
@@ -103,7 +103,7 @@ public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChanne
     }
 
     /// <inheritdoc />
-    protected override async ValueTask NativeWriteAsync(ReadOnlyMemory<byte> data)
+    protected async override ValueTask NativeWriteAsync(ReadOnlyMemory<byte> data)
     {
         if (_outputStream == null || !IsOpen)
         {
@@ -154,7 +154,7 @@ public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChanne
     }
 
     /// <inheritdoc />
-    protected override async ValueTask NativeCloseAsync()
+    protected async override ValueTask NativeCloseAsync()
     {
         Logger?.LogL2CapChannelClosing(Psm);
 

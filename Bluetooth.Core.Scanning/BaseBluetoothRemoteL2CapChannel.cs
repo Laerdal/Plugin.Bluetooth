@@ -198,7 +198,7 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
     ///     Performs asynchronous cleanup of resources used by this channel.
     /// </summary>
     /// <returns>A task representing the asynchronous dispose operation.</returns>
-    protected virtual async ValueTask DisposeAsyncCore()
+    protected async virtual ValueTask DisposeAsyncCore()
     {
         if (IsOpen)
         {

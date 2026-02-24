@@ -261,7 +261,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     ///         <item>Older versions: No special permissions required for advertising</item>
     ///     </list>
     /// </remarks>
-    protected override async ValueTask<bool> NativeHasBroadcasterPermissionsAsync()
+    protected async override ValueTask<bool> NativeHasBroadcasterPermissionsAsync()
     {
         try
         {
@@ -289,7 +289,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     ///         <item>Older versions: No special permissions required for advertising</item>
     ///     </list>
     /// </remarks>
-    protected override async ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken)
+    protected async override ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken)
     {
         await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
 

@@ -348,7 +348,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     ///         <item>Older versions: Requires COARSE_LOCATION permission</item>
     ///     </list>
     /// </remarks>
-    protected override async ValueTask<bool> NativeHasScannerPermissionsAsync()
+    protected async override ValueTask<bool> NativeHasScannerPermissionsAsync()
     {
         try
         {
@@ -386,7 +386,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     ///     </list>
     ///     The <paramref name="requireBackgroundLocation"/> parameter only applies to API 29-30.
     /// </remarks>
-    protected override async ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken)
+    protected async override ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken)
     {
         await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
 

@@ -88,7 +88,7 @@ public static class RetryTools
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="action" /> or <paramref name="options" /> is null.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled via <paramref name="cancellationToken"/>.</exception>
     /// <exception cref="AggregateException">Thrown when all retry attempts fail, containing all exceptions encountered.</exception>
-    public static async Task RunWithRetriesAsync(
+    public async static Task RunWithRetriesAsync(
         Action action,
         RetryOptions options,
         CancellationToken cancellationToken = default)
@@ -147,7 +147,7 @@ public static class RetryTools
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="action" /> or <paramref name="options" /> is null.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled via <paramref name="cancellationToken"/>.</exception>
     /// <exception cref="AggregateException">Thrown when all retry attempts fail, containing all exceptions encountered.</exception>
-    public static async Task RunWithRetriesAsync(
+    public async static Task RunWithRetriesAsync(
         Func<Task> action,
         RetryOptions options,
         CancellationToken cancellationToken = default)

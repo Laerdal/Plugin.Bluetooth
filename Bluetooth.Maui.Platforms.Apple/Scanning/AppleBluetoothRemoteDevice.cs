@@ -409,7 +409,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     #region Disposal
 
     /// <inheritdoc />
-    public async new ValueTask DisposeAsync()
+    public new async ValueTask DisposeAsync()
     {
         // Dispose AutoResetEvent to prevent memory leak
         ReadyToSendWriteWithoutResponse?.Dispose();

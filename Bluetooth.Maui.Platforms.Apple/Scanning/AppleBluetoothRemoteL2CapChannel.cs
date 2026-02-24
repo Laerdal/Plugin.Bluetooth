@@ -78,7 +78,7 @@ public class AppleBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel,
     }
 
     /// <inheritdoc />
-    protected override async ValueTask<int> NativeReadAsync(Memory<byte> buffer)
+    protected async override ValueTask<int> NativeReadAsync(Memory<byte> buffer)
     {
         if (_inputStream == null || !IsOpen)
         {
@@ -105,7 +105,7 @@ public class AppleBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel,
     }
 
     /// <inheritdoc />
-    protected override async ValueTask NativeWriteAsync(ReadOnlyMemory<byte> data)
+    protected async override ValueTask NativeWriteAsync(ReadOnlyMemory<byte> data)
     {
         if (_outputStream == null || !IsOpen)
         {

@@ -267,7 +267,7 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     }
 
     /// <inheritdoc />
-    protected override async ValueTask NativeExecuteReliableWriteAsync()
+    protected async override ValueTask NativeExecuteReliableWriteAsync()
     {
         var success = BluetoothGattProxy.BluetoothGatt.ExecuteReliableWrite();
         if (!success)

@@ -199,7 +199,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     ///         <item>Older versions: Bluetooth permissions automatically granted</item>
     ///     </list>
     /// </remarks>
-    protected override async ValueTask<bool> NativeHasScannerPermissionsAsync()
+    protected async override ValueTask<bool> NativeHasScannerPermissionsAsync()
     {
         if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(10, 15))
         {
@@ -220,7 +220,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     ///     </list>
     ///     The <paramref name="requireBackgroundLocation"/> parameter is ignored on iOS (background permissions handled by Info.plist).
     /// </remarks>
-    protected override async ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken)
+    protected async override ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken)
     {
         if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(10, 15))
         {

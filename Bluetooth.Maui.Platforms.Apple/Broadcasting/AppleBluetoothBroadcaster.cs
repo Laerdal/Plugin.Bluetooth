@@ -256,7 +256,7 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     ///         <item>Older versions: Bluetooth permissions automatically granted</item>
     ///     </list>
     /// </remarks>
-    protected override async ValueTask<bool> NativeHasBroadcasterPermissionsAsync()
+    protected async override ValueTask<bool> NativeHasBroadcasterPermissionsAsync()
     {
         if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(10, 15))
         {
@@ -279,7 +279,7 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     ///         <item>Older versions: No permission spec needed</item>
     ///     </list>
     /// </remarks>
-    protected override async ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken)
+    protected async override ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken)
     {
         if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsMacCatalystVersionAtLeast(10, 15))
         {

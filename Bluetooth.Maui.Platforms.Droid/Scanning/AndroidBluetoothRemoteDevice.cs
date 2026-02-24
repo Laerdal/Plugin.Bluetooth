@@ -70,7 +70,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     public ConnectionOptions? ConnectionOptions => _connectionOptions;
 
     /// <inheritdoc />
-    public async new ValueTask DisposeAsync()
+    public new async ValueTask DisposeAsync()
     {
         if (_bluetoothGattProxy != null)
         {
@@ -88,7 +88,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
 
         return;
 
-        static async ValueTask CastAndDispose(IDisposable resource)
+        async static ValueTask CastAndDispose(IDisposable resource)
         {
             if (resource is IAsyncDisposable resourceAsyncDisposable)
             {
@@ -247,7 +247,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     #region L2CAP
 
     /// <inheritdoc />
-    protected override async ValueTask NativeOpenL2CapChannelAsync(int psm)
+    protected async override ValueTask NativeOpenL2CapChannelAsync(int psm)
     {
         if (!OperatingSystem.IsAndroidVersionAtLeast(29))
         {
@@ -300,7 +300,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
 
     /// <inheritdoc />
     /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#connect()">Android BluetoothGatt.connect()</seealso>
-    protected override async ValueTask NativeConnectAsync(
+    protected async override ValueTask NativeConnectAsync(
         ConnectionOptions connectionOptions,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
@@ -422,7 +422,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
 
     /// <inheritdoc />
     /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#disconnect()">Android BluetoothGatt.disconnect()</seealso>
-    protected override async ValueTask NativeDisconnectAsync(
+    protected async override ValueTask NativeDisconnectAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
@@ -500,7 +500,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
 
     /// <inheritdoc />
     /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#discoverServices()">Android BluetoothGatt.discoverServices()</seealso>
-    protected override async ValueTask NativeServicesExplorationAsync(
+    protected async override ValueTask NativeServicesExplorationAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
