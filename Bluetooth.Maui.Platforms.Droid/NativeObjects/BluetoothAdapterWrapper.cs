@@ -14,7 +14,7 @@ public class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAdapterWrap
     private readonly IBluetoothManagerWrapper _bluetoothManagerWrapper;
 
     private readonly ITicker _ticker;
-    private readonly object _lock = new object();
+    private readonly Lock _lock = new Lock();
     private Android.Bluetooth.BluetoothAdapter? _bluetoothAdapter;
 
     private IDisposable? _refreshSubscription;

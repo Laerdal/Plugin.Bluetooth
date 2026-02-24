@@ -9,7 +9,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     private BluetoothLEAdvertisementWatcher? _watcher;
     private readonly IBluetoothLeAdvertisementWatcherProxyDelegate _delegate;
     private readonly ITicker _ticker;
-    private readonly object _lock = new object();
+    private readonly Lock _lock = new Lock();
     private IDisposable? _refreshSubscription;
 
     /// <summary>

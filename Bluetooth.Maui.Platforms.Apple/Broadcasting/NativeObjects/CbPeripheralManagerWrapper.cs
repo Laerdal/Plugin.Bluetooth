@@ -10,7 +10,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
     private readonly IDispatchQueueProvider _dispatchQueueProvider;
     private readonly CbPeripheralManagerOptions _options;
     private readonly ITicker _ticker;
-    private readonly object _lock = new object();
+    private readonly Lock _lock = new Lock();
     private CBPeripheralManager? _cbPeripheralManager;
     private IDisposable? _refreshSubscription;
 

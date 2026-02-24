@@ -8,7 +8,7 @@ namespace Bluetooth.Maui.Platforms.Droid.NativeObjects;
 /// </summary>
 public class BluetoothManagerWrapper : IBluetoothManagerWrapper, IDisposable
 {
-    private readonly object _lock = new object();
+    private readonly Lock _lock = new Lock();
     private BluetoothManager? _bluetoothManager;
 
     /// <summary>

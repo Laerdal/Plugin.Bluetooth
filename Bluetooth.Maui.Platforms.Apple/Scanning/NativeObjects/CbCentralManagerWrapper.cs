@@ -13,7 +13,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
     private readonly CBCentralInitOptions _options;
 
     private readonly ITicker _ticker;
-    private readonly object _lock = new object();
+    private readonly Lock _lock = new Lock();
     private CBCentralManager? _cbCentralManager;
 
     private IDisposable? _refreshSubscription;
