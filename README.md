@@ -15,12 +15,6 @@
 
 A cross-platform .NET MAUI Bluetooth Low Energy (BLE) library providing a clean, unified API for **Android**, **iOS/MacCatalyst**, and **Windows** platforms.
 
-## ✨ Recent Updates
-
-🎉 **Windows Platform Complete** - Full BLE scanning & GATT operations now available on Windows
-🔧 **API Simplified** - Exploration methods refactored for clarity and ease of use
-📦 **Modern DI** - Streamlined dependency injection with `AddBluetoothServices()`
-
 ## Features
 
 - 🔍 **BLE Scanning** - Discover nearby devices with customizable filtering
