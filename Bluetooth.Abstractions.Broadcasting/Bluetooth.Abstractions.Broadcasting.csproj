@@ -7,6 +7,17 @@
         <Project_Description>Bluetooth.Abstractions.Broadcasting for .NET</Project_Description>
     </PropertyGroup>
 
+    <!-- ==================== NOWARNINGS ==================== -->
+    <PropertyGroup>
+        <!-- CA1034 : Nested types should not be externally visible-->
+        <NoWarn>$(NoWarn);CA1034</NoWarn>
+        <!-- CA1032 : Implement standard exception constructors -->
+        <NoWarn>$(NoWarn);CA1032</NoWarn>
+        <!-- CS1591 : Missing documentation for publicly visible type or member -->
+        <!-- <NoWarn>$(NoWarn);CS1591</NoWarn> -->
+        <!-- CA1816 : Call GC.SuppressFinalize correctly -->
+        <NoWarn>$(NoWarn);CA1816</NoWarn>
+    </PropertyGroup>
 
     <!-- ==================== TARGET FRAMEWORKS ==================== -->
     <PropertyGroup>
