@@ -195,4 +195,67 @@ public static class RetryTools
                 exceptions);
         }
     }
+
+    /// <summary>
+    ///     Executes an asynchronous function with configurable retry logic, using the provided <see cref="RetryOptions"/>.
+    /// </summary>
+    /// <typeparam name="T">The return type of the function.</typeparam>
+    /// <param name="func">The asynchronous function to execute.</param>
+    /// <param name="options">The retry configuration options.</param>
+    /// <param name="cancellationToken">Token to cancel the retry operation.</param>
+    /// <returns>A task representing the asynchronous operation, with the result from the function.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="func" /> or <paramref name="options" /> is null.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled via <paramref name="cancellationToken"/>.</exception>
+    /// <exception cref="AggregateException">Thrown when all retry attempts fail, containing all exceptions encountered.</exception>
+    public async static Task<T> RunWithRetriesAsync<T>(
+        Func<Task<T>> func,
+        RetryOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(func);
+        ArgumentNullException.ThrowIfNull(options);
+
+        T? result = default;
+        var success = false;
+        var attempts = 0;
+        var exceptions = new List<Exception>();
+        var currentDelay = options.DelayBetweenRetries;
+
+        while (!success && attempts < options.MaxRetries)
+        {
+            attempts++;
+            try
+            {
+                result = await func().ConfigureAwait(false);
+                success = true;
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(e);
+
+                // Don't delay after the last attempt
+                if (attempts < options.MaxRetries)
+                {
+                    await Task.Delay(currentDelay, cancellationToken).ConfigureAwait(false);
+
+                    // Apply exponential backoff if enabled
+                    if (options.ExponentialBackoff)
+                    {
+                        currentDelay = TimeSpan.FromMilliseconds(currentDelay.TotalMilliseconds * 2);
+                    }
+                }
+            }
+        }
+
+        if (!success)
+        {
+            throw new AggregateException(
+                $"Operation failed after {attempts} attempts with retry configuration: " +
+                $"MaxRetries={options.MaxRetries}, BaseDelay={options.DelayBetweenRetries.TotalMilliseconds}ms, " +
+                $"ExponentialBackoff={options.ExponentialBackoff}",
+                exceptions);
+        }
+
+        return result!;
+    }
 }
