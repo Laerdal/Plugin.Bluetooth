@@ -77,9 +77,12 @@ public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChanne
             IsOpen = true;
             Logger?.LogL2CapChannelOpened(Psm, Mtu);
 
-            // Start background read loop for DataReceived events
-            _readLoopCts = new CancellationTokenSource();
-            _ = Task.Run(() => ReadLoopAsync(_readLoopCts.Token), _readLoopCts.Token);
+            // Start background read loop for DataReceived events (if enabled)
+            if (Options.EnableBackgroundReading)
+            {
+                _readLoopCts = new CancellationTokenSource();
+                _ = Task.Run(() => ReadLoopAsync(_readLoopCts.Token), _readLoopCts.Token);
+            }
         }
         catch (Exception ex)
         {
@@ -115,7 +118,12 @@ public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChanne
         Logger?.LogL2CapChannelWriting(Psm, data.Length);
 
         await _outputStream.WriteAsync(data, CancellationToken.None).ConfigureAwait(false);
-        await _outputStream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
+
+        // Conditionally flush based on options
+        if (Options.AutoFlushWrites)
+        {
+            await _outputStream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
+        }
 
         Logger?.LogL2CapChannelWritten(Psm);
     }

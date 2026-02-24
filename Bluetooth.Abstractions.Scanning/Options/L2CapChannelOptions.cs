@@ -171,4 +171,88 @@ public record L2CapChannelOptions
     ///     Default: <c>null</c> (uses MTU size)
     /// </remarks>
     public int? ReadBufferSize { get; init; }
+
+    /// <summary>
+    ///     Gets or sets whether to enable automatic background reading for DataReceived events.
+    /// </summary>
+    /// <remarks>
+    ///     When enabled, a background task continuously reads from the channel and raises
+    ///     <c>DataReceived</c> events when data arrives (push model).
+    ///     <para>
+    ///         When disabled, you must call <c>ReadAsync()</c> manually to receive data (pull model).
+    ///     </para>
+    ///     <para>
+    ///         <b>Enable if:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>You rely on the <c>DataReceived</c> event for notifications</item>
+    ///         <item>You want push-based notifications when data arrives</item>
+    ///         <item>Your application is event-driven</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>Disable if:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>You only use <c>ReadAsync()</c> (pull model)</item>
+    ///         <item>You want to reduce background task overhead</item>
+    ///         <item>You want explicit control over when reads occur</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>Platform Support:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>Android: Starts/stops background read loop</item>
+    ///         <item>iOS/macOS: Not applicable (NSStreamDelegate provides push automatically)</item>
+    ///         <item>Windows: Depends on implementation</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>Resource Impact:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>Enabled: One background task per channel consuming a thread pool thread</item>
+    ///         <item>Disabled: No background overhead, manual read calls only</item>
+    ///     </list>
+    ///     Default: <c>true</c> (enable push-based reading)
+    /// </remarks>
+    public bool EnableBackgroundReading { get; init; } = true;
+
+    /// <summary>
+    ///     Gets or sets whether to automatically flush the output stream after each write.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         <b>When enabled (true):</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>Data is sent immediately after each <c>WriteAsync()</c> call</item>
+    ///         <item>Lower latency - best for real-time/interactive applications</item>
+    ///         <item>Lower throughput - more protocol overhead per packet</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>When disabled (false):</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>Data may be buffered before transmission</item>
+    ///         <item>Higher throughput - can achieve 20-30% improvement for bulk transfers</item>
+    ///         <item>Higher latency - data may be delayed until buffer fills or stream closes</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>Platform Support:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>Android: Controls whether <c>FlushAsync()</c> is called after write</item>
+    ///         <item>iOS/macOS: NSStream handles flushing automatically (option ignored)</item>
+    ///         <item>Windows: Depends on implementation</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>Use Cases:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>Real-time control/telemetry: Keep enabled (true) for low latency</item>
+    ///         <item>File transfers/firmware updates: Disable (false) for maximum throughput</item>
+    ///         <item>Mixed workloads: Keep default (true) and batch writes manually if needed</item>
+    ///     </list>
+    ///     Default: <c>true</c> (auto-flush for lowest latency)
+    /// </remarks>
+    public bool AutoFlushWrites { get; init; } = true;
 }
