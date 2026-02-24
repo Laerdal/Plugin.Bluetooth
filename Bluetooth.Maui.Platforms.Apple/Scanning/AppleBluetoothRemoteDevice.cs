@@ -11,18 +11,23 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 /// <inheritdoc cref="BaseBluetoothRemoteDevice" />
 public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeripheralWrapper.ICbPeripheralDelegate, CbCentralManagerWrapper.ICbPeripheralDelegate
 {
+    private readonly IBluetoothRemoteL2CapChannelFactory _l2CapChannelFactory;
+
     /// <inheritdoc />
     public AppleBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request, IBluetoothServiceFactory serviceFactory,
+        IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) :
         base(scanner, request, serviceFactory, rssiToSignalStrengthConverter)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(l2CapChannelFactory);
         if (request is not AppleBluetoothDeviceFactoryRequest appleRequest)
         {
             throw new ArgumentException($"Expected request of type {typeof(AppleBluetoothDeviceFactoryRequest)}, but got {request.GetType()}");
         }
 
         CbPeripheralWrapper = new CbPeripheralWrapper(this, appleRequest.CbPeripheral);
+        _l2CapChannelFactory = l2CapChannelFactory;
     }
 
     /// <summary>
@@ -87,7 +92,11 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
                 throw new IOException("L2CAP channel is null");
             }
 
-            var wrappedChannel = new AppleBluetoothL2CapChannel(this, channel, Logger);
+            // Create channel using factory
+            var psm = (int)channel.Psm;
+            var request = new AppleBluetoothRemoteL2CapChannelFactoryRequest(psm, channel);
+            var wrappedChannel = _l2CapChannelFactory.CreateL2CapChannel(this, request);
+
             OnL2CapChannelOpened(wrappedChannel);
         }
         catch (Exception e)

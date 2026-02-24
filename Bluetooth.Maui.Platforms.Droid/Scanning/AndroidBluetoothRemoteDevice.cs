@@ -25,6 +25,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     private BluetoothGattProxy? _bluetoothGattProxy;
     private BluetoothDevice? _nativeDevice;
     private ConnectionOptions? _connectionOptions;
+    private readonly IBluetoothRemoteL2CapChannelFactory _l2CapChannelFactory;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="AndroidBluetoothRemoteDevice" /> class.
@@ -32,17 +33,20 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <param name="scanner">The Bluetooth scanner associated with this device.</param>
     /// <param name="request">The factory request containing device information.</param>
     /// <param name="serviceFactory">The factory for creating Bluetooth services.</param>
+    /// <param name="l2CapChannelFactory">The factory for creating L2CAP channels.</param>
     /// <param name="rssiToSignalStrengthConverter">Converter for RSSI to signal strength.</param>
     /// <param name="logger">An optional logger for logging device operations.</param>
     public AndroidBluetoothRemoteDevice(
         IBluetoothScanner scanner,
         IBluetoothDeviceFactory.BluetoothDeviceFactoryRequest request,
         IBluetoothServiceFactory serviceFactory,
+        IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ILogger<IBluetoothRemoteDevice>? logger = null)
         : base(scanner, request, serviceFactory, rssiToSignalStrengthConverter, logger)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(l2CapChannelFactory);
         if (request is not AndroidBluetoothDeviceFactoryRequest androidRequest)
         {
             throw new ArgumentException(
@@ -50,6 +54,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         }
 
         _nativeDevice = androidRequest.NativeDevice;
+        _l2CapChannelFactory = l2CapChannelFactory;
     }
 
     /// <summary>
@@ -255,7 +260,9 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             throw new InvalidOperationException("Native device is null");
         }
 
-        var channel = new AndroidBluetoothL2CapChannel(this, _nativeDevice, psm, Logger);
+        // Create channel using factory
+        var request = new AndroidBluetoothRemoteL2CapChannelFactoryRequest(psm, _nativeDevice);
+        var channel = _l2CapChannelFactory.CreateL2CapChannel(this, request);
 
         // Open the channel which will trigger the callback
         _ = Task.Run(async () =>

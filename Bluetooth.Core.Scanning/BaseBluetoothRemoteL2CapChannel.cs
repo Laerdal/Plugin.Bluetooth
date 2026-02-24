@@ -4,7 +4,7 @@ namespace Bluetooth.Core.Scanning;
 ///     Abstract base class for platform-specific L2CAP channel implementations.
 ///     Provides common functionality for opening, closing, reading, and writing to L2CAP channels.
 /// </summary>
-public abstract class BaseBluetoothL2CapChannel : BaseBindableObject, IBluetoothL2CapChannel, IAsyncDisposable
+public abstract class BaseBluetoothRemoteL2CapChannel : BaseBindableObject, IBluetoothL2CapChannel, IAsyncDisposable
 {
     /// <summary>
     ///     Gets the logger for this channel, if any.
@@ -12,14 +12,14 @@ public abstract class BaseBluetoothL2CapChannel : BaseBindableObject, IBluetooth
     protected new ILogger? Logger { get; }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="BaseBluetoothL2CapChannel"/> class.
+    ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteL2CapChannel"/> class.
     /// </summary>
     /// <param name="device">The Bluetooth device this channel belongs to.</param>
     /// <param name="psm">The Protocol/Service Multiplexer (PSM) for this channel.</param>
     /// <param name="logger">Optional logger for logging channel operations.</param>
     /// <exception cref="ArgumentNullException">Thrown when device is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when PSM is not positive.</exception>
-    protected BaseBluetoothL2CapChannel(
+    protected BaseBluetoothRemoteL2CapChannel(
         IBluetoothRemoteDevice device,
         int psm,
         ILogger? logger = null)

@@ -13,7 +13,7 @@ namespace Bluetooth.Maui.Platforms.Droid.Scanning;
 ///     Requires Android API 29+ (Android 10+) for L2CAP channel support.
 ///     Uses a background read loop to enable push-based DataReceived events.
 /// </remarks>
-public class AndroidBluetoothL2CapChannel : BaseBluetoothL2CapChannel, IAsyncDisposable
+public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel, IAsyncDisposable
 {
     private readonly BluetoothDevice _nativeDevice;
     private BluetoothSocket? _socket;
@@ -22,13 +22,13 @@ public class AndroidBluetoothL2CapChannel : BaseBluetoothL2CapChannel, IAsyncDis
     private CancellationTokenSource? _readLoopCts;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AndroidBluetoothL2CapChannel"/> class.
+    ///     Initializes a new instance of the <see cref="AndroidBluetoothRemoteL2CapChannel"/> class.
     /// </summary>
     /// <param name="device">The Bluetooth device this channel belongs to.</param>
     /// <param name="nativeDevice">The native Android BluetoothDevice.</param>
     /// <param name="psm">The Protocol/Service Multiplexer (PSM) for this channel.</param>
     /// <param name="logger">Optional logger for logging channel operations.</param>
-    public AndroidBluetoothL2CapChannel(
+    public AndroidBluetoothRemoteL2CapChannel(
         IBluetoothRemoteDevice device,
         BluetoothDevice nativeDevice,
         int psm,

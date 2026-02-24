@@ -12,7 +12,7 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 ///     Requires iOS 11+ / macOS 10.13+ for L2CAP channel support.
 ///     Uses NSStreamDelegate for event-driven data reading.
 /// </remarks>
-public class AppleBluetoothL2CapChannel : BaseBluetoothL2CapChannel, IAsyncDisposable
+public class AppleBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel, IAsyncDisposable
 {
     private readonly CBL2CapChannel _nativeChannel;
     private NSInputStream? _inputStream;
@@ -20,12 +20,12 @@ public class AppleBluetoothL2CapChannel : BaseBluetoothL2CapChannel, IAsyncDispo
     private StreamDelegate? _streamDelegate;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothL2CapChannel"/> class.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteL2CapChannel"/> class.
     /// </summary>
     /// <param name="device">The Bluetooth device this channel belongs to.</param>
     /// <param name="nativeChannel">The native CBL2CAPChannel from CoreBluetooth.</param>
     /// <param name="logger">Optional logger for logging channel operations.</param>
-    public AppleBluetoothL2CapChannel(
+    public AppleBluetoothRemoteL2CapChannel(
         IBluetoothRemoteDevice device,
         CBL2CapChannel nativeChannel,
         ILogger? logger = null)
@@ -134,9 +134,9 @@ public class AppleBluetoothL2CapChannel : BaseBluetoothL2CapChannel, IAsyncDispo
     /// </summary>
     private sealed class StreamDelegate : NSStreamDelegate
     {
-        private readonly AppleBluetoothL2CapChannel _channel;
+        private readonly AppleBluetoothRemoteL2CapChannel _channel;
 
-        public StreamDelegate(AppleBluetoothL2CapChannel channel)
+        public StreamDelegate(AppleBluetoothRemoteL2CapChannel channel)
         {
             _channel = channel;
         }
