@@ -26,6 +26,12 @@
         <TargetFrameworks>$(TargetFrameworks);net10.0-ios</TargetFrameworks>
     </PropertyGroup>
 
+    <!-- ==================== PACKAGING ==================== -->
+    <PropertyGroup>
+        <!-- Only package in Debug mode for local testing - Release builds only package Bluetooth.Maui -->
+        <IsPackable Condition="'$(Configuration)' == 'Release'">false</IsPackable>
+    </PropertyGroup>
+
     <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
     <ItemGroup>
         <ProjectReference Include="../Bluetooth.Abstractions/Bluetooth.Abstractions.csproj" PrivateAssets="all" />

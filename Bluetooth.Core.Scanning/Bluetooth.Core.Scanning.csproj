@@ -16,12 +16,18 @@
         <!-- CS1591 : Missing documentation for publicly visible type or member -->
         <!-- <NoWarn>$(NoWarn);CS1591</NoWarn> -->
         <!-- CA1816 : Call GC.SuppressFinalize correctly -->
-        <NoWarn>$(NoWarn);CA1816</NoWarn> 
+        <NoWarn>$(NoWarn);CA1816</NoWarn>
     </PropertyGroup>
 
     <!-- ==================== TARGET FRAMEWORKS ==================== -->
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+
+    <!-- ==================== PACKAGING ==================== -->
+    <PropertyGroup>
+        <!-- Only package in Debug mode for local testing - Release builds only package Bluetooth.Maui -->
+        <IsPackable Condition="'$(Configuration)' == 'Release'">false</IsPackable>
     </PropertyGroup>
 
     <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->

@@ -27,6 +27,12 @@
         <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
     </PropertyGroup>
 
+    <!-- ==================== PACKAGING ==================== -->
+    <PropertyGroup>
+        <!-- Only package in Debug mode for local testing - Release builds only package Bluetooth.Maui -->
+        <IsPackable Condition="'$(Configuration)' == 'Release'">false</IsPackable>
+    </PropertyGroup>
+
     <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
     <ItemGroup>
         <ProjectReference Include="../Bluetooth.Abstractions/Bluetooth.Abstractions.csproj" PrivateAssets="all"/>

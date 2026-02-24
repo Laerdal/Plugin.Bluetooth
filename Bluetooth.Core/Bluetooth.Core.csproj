@@ -25,6 +25,12 @@
         <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
 
+    <!-- ==================== PACKAGING ==================== -->
+    <PropertyGroup>
+        <!-- Only package in Debug mode for local testing - Release builds only package Bluetooth.Maui -->
+        <IsPackable Condition="'$(Configuration)' == 'Release'">false</IsPackable>
+    </PropertyGroup>
+
     <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
     <ItemGroup>
         <PackageReference Include="Plugin.ByteArrays" />
