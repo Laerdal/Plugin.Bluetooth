@@ -59,15 +59,23 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
 
     /// <inheritdoc />
     /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#readCharacteristic(android.bluetooth.BluetoothGattCharacteristic)">Android BluetoothGatt.readCharacteristic()</seealso>
-    protected override ValueTask NativeReadValueAsync()
+    protected async override ValueTask NativeReadValueAsync()
+    {
+        // Get retry options from device connection options, or use default
+        var retryOptions = AndroidBluetoothRemoteService.AndroidBluetoothRemoteDevice.ConnectionOptions?.Android?.GattReadRetry
+                           ?? new RetryOptions { MaxRetries = 2, DelayBetweenRetries = TimeSpan.FromMilliseconds(100) };
+
+        // Call with configurable retry
+        await RetryTools.RunWithRetriesAsync(ReadCharacteristicInternal, retryOptions, CancellationToken.None).ConfigureAwait(false);
+    }
+
+    private void ReadCharacteristicInternal()
     {
         var success = BluetoothGattProxy.BluetoothGatt.ReadCharacteristic(NativeCharacteristic);
         if (!success)
         {
             throw new InvalidOperationException("Failed to initiate characteristic read");
         }
-
-        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />

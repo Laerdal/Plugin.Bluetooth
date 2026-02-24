@@ -1,3 +1,4 @@
+using Bluetooth.Abstractions.Options;
 using Bluetooth.Core.Infrastructure.Retries;
 using Bluetooth.Maui.Platforms.Droid.Enums;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
@@ -53,15 +54,23 @@ public class AndroidBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
     #region Read
 
     /// <inheritdoc />
-    protected override ValueTask NativeReadValueAsync()
+    protected async override ValueTask NativeReadValueAsync()
+    {
+        // Get retry options from device connection options, or use default
+        var retryOptions = AndroidBluetoothRemoteCharacteristic.AndroidBluetoothRemoteService.AndroidBluetoothRemoteDevice.ConnectionOptions?.Android?.GattReadRetry
+                           ?? new RetryOptions { MaxRetries = 2, DelayBetweenRetries = TimeSpan.FromMilliseconds(100) };
+
+        // Call with configurable retry
+        await RetryTools.RunWithRetriesAsync(ReadDescriptorInternal, retryOptions, CancellationToken.None).ConfigureAwait(false);
+    }
+
+    private void ReadDescriptorInternal()
     {
         var success = BluetoothGattProxy.BluetoothGatt.ReadDescriptor(NativeDescriptor);
         if (!success)
         {
             throw new InvalidOperationException("Failed to initiate descriptor read");
         }
-
-        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />
@@ -79,8 +88,11 @@ public class AndroidBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
     /// <inheritdoc />
     protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
-        // Call ReadCharacteristic and Handle return value
-        await RetryTools.RunWithRetriesAsync(() => BluetoothGattCharacteristicWrite(value), maxRetries: 3, delayBetweenRetries: TimeSpan.FromMilliseconds(200)).ConfigureAwait(false);
+        // Get retry options from device connection options, or use default
+        var retryOptions = AndroidBluetoothRemoteCharacteristic.AndroidBluetoothRemoteService.AndroidBluetoothRemoteDevice.ConnectionOptions?.Android?.GattWriteRetry ?? RetryOptions.Default;
+
+        // Call with configurable retry
+        await RetryTools.RunWithRetriesAsync(() => BluetoothGattCharacteristicWrite(value), retryOptions, CancellationToken.None).ConfigureAwait(false);
     }
 
 
