@@ -340,19 +340,14 @@ public abstract partial class BaseBluetoothRemoteService
     }
 
     /// <inheritdoc />
-    public IEnumerable<IBluetoothRemoteCharacteristic> GetCharacteristics(Func<IBluetoothRemoteCharacteristic, bool>? filter = null)
+    public IReadOnlyList<IBluetoothRemoteCharacteristic> GetCharacteristics(Func<IBluetoothRemoteCharacteristic, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
 
         lock (Characteristics)
         {
-            foreach (var characteristic in Characteristics)
-            {
-                if (filter.Invoke(characteristic))
-                {
-                    yield return characteristic;
-                }
-            }
+            // Materialize immediately while holding lock
+            return Characteristics.Where(filter).ToList();
         }
     }
 

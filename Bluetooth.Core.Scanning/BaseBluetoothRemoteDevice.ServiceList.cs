@@ -319,19 +319,14 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <inheritdoc />
-    public IEnumerable<IBluetoothRemoteService> GetServices(Func<IBluetoothRemoteService, bool>? filter = null)
+    public IReadOnlyList<IBluetoothRemoteService> GetServices(Func<IBluetoothRemoteService, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
 
         lock (Services)
         {
-            foreach (var service in Services)
-            {
-                if (filter.Invoke(service))
-                {
-                    yield return service;
-                }
-            }
+            // Materialize immediately while holding lock
+            return Services.Where(filter).ToList();
         }
     }
 

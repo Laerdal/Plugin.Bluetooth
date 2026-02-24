@@ -59,16 +59,16 @@ public partial interface IBluetoothRemoteDevice
     ///         <code>
     /// // Simple exploration (uses defaults: services only, with caching):
     /// await device.ExploreServicesAsync();
-    /// 
+    ///
     /// // Explore services and characteristics:
     /// await device.ExploreServicesAsync(ServiceExplorationOptions.WithCharacteristics);
-    /// 
+    ///
     /// // Full exploration (services, characteristics, descriptors):
     /// await device.ExploreServicesAsync(ServiceExplorationOptions.Full);
-    /// 
+    ///
     /// // Force re-exploration (ignore cache):
     /// await device.ExploreServicesAsync(new() { UseCache = false });
-    /// 
+    ///
     /// // Custom options with UUID filtering:
     /// await device.ExploreServicesAsync(new ServiceExplorationOptions
     /// {
@@ -131,8 +131,12 @@ public partial interface IBluetoothRemoteDevice
     ///     Gets the services that match the specified filter.
     /// </summary>
     /// <param name="filter">The filter to apply to the services.</param>
-    /// <returns>The services that match the filter, or all services if the filter is null.</returns>
-    IEnumerable<IBluetoothRemoteService> GetServices(Func<IBluetoothRemoteService, bool>? filter = null);
+    /// <returns>
+    ///     A read-only snapshot of services at the time of the call. This collection is immutable
+    ///     and will not be modified if services are added or removed after the call returns.
+    ///     To get updated results, call this method again or subscribe to <see cref="ServiceListChanged" /> event.
+    /// </returns>
+    IReadOnlyList<IBluetoothRemoteService> GetServices(Func<IBluetoothRemoteService, bool>? filter = null);
 
     #endregion
 

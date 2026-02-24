@@ -57,13 +57,13 @@ public partial interface IBluetoothRemoteService
     ///         <code>
     /// // Simple exploration (uses defaults: characteristics only, with caching):
     /// await service.ExploreCharacteristicsAsync();
-    /// 
+    ///
     /// // Force re-exploration (ignore cache):
     /// await service.ExploreCharacteristicsAsync(new() { UseCache = false });
-    /// 
+    ///
     /// // Explore characteristics and descriptors:
     /// await service.ExploreCharacteristicsAsync(CharacteristicExplorationOptions.Full);
-    /// 
+    ///
     /// // Custom options with UUID filtering:
     /// await service.ExploreCharacteristicsAsync(new CharacteristicExplorationOptions
     /// {
@@ -126,8 +126,12 @@ public partial interface IBluetoothRemoteService
     ///     Gets the characteristics that match the specified filter.
     /// </summary>
     /// <param name="filter">The filter to apply to the characteristics.</param>
-    /// <returns>The characteristics that match the filter, or all characteristics if the filter is null.</returns>
-    IEnumerable<IBluetoothRemoteCharacteristic> GetCharacteristics(Func<IBluetoothRemoteCharacteristic, bool>? filter = null);
+    /// <returns>
+    ///     A read-only snapshot of characteristics at the time of the call. This collection is immutable
+    ///     and will not be modified if characteristics are added or removed after the call returns.
+    ///     To get updated results, call this method again or subscribe to <see cref="CharacteristicListChanged" /> event.
+    /// </returns>
+    IReadOnlyList<IBluetoothRemoteCharacteristic> GetCharacteristics(Func<IBluetoothRemoteCharacteristic, bool>? filter = null);
 
     #endregion
 
