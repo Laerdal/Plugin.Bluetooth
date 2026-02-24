@@ -39,7 +39,7 @@ public record RetryOptions
     ///     - Etc.
     ///     This reduces load on the BLE stack during retry storms.
     /// </remarks>
-    public bool ExponentialBackoff { get; init; } = false;
+    public bool ExponentialBackoff { get; init; }
 
     /// <summary>
     ///     Default retry configuration (3 retries, 200ms delay, no exponential backoff).
