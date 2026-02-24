@@ -1,4 +1,5 @@
 using Bluetooth.Core.Scanning.Factories;
+using Microsoft.Extensions.Logging;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 
@@ -11,8 +12,9 @@ public class AndroidBluetoothDeviceFactory : BaseBluetoothDeviceFactory
     public AndroidBluetoothDeviceFactory(
         IBluetoothRemoteServiceFactory serviceFactory,
         IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory,
-        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter)
-        : base(serviceFactory, rssiToSignalStrengthConverter)
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILoggerFactory? loggerFactory = null)
+        : base(serviceFactory, rssiToSignalStrengthConverter, loggerFactory)
     {
         _l2CapChannelFactory = l2CapChannelFactory;
     }
@@ -22,6 +24,7 @@ public class AndroidBluetoothDeviceFactory : BaseBluetoothDeviceFactory
         IBluetoothScanner scanner,
         IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec)
     {
-        return new AndroidBluetoothRemoteDevice(scanner, spec, ServiceFactory, _l2CapChannelFactory, RssiToSignalStrengthConverter);
+        var logger = LoggerFactory?.CreateLogger<IBluetoothRemoteDevice>();
+        return new AndroidBluetoothRemoteDevice(scanner, spec, ServiceFactory, _l2CapChannelFactory, RssiToSignalStrengthConverter, logger);
     }
 }

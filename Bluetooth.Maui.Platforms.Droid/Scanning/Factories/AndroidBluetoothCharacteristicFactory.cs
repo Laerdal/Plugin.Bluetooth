@@ -1,4 +1,5 @@
 using Bluetooth.Core.Scanning.Factories;
+using Microsoft.Extensions.Logging;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 
@@ -6,8 +7,10 @@ namespace Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 public class AndroidBluetoothCharacteristicFactory : BaseBluetoothCharacteristicFactory
 {
     /// <inheritdoc />
-    public AndroidBluetoothCharacteristicFactory(IBluetoothRemoteDescriptorFactory descriptorFactory)
-        : base(descriptorFactory)
+    public AndroidBluetoothCharacteristicFactory(
+        IBluetoothRemoteDescriptorFactory descriptorFactory,
+        ILoggerFactory? loggerFactory = null)
+        : base(descriptorFactory, loggerFactory)
     {
     }
 
@@ -16,6 +19,7 @@ public class AndroidBluetoothCharacteristicFactory : BaseBluetoothCharacteristic
         IBluetoothRemoteService remoteService,
         IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec)
     {
-        return new AndroidBluetoothRemoteCharacteristic(remoteService, spec, DescriptorFactory);
+        var logger = LoggerFactory?.CreateLogger<IBluetoothRemoteCharacteristic>();
+        return new AndroidBluetoothRemoteCharacteristic(remoteService, spec, DescriptorFactory, logger);
     }
 }

@@ -1,4 +1,5 @@
 using Bluetooth.Core.Scanning.Factories;
+using Microsoft.Extensions.Logging;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 
@@ -8,7 +9,12 @@ public class AppleBluetoothDeviceFactory : BaseBluetoothDeviceFactory
     private readonly IBluetoothRemoteL2CapChannelFactory _l2CapChannelFactory;
 
     /// <inheritdoc />
-    public AppleBluetoothDeviceFactory(IBluetoothRemoteServiceFactory serviceFactory, IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) : base(serviceFactory, rssiToSignalStrengthConverter)
+    public AppleBluetoothDeviceFactory(
+        IBluetoothRemoteServiceFactory serviceFactory,
+        IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILoggerFactory? loggerFactory = null)
+        : base(serviceFactory, rssiToSignalStrengthConverter, loggerFactory)
     {
         _l2CapChannelFactory = l2CapChannelFactory;
     }
@@ -16,6 +22,7 @@ public class AppleBluetoothDeviceFactory : BaseBluetoothDeviceFactory
     /// <inheritdoc />
     public override IBluetoothRemoteDevice Create(IBluetoothScanner scanner, IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec)
     {
-        return new AppleBluetoothRemoteDevice(scanner, spec, ServiceFactory, _l2CapChannelFactory, RssiToSignalStrengthConverter);
+        var logger = LoggerFactory?.CreateLogger<IBluetoothRemoteDevice>();
+        return new AppleBluetoothRemoteDevice(scanner, spec, ServiceFactory, _l2CapChannelFactory, RssiToSignalStrengthConverter, logger);
     }
 }

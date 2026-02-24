@@ -21,8 +21,8 @@ public class AndroidBluetoothRemoteService : BaseBluetoothRemoteService, Bluetoo
     /// <param name="device">The Bluetooth device that owns this service.</param>
     /// <param name="spec">The factory spec containing service information.</param>
     /// <param name="characteristicFactory">The factory for creating characteristics.</param>
-    public AndroidBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory) :
-        base(device, spec, characteristicFactory)
+    public AndroidBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory, ILogger<IBluetoothRemoteService>? logger = null) :
+        base(device, spec, characteristicFactory, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
         if (spec is not AndroidBluetoothRemoteServiceFactorySpec nativeSpec)

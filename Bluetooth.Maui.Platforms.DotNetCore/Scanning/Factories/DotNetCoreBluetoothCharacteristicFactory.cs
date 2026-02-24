@@ -1,4 +1,5 @@
 using Bluetooth.Core.Scanning.Factories;
+using Microsoft.Extensions.Logging;
 
 namespace Bluetooth.Maui.Platforms.DotNetCore.Scanning.Factories;
 
@@ -7,7 +8,7 @@ public class DotNetCoreBluetoothCharacteristicFactory : BaseBluetoothCharacteris
 {
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    public DotNetCoreBluetoothCharacteristicFactory(IBluetoothRemoteDescriptorFactory descriptorFactory) : base(descriptorFactory)
+    public DotNetCoreBluetoothCharacteristicFactory(IBluetoothRemoteDescriptorFactory descriptorFactory, ILoggerFactory? loggerFactory = null) : base(descriptorFactory, loggerFactory)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

@@ -25,8 +25,9 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <param name="service">The Bluetooth service that contains this characteristic.</param>
     /// <param name="spec">The characteristic factory spec containing characteristic information.</param>
     /// <param name="descriptorFactory">The factory for creating Bluetooth descriptors.</param>
-    public WindowsBluetoothRemoteCharacteristic(IBluetoothRemoteService service, IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec, IBluetoothRemoteDescriptorFactory descriptorFactory) :
-        base(service, spec, descriptorFactory)
+    /// <param name="logger">Optional logger for logging characteristic operations.</param>
+    public WindowsBluetoothRemoteCharacteristic(IBluetoothRemoteService service, IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec, IBluetoothRemoteDescriptorFactory descriptorFactory, ILogger<IBluetoothRemoteCharacteristic>? logger = null) :
+        base(service, spec, descriptorFactory, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
         if (spec is not WindowsBluetoothRemoteCharacteristicFactorySpec nativeSpec)

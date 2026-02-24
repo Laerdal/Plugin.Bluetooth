@@ -16,8 +16,9 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     /// <param name="remoteService">The Bluetooth service to which this characteristic belongs.</param>
     /// <param name="spec">The factory spec containing the information needed to create this characteristic.</param>
     /// <param name="descriptorFactory">The factory used to create descriptors for this characteristic.</param>
-    public AppleBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec, IBluetoothRemoteDescriptorFactory descriptorFactory) :
-        base(remoteService, spec, descriptorFactory)
+    /// <param name="logger">Optional logger for logging characteristic operations.</param>
+    public AppleBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec, IBluetoothRemoteDescriptorFactory descriptorFactory, ILogger<IBluetoothRemoteCharacteristic>? logger = null) :
+        base(remoteService, spec, descriptorFactory, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
         if (spec is not AppleBluetoothRemoteCharacteristicFactorySpec nativeSpec)

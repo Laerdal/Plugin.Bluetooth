@@ -1,6 +1,7 @@
 using Bluetooth.Abstractions.Scanning;
 using Bluetooth.Abstractions.Scanning.Factories;
 using Bluetooth.Abstractions.Scanning.Options;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Bluetooth.Core.Scanning.Factories;
@@ -16,12 +17,21 @@ public abstract class BaseBluetoothRemoteL2CapChannelFactory : IBluetoothRemoteL
     protected IOptions<L2CapChannelOptions>? Options { get; }
 
     /// <summary>
+    ///     Gets the logger factory used to create loggers for L2CAP channels.
+    /// </summary>
+    protected ILoggerFactory? LoggerFactory { get; }
+
+    /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteL2CapChannelFactory" /> class.
     /// </summary>
     /// <param name="options">Optional configuration options for L2CAP channel timeouts.</param>
-    protected BaseBluetoothRemoteL2CapChannelFactory(IOptions<L2CapChannelOptions>? options = null)
+    /// <param name="loggerFactory">Optional logger factory for creating loggers.</param>
+    protected BaseBluetoothRemoteL2CapChannelFactory(
+        IOptions<L2CapChannelOptions>? options = null,
+        ILoggerFactory? loggerFactory = null)
     {
         Options = options;
+        LoggerFactory = loggerFactory;
     }
 
     /// <inheritdoc />

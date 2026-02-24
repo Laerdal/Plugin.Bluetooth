@@ -23,10 +23,12 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     /// <param name="spec">The device factory spec containing device information.</param>
     /// <param name="serviceFactory">The factory for creating Bluetooth services.</param>
     /// <param name="rssiToSignalStrengthConverter">Converter for RSSI to signal strength.</param>
+    /// <param name="logger">Optional logger for logging device operations.</param>
     public WindowsBluetoothRemoteDevice(IBluetoothScanner scanner,
         IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec,
         IBluetoothRemoteServiceFactory serviceFactory,
-        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) : base(scanner, spec, serviceFactory, rssiToSignalStrengthConverter)
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILogger<IBluetoothRemoteDevice>? logger = null) : base(scanner, spec, serviceFactory, rssiToSignalStrengthConverter, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
         if (spec is not WindowsBluetoothRemoteDeviceFactorySpec)

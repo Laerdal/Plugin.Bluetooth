@@ -21,8 +21,9 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
     /// <param name="device">The Bluetooth device associated with this service.</param>
     /// <param name="spec">The factory spec containing service information.</param>
     /// <param name="characteristicFactory">The factory for creating characteristics.</param>
-    public WindowsBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory) :
-        base(device, spec, characteristicFactory)
+    /// <param name="logger">Optional logger for logging service operations.</param>
+    public WindowsBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory, ILogger<IBluetoothRemoteService>? logger = null) :
+        base(device, spec, characteristicFactory, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
         if (spec is not WindowsBluetoothRemoteServiceFactorySpec nativeSpec)

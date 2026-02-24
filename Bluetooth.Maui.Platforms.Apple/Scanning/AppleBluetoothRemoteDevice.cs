@@ -16,8 +16,8 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     public AppleBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec, IBluetoothRemoteServiceFactory serviceFactory,
         IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory,
-        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) :
-        base(scanner, spec, serviceFactory, rssiToSignalStrengthConverter)
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter, ILogger<IBluetoothRemoteDevice>? logger = null) :
+        base(scanner, spec, serviceFactory, rssiToSignalStrengthConverter, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(l2CapChannelFactory);

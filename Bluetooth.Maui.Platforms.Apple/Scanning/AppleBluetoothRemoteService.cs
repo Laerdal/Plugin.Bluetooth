@@ -11,7 +11,7 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 public class AppleBluetoothRemoteService : BaseBluetoothRemoteService, CbPeripheralWrapper.ICbServiceDelegate
 {
     /// <inheritdoc />
-    public AppleBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory) : base(device, spec, characteristicFactory)
+    public AppleBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory, ILogger<IBluetoothRemoteService>? logger = null) : base(device, spec, characteristicFactory, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
         if (spec is not AppleBluetoothRemoteServiceFactorySpec nativeSpec)

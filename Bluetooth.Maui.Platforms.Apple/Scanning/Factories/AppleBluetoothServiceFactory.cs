@@ -1,4 +1,5 @@
 using Bluetooth.Core.Scanning.Factories;
+using Microsoft.Extensions.Logging;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 
@@ -6,13 +7,17 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 public class AppleBluetoothServiceFactory : BaseBluetoothServiceFactory
 {
     /// <inheritdoc />
-    public AppleBluetoothServiceFactory(IBluetoothRemoteCharacteristicFactory characteristicFactory) : base(characteristicFactory)
+    public AppleBluetoothServiceFactory(
+        IBluetoothRemoteCharacteristicFactory characteristicFactory,
+        ILoggerFactory? loggerFactory = null)
+        : base(characteristicFactory, loggerFactory)
     {
     }
 
     /// <inheritdoc />
     public override IBluetoothRemoteService Create(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec)
     {
-        return new AppleBluetoothRemoteService(device, spec, CharacteristicFactory);
+        var logger = LoggerFactory?.CreateLogger<IBluetoothRemoteService>();
+        return new AppleBluetoothRemoteService(device, spec, CharacteristicFactory, logger);
     }
 }

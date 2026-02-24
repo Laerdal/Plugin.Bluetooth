@@ -1,4 +1,5 @@
 using Bluetooth.Core.Scanning.Factories;
+using Microsoft.Extensions.Logging;
 
 namespace Bluetooth.Maui.Platforms.Win.Scanning.Factories;
 
@@ -6,7 +7,7 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning.Factories;
 public class WindowsBluetoothCharacteristicFactory : BaseBluetoothCharacteristicFactory
 {
     /// <inheritdoc/>
-    public WindowsBluetoothCharacteristicFactory(IBluetoothRemoteDescriptorFactory descriptorFactory) : base(descriptorFactory)
+    public WindowsBluetoothCharacteristicFactory(IBluetoothRemoteDescriptorFactory descriptorFactory, ILoggerFactory? loggerFactory = null) : base(descriptorFactory, loggerFactory)
     {
     }
 
@@ -15,6 +16,7 @@ public class WindowsBluetoothCharacteristicFactory : BaseBluetoothCharacteristic
         Abstractions.Scanning.IBluetoothRemoteService remoteService,
         IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec)
     {
-        return new WindowsBluetoothRemoteCharacteristic(remoteService, spec, DescriptorFactory);
+        var logger = LoggerFactory?.CreateLogger<IBluetoothRemoteCharacteristic>();
+        return new WindowsBluetoothRemoteCharacteristic(remoteService, spec, DescriptorFactory, logger);
     }
 }
