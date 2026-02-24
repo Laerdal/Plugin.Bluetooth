@@ -12,9 +12,9 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
     private readonly ILogger _logger;
 
     /// <summary>
-    ///     The options for configuring L2CAP channel timeouts.
+    ///     Gets the options for configuring L2CAP channel timeouts.
     /// </summary>
-    private readonly L2CapChannelOptions _options;
+    protected L2CapChannelOptions Options { get; }
 
     /// <summary>
     ///     Gets the logger for this channel, if any.
@@ -43,7 +43,7 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
         }
 
         _logger = logger ?? NullLogger.Instance;
-        _options = options?.Value ?? new L2CapChannelOptions();
+        Options = options?.Value ?? new L2CapChannelOptions();
         Device = device;
         Psm = psm;
         Logger = logger;
@@ -77,7 +77,7 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
     /// <inheritdoc />
     public async ValueTask OpenAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        timeout ??= _options.OpenTimeout;
+        timeout ??= Options.OpenTimeout;
 
         await _operationSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -98,7 +98,7 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
     /// <inheritdoc />
     public async ValueTask CloseAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        timeout ??= _options.CloseTimeout;
+        timeout ??= Options.CloseTimeout;
 
         await _operationSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -122,7 +122,7 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        timeout ??= _options.ReadTimeout;
+        timeout ??= Options.ReadTimeout;
 
         if (!IsOpen)
         {
@@ -138,7 +138,7 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        timeout ??= _options.WriteTimeout;
+        timeout ??= Options.WriteTimeout;
 
         if (!IsOpen)
         {

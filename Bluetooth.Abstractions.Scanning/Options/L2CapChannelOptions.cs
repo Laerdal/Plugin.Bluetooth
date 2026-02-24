@@ -91,4 +91,84 @@ public record L2CapChannelOptions
     ///     Default: <c>10 seconds</c>
     /// </remarks>
     public TimeSpan WriteTimeout { get; init; } = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    ///     Gets or sets the default MTU (Maximum Transmission Unit) to use when the platform
+    ///     cannot determine the actual MTU from the device.
+    /// </summary>
+    /// <remarks>
+    ///     The MTU determines the maximum size of a single L2CAP packet that can be transmitted.
+    ///     This value is used as a fallback when:
+    ///     <list type="bullet">
+    ///         <item>On iOS/macOS - always used (CoreBluetooth doesn't expose actual MTU)</item>
+    ///         <item>On Android API 29-32 - used when MaxTransmitPacketSize is unavailable</item>
+    ///         <item>On Windows - depends on platform capabilities</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>Recommended values:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>672 bytes - Bluetooth spec minimum (safest, works everywhere)</item>
+    ///         <item>1024-4096 bytes - Good balance for most applications</item>
+    ///         <item>23170 bytes - Common maximum for BLE 5.0+ devices</item>
+    ///         <item>65535 bytes - Theoretical maximum (rarely supported)</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>Trade-offs:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>Larger MTU = Higher throughput, fewer packets, lower overhead</item>
+    ///         <item>Smaller MTU = Better compatibility, less memory usage, faster retries</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>Example use cases:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>Firmware updates: Set to 4096+ bytes for 6-8x faster transfers</item>
+    ///         <item>Memory-constrained IoT devices: Set to 512 bytes to reduce memory footprint</item>
+    ///         <item>General use: Keep default 672 bytes for maximum compatibility</item>
+    ///     </list>
+    ///     Default: <c>672 bytes</c> (Bluetooth L2CAP minimum guaranteed)
+    /// </remarks>
+    public int DefaultMtu { get; init; } = 672;
+
+    /// <summary>
+    ///     Gets or sets the size of the read buffer used in the background read loop.
+    /// </summary>
+    /// <remarks>
+    ///     This controls how much memory is allocated for reading incoming data in the background.
+    ///     <para>
+    ///         <b>Behavior:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>When <c>null</c>: Uses the MTU size (default behavior)</item>
+    ///         <item>When specified: Uses the exact buffer size provided</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>Considerations:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>Set smaller for memory-constrained devices with frequent small messages</item>
+    ///         <item>Set larger than MTU to batch multiple packets (may increase latency)</item>
+    ///         <item>Should generally be at least as large as your expected packet size</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>Platform Support:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>Android: Used for background read loop buffer allocation</item>
+    ///         <item>iOS/macOS: Not used (NSStream handles buffering internally)</item>
+    ///         <item>Windows: Depends on implementation</item>
+    ///     </list>
+    ///     <para>
+    ///         <b>Example use cases:</b>
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>High-frequency small packets: Set to 256 bytes to save memory</item>
+    ///         <item>Bulk transfers: Set equal to or larger than MTU</item>
+    ///         <item>General use: Keep default (null) to automatically use MTU</item>
+    ///     </list>
+    ///     Default: <c>null</c> (uses MTU size)
+    /// </remarks>
+    public int? ReadBufferSize { get; init; }
 }

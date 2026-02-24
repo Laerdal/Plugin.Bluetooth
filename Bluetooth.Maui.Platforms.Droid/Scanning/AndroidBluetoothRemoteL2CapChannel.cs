@@ -69,10 +69,10 @@ public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChanne
                 ?? throw new AndroidNativeBluetoothException("Output stream is null");
 
             // Get MTU from socket
-            // Note: MaxTransmitPacketSize available API 33+, fallback to default L2CAP MTU
+            // Note: MaxTransmitPacketSize available API 33+, fallback to configured default MTU
             Mtu = OperatingSystem.IsAndroidVersionAtLeast(33)
                 ? _socket.MaxTransmitPacketSize
-                : 672; // Default L2CAP MTU (minimum guaranteed)
+                : Options.DefaultMtu;
 
             IsOpen = true;
             Logger?.LogL2CapChannelOpened(Psm, Mtu);
@@ -126,7 +126,8 @@ public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChanne
     /// <param name="ct">Cancellation token to stop the read loop.</param>
     private async Task ReadLoopAsync(CancellationToken ct)
     {
-        var buffer = new byte[Mtu];
+        var bufferSize = Options.ReadBufferSize ?? Mtu;
+        var buffer = new byte[bufferSize];
         try
         {
             while (!ct.IsCancellationRequested && IsOpen)

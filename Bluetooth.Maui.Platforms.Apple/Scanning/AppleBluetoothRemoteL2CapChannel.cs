@@ -37,8 +37,8 @@ public class AppleBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel,
         _nativeChannel = nativeChannel;
 
         // Channel is already open when created by CoreBluetooth
-        // Use default L2CAP MTU - iOS L2CAP channels typically support larger MTUs (672 is minimum guaranteed)
-        Mtu = 672;
+        // Use configured default MTU - iOS doesn't expose actual MTU from CoreBluetooth
+        Mtu = Options.DefaultMtu;
         IsOpen = true;
     }
 
@@ -150,7 +150,8 @@ public class AppleBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel,
                 if (eventCode == NSStreamEvent.HasBytesAvailable && stream == _channel._inputStream)
                 {
                     // Data available - read and raise event
-                    var buffer = new byte[_channel.Mtu];
+                    var bufferSize = _channel.Options.ReadBufferSize ?? _channel.Mtu;
+                    var buffer = new byte[bufferSize];
                     var bytesRead = (int)_channel._inputStream!.Read(buffer, 0, (nuint)buffer.Length);
                     if (bytesRead > 0)
                     {
