@@ -1,5 +1,7 @@
 using Bluetooth.Abstractions.Scanning;
 using Bluetooth.Abstractions.Scanning.Factories;
+using Bluetooth.Abstractions.Scanning.Options;
+using Microsoft.Extensions.Options;
 
 namespace Bluetooth.Core.Scanning.Factories;
 
@@ -9,10 +11,17 @@ namespace Bluetooth.Core.Scanning.Factories;
 public abstract class BaseBluetoothRemoteL2CapChannelFactory : IBluetoothRemoteL2CapChannelFactory
 {
     /// <summary>
+    ///     Gets the options for configuring L2CAP channel timeouts.
+    /// </summary>
+    protected IOptions<L2CapChannelOptions>? Options { get; }
+
+    /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteL2CapChannelFactory" /> class.
     /// </summary>
-    protected BaseBluetoothRemoteL2CapChannelFactory()
+    /// <param name="options">Optional configuration options for L2CAP channel timeouts.</param>
+    protected BaseBluetoothRemoteL2CapChannelFactory(IOptions<L2CapChannelOptions>? options = null)
     {
+        Options = options;
     }
 
     /// <inheritdoc />

@@ -27,13 +27,15 @@ public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChanne
     /// <param name="device">The Bluetooth device this channel belongs to.</param>
     /// <param name="nativeDevice">The native Android BluetoothDevice.</param>
     /// <param name="psm">The Protocol/Service Multiplexer (PSM) for this channel.</param>
+    /// <param name="options">Optional configuration options for L2CAP channel timeouts.</param>
     /// <param name="logger">Optional logger for logging channel operations.</param>
     public AndroidBluetoothRemoteL2CapChannel(
         IBluetoothRemoteDevice device,
         BluetoothDevice nativeDevice,
         int psm,
+        IOptions<L2CapChannelOptions>? options = null,
         ILogger? logger = null)
-        : base(device, psm, logger)
+        : base(device, psm, options, logger)
     {
         ArgumentNullException.ThrowIfNull(nativeDevice);
         _nativeDevice = nativeDevice;

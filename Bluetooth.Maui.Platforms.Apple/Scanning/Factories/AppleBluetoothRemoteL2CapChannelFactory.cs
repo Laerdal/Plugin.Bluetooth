@@ -1,6 +1,8 @@
 using Bluetooth.Abstractions.Scanning;
 using Bluetooth.Abstractions.Scanning.Factories;
+using Bluetooth.Abstractions.Scanning.Options;
 using Bluetooth.Core.Scanning.Factories;
+using Microsoft.Extensions.Options;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 
@@ -9,6 +11,15 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 /// </summary>
 public class AppleBluetoothRemoteL2CapChannelFactory : BaseBluetoothRemoteL2CapChannelFactory
 {
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteL2CapChannelFactory" /> class.
+    /// </summary>
+    /// <param name="options">Optional configuration options for L2CAP channel timeouts.</param>
+    public AppleBluetoothRemoteL2CapChannelFactory(IOptions<L2CapChannelOptions>? options = null)
+        : base(options)
+    {
+    }
+
     /// <inheritdoc />
     public override IBluetoothL2CapChannel Create(
         IBluetoothRemoteDevice device,
@@ -25,6 +36,7 @@ public class AppleBluetoothRemoteL2CapChannelFactory : BaseBluetoothRemoteL2CapC
         }
 
         return new AppleBluetoothRemoteL2CapChannel(appleDevice,
-                                                    nativeSpec.NativeChannel);
+                                                    nativeSpec.NativeChannel,
+                                                    Options);
     }
 }

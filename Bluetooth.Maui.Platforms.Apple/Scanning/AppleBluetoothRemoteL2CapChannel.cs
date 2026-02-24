@@ -24,12 +24,14 @@ public class AppleBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel,
     /// </summary>
     /// <param name="device">The Bluetooth device this channel belongs to.</param>
     /// <param name="nativeChannel">The native CBL2CAPChannel from CoreBluetooth.</param>
+    /// <param name="options">Optional configuration options for L2CAP channel timeouts.</param>
     /// <param name="logger">Optional logger for logging channel operations.</param>
     public AppleBluetoothRemoteL2CapChannel(
         IBluetoothRemoteDevice device,
         CBL2CapChannel nativeChannel,
+        IOptions<L2CapChannelOptions>? options = null,
         ILogger? logger = null)
-        : base(device, nativeChannel?.Psm ?? throw new ArgumentNullException(nameof(nativeChannel)), logger)
+        : base(device, nativeChannel?.Psm ?? throw new ArgumentNullException(nameof(nativeChannel)), options, logger)
     {
         ArgumentNullException.ThrowIfNull(nativeChannel);
         _nativeChannel = nativeChannel;
