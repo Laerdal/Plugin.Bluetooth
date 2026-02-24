@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<base:BaseContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                      xmlns:base="clr-namespace:Bluetooth.Maui.Sample.Scanner.Infrastructure"
+                      xmlns:vm="clr-namespace:Bluetooth.Maui.Sample.Scanner.ViewModels"
+                      x:Class="Bluetooth.Maui.Sample.Scanner.Views.CharacteristicDetailPage"
+                      x:TypeArguments="vm:CharacteristicDetailViewModel"
+                      x:DataType="vm:CharacteristicDetailViewModel"
+                      Title="Characteristic Details">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="20">
+
+            <!-- Characteristic Info -->
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
+                <VerticalStackLayout Spacing="12">
+
+                    <!-- Characteristic UUID -->
+                    <Label Text="{Binding CharacteristicId}"
+                           FontAttributes="Bold"
+                           FontSize="16"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                           HorizontalOptions="Center" />
+
+                    <!-- Properties Badges -->
+                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                        <Border IsVisible="{Binding CanRead}"
+                                Padding="8,4"
+                                BackgroundColor="{StaticResource Primary}"
+                                StrokeShape="RoundRectangle 4">
+                            <Label Text="📖 READ"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                        </Border>
+                        <Border IsVisible="{Binding CanWrite}"
+                                Padding="8,4"
+                                BackgroundColor="{StaticResource Secondary}"
+                                StrokeShape="RoundRectangle 4">
+                            <Label Text="✏️ WRITE"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                        </Border>
+                        <Border IsVisible="{Binding CanListen}"
+                                Padding="8,4"
+                                BackgroundColor="{StaticResource Tertiary}"
+                                StrokeShape="RoundRectangle 4">
+                            <Label Text="📬 NOTIFY"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                        </Border>
+                    </HorizontalStackLayout>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Current Value Display -->
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
+                <VerticalStackLayout Spacing="12">
+
+                    <!-- Header with Display Mode Toggle -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="Current Value"
+                               FontAttributes="Bold"
+                               FontSize="16"
+                               VerticalOptions="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
+                        <Button Grid.Column="1"
+                                Text="{Binding DisplayModeText}"
+                                Command="{Binding ToggleDisplayModeCommand}"
+                                FontSize="10"
+                                Padding="8,4"
+                                HeightRequest="32" />
+                    </Grid>
+
+                    <!-- Value Display -->
+                    <Border Padding="12"
+                            BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#2A2A2A}"
+                            StrokeShape="RoundRectangle 8"
+                            MinimumHeightRequest="60">
+                        <Label Text="{Binding CurrentValue, TargetNullValue='(no value read yet)'}"
+                               FontFamily="Courier"
+                               FontSize="14"
+                               LineBreakMode="WordWrap"
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
+                    </Border>
+
+                    <!-- Read Button -->
+                    <Button Text="📖 Read Value"
+                            Command="{Binding ReadValueCommand}"
+                            IsVisible="{Binding CanRead}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White" />
+
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Write Section -->
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}"
+                    IsVisible="{Binding CanWrite}">
+                <VerticalStackLayout Spacing="12">
+
+                    <Label Text="Write Value"
+                           FontAttributes="Bold"
+                           FontSize="16"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
+
+                    <Label Text="{Binding IsHexMode, StringFormat='Mode: {0}'}"
+                           FontSize="12"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Enter as: " />
+                                <Span Text="{Binding IsHexMode, Converter={StaticResource BoolToStringConverter}, ConverterParameter='Hex (e.g., 01 02 03)|Text (UTF-8)'}"
+                                      FontAttributes="Bold" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+
+                    <Entry Placeholder="{Binding IsHexMode, Converter={StaticResource BoolToStringConverter}, ConverterParameter='01 02 03 or 0x010203|Hello World'}"
+                           Text="{Binding WriteValueInput}"
+                           FontFamily="Courier"
+                           ClearButtonVisibility="WhileEditing" />
+
+                    <Button Text="✏️ Write Value"
+                            Command="{Binding WriteValueCommand}"
+                            BackgroundColor="{StaticResource Secondary}"
+                            TextColor="White" />
+
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Notification Section -->
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}"
+                    IsVisible="{Binding CanListen}">
+                <VerticalStackLayout Spacing="12">
+
+                    <Label Text="Notifications"
+                           FontAttributes="Bold"
+                           FontSize="16"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
+
+                    <Label FontSize="12"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Status: " />
+                                <Span Text="{Binding IsListening, Converter={StaticResource BoolToStringConverter}, ConverterParameter='🟢 Listening|⚫ Not listening'}"
+                                      FontAttributes="Bold" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+
+                    <Button Text="{Binding IsListening, Converter={StaticResource BoolToStringConverter}, ConverterParameter='🔕 Stop Listening|📬 Start Listening'}"
+                            Command="{Binding ToggleListenCommand}"
+                            BackgroundColor="{StaticResource Tertiary}"
+                            TextColor="White" />
+
+                    <Label Text="Updates will appear in 'Current Value' above with a 📬 icon"
+                           FontSize="11"
+                           FontAttributes="Italic"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextTertiary}, Dark={StaticResource DarkTextTertiary}}" />
+
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</base:BaseContentPage>

@@ -13,6 +13,7 @@
 
             <!-- Value Converters -->
             <converters:IsNotZeroConverter x:Key="IsNotZeroConverter" />
+            <converters:BoolToStringConverter x:Key="BoolToStringConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

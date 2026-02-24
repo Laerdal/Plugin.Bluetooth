@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 
 /// <summary>
@@ -5,15 +7,19 @@ namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 /// </summary>
 public class DeviceViewModel : BaseViewModel
 {
+    private readonly ILogger<DeviceViewModel> _logger;
     private readonly INavigationService _navigation;
     private IBluetoothRemoteDevice? _device;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="DeviceViewModel" /> class.
     /// </summary>
-    public DeviceViewModel(INavigationService navigation)
+    /// <param name="navigation">The navigation service.</param>
+    /// <param name="logger">The logger instance.</param>
+    public DeviceViewModel(INavigationService navigation, ILogger<DeviceViewModel> logger)
     {
         _navigation = navigation;
+        _logger = logger;
 
         ConnectCommand = new AsyncRelayCommand(ConnectAsync, () => !IsConnected);
         DisconnectCommand = new AsyncRelayCommand(DisconnectAsync, () => IsConnected);
@@ -117,12 +123,18 @@ public class DeviceViewModel : BaseViewModel
 
         try
         {
+            _logger.LogInformation("Attempting to connect to device: {DeviceName} ({DeviceId})", DeviceName, DeviceId);
+
             // Create default connection options
             var connectionOptions = new ConnectionOptions();
             await Device.ConnectAsync(connectionOptions);
+
+            _logger.LogInformation("Successfully connected to device: {DeviceName} ({DeviceId})", DeviceName, DeviceId);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to connect to device: {DeviceName} ({DeviceId})", DeviceName, DeviceId);
+
             var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
             if (mainPage != null)
             {
@@ -146,12 +158,18 @@ public class DeviceViewModel : BaseViewModel
 
         try
         {
+            _logger.LogInformation("Attempting to disconnect from device: {DeviceName} ({DeviceId})", DeviceName, DeviceId);
+
             await Device.DisconnectAsync();
             Services.Clear();
             OnPropertyChanged(nameof(ServiceCount));
+
+            _logger.LogInformation("Successfully disconnected from device: {DeviceName} ({DeviceId})", DeviceName, DeviceId);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to disconnect from device: {DeviceName} ({DeviceId})", DeviceName, DeviceId);
+
             var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
             if (mainPage != null)
             {
@@ -175,6 +193,8 @@ public class DeviceViewModel : BaseViewModel
 
         try
         {
+            _logger.LogInformation("Exploring services for device: {DeviceName} ({DeviceId})", DeviceName, DeviceId);
+
             // Explore services on the device
             await Device.ExploreServicesAsync();
 
@@ -183,9 +203,13 @@ public class DeviceViewModel : BaseViewModel
                 Services.UpdateFrom([.. Device.GetServices()]);
                 OnPropertyChanged(nameof(ServiceCount));
             });
+
+            _logger.LogInformation("Service exploration completed - Found {ServiceCount} services on device: {DeviceName}", ServiceCount, DeviceName);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to explore services on device: {DeviceName} ({DeviceId})", DeviceName, DeviceId);
+
             var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
             if (mainPage != null)
             {
@@ -206,6 +230,8 @@ public class DeviceViewModel : BaseViewModel
         {
             return;
         }
+
+        _logger.LogInformation("Service selected: {ServiceId} on device: {DeviceName}", service.Id, DeviceName);
 
         // Navigate to CharacteristicsPage with the selected service
         var parameters = new Dictionary<string, object>

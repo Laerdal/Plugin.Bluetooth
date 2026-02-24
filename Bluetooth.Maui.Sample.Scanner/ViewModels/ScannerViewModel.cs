@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 
 /// <summary>
@@ -5,6 +7,7 @@ namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 /// </summary>
 public class ScannerViewModel : BaseViewModel
 {
+    private readonly ILogger<ScannerViewModel> _logger;
     private readonly INavigationService _navigation;
 
     private readonly IBluetoothScanner _scanner;
@@ -14,10 +17,12 @@ public class ScannerViewModel : BaseViewModel
     /// </summary>
     /// <param name="scanner">The Bluetooth scanner service.</param>
     /// <param name="navigation">The navigation service.</param>
-    public ScannerViewModel(IBluetoothScanner scanner, INavigationService navigation)
+    /// <param name="logger">The logger instance.</param>
+    public ScannerViewModel(IBluetoothScanner scanner, INavigationService navigation, ILogger<ScannerViewModel> logger)
     {
         _scanner = scanner;
         _navigation = navigation;
+        _logger = logger;
 
         // Initialize commands
         StartScanCommand = new AsyncRelayCommand(StartScanAsync, () => !IsScanning);
@@ -96,6 +101,8 @@ public class ScannerViewModel : BaseViewModel
     {
         try
         {
+            _logger.LogInformation("Starting BLE scan...");
+
             // Create scanning options (cross-platform)
             var options = new ScanningOptions
             {
@@ -105,9 +112,12 @@ public class ScannerViewModel : BaseViewModel
             };
 
             await _scanner.StartScanningAsync(options);
+            _logger.LogInformation("BLE scan started successfully");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to start BLE scanning");
+
             // Handle scanning errors (permissions, Bluetooth off, etc.)
             var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
             if (mainPage != null)
@@ -124,10 +134,14 @@ public class ScannerViewModel : BaseViewModel
     {
         try
         {
+            _logger.LogInformation("Stopping BLE scan...");
             await _scanner.StopScanningAsync();
+            _logger.LogInformation("BLE scan stopped successfully");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to stop BLE scanning");
+
             var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
             if (mainPage != null)
             {
@@ -146,6 +160,8 @@ public class ScannerViewModel : BaseViewModel
         {
             return;
         }
+
+        _logger.LogInformation("Device selected: {DeviceName} ({DeviceId})", device.Name ?? "Unknown", device.Id);
 
         SelectedDevice = device;
 
@@ -176,6 +192,8 @@ public class ScannerViewModel : BaseViewModel
             // Use Plugin.BaseTypeExtensions to efficiently sync collections
             Devices.UpdateFrom(_scanner.GetDevices());
             OnPropertyChanged(nameof(DeviceCount));
+
+            _logger.LogDebug("Device list updated - Total devices: {DeviceCount}", DeviceCount);
         });
     }
 }

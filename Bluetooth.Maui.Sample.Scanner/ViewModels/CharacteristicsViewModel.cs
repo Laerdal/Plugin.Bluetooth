@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 
 /// <summary>
@@ -5,15 +7,19 @@ namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 /// </summary>
 public class CharacteristicsViewModel : BaseViewModel
 {
+    private readonly ILogger<CharacteristicsViewModel> _logger;
     private readonly INavigationService _navigation;
     private IBluetoothRemoteService? _service;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="CharacteristicsViewModel" /> class.
     /// </summary>
-    public CharacteristicsViewModel(INavigationService navigation)
+    /// <param name="navigation">The navigation service.</param>
+    /// <param name="logger">The logger instance.</param>
+    public CharacteristicsViewModel(INavigationService navigation, ILogger<CharacteristicsViewModel> logger)
     {
         _navigation = navigation;
+        _logger = logger;
 
         ExploreCharacteristicsCommand = new AsyncRelayCommand(ExploreCharacteristicsAsync);
         SelectCharacteristicCommand = new AsyncRelayCommand<IBluetoothRemoteCharacteristic>(SelectCharacteristicAsync);
@@ -91,6 +97,8 @@ public class CharacteristicsViewModel : BaseViewModel
 
         try
         {
+            _logger.LogInformation("Exploring characteristics for service: {ServiceId}", ServiceId);
+
             // Explore characteristics on the service
             await Service.ExploreCharacteristicsAsync();
 
@@ -99,9 +107,13 @@ public class CharacteristicsViewModel : BaseViewModel
                 Characteristics.UpdateFrom([.. Service.GetCharacteristics()]);
                 OnPropertyChanged(nameof(CharacteristicCount));
             });
+
+            _logger.LogInformation("Characteristic exploration completed - Found {CharacteristicCount} characteristics for service: {ServiceId}", CharacteristicCount, ServiceId);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to explore characteristics for service: {ServiceId}", ServiceId);
+
             var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
             if (mainPage != null)
             {
@@ -114,7 +126,7 @@ public class CharacteristicsViewModel : BaseViewModel
     }
 
     /// <summary>
-    ///     Handles characteristic selection.
+    ///     Handles characteristic selection and navigates to the detail page.
     /// </summary>
     private async Task SelectCharacteristicAsync(IBluetoothRemoteCharacteristic? characteristic)
     {
@@ -123,35 +135,14 @@ public class CharacteristicsViewModel : BaseViewModel
             return;
         }
 
-        // Display characteristic details
-        var properties = new List<string>();
-        if (characteristic.CanRead)
-        {
-            properties.Add("Read");
-        }
+        _logger.LogInformation("Characteristic selected: {CharacteristicId} from service: {ServiceId}", characteristic.Id, ServiceId);
 
-        if (characteristic.CanWrite)
+        // Navigate to the characteristic detail page with the selected characteristic
+        var parameters = new Dictionary<string, object>
         {
-            properties.Add("Write");
-        }
-
-        if (characteristic.CanListen)
-        {
-            properties.Add("Listen/Notify");
-        }
-
-        var propertiesText = properties.Any()
-            ? string.Join(", ", properties)
-            : "None";
-
-        var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
-        if (mainPage != null)
-        {
-            await mainPage.DisplayAlertAsync(
-                "Characteristic Details",
-                $"UUID: {characteristic.Id}\n\nProperties: {propertiesText}",
-                "OK");
-        }
+            ["Characteristic"] = characteristic
+        };
+        await _navigation.NavigateToAsync<CharacteristicDetailPage>(parameters);
     }
 
     /// <summary>
