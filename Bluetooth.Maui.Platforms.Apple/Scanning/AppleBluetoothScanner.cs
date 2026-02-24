@@ -73,6 +73,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1518986-scanforperipherals">iOS CBCentralManager.scanForPeripherals</seealso>
     protected override ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(scanningOptions);
         Logger?.LogScanStarting(scanningOptions.ScanMode, scanningOptions.CallbackType);
         CbCentralManagerWrapper.CbCentralManager.ScanForPeripherals(scanningOptions);
         return ValueTask.CompletedTask;
@@ -131,7 +132,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     public virtual void UpdatedState(CBManagerState centralState)
     {
         MainThreadDispatcher.BeginInvokeOnMainThread(() => {
-            Logger?.LogCentralManagerStateChanged(centralState.ToString());
+            Logger?.LogCentralManagerStateChanged(centralState);
             State = centralState;
         });
     }

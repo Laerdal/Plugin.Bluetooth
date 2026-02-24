@@ -29,7 +29,7 @@ public class AppleBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel,
         IBluetoothRemoteDevice device,
         CBL2CapChannel nativeChannel,
         ILogger? logger = null)
-        : base(device, (int)nativeChannel.Psm, logger)
+        : base(device, nativeChannel?.Psm ?? throw new ArgumentNullException(nameof(nativeChannel)), logger)
     {
         ArgumentNullException.ThrowIfNull(nativeChannel);
         _nativeChannel = nativeChannel;
@@ -211,6 +211,10 @@ public class AppleBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel,
         {
             await NativeCloseAsync().ConfigureAwait(false);
         }
+
+        _inputStream?.Dispose();
+        _outputStream?.Dispose();
+        _streamDelegate?.Dispose();
 
         // Call base disposal
         await base.DisposeAsync().ConfigureAwait(false);

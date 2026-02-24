@@ -83,7 +83,7 @@ internal static partial class AppleBluetoothLoggerMessages
         Message = "CBCentralManager state changed to: {State}")]
     public static partial void LogCentralManagerStateChanged(
         this ILogger logger,
-        string state);
+        CBManagerState state);
 
     #endregion
 
