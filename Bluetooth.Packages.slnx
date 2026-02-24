@@ -1,0 +1,26 @@
+<Solution>
+  <Folder Name="/Abstractions/">
+    <Project Path="Bluetooth.Abstractions.Broadcasting/Bluetooth.Abstractions.Broadcasting.csproj" />
+    <Project Path="Bluetooth.Abstractions.Scanning/Bluetooth.Abstractions.Scanning.csproj" />
+    <Project Path="Bluetooth.Abstractions/Bluetooth.Abstractions.csproj" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="Bluetooth.Core.Broadcasting/Bluetooth.Core.Broadcasting.csproj" />
+    <Project Path="Bluetooth.Core.Scanning/Bluetooth.Core.Scanning.csproj" />
+    <Project Path="Bluetooth.Core/Bluetooth.Core.csproj" />
+  </Folder>
+  <Folder Name="/Maui/">
+    <Project Path="Bluetooth.Maui.Platforms.Apple/Bluetooth.Maui.Platforms.Apple.csproj" />
+    <Project Path="Bluetooth.Maui.Platforms.DotNetCore/Bluetooth.Maui.Platforms.DotNetCore.csproj" />
+    <Project Path="Bluetooth.Maui.Platforms.Droid/Bluetooth.Maui.Platforms.Droid.csproj" />
+    <Project Path="Bluetooth.Maui.Platforms.Win\Bluetooth.Maui.Platforms.Win.csproj" />
+    <Project Path="Bluetooth.Maui/Bluetooth.Maui.csproj" />
+  </Folder>
+  <Folder Name="/_Extras/">
+    <File Path="Directory.Packages.props" />
+    <File Path="nuget.config" />
+    <File Path="global.json" />
+    <File Path="README.md" />
+    <File Path="LICENSE.md" />
+  </Folder>
+</Solution>
