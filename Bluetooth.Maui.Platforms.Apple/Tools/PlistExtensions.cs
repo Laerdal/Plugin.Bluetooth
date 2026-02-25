@@ -1,3 +1,5 @@
+using Bluetooth.Maui.Platforms.Apple.Exceptions;
+
 namespace Bluetooth.Maui.Platforms.Apple.Tools;
 
 /// <summary>
@@ -33,13 +35,10 @@ public static class PlistExtensions
     ///     Throws an exception if the background mode is not found.
     /// </summary>
     /// <param name="key">The background mode key to verify.</param>
-    /// <exception cref="ArgumentException">Thrown when the background mode is not configured.</exception>
+    /// <exception cref="AppleMissingBackgroundModeInInfoPlistException">Thrown when the background mode is not configured.</exception>
     public static void EnsureHasBackgroundMode(string key)
     {
-        if (!HasBackgroundMode(key))
-        {
-            throw new ArgumentException($"You must add '{key}' in the 'UIBackgroundModes' node of your Info.plist file");
-        }
+        AppleMissingBackgroundModeInInfoPlistException.ThrowIfMissingBackgroundMode(key);
     }
 
     /// <summary>
@@ -58,12 +57,9 @@ public static class PlistExtensions
     ///     Throws an exception if the key is not found.
     /// </summary>
     /// <param name="key">The Info.plist key to verify.</param>
-    /// <exception cref="ArgumentException">Thrown when the key is not configured.</exception>
+    /// <exception cref="AppleMissingInfoPlistKeyException">Thrown when the key is not configured.</exception>
     public static void EnsureHasInfoPlistEntry(string key)
     {
-        if (!HasInfoPlistEntry(key))
-        {
-            throw new ArgumentException($"You must set '{key}' in your Info.plist file");
-        }
+        AppleMissingInfoPlistKeyException.ThrowIfMissingInfoPlistKey(key);
     }
 }
