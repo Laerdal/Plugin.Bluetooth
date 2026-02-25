@@ -23,13 +23,10 @@ public class BluetoothManagerWrapper : IBluetoothManagerWrapper, IDisposable
             {
                 lock (_lock)
                 {
+                    _bluetoothManager = Application.Context.GetSystemService(Context.BluetoothService) as BluetoothManager;
                     if (_bluetoothManager == null)
                     {
-                        _bluetoothManager = Application.Context.GetSystemService(Context.BluetoothService) as BluetoothManager;
-                        if (_bluetoothManager == null)
-                        {
-                            throw new InvalidOperationException("BluetoothManager is null - ensure Bluetooth is available on this device");
-                        }
+                        throw new InvalidOperationException("BluetoothManager is null - ensure Bluetooth is available on this device");
                     }
                 }
             }

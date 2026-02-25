@@ -70,16 +70,14 @@ public class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAdapterWrap
             {
                 lock (_lock)
                 {
+                    _bluetoothAdapter = _bluetoothManagerWrapper.BluetoothManager.Adapter;
                     if (_bluetoothAdapter == null)
                     {
-                        _bluetoothAdapter = _bluetoothManagerWrapper.BluetoothManager.Adapter;
-                        if (_bluetoothAdapter == null)
-                        {
-                            throw new InvalidOperationException("BluetoothAdapter is null - ensure Bluetooth is available on this device");
-                        }
-
-                        _refreshSubscription = _ticker?.Register("bluetooth_adapter_wrapper_refresh", TimeSpan.FromSeconds(1), RefreshAdapterProperties, true);
+                        throw new InvalidOperationException("BluetoothAdapter is null - ensure Bluetooth is available on this device");
                     }
+
+                    _refreshSubscription = _ticker?.Register("bluetooth_adapter_wrapper_refresh", TimeSpan.FromSeconds(1), RefreshAdapterProperties);
+
                 }
             }
 
