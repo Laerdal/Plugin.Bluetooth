@@ -51,6 +51,12 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
             {
                 lock (_lock)
                 {
+                    // Validate Info.plist configuration if state restoration is enabled
+                    if (!string.IsNullOrEmpty(_options.RestoreIdentifierKey))
+                    {
+                        PlistExtensions.EnsureHasBackgroundMode("bluetooth-peripheral");
+                    }
+
                     _cbPeripheralManager = new CBPeripheralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
                     {
                         Delegate = this
@@ -66,7 +72,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
     /// <summary>
     ///     Gets a value indicating whether the Core Bluetooth peripheral manager is currently advertising.
     /// </summary>
-    public bool CbPeripheralManagerIsAdvertising { get; set; }
+    public bool CbPeripheralManagerIsAdvertising { get; private set; }
 
     private void RefreshIsAdvertising()
     {

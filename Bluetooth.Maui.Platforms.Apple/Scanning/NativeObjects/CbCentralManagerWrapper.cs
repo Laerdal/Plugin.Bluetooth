@@ -52,6 +52,12 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
             {
                 lock (_lock)
                 {
+                    // Validate Info.plist configuration if state restoration is enabled
+                    if (!string.IsNullOrEmpty(_options.RestoreIdentifier))
+                    {
+                        PlistExtensions.EnsureHasBackgroundMode("bluetooth-central");
+                    }
+
                     _cbCentralManager = new CBCentralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
                     {
                         Delegate = this
@@ -67,7 +73,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
     /// <summary>
     ///     Gets or sets a value indicating whether the central manager is currently scanning for peripherals.
     /// </summary>
-    public bool CbCentralManagerIsScanning { get; set; }
+    public bool CbCentralManagerIsScanning { get; private set; }
 
     private void RefreshIsScanning()
     {
