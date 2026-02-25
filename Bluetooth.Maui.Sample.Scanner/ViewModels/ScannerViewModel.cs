@@ -8,6 +8,7 @@ namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 public class ScannerViewModel : BaseViewModel
 {
     private readonly ILogger<ScannerViewModel> _logger;
+
     private readonly INavigationService _navigation;
 
     private readonly IBluetoothScanner _scanner;
@@ -177,9 +178,11 @@ public class ScannerViewModel : BaseViewModel
     /// </summary>
     private void OnRunningStateChanged(object? sender, EventArgs e)
     {
-        IsScanning = _scanner.IsRunning;
-        StartScanCommand.NotifyCanExecuteChanged();
-        StopScanCommand.NotifyCanExecuteChanged();
+        MainThread.BeginInvokeOnMainThread(() => {
+            IsScanning = _scanner.IsRunning;
+            StartScanCommand.NotifyCanExecuteChanged();
+            StopScanCommand.NotifyCanExecuteChanged();
+        });
     }
 
     /// <summary>
