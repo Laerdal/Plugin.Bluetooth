@@ -7,13 +7,18 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
 {
     private readonly ICbPeripheralManagerDelegate _cbPeripheralManagerDelegate;
-    private readonly IDispatchQueueProvider _dispatchQueueProvider;
-    private readonly CbPeripheralManagerOptions _options;
-    private readonly ITicker _ticker;
-    private readonly Lock _lock = new Lock();
-    private CBPeripheralManager? _cbPeripheralManager;
-    private IDisposable? _refreshSubscription;
 
+    private readonly IDispatchQueueProvider _dispatchQueueProvider;
+
+    private readonly CbPeripheralManagerOptions _options;
+
+    private readonly ITicker _ticker;
+
+    private readonly Lock _lock = new Lock();
+
+    private CBPeripheralManager? _cbPeripheralManager;
+
+    private IDisposable? _refreshSubscription;
 
     /// <summary>
     ///     Initializes a new instance of the CbPeripheralManagerWrapper class.
@@ -22,10 +27,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
     /// <param name="options">The initialization options for the peripheral manager.</param>
     /// <param name="dispatchQueueProvider">The provider for dispatch queues.</param>
     /// <param name="ticker">The ticker for scheduling periodic tasks.</param>
-    public CbPeripheralManagerWrapper(ICbPeripheralManagerDelegate cbPeripheralManagerDelegate,
-        IOptions<CbPeripheralManagerOptions> options,
-        IDispatchQueueProvider dispatchQueueProvider,
-        ITicker ticker)
+    public CbPeripheralManagerWrapper(ICbPeripheralManagerDelegate cbPeripheralManagerDelegate, IOptions<CbPeripheralManagerOptions> options, IDispatchQueueProvider dispatchQueueProvider, ITicker ticker)
     {
         ArgumentNullException.ThrowIfNull(cbPeripheralManagerDelegate);
         ArgumentNullException.ThrowIfNull(options);
@@ -49,14 +51,11 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
             {
                 lock (_lock)
                 {
-                    if (_cbPeripheralManager == null)
+                    _cbPeripheralManager = new CBPeripheralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
                     {
-                        _cbPeripheralManager = new CBPeripheralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
-                        {
-                            Delegate = this
-                        };
-                        _refreshSubscription = _ticker.Register("refresh_peripheral_manager_properties", TimeSpan.FromSeconds(1), RefreshIsAdvertising, true);
-                    }
+                        Delegate = this
+                    };
+                    _refreshSubscription = _ticker.Register("refresh_peripheral_manager_properties", TimeSpan.FromSeconds(1), RefreshIsAdvertising, true);
                 }
             }
 
@@ -67,7 +66,7 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
     /// <summary>
     ///     Gets a value indicating whether the Core Bluetooth peripheral manager is currently advertising.
     /// </summary>
-    private bool CbPeripheralManagerIsAdvertising { get; set; }
+    public bool CbPeripheralManagerIsAdvertising { get; set; }
 
     private void RefreshIsAdvertising()
     {
@@ -315,4 +314,5 @@ public partial class CbPeripheralManagerWrapper : CBPeripheralManagerDelegate
     }
 
     #endregion
+
 }

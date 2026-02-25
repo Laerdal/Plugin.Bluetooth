@@ -13,7 +13,9 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
     private readonly CBCentralInitOptions _options;
 
     private readonly ITicker _ticker;
+
     private readonly Lock _lock = new Lock();
+
     private CBCentralManager? _cbCentralManager;
 
     private IDisposable? _refreshSubscription;
@@ -50,14 +52,11 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
             {
                 lock (_lock)
                 {
-                    if (_cbCentralManager == null)
+                    _cbCentralManager = new CBCentralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
                     {
-                        _cbCentralManager = new CBCentralManager(this, _dispatchQueueProvider.GetCbCentralManagerDispatchQueue(), _options)
-                        {
-                            Delegate = this
-                        };
-                        _refreshSubscription = _ticker.Register("refresh_central_manager_properties", TimeSpan.FromSeconds(1), RefreshIsScanning, true);
-                    }
+                        Delegate = this
+                    };
+                    _refreshSubscription = _ticker.Register("refresh_central_manager_properties", TimeSpan.FromSeconds(1), RefreshIsScanning, true);
                 }
             }
 
@@ -68,7 +67,7 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
     /// <summary>
     ///     Gets or sets a value indicating whether the central manager is currently scanning for peripherals.
     /// </summary>
-    private bool CbCentralManagerIsScanning { get; set; }
+    public bool CbCentralManagerIsScanning { get; set; }
 
     private void RefreshIsScanning()
     {
@@ -300,4 +299,5 @@ public partial class CbCentralManagerWrapper : CBCentralManagerDelegate
     }
 
     #endregion
+
 }

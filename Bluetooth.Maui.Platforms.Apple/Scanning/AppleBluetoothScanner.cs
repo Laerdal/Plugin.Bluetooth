@@ -64,7 +64,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <inheritdoc />
     protected override void NativeRefreshIsRunning()
     {
-        IsRunning = CbCentralManagerWrapper.CbCentralManager.IsScanning;
+        IsRunning = CbCentralManagerWrapper.CbCentralManagerIsScanning;
     }
 
     #region Start
@@ -152,7 +152,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     {
         // Capture values before dispatching to avoid referencing native objects across threads
         var advertisement = new AppleBluetoothAdvertisement(peripheral, advertisementData, rssi);
-        var isScanning = CbCentralManagerWrapper.CbCentralManager.IsScanning;
+        var isScanning = CbCentralManagerWrapper.CbCentralManagerIsScanning;
         var deviceIdStr = peripheral.Identifier.ToString();
         var rssiValue = rssi.Int32Value;
 

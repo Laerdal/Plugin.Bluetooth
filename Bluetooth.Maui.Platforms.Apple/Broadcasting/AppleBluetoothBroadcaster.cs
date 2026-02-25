@@ -61,7 +61,7 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     /// <inheritdoc />
     protected override void NativeRefreshIsRunning()
     {
-        IsRunning = CbPeripheralManagerWrapper.CbPeripheralManager.Advertising;
+        IsRunning = CbPeripheralManagerWrapper.CbPeripheralManagerIsAdvertising;
     }
 
     #region Client Device Management
