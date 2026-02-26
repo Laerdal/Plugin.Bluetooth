@@ -7,9 +7,13 @@ namespace Bluetooth.Maui.Platforms.Win.Broadcasting.NativeObjects;
 public sealed partial class BluetoothLeAdvertisementPublisherWrapper : BaseBindableObject, IBluetoothLeAdvertisementPublisherWrapper, IDisposable
 {
     private BluetoothLEAdvertisementPublisher? _publisher;
+
     private readonly IBluetoothLeAdvertisementPublisherProxyDelegate _delegate;
+
     private readonly ITicker _ticker;
+
     private readonly Lock _lock = new Lock();
+
     private IDisposable? _refreshSubscription;
 
     /// <summary>
@@ -17,9 +21,7 @@ public sealed partial class BluetoothLeAdvertisementPublisherWrapper : BaseBinda
     /// </summary>
     /// <param name="delegate">The delegate for handling advertisement publisher events.</param>
     /// <param name="ticker">The ticker for periodic property refresh.</param>
-    public BluetoothLeAdvertisementPublisherWrapper(
-        IBluetoothLeAdvertisementPublisherProxyDelegate @delegate,
-        ITicker ticker)
+    public BluetoothLeAdvertisementPublisherWrapper(IBluetoothLeAdvertisementPublisherProxyDelegate @delegate, ITicker ticker)
     {
         ArgumentNullException.ThrowIfNull(@delegate);
         ArgumentNullException.ThrowIfNull(ticker);
@@ -39,18 +41,11 @@ public sealed partial class BluetoothLeAdvertisementPublisherWrapper : BaseBinda
             {
                 lock (_lock)
                 {
-                    if (_publisher == null)
-                    {
-                        _publisher = new BluetoothLEAdvertisementPublisher();
-                        _publisher.StatusChanged += BluetoothLEAdvertisementPublisher_StatusChanged;
+                    _publisher = new BluetoothLEAdvertisementPublisher();
+                    _publisher.StatusChanged += BluetoothLEAdvertisementPublisher_StatusChanged;
 
-                        // Start ticker for property refresh
-                        _refreshSubscription = _ticker.Register(
-                            "BluetoothLeAdvertisementPublisherWrapper",
-                            TimeSpan.FromSeconds(1),
-                            RefreshValues,
-                            runImmediately: true);
-                    }
+                    // Start ticker for property refresh
+                    _refreshSubscription = _ticker.Register("BluetoothLeAdvertisementPublisherWrapper", TimeSpan.FromSeconds(1), RefreshValues, runImmediately: true);
                 }
             }
 
@@ -82,13 +77,11 @@ public sealed partial class BluetoothLeAdvertisementPublisherWrapper : BaseBinda
         {
             if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22621))
             {
-                _delegate.OnAdvertisementPublisherStatusChanged(
-                    args.Status, args.Error, args.SelectedTransmitPowerLevelInDBm);
+                _delegate.OnAdvertisementPublisherStatusChanged(args.Status, args.Error, args.SelectedTransmitPowerLevelInDBm);
             }
             else
             {
-                _delegate.OnAdvertisementPublisherStatusChanged(
-                    args.Status, args.Error);
+                _delegate.OnAdvertisementPublisherStatusChanged(args.Status, args.Error);
             }
         }
         catch (Exception e)
@@ -119,7 +112,6 @@ public sealed partial class BluetoothLeAdvertisementPublisherWrapper : BaseBinda
             PreferredTransmitPowerLevelInDBm = _publisher.PreferredTransmitPowerLevelInDBm;
         }
     }
-
 
     /// <inheritdoc/>
     public BluetoothLEAdvertisementPublisherStatus Status
@@ -155,5 +147,7 @@ public sealed partial class BluetoothLeAdvertisementPublisherWrapper : BaseBinda
         get => GetValue<short?>(null);
         private set => SetValue(value);
     }
+
     #endregion
+
 }

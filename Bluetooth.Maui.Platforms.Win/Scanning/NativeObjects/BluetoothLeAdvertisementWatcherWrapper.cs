@@ -7,9 +7,13 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning.NativeObjects;
 public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindableObject, IBluetoothLeAdvertisementWatcherWrapper, IDisposable
 {
     private BluetoothLEAdvertisementWatcher? _watcher;
+
     private readonly IBluetoothLeAdvertisementWatcherProxyDelegate _delegate;
+
     private readonly ITicker _ticker;
+
     private readonly Lock _lock = new Lock();
+
     private IDisposable? _refreshSubscription;
 
     /// <summary>
@@ -17,9 +21,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     /// </summary>
     /// <param name="delegate">The delegate for handling advertisement watcher events.</param>
     /// <param name="ticker">The ticker for periodic property refresh.</param>
-    public BluetoothLeAdvertisementWatcherWrapper(
-        IBluetoothLeAdvertisementWatcherProxyDelegate @delegate,
-        ITicker ticker)
+    public BluetoothLeAdvertisementWatcherWrapper(IBluetoothLeAdvertisementWatcherProxyDelegate @delegate, ITicker ticker)
     {
         ArgumentNullException.ThrowIfNull(@delegate);
         ArgumentNullException.ThrowIfNull(ticker);
@@ -39,19 +41,12 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
             {
                 lock (_lock)
                 {
-                    if (_watcher == null)
-                    {
-                        _watcher = new BluetoothLEAdvertisementWatcher();
-                        _watcher.Received += BluetoothLEAdvertisementWatcher_Received;
-                        _watcher.Stopped += BluetoothLEAdvertisementWatcher_Stopped;
+                    _watcher = new BluetoothLEAdvertisementWatcher();
+                    _watcher.Received += BluetoothLEAdvertisementWatcher_Received;
+                    _watcher.Stopped += BluetoothLEAdvertisementWatcher_Stopped;
 
-                        // Start ticker for property refresh
-                        _refreshSubscription = _ticker.Register(
-                            "BluetoothLeAdvertisementWatcherWrapper",
-                            TimeSpan.FromSeconds(1),
-                            RefreshValues,
-                            runImmediately: true);
-                    }
+                    // Start ticker for property refresh
+                    _refreshSubscription = _ticker.Register("BluetoothLeAdvertisementWatcherWrapper", TimeSpan.FromSeconds(1), RefreshValues, runImmediately: true);
                 }
             }
 
@@ -218,4 +213,5 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     }
 
     #endregion
+
 }
