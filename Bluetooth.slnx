@@ -27,5 +27,6 @@
     <File Path="global.json" />
     <File Path="README.md" />
     <File Path="LICENSE.md" />
+    <File Path=".editorconfig" />
   </Folder>
 </Solution>
