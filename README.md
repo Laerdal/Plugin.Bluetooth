@@ -29,12 +29,12 @@ A cross-platform .NET MAUI Bluetooth Low Energy (BLE) library providing a clean,
 
 ## Platform Support
 
-| Platform | Scanning | Connection | GATT Operations | Broadcasting |
-|----------|----------|------------|-----------------|--------------|
-| **Android** | ✅ | ✅ | ✅ | ✅ |
-| **iOS** | ✅ | ✅ | ✅ | ❌ |
-| **MacCatalyst** | ✅ | ✅ | ✅ | ❌ |
-| **Windows** | ✅ | ✅ | ✅ | ❌ |
+| Platform        | Scanning | Connection | GATT Operations | Broadcasting |
+|-----------------|----------|------------|-----------------|--------------|
+| **Android**     | ✅        | ✅          | ✅               | ✅            |
+| **iOS**         | ✅        | ✅          | ✅               | ❌            |
+| **MacCatalyst** | ✅        | ✅          | ✅               | ❌            |
+| **Windows**     | ✅        | ✅          | ✅               | ❌            |
 
 > **Note**: Broadcasting (peripheral mode) is currently Android-only. iOS/MacCatalyst/Windows throw `NotImplementedException`.
 
