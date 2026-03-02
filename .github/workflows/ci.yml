@@ -58,7 +58,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: '⬇️ Download Version artifact'
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: version
           path: '${{ github.workspace }}/Output/Version'
@@ -112,7 +112,7 @@ jobs:
     needs: build
     steps:
       - name: '📦 Download NuGet packages'
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: packages
           path: '${{ github.workspace }}/packages'
