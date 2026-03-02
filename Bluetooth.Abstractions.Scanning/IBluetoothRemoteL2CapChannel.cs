@@ -4,7 +4,7 @@ namespace Bluetooth.Abstractions.Scanning;
 ///     Interface representing a Bluetooth L2CAP (Logical Link Control and Adaptation Protocol) channel.
 ///     L2CAP channels provide connection-oriented data transfer with higher throughput than GATT characteristics.
 /// </summary>
-public interface IBluetoothL2CapChannel : INotifyPropertyChanged, IAsyncDisposable
+public interface IBluetoothRemoteL2CapChannel : INotifyPropertyChanged, IAsyncDisposable
 {
     /// <summary>
     ///     Gets the device associated with this L2CAP channel.

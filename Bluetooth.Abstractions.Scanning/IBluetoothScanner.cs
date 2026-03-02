@@ -5,6 +5,21 @@ namespace Bluetooth.Abstractions.Scanning;
 /// </summary>
 public partial interface IBluetoothScanner : IAsyncDisposable
 {
+    /// <summary>
+    ///     Gets the name provider for Bluetooth scanning objects.
+    /// </summary>
+    IBluetoothNameProvider? NameProvider { get; }
+    
+    /// <summary>
+    ///     Gets the converter for translating RSSI values to signal strength levels.
+    /// </summary>
+    IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
+    
+    /// <summary>
+    ///     Gets the logger factory for creating loggers within the Bluetooth scanner implementation.
+    /// </summary>
+    ILoggerFactory? LoggerFactory { get; }
+    
     #region Advertisement
 
     /// <summary>

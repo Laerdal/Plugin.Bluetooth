@@ -8,7 +8,7 @@ public partial interface IBluetoothRemoteCharacteristic : INotifyPropertyChanged
     /// <summary>
     ///     Gets the Bluetooth service associated with this characteristic.
     /// </summary>
-    IBluetoothRemoteService RemoteService { get; }
+    IBluetoothRemoteService Service { get; }
 
     /// <summary>
     ///     Gets the universally unique identifier (UUID) of the characteristic.

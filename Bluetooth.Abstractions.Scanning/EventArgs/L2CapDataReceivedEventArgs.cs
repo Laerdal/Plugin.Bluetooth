@@ -10,7 +10,7 @@ public class L2CapDataReceivedEventArgs : System.EventArgs
     /// </summary>
     /// <param name="channel">The L2CAP channel that received the data.</param>
     /// <param name="data">The data that was received.</param>
-    public L2CapDataReceivedEventArgs(IBluetoothL2CapChannel channel, ReadOnlyMemory<byte> data)
+    public L2CapDataReceivedEventArgs(IBluetoothRemoteL2CapChannel channel, ReadOnlyMemory<byte> data)
     {
         Channel = channel;
         Data = data;
@@ -19,7 +19,7 @@ public class L2CapDataReceivedEventArgs : System.EventArgs
     /// <summary>
     ///     Gets the L2CAP channel that received the data.
     /// </summary>
-    public IBluetoothL2CapChannel Channel { get; }
+    public IBluetoothRemoteL2CapChannel Channel { get; }
 
     /// <summary>
     ///     Gets the data that was received.

@@ -9,7 +9,7 @@ public partial interface IBluetoothRemoteDescriptor : INotifyPropertyChanged, IA
     /// <summary>
     ///     Gets the Bluetooth characteristic associated with this descriptor.
     /// </summary>
-    IBluetoothRemoteCharacteristic RemoteCharacteristic { get; }
+    IBluetoothRemoteCharacteristic Characteristic { get; }
 
     /// <summary>
     ///     Gets the unique identifier of the descriptor. This is typically a UUID that identifies the type of descriptor (e.g., Client Characteristic Configuration Descriptor has a well-known UUID).
