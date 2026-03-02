@@ -56,6 +56,9 @@
         <Compile Update="**\BaseBluetoothRemoteDescriptor.*.cs">
             <DependentUpon>BaseBluetoothRemoteDescriptor.cs</DependentUpon>
         </Compile>
+        <Compile Update="**\BaseBluetoothRemoteL2CapChannel.*.cs">
+            <DependentUpon>BaseBluetoothRemoteL2CapChannel.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <!-- ==================== PROJECT REFERENCES / DEPENDENCIES ==================== -->

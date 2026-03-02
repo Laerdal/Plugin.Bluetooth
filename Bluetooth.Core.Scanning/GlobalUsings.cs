@@ -22,7 +22,6 @@ global using Bluetooth.Abstractions.Scanning;
 global using Bluetooth.Abstractions.Scanning.Converters;
 global using Bluetooth.Abstractions.Scanning.EventArgs;
 global using Bluetooth.Abstractions.Scanning.Exceptions;
-global using Bluetooth.Abstractions.Scanning.Factories;
 global using Bluetooth.Abstractions.Scanning.Options;
 global using Bluetooth.Core;
 global using Bluetooth.Core.Infrastructure.Scheduling;

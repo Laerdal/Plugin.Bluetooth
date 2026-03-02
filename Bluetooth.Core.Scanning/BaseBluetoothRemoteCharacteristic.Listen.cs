@@ -16,19 +16,19 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     public async ValueTask StartListeningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        LogStartingNotifications(Id, RemoteService.Device.Id);
+        LogStartingNotifications(Id, Service.Device.Id);
 
         await ReadIsListeningAsync(timeout, cancellationToken).ConfigureAwait(false);
         if (IsListening)
         {
-            LogNotificationsStarted(Id, RemoteService.Device.Id);
+            LogNotificationsStarted(Id, Service.Device.Id);
             return;
         }
 
         await WriteIsListeningAsync(true, timeout, cancellationToken).ConfigureAwait(false);
         await ReadIsListeningAsync(timeout, cancellationToken).ConfigureAwait(false);
 
-        LogNotificationsStarted(Id, RemoteService.Device.Id);
+        LogNotificationsStarted(Id, Service.Device.Id);
     }
 
     /// <inheritdoc />
@@ -38,19 +38,19 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     public async ValueTask StopListeningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        LogStoppingNotifications(Id, RemoteService.Device.Id);
+        LogStoppingNotifications(Id, Service.Device.Id);
 
         await ReadIsListeningAsync(timeout, cancellationToken).ConfigureAwait(false);
         if (!IsListening)
         {
-            LogNotificationsStopped(Id, RemoteService.Device.Id);
+            LogNotificationsStopped(Id, Service.Device.Id);
             return;
         }
 
         await WriteIsListeningAsync(false, timeout, cancellationToken).ConfigureAwait(false);
         await ReadIsListeningAsync(timeout, cancellationToken).ConfigureAwait(false);
 
-        LogNotificationsStopped(Id, RemoteService.Device.Id);
+        LogNotificationsStopped(Id, Service.Device.Id);
     }
 
 
@@ -61,7 +61,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     /// <param name="oldValue">The old value of the characteristic.</param>
     private void OnValueUpdated(ReadOnlyMemory<byte> newValue, ReadOnlyMemory<byte> oldValue)
     {
-        LogValueUpdated(Id, RemoteService.Device.Id, newValue.Length);
+        LogValueUpdated(Id, Service.Device.Id, newValue.Length);
         ValueUpdated?.Invoke(this, new ValueUpdatedEventArgs(newValue, oldValue));
     }
 
@@ -128,7 +128,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     /// </remarks>
     protected void OnReadIsListeningFailed(Exception e)
     {
-        LogNotificationsStartFailed(Id, RemoteService.Device.Id, e);
+        LogNotificationsStartFailed(Id, Service.Device.Id, e);
 
         // Attempt to dispatch exception to the TaskCompletionSource
         var success = ReadIsListeningTcs?.TrySetException(e) ?? false;
@@ -174,7 +174,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     public async ValueTask<bool> ReadIsListeningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
-        DeviceNotConnectedException.ThrowIfNotConnected(RemoteService.Device);
+        DeviceNotConnectedException.ThrowIfNotConnected(Service.Device);
 
         // Ensure LISTEN is supported
         CharacteristicCantListenException.ThrowIfCantListen(this);
@@ -182,7 +182,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         // Prevents multiple calls to ReadIsListeningAsync
         if (ReadIsListeningTcs is { Task.IsCompleted: false })
         {
-            LogMergingNotificationAttempts(Id, RemoteService.Device.Id);
+            LogMergingNotificationAttempts(Id, Service.Device.Id);
             return await ReadIsListeningTcs.Task.ConfigureAwait(false);
         }
 
@@ -258,7 +258,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     /// </remarks>
     protected void OnWriteIsListeningFailed(Exception e)
     {
-        LogNotificationsStartFailed(Id, RemoteService.Device.Id, e);
+        LogNotificationsStartFailed(Id, Service.Device.Id, e);
 
         // Attempt to dispatch exception to the TaskCompletionSource
         var success = WriteIsListeningTcs?.TrySetException(e) ?? false;
@@ -313,7 +313,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     public async ValueTask WriteIsListeningAsync(bool shouldBeListening, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
-        DeviceNotConnectedException.ThrowIfNotConnected(RemoteService.Device);
+        DeviceNotConnectedException.ThrowIfNotConnected(Service.Device);
 
         // Ensure LISTEN is supported
         CharacteristicCantListenException.ThrowIfCantListen(this);

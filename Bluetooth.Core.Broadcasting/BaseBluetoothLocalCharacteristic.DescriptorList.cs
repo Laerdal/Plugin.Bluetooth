@@ -17,19 +17,26 @@ public abstract partial class BaseBluetoothLocalCharacteristic
     #region Descriptors - Add
 
     /// <inheritdoc />
-    public ValueTask<IBluetoothLocalDescriptor> AddDescriptorAsync(IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask<IBluetoothLocalDescriptor> CreateDescriptorAsync(Guid id, string? name = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(spec);
-        var existingDescriptor = GetDescriptorOrDefault(spec.Id);
+        var existingDescriptor = GetDescriptorOrDefault(id);
         if (existingDescriptor != null)
         {
-            throw new DescriptorAlreadyExistsException(this, spec.Id, existingDescriptor);
+            throw new DescriptorAlreadyExistsException(this, id, existingDescriptor);
         }
 
-        var newDescriptor = LocalDescriptorFactory.Create(this, spec);
+        var newDescriptor = await NativeCreateDescriptorAsync(id, name, timeout, cancellationToken).ConfigureAwait(false);
         Descriptors.Add(newDescriptor);
-        return ValueTask.FromResult(newDescriptor);
+        return newDescriptor;
     }
+
+    /// <summary>
+    ///     Creates a new local Bluetooth descriptor with the specified parameters.
+    /// </summary>
+    protected abstract ValueTask<IBluetoothLocalDescriptor> NativeCreateDescriptorAsync(Guid id,
+        string? name = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -143,4 +150,5 @@ public abstract partial class BaseBluetoothLocalCharacteristic
     }
 
     #endregion
+
 }

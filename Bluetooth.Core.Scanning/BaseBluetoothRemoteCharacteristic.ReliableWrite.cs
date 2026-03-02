@@ -24,7 +24,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     public async ValueTask BeginReliableWriteAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
-        DeviceNotConnectedException.ThrowIfNotConnected(RemoteService.Device);
+        DeviceNotConnectedException.ThrowIfNotConnected(Service.Device);
 
         // Prevents multiple calls
         if (BeginReliableWriteTcs is { Task.IsCompleted: false })
@@ -58,7 +58,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     public async ValueTask ExecuteReliableWriteAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
-        DeviceNotConnectedException.ThrowIfNotConnected(RemoteService.Device);
+        DeviceNotConnectedException.ThrowIfNotConnected(Service.Device);
 
         // Prevents multiple calls
         if (ExecuteReliableWriteTcs is { Task.IsCompleted: false })
@@ -92,7 +92,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     public async ValueTask AbortReliableWriteAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
-        DeviceNotConnectedException.ThrowIfNotConnected(RemoteService.Device);
+        DeviceNotConnectedException.ThrowIfNotConnected(Service.Device);
 
         // Prevents multiple calls
         if (AbortReliableWriteTcs is { Task.IsCompleted: false })

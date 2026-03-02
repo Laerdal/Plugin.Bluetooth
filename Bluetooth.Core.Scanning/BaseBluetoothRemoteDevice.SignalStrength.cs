@@ -63,7 +63,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         {
             SetValue(value);
             _rssiHistory.Enqueue(value, IsConnected ? Scanner.CurrentScanningOptions.SignalStrengthJitterSmoothing.SmoothingWhenConnected : Scanner.CurrentScanningOptions.SignalStrengthJitterSmoothing.SmoothingOnAdvertisement);
-            SignalStrengthPercent = RssiToSignalStrengthConverter.Convert(_rssiHistory.Average());
+            SignalStrengthPercent = Scanner.RssiToSignalStrengthConverter.Convert(_rssiHistory.Average());
         }
     }
 

@@ -19,24 +19,40 @@ public abstract partial class BaseBluetoothBroadcaster
     #region Services - Add
 
     /// <inheritdoc />
-    public ValueTask<IBluetoothLocalService> CreateServiceAsync(IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask<IBluetoothLocalService> CreateServiceAsync(Guid id,
+        string? name = null,
+        bool isPrimary = true,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(spec);
-
-        var existingService = GetServiceOrDefault(spec.Id);
+        var existingService = GetServiceOrDefault(id);
         if (existingService != null)
         {
-            LogServiceAlreadyExists(spec.Id);
-            throw new ServiceAlreadyExistsException(this, spec.Id, existingService);
+            LogServiceAlreadyExists(id);
+            throw new ServiceAlreadyExistsException(this, id, existingService);
         }
 
-        LogAddingService(spec.Id);
-        var newService = LocalServiceFactory.Create(this, spec);
+        LogAddingService(id);
+        var newService = await NativeCreateServiceAsync(id,
+                                                        name,
+                                                        isPrimary,
+                                                        timeout,
+                                                        cancellationToken)
+                            .ConfigureAwait(false);
         Services.Add(newService);
-        LogServiceAdded(spec.Id);
+        LogServiceAdded(id);
 
-        return new ValueTask<IBluetoothLocalService>(newService);
+        return newService;
     }
+
+    /// <summary>
+    ///     Creates a new local Bluetooth service with the specified parameters.
+    /// </summary>
+    protected abstract ValueTask<IBluetoothLocalService> NativeCreateServiceAsync(Guid id,
+        string? name = null,
+        bool isPrimary = true,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -191,4 +207,5 @@ public abstract partial class BaseBluetoothBroadcaster
     }
 
     #endregion
+
 }

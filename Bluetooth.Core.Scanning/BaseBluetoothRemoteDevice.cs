@@ -3,51 +3,50 @@ namespace Bluetooth.Core.Scanning;
 /// <inheritdoc cref="IBluetoothRemoteDevice" />
 public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IBluetoothRemoteDevice
 {
+    /// <inheritdoc />
+    public IBluetoothScanner Scanner { get; }
+    
     /// <summary>
-    ///     The logger instance used for logging device operations.
+    ///    Initializes a new instance of the <see cref="BaseBluetoothRemoteDevice" /> class using the provided Bluetooth advertisement and parent scanner.
     /// </summary>
-    private readonly ILogger<IBluetoothRemoteDevice> _logger;
+    /// <param name="parentScanner">The Bluetooth scanner associated with this remote device.</param>
+    /// <param name="advertisement">The Bluetooth advertisement containing information about the remote device.</param>
+    /// <param name="logger">Optional logger instance for logging purposes.</param>
+    protected BaseBluetoothRemoteDevice(IBluetoothScanner parentScanner, IBluetoothAdvertisement advertisement, ILogger<IBluetoothRemoteDevice>? logger = null) : base(logger)
+    {
+        // Validate constructor arguments
+        ArgumentNullException.ThrowIfNull(advertisement);
+        ArgumentNullException.ThrowIfNull(parentScanner);
+
+        Scanner = parentScanner;
+        Id = advertisement.BluetoothAddress;
+        Manufacturer = advertisement.Manufacturer;
+
+        // Properties from spec
+        OnAdvertisementReceived(advertisement);
+    }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteDevice" /> class.
     /// </summary>
-    /// <param name="scanner">The Bluetooth scanner associated with this device.</param>
-    /// <param name="spec">The factory spec containing device information.</param>
-    /// <param name="serviceFactory">The factory for creating Bluetooth services.</param>
-    /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
+    /// <param name="parentScanner">The Bluetooth scanner associated with this device.</param>
+    /// <param name="id">The unique identifier of the Bluetooth device, typically a UUID or MAC address.</param>
+    /// <param name="manufacturer">The manufacturer information for the Bluetooth device.</param>
     /// <param name="logger">The logger instance to use for logging.</param>
-    protected BaseBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec, IBluetoothRemoteServiceFactory serviceFactory,
-        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter, ILogger<IBluetoothRemoteDevice>? logger = null)
+    protected BaseBluetoothRemoteDevice(
+        IBluetoothScanner parentScanner,
+        string id,
+        Manufacturer manufacturer,
+        ILogger<IBluetoothRemoteDevice>? logger = null) : base(logger)
     {
-        ArgumentNullException.ThrowIfNull(scanner);
-        ArgumentNullException.ThrowIfNull(serviceFactory);
-        ArgumentNullException.ThrowIfNull(rssiToSignalStrengthConverter);
-        ArgumentNullException.ThrowIfNull(spec);
+        // Validate constructor arguments
+        ArgumentNullException.ThrowIfNull(parentScanner);
 
-        _logger = logger ?? NullLogger<IBluetoothRemoteDevice>.Instance;
-        Scanner = scanner;
-        ServiceFactory = serviceFactory;
-        RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
-        Id = spec.DeviceId;
-        Manufacturer = spec.Manufacturer;
-        if (spec.Advertisement != null)
-        {
-            OnAdvertisementReceived(spec.Advertisement);
-        }
+        Scanner = parentScanner;
+        Id = id;
+        Manufacturer = manufacturer;
     }
 
-    /// <summary>
-    ///     The factory responsible for creating services associated with this device.
-    /// </summary>
-    protected IBluetoothRemoteServiceFactory ServiceFactory { get; }
-
-    /// <summary>
-    ///     The converter responsible for translating RSSI values to signal strength levels, which can be used for filtering and sorting devices based on signal quality.
-    /// </summary>
-    protected IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
-
-    /// <inheritdoc />
-    public IBluetoothScanner Scanner { get; }
 
     /// <inheritdoc />
     public string Id { get; }
@@ -57,6 +56,8 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
 
     /// <inheritdoc />
     public DateTimeOffset LastSeen { get; private set; }
+
+    #region Dispose
 
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
@@ -113,9 +114,15 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
         await ClearServicesAsync().ConfigureAwait(false);
     }
 
+    #endregion
+
+    #region ToString
+
     /// <inheritdoc />
     public override string ToString()
     {
         return $"[{Id}] {Name} by {Manufacturer}";
     }
+
+    #endregion
 }

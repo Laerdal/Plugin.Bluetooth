@@ -15,13 +15,16 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
     /// <param name="logger">Optional logger instance for tracking property changes.</param>
     protected BaseBindableObject(ILogger? logger = null)
     {
-        Logger = logger;
+        _logger = logger ?? NullLogger.Instance;
     }
 
     /// <summary>
     ///     The logger instance for this object.
     /// </summary>
-    protected ILogger? Logger { get; }
+    protected ILogger Logger => _logger;
+
+    
+    protected ILogger _logger;
 
     /// <summary>
     ///     Occurs when a property value changes.

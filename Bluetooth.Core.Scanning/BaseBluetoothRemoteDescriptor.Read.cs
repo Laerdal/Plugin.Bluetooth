@@ -21,7 +21,7 @@ public abstract partial class BaseBluetoothRemoteDescriptor
     public async ValueTask<ReadOnlyMemory<byte>> ReadValueAsync(bool skipIfPreviouslyRead = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
-        DeviceNotConnectedException.ThrowIfNotConnected(RemoteCharacteristic.RemoteService.Device);
+        DeviceNotConnectedException.ThrowIfNotConnected(Characteristic.Service.Device);
 
         // Ensure READ is supported
         if (!CanRead)

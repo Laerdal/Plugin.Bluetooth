@@ -5,52 +5,40 @@ namespace Bluetooth.Core.Broadcasting;
 /// </summary>
 public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject, IBluetoothLocalDescriptor
 {
+    /// <inheritdoc />
+    public IBluetoothLocalCharacteristic LocalCharacteristic { get; }
+
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothLocalDescriptor" /> class.
     /// </summary>
-    protected BaseBluetoothLocalDescriptor(
-        IBluetoothLocalCharacteristic localCharacteristic,
-        IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
+    /// <param name="localCharacteristic">The local characteristic this descriptor belongs to.</param>
+    /// <param name="id">The unique identifier of the descriptor.</param>
+    /// <param name="initialValue">The initial value of the descriptor (optional).</param>
+    /// <param name="name">The name of the descriptor (optional).</param>
+    /// <param name="logger">Optional logger for logging descriptor operations.</param>
+    protected BaseBluetoothLocalDescriptor(IBluetoothLocalCharacteristic localCharacteristic,
+        Guid id,
+        ReadOnlyMemory<byte>? initialValue = null,
+        string? name = null,
+        ILogger<IBluetoothLocalDescriptor>? logger = null) : base(logger)
     {
+        // Validate constructor arguments
         ArgumentNullException.ThrowIfNull(localCharacteristic);
-        ArgumentNullException.ThrowIfNull(spec);
 
         LocalCharacteristic = localCharacteristic;
-
-        Id = spec.Id;
-        Value = spec.InitialValue ?? ReadOnlyMemory<byte>.Empty;
+        Id = id;
+        Value = initialValue ?? ReadOnlyMemory<byte>.Empty;
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            Name = name;
+        }
     }
-
-
-    /// <inheritdoc />
-    public IBluetoothLocalCharacteristic LocalCharacteristic { get; }
 
     /// <inheritdoc />
     public Guid Id { get; }
 
     /// <inheritdoc />
     public string Name { get; } = "Unknown Descriptor";
-
-    /// <inheritdoc />
-    public async ValueTask DisposeAsync()
-    {
-        await DisposeAsyncCore().ConfigureAwait(false);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"[{Id}] {Name}";
-    }
-
-    /// <summary>
-    ///     Disposes the resources asynchronously.
-    /// </summary>
-    protected virtual ValueTask DisposeAsyncCore()
-    {
-        return ValueTask.CompletedTask;
-    }
 
     #region Read/Write Requests
 
@@ -78,20 +66,18 @@ public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject,
     /// <summary>
     ///     Handles a write request from a client device.
     /// </summary>
-    protected DescriptorWriteRequestEventArgs OnWriteRequested(
-        IBluetoothConnectedDevice device,
+    protected DescriptorWriteRequestEventArgs OnWriteRequested(IBluetoothConnectedDevice device,
         ReadOnlyMemory<byte> value,
         int offset,
         bool isPreparedWrite,
         bool responseNeeded)
     {
-        var args = new DescriptorWriteRequestEventArgs(
-            device,
-            this,
-            value,
-            offset,
-            isPreparedWrite,
-            responseNeeded);
+        var args = new DescriptorWriteRequestEventArgs(device,
+                                                       this,
+                                                       value,
+                                                       offset,
+                                                       isPreparedWrite,
+                                                       responseNeeded);
 
         WriteRequested?.Invoke(this, args);
 
@@ -104,4 +90,34 @@ public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject,
     }
 
     #endregion
+
+    #region Dispose
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    ///     Disposes the resources asynchronously.
+    /// </summary>
+    protected virtual ValueTask DisposeAsyncCore()
+    {
+        return ValueTask.CompletedTask;
+    }
+
+    #endregion
+
+    #region ToString
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return $"[{Id}] {Name}";
+    }
+
+    #endregion
+
 }

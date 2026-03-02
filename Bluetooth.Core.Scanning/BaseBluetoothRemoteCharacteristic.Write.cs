@@ -37,7 +37,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     public async ValueTask WriteValueAsync(ReadOnlyMemory<byte> value, bool skipIfOldValueMatchesNewValue = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
-        DeviceNotConnectedException.ThrowIfNotConnected(RemoteService.Device);
+        DeviceNotConnectedException.ThrowIfNotConnected(Service.Device);
 
         // Ensure WRITE is supported
         CharacteristicCantWriteException.ThrowIfCantWrite(this);
@@ -49,7 +49,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         }
 
         // Prevents multiple calls to WriteValueAsync, putting them in a queue. WARNING: If the queue gets too long, timeout might be reached
-        LogQueuingWrite(Id, RemoteService.Device.Id);
+        LogQueuingWrite(Id, Service.Device.Id);
         await WriteSemaphoreSlim.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
 
         // Should not happen because of the semaphore, but just in case
@@ -61,7 +61,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         WriteValueTcs = new TaskCompletionSource(); // Reset the TCS
         IsWriting = true; // Set the writing flag
 
-        LogWritingValue(Id, RemoteService.Device.Id, value.Length);
+        LogWritingValue(Id, Service.Device.Id, value.Length);
 
         try
         {
@@ -107,7 +107,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     /// <exception cref="CharacteristicUnexpectedWriteException">Thrown when no pending write operation is found to complete.</exception>
     protected void OnWriteValueSucceeded()
     {
-        LogWriteSucceeded(Id, RemoteService.Device.Id);
+        LogWriteSucceeded(Id, Service.Device.Id);
 
         // Attempt to dispatch success to the TaskCompletionSource
         var success = WriteValueTcs?.TrySetResult() ?? false;
@@ -117,7 +117,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         }
 
         // Else throw an exception
-        LogUnexpectedWrite(Id, RemoteService.Device.Id);
+        LogUnexpectedWrite(Id, Service.Device.Id);
         throw new CharacteristicUnexpectedWriteException(this);
     }
 
@@ -131,7 +131,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     /// </remarks>
     protected void OnWriteValueFailed(Exception e)
     {
-        LogWriteFailed(Id, RemoteService.Device.Id, e);
+        LogWriteFailed(Id, Service.Device.Id, e);
 
         // Attempt to dispatch exception to the TaskCompletionSource
         var success = WriteValueTcs?.TrySetException(e) ?? false;

@@ -30,7 +30,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     public async ValueTask<ReadOnlyMemory<byte>> ReadValueAsync(bool skipIfPreviouslyRead = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
-        DeviceNotConnectedException.ThrowIfNotConnected(RemoteService.Device);
+        DeviceNotConnectedException.ThrowIfNotConnected(Service.Device);
 
         // Ensure READ is supported
         CharacteristicCantReadException.ThrowIfCantRead(this);
@@ -38,21 +38,21 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         // Check if the value is already read and skipIfPreviouslyRead is true
         if (skipIfPreviouslyRead && Value.Length != 0)
         {
-            LogMergingReadAttempts(Id, RemoteService.Device.Id);
+            LogMergingReadAttempts(Id, Service.Device.Id);
             return Value;
         }
 
         // Prevents multiple calls to ReadValueAsync
         if (ReadValueTcs is { Task.IsCompleted: false })
         {
-            LogMergingReadAttempts(Id, RemoteService.Device.Id);
+            LogMergingReadAttempts(Id, Service.Device.Id);
             return await ReadValueTcs.Task.ConfigureAwait(false);
         }
 
         ReadValueTcs = new TaskCompletionSource<ReadOnlyMemory<byte>>(); // Reset the TCS
         IsReading = true; // Set the flag to true
 
-        LogReadingValue(Id, RemoteService.Device.Id);
+        LogReadingValue(Id, Service.Device.Id);
 
         try // try-catch to dispatch exceptions rising from start reading
         {
@@ -99,7 +99,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         var old = Value;
         Value = value;
 
-        LogReadSucceeded(Id, RemoteService.Device.Id, value.Length);
+        LogReadSucceeded(Id, Service.Device.Id, value.Length);
 
         // Attempt to dispatch success to the TaskCompletionSource
         if (ReadValueTcs != null && ReadValueTcs.TrySetResult(value))
@@ -115,7 +115,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         }
 
         // Else throw an exception
-        LogUnexpectedRead(Id, RemoteService.Device.Id);
+        LogUnexpectedRead(Id, Service.Device.Id);
         throw new CharacteristicUnexpectedReadException(this);
     }
 
@@ -129,7 +129,7 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     /// </remarks>
     protected void OnReadValueFailed(Exception e)
     {
-        LogReadFailed(Id, RemoteService.Device.Id, e);
+        LogReadFailed(Id, Service.Device.Id, e);
 
         // Attempt to dispatch exception to the TaskCompletionSource
         var success = ReadValueTcs?.TrySetException(e) ?? false;
