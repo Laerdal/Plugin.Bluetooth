@@ -9,7 +9,7 @@ public partial interface IBluetoothLocalDescriptor : INotifyPropertyChanged, IAs
     /// <summary>
     ///     Gets the Bluetooth characteristic hosting this descriptor.
     /// </summary>
-    IBluetoothLocalCharacteristic LocalCharacteristic { get; }
+    IBluetoothLocalCharacteristic Characteristic { get; }
 
     /// <summary>
     ///     Gets the name of the descriptor.

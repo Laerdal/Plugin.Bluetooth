@@ -6,26 +6,26 @@ namespace Bluetooth.Core.Broadcasting;
 public abstract partial class BaseBluetoothLocalDescriptor : BaseBindableObject, IBluetoothLocalDescriptor
 {
     /// <inheritdoc />
-    public IBluetoothLocalCharacteristic LocalCharacteristic { get; }
+    public IBluetoothLocalCharacteristic Characteristic { get; }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothLocalDescriptor" /> class.
     /// </summary>
-    /// <param name="localCharacteristic">The local characteristic this descriptor belongs to.</param>
+    /// <param name="characteristic">The local characteristic this descriptor belongs to.</param>
     /// <param name="id">The unique identifier of the descriptor.</param>
     /// <param name="initialValue">The initial value of the descriptor (optional).</param>
     /// <param name="name">The name of the descriptor (optional).</param>
     /// <param name="logger">Optional logger for logging descriptor operations.</param>
-    protected BaseBluetoothLocalDescriptor(IBluetoothLocalCharacteristic localCharacteristic,
+    protected BaseBluetoothLocalDescriptor(IBluetoothLocalCharacteristic characteristic,
         Guid id,
         ReadOnlyMemory<byte>? initialValue = null,
         string? name = null,
         ILogger<IBluetoothLocalDescriptor>? logger = null) : base(logger)
     {
         // Validate constructor arguments
-        ArgumentNullException.ThrowIfNull(localCharacteristic);
+        ArgumentNullException.ThrowIfNull(characteristic);
 
-        LocalCharacteristic = localCharacteristic;
+        Characteristic = characteristic;
         Id = id;
         Value = initialValue ?? ReadOnlyMemory<byte>.Empty;
         if (!string.IsNullOrWhiteSpace(name))

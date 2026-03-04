@@ -6,12 +6,12 @@ namespace Bluetooth.Core.Broadcasting;
 public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObject, IBluetoothLocalCharacteristic
 {
     /// <inheritdoc />
-    public IBluetoothLocalService LocalService { get; }
+    public IBluetoothLocalService Service { get; }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothLocalCharacteristic" /> class.
     /// </summary>
-    protected BaseBluetoothLocalCharacteristic(IBluetoothLocalService localService,
+    protected BaseBluetoothLocalCharacteristic(IBluetoothLocalService service,
         Guid id,
         BluetoothCharacteristicProperties properties,
         BluetoothCharacteristicPermissions permissions,
@@ -20,9 +20,9 @@ public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObj
         ILogger<IBluetoothLocalCharacteristic>? logger = null) : base(logger)
     {
         // Validate constructor arguments
-        ArgumentNullException.ThrowIfNull(localService);
+        ArgumentNullException.ThrowIfNull(service);
 
-        LocalService = localService;
+        Service = service;
         Id = id;
         Value = initialValue ?? new ReadOnlyMemory<byte>([]);
         Properties = properties;

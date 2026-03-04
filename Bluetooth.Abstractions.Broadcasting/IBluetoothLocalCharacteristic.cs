@@ -8,7 +8,7 @@ public partial interface IBluetoothLocalCharacteristic : INotifyPropertyChanged,
     /// <summary>
     ///     Gets the Bluetooth service hosting this characteristic.
     /// </summary>
-    IBluetoothLocalService LocalService { get; }
+    IBluetoothLocalService Service { get; }
 
     /// <summary>
     ///     Gets the name of the characteristic.
