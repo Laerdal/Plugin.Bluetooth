@@ -1,24 +1,20 @@
-using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
-
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 
 /// <inheritdoc cref="BaseBluetoothConnectedDevice" />
 public class AppleBluetoothConnectedDevice : BaseBluetoothConnectedDevice
 {
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothConnectedDevice" /> class with the specified broadcaster and factory spec.
-    /// </summary>
-    /// <param name="broadcaster">The Bluetooth broadcaster to which this client device is connected.</param>
-    /// <param name="spec">The factory spec containing the information needed to create this client device.</param>
-    public AppleBluetoothConnectedDevice(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec) : base(broadcaster, spec)
-    {
-        ArgumentNullException.ThrowIfNull(spec);
-        if (spec is not AppleBluetoothConnectedDeviceSpec nativeSpec)
-        {
-            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothConnectedDeviceSpec)}, but got {spec.GetType()}");
-        }
 
-        CbCentral = nativeSpec.CbCentral;
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AppleBluetoothConnectedDevice" /> class with the specified Core Bluetooth central device, broadcaster, ID, and logger.
+    /// </summary>
+    /// <param name="cbCentral">The native iOS Core Bluetooth central device represented by this connected device.</param>
+    /// <param name="broadcaster">The Bluetooth broadcaster to which this device is connected.</param>
+    /// <param name="id">The unique identifier for this connected device.</param>
+    /// <param name="logger">An optional logger for logging connected device-related events and errors.</param>
+    public AppleBluetoothConnectedDevice(CBCentral cbCentral, IBluetoothBroadcaster broadcaster, string id, ILogger<IBluetoothConnectedDevice>? logger = null) :
+        base(broadcaster, id, logger)
+    {
+        CbCentral = cbCentral;
     }
 
     /// <summary>

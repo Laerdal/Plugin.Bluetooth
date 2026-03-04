@@ -1,4 +1,3 @@
-using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 using Bluetooth.Maui.Platforms.Apple.Permissions;
 
@@ -14,21 +13,15 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     ///     Initializes a new instance of the <see cref="AppleBluetoothBroadcaster" /> class.
     /// </summary>
     /// <param name="adapter">The Bluetooth adapter associated with this broadcaster.</param>
-    /// <param name="localServiceFactory">The factory for creating broadcast services.</param>
-    /// <param name="connectedDeviceFactory">The factory for creating client devices.</param>
     /// <param name="cbPeripheralManagerWrapper">The Core Bluetooth peripheral manager wrapper.</param>
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
-    /// <param name="logger">The logger instance to use for logging.</param>
+    /// <param name="loggerFactory">An optional logger factory for creating loggers used by this broadcaster and its components.</param>
     public AppleBluetoothBroadcaster(IBluetoothAdapter adapter,
-        IBluetoothLocalServiceFactory localServiceFactory,
-        IBluetoothConnectedDeviceFactory connectedDeviceFactory,
         CbPeripheralManagerWrapper cbPeripheralManagerWrapper,
         ITicker ticker,
-        ILogger<IBluetoothBroadcaster>? logger = null) : base(adapter,
-        localServiceFactory,
-        connectedDeviceFactory,
+        ILoggerFactory? loggerFactory = null) : base(adapter,
         ticker,
-        logger)
+        loggerFactory)
     {
         ArgumentNullException.ThrowIfNull(cbPeripheralManagerWrapper);
         CbPeripheralManagerWrapper = cbPeripheralManagerWrapper;
@@ -80,8 +73,8 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
 
         if (device == null)
         {
-            var spec = new AppleBluetoothConnectedDeviceSpec(central);
-            device = ConnectedDeviceFactory.Create(this, spec);
+            var id = central.Identifier.ToGuid().ToString();
+            device = new AppleBluetoothConnectedDevice(central, this, id, LoggerFactory?.CreateLogger<AppleBluetoothConnectedDevice>());
             AddClientDevice(device);
         }
 
@@ -247,6 +240,17 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     #endregion
 
     #region Permission Methods
+
+    protected override ValueTask<IBluetoothLocalService> NativeCreateServiceAsync(Guid id,
+        string? name = null,
+        bool isPrimary = true,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        var cbService = new CBMutableService(id.ToCBUuid(), isPrimary);
+        var service = new AppleBluetoothLocalService(cbService, this, id, name, isPrimary, LoggerFactory?.CreateLogger<AppleBluetoothLocalService>());
+        return new ValueTask<IBluetoothLocalService>(service);
+    }
 
     /// <inheritdoc />
     /// <remarks>

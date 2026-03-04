@@ -1,4 +1,3 @@
-using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
@@ -18,12 +17,7 @@ public static class ServiceCollectionExtensions
     public static void AddBluetoothMauiAppleBroadcastingServices(this IServiceCollection services)
     {
         services.AddSingleton<IBluetoothBroadcaster, AppleBluetoothBroadcaster>();
-
-        services.AddSingleton<IBluetoothLocalCharacteristicFactory, AppleBluetoothLocalCharacteristicFactory>();
-        services.AddSingleton<IBluetoothLocalServiceFactory, AppleBluetoothLocalServiceFactory>();
-        services.AddSingleton<IBluetoothLocalDescriptorFactory, AppleBluetoothLocalDescriptorFactory>();
-        services.AddSingleton<IBluetoothConnectedDeviceFactory, AppleBluetoothConnectedDeviceFactory>();
-
+        
         services.AddSingleton<CBPeripheralManagerDelegate, CbPeripheralManagerWrapper>();
         services.Configure<CbPeripheralManagerOptions>(options => {
             options.ShowPowerAlert = true;

@@ -1,35 +1,41 @@
-using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
-
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 
 /// <inheritdoc cref="BaseBluetoothLocalDescriptor" />
 public class AppleBluetoothLocalDescriptor : BaseBluetoothLocalDescriptor
 {
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothLocalDescriptor" /> class with the specified characteristic and factory spec.
-    /// </summary>
-    /// <param name="localCharacteristic">The Bluetooth characteristic to which this descriptor belongs.</param>
-    /// <param name="spec">The factory spec containing the native Core Bluetooth descriptor.</param>
-    public AppleBluetoothLocalDescriptor(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec) : base(localCharacteristic, spec)
-    {
-        ArgumentNullException.ThrowIfNull(spec);
-        if (spec is not AppleBluetoothLocalDescriptorSpec nativeSpec)
-        {
-            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothLocalDescriptorSpec)}, but got {spec.GetType()}");
-        }
 
-        CbDescriptor = nativeSpec.CbDescriptor;
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AppleBluetoothLocalDescriptor" /> class with the specified Core Bluetooth descriptor, characteristic, ID, initial value, name, and logger.
+    /// </summary>
+    /// <param name="cbDescriptor">The native iOS Core Bluetooth descriptor represented by this local descriptor.</param>
+    /// <param name="characteristic">The Bluetooth characteristic to which this descriptor belongs.</param>
+    /// <param name="id">The unique identifier for this descriptor.</param>
+    /// <param name="initialValue">The initial value of the descriptor, if any.</param>
+    /// <param name="name">An optional name for the descriptor, used for debugging purposes.</param>
+    /// <param name="logger">An optional logger for logging descriptor-related events and errors.</param>
+    public AppleBluetoothLocalDescriptor(CBMutableDescriptor cbDescriptor,
+        IBluetoothLocalCharacteristic characteristic,
+        Guid id,
+        ReadOnlyMemory<byte>? initialValue = null,
+        string? name = null,
+        ILogger<IBluetoothLocalDescriptor>? logger = null) : base(characteristic,
+                                                                  id,
+                                                                  initialValue,
+                                                                  name,
+                                                                  logger)
+    {
+        CbDescriptor = cbDescriptor ?? throw new ArgumentNullException(nameof(cbDescriptor));
     }
 
     /// <summary>
     ///     Gets the native iOS Core Bluetooth descriptor.
     /// </summary>
-    public CBDescriptor CbDescriptor { get; }
+    public CBMutableDescriptor CbDescriptor { get; }
 
     /// <summary>
     ///     Gets the Bluetooth characteristic to which this descriptor belongs, cast to the Apple-specific implementation.
     /// </summary>
-    public AppleBluetoothLocalCharacteristic AppleBluetoothLocalCharacteristic => (AppleBluetoothLocalCharacteristic) LocalCharacteristic;
+    public AppleBluetoothLocalCharacteristic AppleCharacteristic => (AppleBluetoothLocalCharacteristic) Characteristic;
 
     /// <inheritdoc />
     protected override ValueTask NativeUpdateValueAsync(ReadOnlyMemory<byte> value, TimeSpan? timeout, CancellationToken cancellationToken)

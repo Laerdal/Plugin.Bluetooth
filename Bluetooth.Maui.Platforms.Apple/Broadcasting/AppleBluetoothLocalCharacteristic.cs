@@ -1,4 +1,3 @@
-using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
@@ -7,21 +6,32 @@ namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
 public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristic, CbPeripheralManagerWrapper.ICbCharacteristicDelegate
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothLocalCharacteristic" /> class with the specified service, factory spec, and descriptor factory.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothLocalCharacteristic" /> class with the specified Core Bluetooth characteristic, local service, ID, properties, permissions, initial value, name, and logger.
     /// </summary>
-    /// <param name="localService">The Bluetooth service to which this characteristic belongs.</param>
-    /// <param name="spec">The factory spec containing the information needed to create this characteristic.</param>
-    /// <param name="localDescriptorFactory">The factory used to create descriptors for this characteristic.</param>
-    public AppleBluetoothLocalCharacteristic(IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec, IBluetoothLocalDescriptorFactory localDescriptorFactory) : base(localService,
-        spec, localDescriptorFactory)
+    /// <param name="cbCharacteristic">The native iOS Core Bluetooth mutable characteristic represented by this local characteristic.</param>
+    /// <param name="service">The Bluetooth local service to which this characteristic belongs.</param>
+    /// <param name="id">The unique identifier for this characteristic.</param>
+    /// <param name="properties">The properties of this characteristic (e.g., read, write, notify).</param>
+    /// <param name="permissions">The permissions for this characteristic (e.g., readable, writable).</param>
+    /// <param name="initialValue">The initial value of the characteristic, if any.</param>
+    /// <param name="name">An optional name for the characteristic, used for debugging purposes.</param>
+    /// <param name="logger">An optional logger for logging characteristic-related events and errors.</param>
+    public AppleBluetoothLocalCharacteristic(CBMutableCharacteristic cbCharacteristic,
+        IBluetoothLocalService service,
+        Guid id,
+        BluetoothCharacteristicProperties properties,
+        BluetoothCharacteristicPermissions permissions,
+        ReadOnlyMemory<byte>? initialValue = null,
+        string? name = null,
+        ILogger<IBluetoothLocalCharacteristic>? logger = null) : base(service,
+                                                                      id,
+                                                                      properties,
+                                                                      permissions,
+                                                                      initialValue,
+                                                                      name,
+                                                                      logger)
     {
-        ArgumentNullException.ThrowIfNull(spec);
-        if (spec is not AppleBluetoothLocalCharacteristicSpec nativeSpec)
-        {
-            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothLocalCharacteristicSpec)}, but got {spec.GetType()}");
-        }
-
-        CbCharacteristic = nativeSpec.CbCharacteristic;
+        CbCharacteristic = cbCharacteristic ?? throw new ArgumentNullException(nameof(cbCharacteristic));
     }
 
     /// <summary>
@@ -32,7 +42,7 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
     /// <summary>
     ///     Gets the Bluetooth service to which this characteristic belongs, cast to the Apple-specific implementation.
     /// </summary>
-    public AppleBluetoothLocalService AppleBluetoothLocalService => (AppleBluetoothLocalService) LocalService;
+    public AppleBluetoothLocalService AppleService => (AppleBluetoothLocalService) Service;
 
     /// <inheritdoc />
     public void CharacteristicSubscribed(CBCentral central, CBCharacteristic characteristic)
@@ -77,12 +87,12 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
             var bytes = value.ToArray();
             request.Value = new ReadOnlyMemory<byte>(bytes).ToNSData();
 
-            AppleBluetoothLocalService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.RespondToRequest(request, CBATTError.Success);
+            AppleService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.RespondToRequest(request, CBATTError.Success);
         }
         catch (Exception e)
         {
             BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
-            AppleBluetoothLocalService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.RespondToRequest(request, CBATTError.RequestNotSupported);
+            AppleService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.RespondToRequest(request, CBATTError.RequestNotSupported);
         }
     }
 
@@ -98,12 +108,12 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
             var device = GetOrCreateClientDevice(request.Central);
             await OnWriteRequestReceivedAsync(device, request.Value.ToArray()).ConfigureAwait(false);
 
-            AppleBluetoothLocalService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.RespondToRequest(request, CBATTError.Success);
+            AppleService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.RespondToRequest(request, CBATTError.Success);
         }
         catch (Exception e)
         {
             BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
-            AppleBluetoothLocalService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.RespondToRequest(request, CBATTError.RequestNotSupported);
+            AppleService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.RespondToRequest(request, CBATTError.RequestNotSupported);
         }
     }
 
@@ -113,7 +123,7 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
         var nsData = value.ToNSData();
         var centralsToNotify = notifyClients ? SubscribedDevices.Cast<AppleBluetoothConnectedDevice>().Select(d => d.CbCentral).ToArray() : null;
 
-        var result = AppleBluetoothLocalService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.UpdateValue(nsData, CbCharacteristic, centralsToNotify);
+        var result = AppleService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.UpdateValue(nsData, CbCharacteristic, centralsToNotify);
 
         if (!result)
         {
@@ -130,6 +140,16 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
     /// <returns>The client device corresponding to the central.</returns>
     private IBluetoothConnectedDevice GetOrCreateClientDevice(CBCentral central)
     {
-        return AppleBluetoothLocalService.AppleBluetoothBroadcaster.GetOrCreateClientDevice(central);
+        return AppleService.AppleBluetoothBroadcaster.GetOrCreateClientDevice(central);
+    }
+    
+    /// <inheritdoc />
+    protected override ValueTask<IBluetoothLocalDescriptor> NativeCreateDescriptorAsync(Guid id, string? name = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        var cbDescriptor = new CBMutableDescriptor(id.ToCBUuid(), null);
+        var logger = AppleService.AppleBluetoothBroadcaster.LoggerFactory?.CreateLogger<AppleBluetoothLocalDescriptor>();
+        var localDescriptor = new AppleBluetoothLocalDescriptor(cbDescriptor, this, id, null, name, logger);
+        
+        return new ValueTask<IBluetoothLocalDescriptor>(localDescriptor);
     }
 }
