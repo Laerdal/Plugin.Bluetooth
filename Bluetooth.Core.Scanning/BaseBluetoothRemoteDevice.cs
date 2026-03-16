@@ -5,20 +5,40 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
 {
     /// <inheritdoc />
     public IBluetoothScanner Scanner { get; }
-    
+
+    /// <summary>
+    ///    Gets the options for smoothing signal strength jitter. This allows for configuring how the signal strength readings are averaged over time to provide a more stable and accurate representation of the device's signal strength, especially in environments with fluctuating signal conditions.
+    /// </summary>
+    public SignalStrengthSmoothingOptions SignalStrengthSmoothingOptions { get; }
+
+    /// <summary>
+    ///     Gets the converter used to convert RSSI values to signal strength levels. This allows for consistent interpretation of signal strength across different platforms and devices, as RSSI values can vary in scale and meaning depending on the underlying Bluetooth implementation.
+    /// </summary>
+    protected IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
+
     /// <summary>
     ///    Initializes a new instance of the <see cref="BaseBluetoothRemoteDevice" /> class using the provided Bluetooth advertisement and parent scanner.
     /// </summary>
     /// <param name="parentScanner">The Bluetooth scanner associated with this remote device.</param>
     /// <param name="advertisement">The Bluetooth advertisement containing information about the remote device.</param>
+    /// <param name="signalStrengthSmoothingOptions">The options for smoothing signal strength jitter.</param>
+    /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
     /// <param name="logger">Optional logger instance for logging purposes.</param>
-    protected BaseBluetoothRemoteDevice(IBluetoothScanner parentScanner, IBluetoothAdvertisement advertisement, ILogger<IBluetoothRemoteDevice>? logger = null) : base(logger)
+    protected BaseBluetoothRemoteDevice(IBluetoothScanner parentScanner,
+        IBluetoothAdvertisement advertisement,
+        SignalStrengthSmoothingOptions signalStrengthSmoothingOptions,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILogger<IBluetoothRemoteDevice>? logger = null) : base(logger)
     {
         // Validate constructor arguments
         ArgumentNullException.ThrowIfNull(advertisement);
         ArgumentNullException.ThrowIfNull(parentScanner);
+        ArgumentNullException.ThrowIfNull(rssiToSignalStrengthConverter);
+        ArgumentNullException.ThrowIfNull(signalStrengthSmoothingOptions);
 
         Scanner = parentScanner;
+        SignalStrengthSmoothingOptions = signalStrengthSmoothingOptions;
+        RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
         Id = advertisement.BluetoothAddress;
         Manufacturer = advertisement.Manufacturer;
 
@@ -32,21 +52,27 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
     /// <param name="parentScanner">The Bluetooth scanner associated with this device.</param>
     /// <param name="id">The unique identifier of the Bluetooth device, typically a UUID or MAC address.</param>
     /// <param name="manufacturer">The manufacturer information for the Bluetooth device.</param>
+    /// <param name="signalStrengthSmoothingOptions">The options for smoothing signal strength jitter.</param>
+    /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
     /// <param name="logger">The logger instance to use for logging.</param>
-    protected BaseBluetoothRemoteDevice(
-        IBluetoothScanner parentScanner,
+    protected BaseBluetoothRemoteDevice(IBluetoothScanner parentScanner,
         string id,
         Manufacturer manufacturer,
+        SignalStrengthSmoothingOptions signalStrengthSmoothingOptions,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ILogger<IBluetoothRemoteDevice>? logger = null) : base(logger)
     {
         // Validate constructor arguments
         ArgumentNullException.ThrowIfNull(parentScanner);
+        ArgumentNullException.ThrowIfNull(rssiToSignalStrengthConverter);
+        ArgumentNullException.ThrowIfNull(signalStrengthSmoothingOptions);
 
         Scanner = parentScanner;
+        RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
+        SignalStrengthSmoothingOptions = signalStrengthSmoothingOptions;
         Id = id;
         Manufacturer = manufacturer;
     }
-
 
     /// <inheritdoc />
     public string Id { get; }
@@ -125,4 +151,5 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
     }
 
     #endregion
+
 }

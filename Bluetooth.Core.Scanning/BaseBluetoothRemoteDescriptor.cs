@@ -11,9 +11,13 @@ public abstract partial class BaseBluetoothRemoteDescriptor : BaseBindableObject
     /// </summary>
     /// <param name="parentCharacteristic">The Bluetooth characteristic associated with this descriptor.</param>
     /// <param name="id">The unique identifier (UUID) of the descriptor.</param>
+    /// <param name="nameProvider">An optional provider for descriptor names, used to resolve the name based on the ID.</param>
     /// <param name="logger">The logger instance to use for logging (optional).</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="parentCharacteristic" /> is null.</exception>
-    protected BaseBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic parentCharacteristic, Guid id, ILogger<IBluetoothRemoteDescriptor>? logger = null) : base(logger)
+    protected BaseBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic parentCharacteristic,
+        Guid id,
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteDescriptor>? logger = null) : base(logger)
     {
         // Validate constructor arguments
         ArgumentNullException.ThrowIfNull(parentCharacteristic);
@@ -22,9 +26,9 @@ public abstract partial class BaseBluetoothRemoteDescriptor : BaseBindableObject
         Id = id;
 
         // Name
-        if (parentCharacteristic.Service.Device.Scanner.NameProvider != null)
+        if (nameProvider != null)
         {
-            Name = parentCharacteristic.Service.Device.Scanner.NameProvider.GetKnownDescriptorName(Id);
+            Name = nameProvider.GetKnownDescriptorName(Id) ?? Name;
         }
 
         LazyCanRead = new Lazy<bool>(NativeCanRead);

@@ -2,46 +2,6 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothScanner
 {
-    #region Configuration
-
-    /// <inheritdoc />
-    public async ValueTask UpdateScannerOptionsAsync(ScanningOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        var old = CurrentScanningOptions;
-        try
-        {
-            LogUpdatingScannerConfiguration();
-            if (IsRunning)
-            {
-                await StopScanningAsync(timeout, cancellationToken).ConfigureAwait(false);
-                await StartScanningAsync(options, timeout, cancellationToken).ConfigureAwait(false);
-            }
-        }
-        catch (Exception e)
-        {
-            CurrentScanningOptions = old;
-            LogScannerConfigurationUpdateFailed(e);
-            throw new ScannerConfigurationUpdateFailedException(this, innerException: e);
-        }
-    }
-
-    #endregion
-
-    #region Configuration
-
-    /// <summary>
-    ///     Gets the default scanning options used when starting the scanner without specifying options.
-    /// </summary>
-    public static ScanningOptions DefaultScanningOptions { get; } = new ScanningOptions();
-
-    /// <inheritdoc />
-    public ScanningOptions CurrentScanningOptions
-    {
-        get => GetValue(DefaultScanningOptions);
-        private set => SetValue(value);
-    }
-
-    #endregion
 
     #region IsRunning
 
@@ -155,16 +115,22 @@ public abstract partial class BaseBluetoothScanner
     }
 
     /// <inheritdoc />
-    public ValueTask StartScanningIfNeededAsync(ScanningOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask StartScanningIfNeededAsync(ScanningOptions? scanningOptions = null,
+        PermissionOptions? permissionOptions = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
     {
-        options ??= DefaultScanningOptions;
-        return IsRunning && options == CurrentScanningOptions ? ValueTask.CompletedTask : new ValueTask(StartScanningAsync(options, timeout, cancellationToken));
+        return IsRunning ? ValueTask.CompletedTask : new ValueTask(StartScanningAsync(scanningOptions, permissionOptions, timeout, cancellationToken));
     }
 
     /// <inheritdoc />
-    public async Task StartScanningAsync(ScanningOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async Task StartScanningAsync(ScanningOptions? scanningOptions = null,
+        PermissionOptions? permissionOptions = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
     {
-        options ??= DefaultScanningOptions;
+        scanningOptions ??= Options.Create(new ScanningOptions()).Value;
+        permissionOptions ??= Options.Create(new PermissionOptions()).Value;
 
         // Ensure we are not already started
         if (IsRunning)
@@ -187,13 +153,10 @@ public abstract partial class BaseBluetoothScanner
 
         try // try-catch to dispatch exceptions rising from start through OnStartFailed
         {
-            CurrentScanningOptions = options; // Set the configuration
-
             // Handle permissions based on strategy
-            await HandlePermissionsAsync(options.PermissionStrategy, options.RequireBackgroundLocation, cancellationToken).ConfigureAwait(false);
+            await HandlePermissionsAsync(permissionOptions, cancellationToken).ConfigureAwait(false);
 
-            LogScannerStarting(options.ServiceUuids?.Count ?? 0);
-            await NativeStartAsync(options, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
+            await NativeStartAsync(scanningOptions, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
         }
         catch (Exception e)
         {
@@ -224,6 +187,12 @@ public abstract partial class BaseBluetoothScanner
         }
     }
 
+    protected virtual Task HandlePermissionsAsync(PermissionOptions permissionOptions, CancellationToken cancellationToken = default)
+    {
+        permissionOptions ??= Options.Create(new PermissionOptions()).Value;
+        return HandlePermissionsAsync(permissionOptions.PermissionStrategy, permissionOptions.RequireBackgroundLocation, cancellationToken);
+    }
+
     /// <summary>
     ///     Handles permissions based on the specified strategy.
     ///     This method is called by <see cref="StartScanningAsync" /> to manage permissions before starting the scanner.
@@ -231,9 +200,7 @@ public abstract partial class BaseBluetoothScanner
     /// <param name="permissionStrategy">The strategy to use for handling permissions.</param>
     /// <param name="requireBackgroundLocation">Indicates whether background location permission is required.</param>
     /// <param name="cancellationToken">An optional cancellation token to cancel the permission handling operation.</param>
-    protected async virtual Task HandlePermissionsAsync(
-        PermissionRequestStrategy permissionStrategy,
-        bool requireBackgroundLocation, CancellationToken cancellationToken = default)
+    protected async virtual Task HandlePermissionsAsync(PermissionRequestStrategy permissionStrategy, bool requireBackgroundLocation, CancellationToken cancellationToken = default)
     {
         switch (permissionStrategy)
         {
@@ -245,8 +212,7 @@ public abstract partial class BaseBluetoothScanner
                 var hasPermissions = await HasScannerPermissionsAsync().ConfigureAwait(false);
                 if (!hasPermissions)
                 {
-                    throw new BluetoothPermissionException(
-                                                           "Scanner permissions not granted. Call scanner.RequestScannerPermissionsAsync() before starting the scanner.");
+                    throw new BluetoothPermissionException("Scanner permissions not granted. Call scanner.RequestScannerPermissionsAsync() before starting the scanner.");
                 }
                 break;
 
@@ -409,4 +375,5 @@ public abstract partial class BaseBluetoothScanner
     protected abstract ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
+
 }

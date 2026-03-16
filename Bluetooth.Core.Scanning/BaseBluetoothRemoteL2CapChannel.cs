@@ -10,23 +10,16 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
     public IBluetoothRemoteDevice Device { get; }
 
     /// <summary>
-    ///     Gets the options for configuring L2CAP channel timeouts.
-    /// </summary>
-    protected L2CapChannelOptions Options { get; }
-
-    /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteL2CapChannel"/> class.
     /// </summary>
     /// <param name="parentDevice">The Bluetooth device this channel belongs to.</param>
     /// <param name="psm">The Protocol/Service Multiplexer (PSM) for this channel.</param>
-    /// <param name="options">Optional configuration options for L2CAP channel timeouts. If null, default options will be used.</param>
     /// <param name="logger">Optional logger for logging channel operations.</param>
     /// <exception cref="ArgumentNullException">Thrown when device is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when PSM is not positive.</exception>
     protected BaseBluetoothRemoteL2CapChannel(
         IBluetoothRemoteDevice parentDevice,
         int psm,
-        IOptions<L2CapChannelOptions>? options = null,
         ILogger? logger = null) : base(logger)
     {
         // Validate constructor arguments
@@ -38,27 +31,16 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
 
         // Parent
         Device = parentDevice;
-
-        // Options
-        Options = options?.Value ?? new L2CapChannelOptions();
         Psm = psm;
     }
 
     /// <inheritdoc />
     public int Psm { get; }
 
-
-    /// <inheritdoc />
-    public int Mtu
-    {
-        get => GetValue(0);
-        protected set => SetValue(value);
-    }
-
     /// <summary>
     ///     Semaphore for serializing channel operations to prevent concurrent access issues.
     /// </summary>
-    private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
+    private readonly SemaphoreSlim _operationSemaphore = new SemaphoreSlim(1, 1);
 
     #region Open/Close
 
@@ -72,8 +54,6 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
     /// <inheritdoc />
     public async ValueTask OpenAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        timeout ??= Options.OpenTimeout;
-
         await _operationSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -99,8 +79,6 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
     /// <inheritdoc />
     public async ValueTask CloseAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        timeout ??= Options.CloseTimeout;
-
         await _operationSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -133,8 +111,6 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        timeout ??= Options.ReadTimeout;
-
         if (!IsOpen)
         {
             throw new InvalidOperationException("Channel is not open");
@@ -156,8 +132,6 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        timeout ??= Options.WriteTimeout;
-
         if (!IsOpen)
         {
             throw new InvalidOperationException("Channel is not open");

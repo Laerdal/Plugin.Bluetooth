@@ -9,13 +9,34 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     /// </summary>
     public IBluetoothAdapter Adapter { get; }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     The provider for Bluetooth device names, used to resolve human-readable names for devices based on their identifiers. This allows for a more user-friendly representation of devices in the scanner's device list and related events.
+    /// </summary>
     public IBluetoothNameProvider? NameProvider { get; }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     The factory for creating options related to Bluetooth scanning, such as signal strength smoothing and other scanning parameters. This allows for flexible configuration of scanning behavior and properties, enabling developers to customize the scanning experience based on their application's needs and the specific requirements of different platforms.
+    /// </summary>
+    public IOptionsFactory<ScanningOptions> ScanningOptionsFactory { get; }
+
+    /// <summary>
+    ///     The factory for creating options related to signal strength smoothing in Bluetooth scanning. This allows for configuring how the signal strength readings are averaged over time to provide a more stable and accurate representation of the device's signal strength, especially in environments with fluctuating signal conditions.
+    /// </summary>
+    public IOptionsFactory<SignalStrengthSmoothingOptions> SignalStrengthSmoothingOptionsFactory { get; }
+
+    /// <summary>
+    ///     The options for smoothing signal strength jitter in Bluetooth scanning. This allows for configuring how the signal strength readings are averaged over time to provide a more stable and accurate representation of the device's signal strength, especially in environments with fluctuating signal conditions.
+    /// </summary>
+    protected IOptionsMonitor<ScanningOptions> ScanningOptions { get; }
+
+    /// <summary>
+    ///     The converter used to convert RSSI values to signal strength levels. This allows for consistent interpretation of signal strength across different platforms and devices, as RSSI values can vary in scale and meaning depending on the underlying Bluetooth implementation.
+    /// </summary>
     public IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     The logger factory used for creating loggers within the scanner and its related components. This allows for consistent logging across the scanner and its associated devices, services, and characteristics, and enables the creation of loggers with specific categories for different parts of the Bluetooth scanning implementation.
+    /// </summary>
     public ILoggerFactory? LoggerFactory { get; }
 
     /// <summary>
@@ -24,6 +45,7 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     /// <param name="adapter">The Bluetooth adapter associated with this scanner.</param>
     /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
+    /// <param name="nameProvider">Optional provider for Bluetooth device names.</param>
     /// <param name="loggerFactory">Optional logger factory for creating loggers.</param>
     [ActivatorUtilitiesConstructor]
     protected BaseBluetoothScanner(IBluetoothAdapter adapter,

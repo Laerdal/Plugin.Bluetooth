@@ -12,23 +12,11 @@ public static class ServiceCollectionExtensions
     ///     Registers all core Bluetooth services including the ticker and infrastructure options.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
-    /// <param name="configureOptions">Optional configuration action for BluetoothInfrastructureOptions.</param>
     /// <returns>The updated service collection for method chaining.</returns>
     public static IServiceCollection AddBluetoothCoreServices(
-        this IServiceCollection services,
-        Action<BluetoothInfrastructureOptions>? configureOptions = null)
+        this IServiceCollection services)
     {
         services.AddTicker();
-
-        if (configureOptions != null)
-        {
-            services.Configure(configureOptions);
-        }
-        else
-        {
-            services.AddSingleton(Options.Create(new BluetoothInfrastructureOptions()));
-        }
-
         return services;
     }
 }

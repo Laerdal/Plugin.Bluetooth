@@ -7,6 +7,9 @@ public abstract partial class BaseBluetoothScanner
     /// <inheritdoc />
     public event EventHandler<AdvertisementReceivedEventArgs>? AdvertisementReceived;
 
+    /// <inheritdoc />
+    public Func<IBluetoothAdvertisement, bool> AdvertisementFilter { get; set; }
+
     #endregion
 
     #region Device Factory
@@ -16,7 +19,7 @@ public abstract partial class BaseBluetoothScanner
     /// </summary>
     /// <param name="advertisement">The advertisement from which to create and add the device.</param>
     /// <returns>The newly created and added <see cref="IBluetoothRemoteDevice" /> instance.</returns>
-    protected IBluetoothRemoteDevice AddDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
+    private IBluetoothRemoteDevice AddDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
         var device = NativeCreateDeviceFromAdvertisement(advertisement);
         lock (Devices)
@@ -45,13 +48,8 @@ public abstract partial class BaseBluetoothScanner
     protected void OnAdvertisementReceived<TAdvertisement>(TAdvertisement advertisement)
         where TAdvertisement : struct, IBluetoothAdvertisement
     {
-        if (CurrentScanningOptions.IgnoreNamelessAdvertisements && string.IsNullOrEmpty(advertisement.DeviceName))
-        {
-            return;
-        }
-
         // Filter
-        if (!CurrentScanningOptions.AdvertisementFilter.Invoke(advertisement))
+        if (!AdvertisementFilter.Invoke(advertisement))
         {
             return;
         }
@@ -62,12 +60,6 @@ public abstract partial class BaseBluetoothScanner
         // Get or create device
         if (GetDeviceOrDefault(advertisement.BluetoothAddress) is { } existingDevice)
         {
-            // Filter out duplicates if needed
-            if (CurrentScanningOptions.IgnoreDuplicateAdvertisements && existingDevice.LastAdvertisement != null && existingDevice.LastAdvertisement.Equals(advertisement))
-            {
-                return;
-            }
-
             // Process advertisement infos
             existingDevice.OnAdvertisementReceived(advertisement);
         }
@@ -89,7 +81,7 @@ public abstract partial class BaseBluetoothScanner
     protected void OnAdvertisementsReceived(IEnumerable<IBluetoothAdvertisement> advertisements)
     {
         // Filter
-        var filteredAdvertisements = advertisements.Where(advertisement => CurrentScanningOptions.AdvertisementFilter.Invoke(advertisement)).ToList();
+        var filteredAdvertisements = advertisements.Where(adv => AdvertisementFilter.Invoke(adv)).ToList();
 
         // Throw event
         foreach (var advertisement in filteredAdvertisements)

@@ -11,9 +11,11 @@ public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, I
     /// </summary>
     /// <param name="parentDevice">The Bluetooth device associated with this service.</param>
     /// <param name="id">The unique identifier (UUID) of the service.</param>
+    /// <param name="nameProvider">An optional provider for service names, used to resolve the name based on the ID.</param>
     /// <param name="logger">The logger instance to use for logging (optional).</param>
     protected BaseBluetoothRemoteService(IBluetoothRemoteDevice parentDevice,
         Guid id,
+        IBluetoothNameProvider? nameProvider = null,
         ILogger<IBluetoothRemoteService>? logger = null) : base(logger)
     {
         // Validate constructor arguments
@@ -23,9 +25,9 @@ public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, I
         Id = id;
         
         // Name
-        if (parentDevice.Scanner.NameProvider != null)
+        if (nameProvider != null)
         {
-            Name = parentDevice.Scanner.NameProvider.GetKnownServiceName(Id);
+            Name = nameProvider.GetKnownServiceName(Id) ?? Name;
         }
     }
 
