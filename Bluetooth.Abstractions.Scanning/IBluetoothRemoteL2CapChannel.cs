@@ -22,11 +22,6 @@ public interface IBluetoothRemoteL2CapChannel : INotifyPropertyChanged, IAsyncDi
     bool IsOpen { get; }
 
     /// <summary>
-    ///     Gets the Maximum Transmission Unit (MTU) for this channel.
-    /// </summary>
-    int Mtu { get; }
-
-    /// <summary>
     ///     Opens the L2CAP channel asynchronously.
     /// </summary>
     /// <param name="timeout">The timeout for this operation.</param>

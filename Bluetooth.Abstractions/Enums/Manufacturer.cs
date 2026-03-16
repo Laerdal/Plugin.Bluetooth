@@ -14,7 +14,7 @@ namespace Bluetooth.Abstractions.Enums;
 /// </summary>
 public enum Manufacturer : short
 {
-    [Description("None")] None = -1, // None
+    [Description("None")] Unknown = -1, // Unknown
 
     [Description("Ericsson Technology Licensing")]
     Ericsson_Technology_Licensing = 0, // Ericsson Technology Licensing
