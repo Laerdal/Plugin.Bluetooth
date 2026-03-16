@@ -1,5 +1,4 @@
 using Bluetooth.Maui.Platforms.Apple.Logging;
-using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
 using CharacteristicNotFoundException = Bluetooth.Abstractions.Scanning.Exceptions.CharacteristicNotFoundException;
@@ -10,16 +9,21 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 /// <inheritdoc cref="BaseBluetoothRemoteService" />
 public class AppleBluetoothRemoteService : BaseBluetoothRemoteService, CbPeripheralWrapper.ICbServiceDelegate
 {
-    /// <inheritdoc />
-    public AppleBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory, ILogger<IBluetoothRemoteService>? logger = null) : base(device, spec, characteristicFactory, logger)
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteService" /> class with the specified Core Bluetooth service, parent device, ID, name provider, and logger.
+    /// </summary>
+    /// <param name="cbService">The native iOS Core Bluetooth service represented by this remote service.</param>
+    /// <param name="parentDevice">The Bluetooth device associated with this service.</param>
+    /// <param name="id">The unique identifier for this service.</param>
+    /// <param name="nameProvider">An optional provider for service names, used to resolve the name based on the ID.</param>
+    /// <param name="logger">An optional logger for logging service-related events and errors.</param>
+    public AppleBluetoothRemoteService(CBService cbService,
+        IBluetoothRemoteDevice parentDevice,
+        Guid id,
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteService>? logger = null) : base(parentDevice, id, nameProvider, logger)
     {
-        ArgumentNullException.ThrowIfNull(spec);
-        if (spec is not AppleBluetoothRemoteServiceFactorySpec nativeSpec)
-        {
-            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothRemoteServiceFactorySpec)}, but got {spec.GetType()}");
-        }
-
-        CbService = nativeSpec.CbService;
+        CbService = cbService;
     }
 
     /// <summary>
@@ -60,8 +64,11 @@ public class AppleBluetoothRemoteService : BaseBluetoothRemoteService, CbPeriphe
 
         IBluetoothRemoteCharacteristic FromInputTypeToOutputTypeConversion(CBCharacteristic native)
         {
-            var spec = new AppleBluetoothRemoteCharacteristicFactorySpec(native);
-            return CharacteristicFactory.Create(this, spec);
+            var id = native.UUID.ToGuid();
+            var logger = AppleBluetoothRemoteDevice.AppleBluetoothScanner?.LoggerFactory?.CreateLogger<IBluetoothRemoteCharacteristic>()
+                      ?? new NullLogger<IBluetoothRemoteCharacteristic>();
+            var nameProvider = AppleBluetoothRemoteDevice.AppleBluetoothScanner?.NameProvider;
+            return new AppleBluetoothRemoteCharacteristic(native, this, id, nameProvider, logger);
         }
     }
 

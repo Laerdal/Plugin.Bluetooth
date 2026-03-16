@@ -1,5 +1,4 @@
 using Bluetooth.Maui.Platforms.Apple.Logging;
-using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 using Bluetooth.Maui.Platforms.Apple.Threading;
 
@@ -11,23 +10,66 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 /// <inheritdoc cref="BaseBluetoothRemoteDevice" />
 public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeripheralWrapper.ICbPeripheralDelegate, CbCentralManagerWrapper.ICbPeripheralDelegate
 {
-    private readonly IBluetoothRemoteL2CapChannelFactory _l2CapChannelFactory;
-
-    /// <inheritdoc />
-    public AppleBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec, IBluetoothRemoteServiceFactory serviceFactory,
-        IBluetoothRemoteL2CapChannelFactory l2CapChannelFactory,
-        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter, ILogger<IBluetoothRemoteDevice>? logger = null) :
-        base(scanner, spec, serviceFactory, rssiToSignalStrengthConverter, logger)
+    public AppleBluetoothRemoteDevice(IBluetoothScanner parentScanner,
+        AppleBluetoothAdvertisement advertisement,
+        SignalStrengthSmoothingOptions signalStrengthSmoothingOptions,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILogger<IBluetoothRemoteDevice>? logger = null) : base(parentScanner,
+                                                               advertisement,
+                                                               signalStrengthSmoothingOptions,
+                                                               rssiToSignalStrengthConverter,
+                                                               logger)
     {
-        ArgumentNullException.ThrowIfNull(spec);
-        ArgumentNullException.ThrowIfNull(l2CapChannelFactory);
-        if (spec is not AppleBluetoothRemoteDeviceFactorySpec nativeSpec)
-        {
-            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothRemoteDeviceFactorySpec)}, but got {spec.GetType()}");
-        }
+        CbPeripheralWrapper = new CbPeripheralWrapper(this, advertisement.CbPeripheral);
+    }
 
-        CbPeripheralWrapper = new CbPeripheralWrapper(this, nativeSpec.CbPeripheral);
-        _l2CapChannelFactory = l2CapChannelFactory;
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteDevice" /> class with the specified Core Bluetooth peripheral wrapper, parent scanner, advertisement, and logger.
+    /// </summary>
+    /// <param name="cbPeripheral">The native iOS Core Bluetooth peripheral represented by this remote device.</param>
+    /// <param name="parentScanner">The Bluetooth scanner that discovered this device.</param>
+    /// <param name="advertisement">The Bluetooth advertisement associated with this device.</param>
+    /// <param name="signalStrengthSmoothingOptions">The options for smoothing signal strength jitter.</param>
+    /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
+    /// <param name="logger">An optional logger for logging device-related events and errors.</param>
+    public AppleBluetoothRemoteDevice(CBPeripheral cbPeripheral,
+        IBluetoothScanner parentScanner,
+        IBluetoothAdvertisement advertisement,
+        SignalStrengthSmoothingOptions signalStrengthSmoothingOptions,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILogger<IBluetoothRemoteDevice>? logger = null) : base(parentScanner,
+                                                               advertisement,
+                                                               signalStrengthSmoothingOptions,
+                                                               rssiToSignalStrengthConverter,
+                                                               logger)
+    {
+        CbPeripheralWrapper = new CbPeripheralWrapper(this, cbPeripheral);
+    }
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteDevice" /> class with the specified Core Bluetooth peripheral wrapper, parent scanner, ID, manufacturer, and logger.
+    /// </summary>
+    /// <param name="cbPeripheral">The native iOS Core Bluetooth peripheral represented by this remote device.</param>
+    /// <param name="parentScanner">The Bluetooth scanner that discovered this device.</param>
+    /// <param name="id">The unique identifier for this device.</param>
+    /// <param name="manufacturer">The manufacturer of this device, if known.</param>
+    /// <param name="signalStrengthSmoothingOptions">The options for smoothing signal strength jitter.</param>
+    /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
+    /// <param name="logger">An optional logger for logging device-related events and errors.</param>
+    public AppleBluetoothRemoteDevice(CBPeripheral cbPeripheral,
+        IBluetoothScanner parentScanner,
+        string id,
+        Manufacturer manufacturer,
+        SignalStrengthSmoothingOptions signalStrengthSmoothingOptions,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILogger<IBluetoothRemoteDevice>? logger = null) : base(parentScanner,
+                                                               id,
+                                                               manufacturer,
+                                                               signalStrengthSmoothingOptions,
+                                                               rssiToSignalStrengthConverter,
+                                                               logger)
+    {
+        CbPeripheralWrapper = new CbPeripheralWrapper(this, cbPeripheral);
     }
 
     /// <summary>
@@ -92,12 +134,10 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
                 throw new IOException("L2CAP channel is null");
             }
 
-            // Create channel using factory
-            var psm = (int)channel.Psm;
-            var spec = new AppleBluetoothRemoteL2CapChannelFactorySpec(psm, channel);
-            var wrappedChannel = _l2CapChannelFactory.Create(this, spec);
+            var logger = AppleBluetoothScanner?.LoggerFactory?.CreateLogger<IBluetoothRemoteDevice>() ?? new NullLogger<IBluetoothRemoteDevice>();
+            var appleChannel = new AppleBluetoothRemoteL2CapChannel(this, channel, logger);
 
-            OnL2CapChannelOpened(wrappedChannel);
+            OnL2CapChannelOpened(appleChannel);
         }
         catch (Exception e)
         {
@@ -140,20 +180,13 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         }
 
         // Convert abstract ConnectionOptions to Apple-specific options
-        var appleOptions = new Options.ConnectionOptions
+        var appleOptions = new PeripheralConnectionOptions
         {
-            // Copy common properties
-            PermissionStrategy = connectionOptions.PermissionStrategy,
-            WaitForAdvertisementBeforeConnecting = connectionOptions.WaitForAdvertisementBeforeConnecting,
-
             // Read Apple-specific sub-options (or use defaults if not provided)
             NotifyOnConnection = connectionOptions.Apple?.NotifyOnConnection ?? true,
             NotifyOnDisconnection = connectionOptions.Apple?.NotifyOnDisconnection ?? true,
-            NotifyOnNotification = connectionOptions.Apple?.NotifyOnNotification ?? true,
-            EnableTransportBridging = connectionOptions.Apple?.EnableTransportBridging,
-            RequiresAncs = connectionOptions.Apple?.RequiresAncs
+            NotifyOnNotification = connectionOptions.Apple?.NotifyOnNotification ?? true
         };
-
         scanner.CbCentralManagerWrapper.CbCentralManager.ConnectPeripheral(CbPeripheralWrapper.CbPeripheral, appleOptions);
         return ValueTask.CompletedTask;
     }
@@ -203,6 +236,13 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     }
 
     /// <inheritdoc />
+    protected override ValueTask NativeRequestConnectionPriorityAsync(ConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        // iOS does not allow setting connection priority, it is determined by the system and the connected peripheral. The connection priority can be read after a successful connection.
+        return ValueTask.CompletedTask;
+    }
+
+    /// <inheritdoc />
     public void DisconnectedPeripheral(NSError? error)
     {
         NativeRefreshIsConnected();
@@ -239,21 +279,6 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         {
             OnDisconnect(e);
         }
-    }
-
-    #endregion
-
-    #region Connection Priority
-
-    /// <inheritdoc />
-    /// <remarks>
-    ///     On iOS/macOS, connection priority is automatically managed by the system.
-    ///     This method is a no-op and immediately completes successfully.
-    /// </remarks>
-    protected override ValueTask NativeRequestConnectionPriorityAsync(BluetoothConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        // iOS automatically manages connection priority
-        return ValueTask.CompletedTask;
     }
 
     #endregion
@@ -327,8 +352,14 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
         IBluetoothRemoteService FromInputTypeToOutputTypeConversion(CBService native)
         {
-            var spec = new AppleBluetoothRemoteServiceFactorySpec(native);
-            return ServiceFactory.Create(this, spec);
+            var id = native.UUID.ToGuid();
+            var logger = AppleBluetoothScanner?.LoggerFactory?.CreateLogger<IBluetoothRemoteService>() ?? new NullLogger<IBluetoothRemoteService>();
+            var nameProvider = AppleBluetoothScanner?.NameProvider;
+            return new AppleBluetoothRemoteService(native,
+                                                   this,
+                                                   id,
+                                                   nameProvider,
+                                                   logger);
         }
     }
 
@@ -401,21 +432,11 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <returns>A task that completes when the peripheral is ready or immediately if already ready.</returns>
     public Task WaitForReadyToSendWriteWithoutResponseAsync(TimeSpan timeout, CancellationToken cancellationToken)
     {
-        return CbPeripheralWrapper.CbPeripheral.CanSendWriteWithoutResponse ? Task.CompletedTask : Task.Run(() => ReadyToSendWriteWithoutResponse.WaitOne(timeout), cancellationToken);
+        return CbPeripheralWrapper.CbPeripheral.CanSendWriteWithoutResponse ?
+                   Task.CompletedTask :
+                   Task.Run(() => ReadyToSendWriteWithoutResponse.WaitOne(timeout), cancellationToken);
     }
 
     #endregion
 
-    #region Disposal
-
-    /// <inheritdoc />
-    public new async ValueTask DisposeAsync()
-    {
-        // Dispose AutoResetEvent to prevent memory leak
-        ReadyToSendWriteWithoutResponse?.Dispose();
-
-        await base.DisposeAsync().ConfigureAwait(false);
-    }
-
-    #endregion
 }

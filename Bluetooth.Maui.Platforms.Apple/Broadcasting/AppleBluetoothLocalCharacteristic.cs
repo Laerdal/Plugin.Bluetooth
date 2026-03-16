@@ -146,9 +146,17 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
     /// <inheritdoc />
     protected override ValueTask<IBluetoothLocalDescriptor> NativeCreateDescriptorAsync(Guid id, string? name = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        // Create a new CBMutableDescriptor with the specified ID and an initial value of null (iOS requires a value at creation time, but it can be updated later)
         var cbDescriptor = new CBMutableDescriptor(id.ToCBUuid(), null);
-        var logger = AppleService.AppleBluetoothBroadcaster.LoggerFactory?.CreateLogger<AppleBluetoothLocalDescriptor>();
+        
+        // Create the corresponding AppleBluetoothLocalDescriptor instance
+        var logger = Service.Broadcaster.LoggerFactory?.CreateLogger<AppleBluetoothLocalDescriptor>();
         var localDescriptor = new AppleBluetoothLocalDescriptor(cbDescriptor, this, id, null, name, logger);
+        
+        // Add the descriptor to the characteristic's list of descriptors
+        var descriptors = CbCharacteristic.Descriptors?.ToList() ?? new List<CBDescriptor>();
+        descriptors.Add(cbDescriptor);
+        CbCharacteristic.Descriptors = descriptors.ToArray();
         
         return new ValueTask<IBluetoothLocalDescriptor>(localDescriptor);
     }

@@ -17,11 +17,9 @@ internal static partial class AppleBluetoothLoggerMessages
     [LoggerMessage(
         EventId = 1000,
         Level = LogLevel.Information,
-        Message = "Starting BLE scan with mode: {ScanMode}, callback type: {CallbackType}")]
+        Message = "Starting BLE scan")]
     public static partial void LogScanStarting(
-        this ILogger logger,
-        BluetoothScanMode scanMode,
-        BluetoothScanCallbackType callbackType);
+        this ILogger logger);
 
     [LoggerMessage(
         EventId = 1001,
@@ -484,11 +482,10 @@ internal static partial class AppleBluetoothLoggerMessages
     [LoggerMessage(
         EventId = 8001,
         Level = LogLevel.Information,
-        Message = "L2CAP channel opened successfully to PSM {Psm}, MTU: {Mtu}")]
+        Message = "L2CAP channel opened successfully to PSM {Psm}")]
     public static partial void LogL2CapChannelOpened(
         this ILogger logger,
-        int psm,
-        int mtu);
+        int psm);
 
     [LoggerMessage(
         EventId = 8002,

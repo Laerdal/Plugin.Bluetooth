@@ -247,8 +247,16 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
+        // Create a new CBMutableService with the specified ID and primary status
         var cbService = new CBMutableService(id.ToCBUuid(), isPrimary);
-        var service = new AppleBluetoothLocalService(cbService, this, id, name, isPrimary, LoggerFactory?.CreateLogger<AppleBluetoothLocalService>());
+        
+        // Create the AppleBluetoothLocalService wrapper for the new service
+        var logger = LoggerFactory?.CreateLogger<AppleBluetoothLocalService>();
+        var service = new AppleBluetoothLocalService(cbService, this, id, name, isPrimary, logger);
+        
+        // Add the service to the peripheral manager
+        CbPeripheralManagerWrapper.CbPeripheralManager.AddService(cbService);
+        
         return new ValueTask<IBluetoothLocalService>(service);
     }
 
