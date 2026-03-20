@@ -6,7 +6,7 @@ using Bluetooth.Maui.Platforms.Droid.Logging;
 namespace Bluetooth.Maui.Platforms.Droid.Scanning;
 
 /// <summary>
-///     Android implementation of <see cref="IBluetoothL2CapChannel"/> using BluetoothSocket.
+///     Android implementation of <see cref="IBluetoothRemoteL2CapChannel"/> using BluetoothSocket.
 ///     Provides stream-based I/O for L2CAP channels with automatic background reading for DataReceived events.
 /// </summary>
 /// <remarks>
@@ -33,7 +33,7 @@ public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChanne
         IBluetoothRemoteDevice device,
         BluetoothDevice nativeDevice,
         int psm,
-        IOptions<L2CapChannelOptions>? options = null,
+        L2CapChannelOptions? options = null,
         ILogger? logger = null)
         : base(device, psm, options, logger)
     {
@@ -134,7 +134,7 @@ public class AndroidBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChanne
     /// <param name="ct">Cancellation token to stop the read loop.</param>
     private async Task ReadLoopAsync(CancellationToken ct)
     {
-        var bufferSize = Options.ReadBufferSize ?? Mtu;
+        var bufferSize = Options.ReadBufferSize > 0 ? Options.ReadBufferSize : Mtu;
         var buffer = new byte[bufferSize];
         try
         {

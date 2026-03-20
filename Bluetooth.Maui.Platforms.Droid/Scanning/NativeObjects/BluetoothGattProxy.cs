@@ -2,7 +2,7 @@ using Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 using BluetoothPhy = Android.Bluetooth.BluetoothPhy;
 using Boolean = Java.Lang.Boolean;
-using ConnectionOptions = Bluetooth.Maui.Platforms.Droid.Scanning.Options.ConnectionOptions;
+using ConnectionOptions = Bluetooth.Abstractions.Scanning.Options.ConnectionOptions;
 using Exception = System.Exception;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;

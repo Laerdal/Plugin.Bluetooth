@@ -38,6 +38,19 @@ public class AndroidBluetoothLocalService : BaseBluetoothLocalService, Bluetooth
         return droidCharacteristic;
     }
 
+    /// <inheritdoc />
+    protected override ValueTask<IBluetoothLocalCharacteristic> NativeCreateCharacteristicAsync(
+        Guid id,
+        BluetoothCharacteristicProperties properties,
+        BluetoothCharacteristicPermissions permissions,
+        string? name = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement Android GATT characteristic creation
+        throw new NotImplementedException("Android GATT characteristic creation pending");
+    }
+
     void BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate.OnServiceAdded(GattStatus status)
     {
         // Service has been added to GATT server

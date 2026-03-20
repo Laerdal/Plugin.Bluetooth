@@ -1,13 +1,11 @@
-using Bluetooth.Core.Broadcasting.Factories;
-
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.Factories;
 
 /// <inheritdoc />
-public class AndroidBluetoothConnectedDeviceFactory : BaseBluetoothConnectedDeviceFactory
+public class AndroidBluetoothConnectedDeviceFactory : IBluetoothConnectedDeviceFactory
 {
     /// <inheritdoc />
-    public override IBluetoothConnectedDevice Create(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec)
+    public IBluetoothConnectedDevice Create(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec)
     {
-        throw new NotImplementedException();
+        return new AndroidBluetoothConnectedDevice(broadcaster, spec);
     }
 }

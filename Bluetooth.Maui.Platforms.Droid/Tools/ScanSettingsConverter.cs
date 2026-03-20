@@ -1,4 +1,4 @@
-using Bluetooth.Maui.Platforms.Droid.Scanning.Options;
+using Bluetooth.Abstractions.Scanning.Options.Android;
 
 namespace Bluetooth.Maui.Platforms.Droid.Tools;
 

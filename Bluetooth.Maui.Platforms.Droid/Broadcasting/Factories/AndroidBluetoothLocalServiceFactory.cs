@@ -1,18 +1,19 @@
-using Bluetooth.Core.Broadcasting.Factories;
-
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.Factories;
 
 /// <inheritdoc />
-public class AndroidBluetoothLocalServiceFactory : BaseBluetoothLocalServiceFactory
+public class AndroidBluetoothLocalServiceFactory : IBluetoothLocalServiceFactory
 {
+    private readonly IBluetoothLocalCharacteristicFactory _characteristicFactory;
+
     /// <inheritdoc />
-    public AndroidBluetoothLocalServiceFactory(IBluetoothLocalCharacteristicFactory localCharacteristicFactory) : base(localCharacteristicFactory)
+    public AndroidBluetoothLocalServiceFactory(IBluetoothLocalCharacteristicFactory characteristicFactory)
     {
+        _characteristicFactory = characteristicFactory;
     }
 
     /// <inheritdoc />
-    public override IBluetoothLocalService Create(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec)
+    public IBluetoothLocalService Create(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec)
     {
-        throw new NotImplementedException();
+        return new AndroidBluetoothLocalService(broadcaster, spec, _characteristicFactory);
     }
 }

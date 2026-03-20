@@ -18,10 +18,10 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IBluetoothScanner, AndroidBluetoothScanner>();
 
-        services.AddSingleton<IBluetoothRemoteDeviceFactory, AndroidBluetoothDeviceFactory>();
+        services.AddSingleton<IBluetoothRemoteDeviceFactory, AndroidBluetoothRemoteDeviceFactory>();
         services.AddSingleton<IBluetoothRemoteServiceFactory, AndroidBluetoothServiceFactory>();
-        services.AddSingleton<IBluetoothRemoteCharacteristicFactory, AndroidBluetoothCharacteristicFactory>();
-        services.AddSingleton<IBluetoothRemoteDescriptorFactory, AndroidBluetoothDescriptorFactory>();
+        services.AddSingleton<IBluetoothRemoteCharacteristicFactory, AndroidBluetoothRemoteCharacteristicFactory>();
+        services.AddSingleton<IBluetoothRemoteDescriptorFactory, AndroidBluetoothRemoteDescriptorFactory>();
         services.AddSingleton<IBluetoothRemoteL2CapChannelFactory, AndroidBluetoothRemoteL2CapChannelFactory>();
     }
 }

@@ -95,7 +95,7 @@ public class AndroidBluetoothRemoteService : BaseBluetoothRemoteService, Bluetoo
         IBluetoothRemoteCharacteristic FromInputTypeToOutputTypeConversion(BluetoothGattCharacteristic nativeCharacteristic)
         {
             var spec = new AndroidBluetoothRemoteCharacteristicFactorySpec(nativeCharacteristic);
-            return CharacteristicFactory.Create(this, spec);
+            return (CharacteristicFactory ?? throw new InvalidOperationException("CharacteristicFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 

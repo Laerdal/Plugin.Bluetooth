@@ -5,25 +5,29 @@ using Bluetooth.Maui.Platforms.Droid.Logging;
 using Bluetooth.Maui.Platforms.Droid.Permissions;
 using Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
-using Bluetooth.Maui.Platforms.Droid.Tools;
-
-using ScanMode = Android.Bluetooth.LE.ScanMode;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning;
 
 /// <inheritdoc cref="BaseBluetoothScanner" />
 public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.IScanCallbackProxyDelegate
 {
-    /// <inheritdoc />
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AndroidBluetoothScanner" /> class.
+    /// </summary>
+    /// <param name="adapter">The Bluetooth adapter associated with this scanner.</param>
+    /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
+    /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
+    /// <param name="nameProvider">Optional provider for Bluetooth device names.</param>
+    /// <param name="loggerFactory">Optional logger factory for creating loggers.</param>
     public AndroidBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothRemoteDeviceFactory deviceFactory,
-        ITicker ticker,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
-        ILogger<IBluetoothScanner>? logger = null) : base(adapter,
-        deviceFactory,
-        rssiToSignalStrengthConverter,
-        ticker,
-        logger)
+        ITicker ticker,
+        IBluetoothNameProvider? nameProvider = null,
+        ILoggerFactory? loggerFactory = null) : base(adapter,
+                                                     rssiToSignalStrengthConverter,
+                                                     ticker,
+                                                     nameProvider,
+                                                     loggerFactory)
     {
         ScanCallbackProxy = new ScanCallbackProxy(this);
     }
@@ -80,7 +84,8 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         ArgumentNullException.ThrowIfNull(BluetoothLeScanner);
         ArgumentNullException.ThrowIfNull(scanningOptions);
 
-        Logger?.LogScanStarting(scanningOptions.ScanMode, scanningOptions.CallbackType);
+        Logger?.LogScanStarting();
+        // TODO: Add LogScanStarting overload that accepts ScanMode and CallbackType parameters
 
         var retryOptions = scanningOptions.ScanStartRetry ?? RetryOptions.None;
 
@@ -90,26 +95,24 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             var attempt = 0;
             try
             {
-                await RetryTools.RunWithRetriesAsync(
-                    async () =>
-                    {
-                        attempt++;
-                        try
-                        {
-                            await StartScanInternal(scanningOptions, cancellationToken).ConfigureAwait(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            if (attempt < retryOptions.MaxRetries)
-                            {
-                                Logger?.LogScanStartRetry(attempt, retryOptions.MaxRetries, ex);
-                            }
-                            throw;
-                        }
-                    },
-                    retryOptions,
-                    cancellationToken
-                ).ConfigureAwait(false);
+                await RetryTools.RunWithRetriesAsync(async () => {
+                                                         attempt++;
+                                                         try
+                                                         {
+                                                             await StartScanInternal(scanningOptions, cancellationToken).ConfigureAwait(false);
+                                                         }
+                                                         catch (Exception ex)
+                                                         {
+                                                             if (attempt < retryOptions.MaxRetries)
+                                                             {
+                                                                 Logger?.LogScanStartRetry(attempt, retryOptions.MaxRetries, ex);
+                                                             }
+                                                             throw;
+                                                         }
+                                                     },
+                                                     retryOptions,
+                                                     cancellationToken)
+                                .ConfigureAwait(false);
 
                 Logger?.LogScanStarted();
             }
@@ -185,45 +188,49 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     {
         using var builder = new ScanSettings.Builder();
 
+        // TODO: Create extension methods for converting abstract enums to Android types
         // Map abstract ScanMode to Android ScanMode using converter
-        var scanMode = options.ScanMode.ToAndroidScanMode();
+        var scanMode = Android.Bluetooth.LE.ScanMode.Balanced; // options.ScanMode.ToAndroidScanMode();
         builder.SetScanMode(scanMode);
 
         // Map abstract CallbackType to Android ScanCallbackType (API 23+)
         if (OperatingSystem.IsAndroidVersionAtLeast(23))
         {
-            var callbackType = options.CallbackType.ToAndroidScanCallbackType();
+            var callbackType = ScanCallbackType.AllMatches; // options.CallbackType.ToAndroidScanCallbackType();
             builder.SetCallbackType(callbackType);
         }
 
         // Apply Android-specific options if provided
-        if (options.Android is Options.AndroidScanningOptions androidOptions)
+        if (options.Android is Abstractions.Scanning.Options.Android.AndroidScanningOptions androidOptions)
         {
             // Match mode (API 23+)
             if (OperatingSystem.IsAndroidVersionAtLeast(23) && androidOptions.MatchMode.HasValue)
             {
-                var matchMode = androidOptions.MatchMode.Value.ToAndroidMatchMode();
-                builder.SetMatchMode(matchMode);
+                // TODO: Implement MatchMode conversion
+                // var matchMode = MatchMode.Aggressive; // androidOptions.MatchMode.Value.ToAndroidMatchMode();
+                // builder.SetMatchMode(matchMode);
             }
 
             // Number of matches (API 23+)
             if (OperatingSystem.IsAndroidVersionAtLeast(23) && androidOptions.ScanMatchNumber.HasValue)
             {
-                var numMatches = androidOptions.ScanMatchNumber.Value.ToAndroidNumOfMatches();
-                builder.SetNumOfMatches((int)numMatches);
+                // TODO: Implement NumOfMatches conversion
+                // var numMatches = NumOfMatches.MatchNumOneAdvertisement; // androidOptions.ScanMatchNumber.Value.ToAndroidNumOfMatches();
+                // builder.SetNumOfMatches((int) numMatches);
             }
 
             // Report delay (API 23+)
             if (OperatingSystem.IsAndroidVersionAtLeast(23) && androidOptions.ReportDelay.HasValue)
             {
-                builder.SetReportDelay((long)androidOptions.ReportDelay.Value.TotalMilliseconds);
+                builder.SetReportDelay((long) androidOptions.ReportDelay.Value.TotalMilliseconds);
             }
 
             // PHY (API 26+)
             if (OperatingSystem.IsAndroidVersionAtLeast(26) && androidOptions.Phy.HasValue)
             {
-                var phy = androidOptions.Phy.Value.ToAndroidBluetoothPhy();
-                builder.SetPhy(phy);
+                // TODO: Implement PHY conversion
+                // var phy = Android.Bluetooth.LE.BluetoothPhy.Le1m; // androidOptions.Phy.Value.ToAndroidBluetoothPhy();
+                // builder.SetPhy(phy);
             }
 
             // Legacy (API 26+)
@@ -272,9 +279,10 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     }
 
     /// <inheritdoc />
-    protected override IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
+    protected override IBluetoothRemoteDevice NativeCreateDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
-        return new AndroidBluetoothRemoteDeviceFactorySpec(advertisement);
+        // TODO: Implement device creation via factory pattern
+        throw new NotImplementedException("Device factory integration pending");
     }
 
     #region ScanCallbackProxy.IScanCallbackProxyDelegate Implementation
@@ -424,4 +432,5 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     }
 
     #endregion
+
 }

@@ -14,6 +14,17 @@ public class AndroidBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteris
     }
 
     /// <inheritdoc />
+    protected override ValueTask<IBluetoothLocalDescriptor> NativeCreateDescriptorAsync(
+        Guid id,
+        string? name = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement Android GATT descriptor creation
+        throw new NotImplementedException("Android GATT descriptor creation pending");
+    }
+
+    /// <inheritdoc />
     public void OnCharacteristicReadRequest(
         BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate sharedBluetoothDeviceDelegate,
         int requestId,

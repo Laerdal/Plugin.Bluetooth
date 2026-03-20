@@ -47,7 +47,7 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     ///     Gets the Bluetooth service to which this characteristic belongs, cast to the Android-specific implementation.
     /// </summary>
     public AndroidBluetoothRemoteService AndroidBluetoothRemoteService =>
-        (AndroidBluetoothRemoteService) RemoteService;
+        (AndroidBluetoothRemoteService) Service;
 
     /// <summary>
     ///     Gets the GATT proxy from the device.
@@ -333,7 +333,7 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
         IBluetoothRemoteDescriptor FromInputTypeToOutputTypeConversion(BluetoothGattDescriptor nativeDescriptor)
         {
             var spec = new AndroidBluetoothRemoteDescriptorFactorySpec(nativeDescriptor);
-            return DescriptorFactory.Create(this, spec);
+            return (DescriptorFactory ?? throw new InvalidOperationException("DescriptorFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 

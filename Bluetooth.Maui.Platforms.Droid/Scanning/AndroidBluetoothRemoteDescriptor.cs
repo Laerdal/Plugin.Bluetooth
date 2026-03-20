@@ -42,7 +42,7 @@ public class AndroidBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
     ///     Gets the Bluetooth characteristic to which this descriptor belongs, cast to the Android-specific implementation.
     /// </summary>
     public AndroidBluetoothRemoteCharacteristic AndroidBluetoothRemoteCharacteristic =>
-        (AndroidBluetoothRemoteCharacteristic) RemoteCharacteristic;
+        (AndroidBluetoothRemoteCharacteristic) Characteristic;
 
     /// <summary>
     ///     Gets the GATT proxy from the device.

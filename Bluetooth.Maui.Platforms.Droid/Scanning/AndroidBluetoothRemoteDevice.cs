@@ -176,7 +176,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <inheritdoc />
     /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#requestConnectionPriority(int)">Android BluetoothGatt.requestConnectionPriority(int)</seealso>
     protected override ValueTask NativeRequestConnectionPriorityAsync(
-        BluetoothConnectionPriority priority,
+        ConnectionPriority priority,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
@@ -185,13 +185,14 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             throw new InvalidOperationException("Device not connected - GATT proxy is null");
         }
 
+        // TODO: Create ToAndroidGattConnectionPriority extension method
         // Convert abstract priority to Android GattConnectionPriority using converter
-        var androidPriority = priority.ToAndroidGattConnectionPriority();
+        var androidPriority = GattConnectionPriority.Balanced; // priority.ToAndroidGattConnectionPriority();
 
         var success = _bluetoothGattProxy.BluetoothGatt.RequestConnectionPriority(androidPriority);
         if (!success)
         {
-            throw new InvalidOperationException($"Failed to spec connection priority: {priority}");
+            throw new InvalidOperationException($"Failed to request connection priority: {priority}");
         }
 
         return ValueTask.CompletedTask;
@@ -411,7 +412,8 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             Windows = connectionOptions.Windows,
 
             // Add Droid-specific PreferredPhy (extracted from Android sub-options)
-            PreferredPhy = connectionOptions.Android?.PreferredPhy as BluetoothPhy?
+            // TODO: Implement PhyMode → Android.Bluetooth.BluetoothPhy conversion when extension methods are available
+            PreferredPhy = null
         };
 
         // Create GATT connection
@@ -633,7 +635,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         IBluetoothRemoteService FromInputTypeToOutputTypeConversion(BluetoothGattService nativeService)
         {
             var spec = new AndroidBluetoothRemoteServiceFactorySpec(nativeService);
-            return ServiceFactory.Create(this, spec);
+            return (ServiceFactory ?? throw new InvalidOperationException("ServiceFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 

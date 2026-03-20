@@ -1,13 +1,11 @@
-using Bluetooth.Core.Broadcasting.Factories;
-
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.Factories;
 
 /// <inheritdoc />
-public class AndroidBluetoothLocalDescriptorFactory : BaseBluetoothLocalDescriptorFactory
+public class AndroidBluetoothLocalDescriptorFactory : IBluetoothLocalDescriptorFactory
 {
     /// <inheritdoc />
-    public override IBluetoothLocalDescriptor Create(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
+    public IBluetoothLocalDescriptor Create(IBluetoothLocalCharacteristic characteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Android GATT local descriptor creation is not yet implemented.");
     }
 }
