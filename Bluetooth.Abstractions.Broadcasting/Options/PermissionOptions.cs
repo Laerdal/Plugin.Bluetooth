@@ -1,5 +1,8 @@
 namespace Bluetooth.Abstractions.Broadcasting.Options;
 
+/// <summary>
+///     Represents permission configuration options for broadcasting operations.
+/// </summary>
 public record PermissionOptions
 {
     /// <summary>

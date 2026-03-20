@@ -1,5 +1,8 @@
 namespace Bluetooth.Abstractions.Broadcasting.Options;
 
+/// <summary>
+///     Represents broadcasting configuration options.
+/// </summary>
 public record BroadcastingOptions
 {
     /// <summary>
@@ -17,7 +20,7 @@ public record BroadcastingOptions
     ///     <platform>Apple</platform>
     /// </platforms>
     public bool IncludeDeviceName { get; init; }
-    
+
     /// <summary>
     ///     Gets the list of service UUIDs advertised by the device.
     /// </summary>

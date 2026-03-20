@@ -1,5 +1,8 @@
 namespace Bluetooth.Abstractions.Scanning.Options;
 
+/// <summary>
+///     Represents permission configuration options for scanning operations.
+/// </summary>
 public record PermissionOptions
 {
     /// <summary>

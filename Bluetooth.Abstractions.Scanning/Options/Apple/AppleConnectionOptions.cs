@@ -1,11 +1,33 @@
 namespace Bluetooth.Abstractions.Scanning.Options.Apple;
 
+/// <summary>
+///     Apple (iOS/macOS) platform-specific scanning options.
+/// </summary>
 public record AppleScanningOptions : ScanningOptions
 {
+    /// <summary>
+    ///     Gets a value indicating whether duplicate advertisements should be allowed.
+    /// </summary>
+    /// <remarks>
+    ///     When true, allows multiple callbacks for the same peripheral. Default is based on scan mode.
+    /// </remarks>
     public bool? AllowDuplicates { get; init; }
-    
+
+    /// <summary>
+    ///     Gets the service UUID to filter peripherals.
+    /// </summary>
+    /// <remarks>
+    ///     When set, only peripherals advertising this service UUID will be discovered.
+    /// </remarks>
     public Guid? ServiceUuid { get; init; }
-    
+
+    /// <summary>
+    ///     Gets the list of peripheral UUIDs to scan for.
+    /// </summary>
+    /// <remarks>
+    ///     When set, only peripherals with these UUIDs will be discovered.
+    ///     Useful for reconnecting to known devices.
+    /// </remarks>
     public IList<Guid>? PeripheralUuids { get; init; }
 }
 
