@@ -56,4 +56,8 @@
         <PackageReference Include="Plugin.ExceptionListeners"/>
         <PackageReference Include="Plugin.ExceptionListeners.Maui"/>
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Builders\" />
+    </ItemGroup>
 </Project>
