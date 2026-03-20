@@ -5,6 +5,7 @@ using Bluetooth.Maui.Platforms.Droid.Logging;
 using Bluetooth.Maui.Platforms.Droid.Permissions;
 using Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
+using Bluetooth.Maui.Platforms.Droid.Tools;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning;
 
@@ -193,15 +194,13 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     {
         using var builder = new ScanSettings.Builder();
 
-        // TODO: Create extension methods for converting abstract enums to Android types
-        // Map abstract ScanMode to Android ScanMode using converter
-        var scanMode = Android.Bluetooth.LE.ScanMode.Balanced; // options.ScanMode.ToAndroidScanMode();
+        var scanMode = options.ScanMode.ToAndroidScanMode();
         builder.SetScanMode(scanMode);
 
         // Map abstract CallbackType to Android ScanCallbackType (API 23+)
         if (OperatingSystem.IsAndroidVersionAtLeast(23))
         {
-            var callbackType = ScanCallbackType.AllMatches; // options.CallbackType.ToAndroidScanCallbackType();
+            var callbackType = options.CallbackType.ToAndroidScanCallbackType();
             builder.SetCallbackType(callbackType);
         }
 
@@ -211,17 +210,15 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             // Match mode (API 23+)
             if (OperatingSystem.IsAndroidVersionAtLeast(23) && androidOptions.MatchMode.HasValue)
             {
-                // TODO: Implement MatchMode conversion
-                // var matchMode = MatchMode.Aggressive; // androidOptions.MatchMode.Value.ToAndroidMatchMode();
-                // builder.SetMatchMode(matchMode);
+                var matchMode = androidOptions.MatchMode.Value.ToAndroidMatchMode();
+                builder.SetMatchMode(matchMode);
             }
 
             // Number of matches (API 23+)
             if (OperatingSystem.IsAndroidVersionAtLeast(23) && androidOptions.ScanMatchNumber.HasValue)
             {
-                // TODO: Implement NumOfMatches conversion
-                // var numMatches = NumOfMatches.MatchNumOneAdvertisement; // androidOptions.ScanMatchNumber.Value.ToAndroidNumOfMatches();
-                // builder.SetNumOfMatches((int) numMatches);
+                var numMatches = androidOptions.ScanMatchNumber.Value.ToAndroidNumOfMatches();
+                builder.SetNumOfMatches((int) numMatches);
             }
 
             // Report delay (API 23+)
@@ -233,9 +230,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             // PHY (API 26+)
             if (OperatingSystem.IsAndroidVersionAtLeast(26) && androidOptions.Phy.HasValue)
             {
-                // TODO: Implement PHY conversion
-                // var phy = Android.Bluetooth.LE.BluetoothPhy.Le1m; // androidOptions.Phy.Value.ToAndroidBluetoothPhy();
-                // builder.SetPhy(phy);
+                builder.SetPhy(androidOptions.Phy.Value.ToAndroidScanPhy());
             }
 
             // Legacy (API 26+)

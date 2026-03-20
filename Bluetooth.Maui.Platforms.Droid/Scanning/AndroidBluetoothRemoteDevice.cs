@@ -185,9 +185,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             throw new InvalidOperationException("Device not connected - GATT proxy is null");
         }
 
-        // TODO: Create ToAndroidGattConnectionPriority extension method
-        // Convert abstract priority to Android GattConnectionPriority using converter
-        var androidPriority = GattConnectionPriority.Balanced; // priority.ToAndroidGattConnectionPriority();
+        var androidPriority = priority.ToAndroidGattConnectionPriority();
 
         var success = _bluetoothGattProxy.BluetoothGatt.RequestConnectionPriority(androidPriority);
         if (!success)
@@ -412,8 +410,9 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             Windows = connectionOptions.Windows,
 
             // Add Droid-specific PreferredPhy (extracted from Android sub-options)
-            // TODO: Implement PhyMode → Android.Bluetooth.BluetoothPhy conversion when extension methods are available
-            PreferredPhy = null
+            PreferredPhy = connectionOptions.Android?.PreferredPhy is PhyMode phy && OperatingSystem.IsAndroidVersionAtLeast(26)
+                ? phy.ToAndroidPhyMode()
+                : null
         };
 
         // Create GATT connection

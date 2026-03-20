@@ -26,8 +26,7 @@ public static class BluetoothDeviceExtensions
         // Extract Android-specific options (with defaults)
         var autoConnect = connectionOptions.Android?.AutoConnect ?? false;
         var transportType = connectionOptions.Android?.TransportType ?? TransportType.Auto;
-        // TODO: Implement PhyMode → Android.Bluetooth.BluetoothPhy conversion when extension methods are available
-        Android.Bluetooth.BluetoothPhy? preferredPhy = null;
+        var preferredPhy = (connectionOptions as Bluetooth.Maui.Platforms.Droid.Scanning.Options.ConnectionOptions)?.PreferredPhy;
 
         if (OperatingSystem.IsAndroidVersionAtLeast(26) && preferredPhy.HasValue)
         {
