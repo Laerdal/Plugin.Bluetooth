@@ -7,7 +7,12 @@ public partial interface IBluetoothLocalCharacteristic
 {
     #region Read
 
-    // TODO : Implement Read support once all platforms are investigated.
+    /// <summary>
+    ///     Event raised when a client device requests to read this characteristic.
+    /// </summary>
+    event EventHandler<CharacteristicReadRequestEventArgs>? ReadRequested;
+
+    // TODO : Implement Read request handling (response customisation) once all platforms are investigated.
 
     #endregion
 }

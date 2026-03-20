@@ -17,7 +17,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
         ArgumentNullException.ThrowIfNull(device);
 
         LogClientSubscribed(Id, Service.Id, device.Id);
-        // TODO : EVENT
+        ClientSubscribed?.Invoke(this, new CharacteristicSubscriptionChangedEventArgs(device.Id, Service.Id, Id));
         device.AddCharacteristicSubscription(this);
     }
 
@@ -30,7 +30,7 @@ public abstract partial class BaseBluetoothLocalCharacteristic
         ArgumentNullException.ThrowIfNull(device);
 
         LogClientUnsubscribed(Id, Service.Id, device.Id);
-        // TODO : EVENT
+        ClientUnsubscribed?.Invoke(this, new CharacteristicSubscriptionChangedEventArgs(device.Id, Service.Id, Id));
         device.RemoveCharacteristicSubscription(this);
     }
 }

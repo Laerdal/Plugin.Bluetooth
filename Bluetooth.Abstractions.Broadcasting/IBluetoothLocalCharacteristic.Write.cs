@@ -7,7 +7,12 @@ public partial interface IBluetoothLocalCharacteristic
 {
     #region Write
 
-    // TODO : Implement Write support once all platforms are investigated.
+    /// <summary>
+    ///     Event raised when a client device requests to write to this characteristic.
+    /// </summary>
+    event EventHandler<CharacteristicWriteRequestEventArgs>? WriteRequested;
+
+    // TODO : Implement Write request handling (response customisation) once all platforms are investigated.
 
     #endregion
 }

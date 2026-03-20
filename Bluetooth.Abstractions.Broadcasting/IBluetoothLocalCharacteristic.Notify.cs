@@ -12,7 +12,17 @@ public partial interface IBluetoothLocalCharacteristic
     /// </summary>
     IReadOnlyList<IBluetoothConnectedDevice> SubscribedDevices { get; }
 
-    // TODO : Implement Notify/Indicate support once all platforms are investigated.
+    /// <summary>
+    ///     Event raised when a client device subscribes to this characteristic.
+    /// </summary>
+    event EventHandler<CharacteristicSubscriptionChangedEventArgs>? ClientSubscribed;
+
+    /// <summary>
+    ///     Event raised when a client device unsubscribes from this characteristic.
+    /// </summary>
+    event EventHandler<CharacteristicSubscriptionChangedEventArgs>? ClientUnsubscribed;
+
+    // TODO : Implement Notify/Indicate send API once all platforms are investigated.
 
     #endregion
 }
