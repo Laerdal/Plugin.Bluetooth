@@ -24,6 +24,20 @@ public abstract partial class BaseBluetoothConnectedDevice : BaseBindableObject,
         Id = id;
     }
 
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="broadcaster">The broadcaster that owns this client device.</param>
+    /// <param name="spec">The factory spec containing connected device information.</param>
+    /// <param name="logger">The logger for logging operations.</param>
+    protected BaseBluetoothConnectedDevice(
+        IBluetoothBroadcaster broadcaster,
+        IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec,
+        ILogger<IBluetoothConnectedDevice>? logger = null)
+        : this(broadcaster, (spec ?? throw new ArgumentNullException(nameof(spec))).DeviceId, logger)
+    {
+    }
+
     /// <inheritdoc />
     public string Id { get; }
 

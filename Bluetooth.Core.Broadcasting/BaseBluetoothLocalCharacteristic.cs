@@ -9,6 +9,11 @@ public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObj
     public IBluetoothLocalService Service { get; }
 
     /// <summary>
+    ///     Gets the factory for creating local Bluetooth descriptors.
+    /// </summary>
+    protected IBluetoothLocalDescriptorFactory? DescriptorFactory { get; }
+
+    /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothLocalCharacteristic" /> class.
     /// </summary>
     protected BaseBluetoothLocalCharacteristic(IBluetoothLocalService service,
@@ -31,6 +36,30 @@ public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObj
         {
             Name = name;
         }
+    }
+
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="service">The local service this characteristic belongs to.</param>
+    /// <param name="spec">The factory spec containing characteristic information.</param>
+    /// <param name="descriptorFactory">The factory for creating local descriptors.</param>
+    /// <param name="logger">The logger instance to use for logging (optional).</param>
+    protected BaseBluetoothLocalCharacteristic(
+        IBluetoothLocalService service,
+        IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec,
+        IBluetoothLocalDescriptorFactory descriptorFactory,
+        ILogger<IBluetoothLocalCharacteristic>? logger = null)
+        : this(service,
+            (spec ?? throw new ArgumentNullException(nameof(spec))).CharacteristicId,
+            spec.Properties,
+            spec.Permissions,
+            null,
+            spec.Name,
+            logger)
+    {
+        ArgumentNullException.ThrowIfNull(descriptorFactory);
+        DescriptorFactory = descriptorFactory;
     }
 
     /// <inheritdoc />

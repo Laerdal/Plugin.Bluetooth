@@ -9,7 +9,6 @@ namespace Bluetooth.Core.Broadcasting;
 /// </remarks>
 public abstract partial class BaseBluetoothBroadcaster : BaseBindableObject, IBluetoothBroadcaster
 {
-
     /// <inheritdoc />
     public IBluetoothAdapter Adapter { get; }
 
