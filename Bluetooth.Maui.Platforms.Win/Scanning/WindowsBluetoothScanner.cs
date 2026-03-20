@@ -28,14 +28,14 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
 
     /// <inheritdoc />
     public WindowsBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothRemoteDeviceFactory deviceFactory,
-        ITicker ticker,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
-        ILogger<IBluetoothScanner>? logger = null) : base(adapter,
-                                                          deviceFactory,
-                                                          rssiToSignalStrengthConverter,
-                                                          ticker,
-                                                          logger)
+        ITicker ticker,
+        IBluetoothNameProvider? nameProvider = null,
+        ILoggerFactory? loggerFactory = null) : base(adapter,
+                                                       rssiToSignalStrengthConverter,
+                                                       ticker,
+                                                       nameProvider,
+                                                       loggerFactory)
     {
         _ticker = ticker;
     }
@@ -128,20 +128,6 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         return ValueTask.CompletedTask;
     }
 
-    /// <inheritdoc />
-    /// <remarks>
-    ///     Creates a Windows-specific device factory spec from the advertisement.
-    /// </remarks>
-    protected override IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
-    {
-        if (advertisement is not WindowsBluetoothAdvertisement windowsAdvertisement)
-        {
-            throw new ArgumentException($"Expected advertisement of type {typeof(WindowsBluetoothAdvertisement)}", nameof(advertisement));
-        }
-
-        return new WindowsBluetoothRemoteDeviceFactorySpec(windowsAdvertisement);
-    }
-
     #endregion
 
     #region Permission Methods
@@ -168,6 +154,13 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     {
         // No runtime spec needed on Windows - permissions are declared at install time
         return ValueTask.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    protected override IBluetoothRemoteDevice NativeCreateDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
+    {
+        // TODO: Implement device creation via factory pattern
+        throw new NotImplementedException("Device factory integration pending");
     }
 
     #endregion

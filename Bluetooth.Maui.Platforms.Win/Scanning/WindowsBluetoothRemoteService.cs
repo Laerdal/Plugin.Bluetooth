@@ -89,7 +89,7 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
         IBluetoothRemoteCharacteristic FromInputTypeToOutputTypeConversion(GattCharacteristic nativeCharacteristic)
         {
             var spec = new WindowsBluetoothRemoteCharacteristicFactorySpec(nativeCharacteristic);
-            return CharacteristicFactory.Create(this, spec);
+            return (CharacteristicFactory ?? throw new InvalidOperationException("CharacteristicFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 

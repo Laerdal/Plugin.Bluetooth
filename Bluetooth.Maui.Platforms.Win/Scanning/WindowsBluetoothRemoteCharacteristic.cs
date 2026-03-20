@@ -52,7 +52,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <param name="argsTimestamp">The timestamp when the value changed.</param>
     public void OnValueChanged(byte[] value, DateTimeOffset argsTimestamp)
     {
-        Logger?.LogNotificationReceived(Id, RemoteService.Device.Id, value?.Length ?? 0);
+        Logger?.LogNotificationReceived(Id, Service.Device.Id, value?.Length ?? 0);
         OnReadValueSucceeded(value);
     }
 
@@ -63,7 +63,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <inheritdoc />
     protected async override ValueTask NativeReadValueAsync()
     {
-        Logger?.LogCharacteristicRead(Id, RemoteService.Device.Id);
+        Logger?.LogCharacteristicRead(Id, Service.Device.Id);
 
         try
         {
@@ -76,18 +76,18 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
                 var data = new byte[buffer.Length];
                 using var reader = DataReader.FromBuffer(buffer);
                 reader.ReadBytes(data);
-                Logger?.LogCharacteristicReadCompleted(Id, RemoteService.Device.Id, data.Length);
+                Logger?.LogCharacteristicReadCompleted(Id, Service.Device.Id, data.Length);
                 OnReadValueSucceeded(data);
             }
             else
             {
-                Logger?.LogCharacteristicReadCompleted(Id, RemoteService.Device.Id, 0);
+                Logger?.LogCharacteristicReadCompleted(Id, Service.Device.Id, 0);
                 OnReadValueSucceeded(Array.Empty<byte>());
             }
         }
         catch (Exception ex)
         {
-            Logger?.LogCharacteristicReadError(Id, RemoteService.Device.Id, ex.Message, ex);
+            Logger?.LogCharacteristicReadError(Id, Service.Device.Id, ex.Message, ex);
             OnReadValueFailed(ex);
         }
     }
@@ -105,7 +105,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <inheritdoc />
     protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
-        Logger?.LogCharacteristicWrite(Id, RemoteService.Device.Id, value.Length);
+        Logger?.LogCharacteristicWrite(Id, Service.Device.Id, value.Length);
 
         try
         {
@@ -135,12 +135,12 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
-            Logger?.LogCharacteristicWriteCompleted(Id, RemoteService.Device.Id);
+            Logger?.LogCharacteristicWriteCompleted(Id, Service.Device.Id);
             OnWriteValueSucceeded();
         }
         catch (Exception ex)
         {
-            Logger?.LogCharacteristicWriteError(Id, RemoteService.Device.Id, ex.Message, ex);
+            Logger?.LogCharacteristicWriteError(Id, Service.Device.Id, ex.Message, ex);
             OnWriteValueFailed(ex);
         }
     }
@@ -178,7 +178,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     protected async override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
         var action = shouldBeListening ? "Enabling" : "Disabling";
-        Logger?.LogNotificationStateChange(action, Id, RemoteService.Device.Id);
+        Logger?.LogNotificationStateChange(action, Id, Service.Device.Id);
 
         try
         {
@@ -213,7 +213,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
         }
         catch (Exception ex)
         {
-            Logger?.LogNotificationStateChangeError(Id, RemoteService.Device.Id, ex.Message, ex);
+            Logger?.LogNotificationStateChangeError(Id, Service.Device.Id, ex.Message, ex);
             OnWriteIsListeningFailed(ex);
         }
     }
@@ -274,7 +274,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
         IBluetoothRemoteDescriptor FromInputTypeToOutputTypeConversion(GattDescriptor nativeDescriptor)
         {
             var spec = new WindowsBluetoothRemoteDescriptorFactorySpec(nativeDescriptor);
-            return DescriptorFactory.Create(this, spec);
+            return (DescriptorFactory ?? throw new InvalidOperationException("DescriptorFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 

@@ -3,14 +3,13 @@ namespace Bluetooth.Maui.Platforms.Win.Broadcasting;
 /// <inheritdoc />
 public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster
 {
-    /// <inheritdoc />
-    public WindowsBluetoothBroadcaster(
-        IBluetoothAdapter adapter,
-        IBluetoothLocalServiceFactory localServiceFactory,
-        IBluetoothConnectedDeviceFactory connectedDeviceFactory,
-        ITicker ticker,
-        ILogger<IBluetoothBroadcaster>? logger = null)
-        : base(adapter, localServiceFactory, connectedDeviceFactory, ticker, logger)
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="WindowsBluetoothBroadcaster" /> class.
+    /// </summary>
+    /// <param name="adapter">The Bluetooth adapter associated with this broadcaster.</param>
+    /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
+    /// <param name="loggerFactory">An optional logger factory for creating loggers used by this broadcaster and its components.</param>
+    public WindowsBluetoothBroadcaster(IBluetoothAdapter adapter, ITicker ticker, ILoggerFactory? loggerFactory = null) : base(adapter, ticker, loggerFactory)
     {
     }
 
@@ -30,6 +29,17 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster
     protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("WindowsBluetoothBroadcaster is not yet implemented on Windows.");
+    }
+
+    /// <inheritdoc />
+    protected override ValueTask<IBluetoothLocalService> NativeCreateServiceAsync(Guid id,
+        string? name = null,
+        bool isPrimary = true,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement Windows GATT server support
+        throw new NotImplementedException("Windows GATT server implementation pending");
     }
 
     #region Permission Methods
@@ -58,4 +68,5 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster
     }
 
     #endregion
+
 }
