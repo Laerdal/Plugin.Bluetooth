@@ -97,7 +97,7 @@ public class CharacteristicsViewModel : BaseViewModel
 
         try
         {
-            _logger.LogInformation("Exploring characteristics for service: {ServiceId}", ServiceId);
+            _logger.LogInformation("Exploring characteristics for service: {Id}", ServiceId);
 
             // Explore characteristics on the service
             await Service.ExploreCharacteristicsAsync();
@@ -108,11 +108,11 @@ public class CharacteristicsViewModel : BaseViewModel
                 OnPropertyChanged(nameof(CharacteristicCount));
             });
 
-            _logger.LogInformation("Characteristic exploration completed - Found {CharacteristicCount} characteristics for service: {ServiceId}", CharacteristicCount, ServiceId);
+            _logger.LogInformation("Characteristic exploration completed - Found {CharacteristicCount} characteristics for service: {Id}", CharacteristicCount, ServiceId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to explore characteristics for service: {ServiceId}", ServiceId);
+            _logger.LogError(ex, "Failed to explore characteristics for service: {Id}", ServiceId);
 
             var mainPage = Application.Current?.Windows.FirstOrDefault()?.Page;
             if (mainPage != null)
@@ -135,7 +135,7 @@ public class CharacteristicsViewModel : BaseViewModel
             return;
         }
 
-        _logger.LogInformation("Characteristic selected: {CharacteristicId} from service: {ServiceId}", characteristic.Id, ServiceId);
+        _logger.LogInformation("Characteristic selected: {CharacteristicId} from service: {Id}", characteristic.Id, ServiceId);
 
         // Navigate to the characteristic detail page with the selected characteristic
         var parameters = new Dictionary<string, object>
