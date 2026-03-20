@@ -17,11 +17,13 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// <param name="adapter">The Bluetooth adapter associated with this scanner.</param>
     /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
+    /// <param name="deviceFactory">The factory for creating platform-specific remote device instances.</param>
     /// <param name="nameProvider">Optional provider for Bluetooth device names.</param>
     /// <param name="loggerFactory">Optional logger factory for creating loggers.</param>
     public AndroidBluetoothScanner(IBluetoothAdapter adapter,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ITicker ticker,
+        IBluetoothRemoteDeviceFactory deviceFactory,
         IBluetoothNameProvider? nameProvider = null,
         ILoggerFactory? loggerFactory = null) : base(adapter,
                                                      rssiToSignalStrengthConverter,
@@ -29,8 +31,11 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
                                                      nameProvider,
                                                      loggerFactory)
     {
+        _deviceFactory = deviceFactory;
         ScanCallbackProxy = new ScanCallbackProxy(this);
     }
+
+    private readonly IBluetoothRemoteDeviceFactory _deviceFactory;
 
     /// <summary>
     ///     Gets the BluetoothLeScanner instance from the Android Bluetooth adapter.
@@ -281,8 +286,8 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// <inheritdoc />
     protected override IBluetoothRemoteDevice NativeCreateDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
-        // TODO: Implement device creation via factory pattern
-        throw new NotImplementedException("Device factory integration pending");
+        var spec = new IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec(advertisement);
+        return _deviceFactory.Create(this, spec);
     }
 
     #region ScanCallbackProxy.IScanCallbackProxyDelegate Implementation

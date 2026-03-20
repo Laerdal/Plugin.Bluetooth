@@ -1,6 +1,4 @@
 using Android.Bluetooth;
-// TODO: Uncomment when Abstractions factory infrastructure exists
-// using Bluetooth.Abstractions.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 

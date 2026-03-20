@@ -1,5 +1,3 @@
-// TODO: Uncomment when Core factory infrastructure exists
-// using Bluetooth.Core.Scanning.Factories;
 using Microsoft.Extensions.Logging;
 
 namespace Bluetooth.Maui.Platforms.Win.Scanning.Factories;

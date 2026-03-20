@@ -19,6 +19,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     private NativeObjects.BluetoothLeAdvertisementWatcherWrapper? _watcher;
 
     private readonly ITicker _ticker;
+    private readonly IBluetoothRemoteDeviceFactory _deviceFactory;
 
     /// <summary>
     ///     Gets the advertisement watcher wrapper, creating it lazily with this scanner as the delegate.
@@ -30,6 +31,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     public WindowsBluetoothScanner(IBluetoothAdapter adapter,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ITicker ticker,
+        IBluetoothRemoteDeviceFactory deviceFactory,
         IBluetoothNameProvider? nameProvider = null,
         ILoggerFactory? loggerFactory = null) : base(adapter,
                                                        rssiToSignalStrengthConverter,
@@ -38,6 +40,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
                                                        loggerFactory)
     {
         _ticker = ticker;
+        _deviceFactory = deviceFactory;
     }
 
     #region Delegate Callbacks
@@ -159,8 +162,8 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     /// <inheritdoc />
     protected override IBluetoothRemoteDevice NativeCreateDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
-        // TODO: Implement device creation via factory pattern
-        throw new NotImplementedException("Device factory integration pending");
+        var spec = new IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec(advertisement);
+        return _deviceFactory.Create(this, spec);
     }
 
     #endregion

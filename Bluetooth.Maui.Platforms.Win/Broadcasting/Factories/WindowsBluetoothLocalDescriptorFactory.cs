@@ -1,6 +1,3 @@
-// TODO: Uncomment when Core factory infrastructure exists
-// using Bluetooth.Core.Broadcasting.Factories;
-
 namespace Bluetooth.Maui.Platforms.Win.Broadcasting.Factories;
 
 /// <inheritdoc />

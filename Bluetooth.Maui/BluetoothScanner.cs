@@ -67,6 +67,16 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
     /// <param name="dispatchQueueProvider">Apple-specific: Dispatch queue provider for Core Bluetooth.</param>
     /// <param name="nameProvider">Optional provider for Bluetooth device names.</param>
     /// <param name="loggerFactory">Optional logger factory for creating loggers.</param>
+#elif __ANDROID__ || WINDOWS
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="BluetoothScanner"/> class.
+    /// </summary>
+    /// <param name="adapter">The Bluetooth adapter associated with this scanner.</param>
+    /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
+    /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
+    /// <param name="deviceFactory">The factory for creating platform-specific remote device instances.</param>
+    /// <param name="nameProvider">Optional provider for Bluetooth device names.</param>
+    /// <param name="loggerFactory">Optional logger factory for creating loggers.</param>
 #else
     /// <summary>
     ///     Initializes a new instance of the <see cref="BluetoothScanner"/> class.
@@ -85,6 +95,8 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
 #if __IOS__ || __MACCATALYST__
         IOptions<CBCentralInitOptions> cbCentralInitOptions,
         IDispatchQueueProvider dispatchQueueProvider,
+#elif __ANDROID__ || WINDOWS
+        IBluetoothRemoteDeviceFactory deviceFactory,
 #endif
         IBluetoothNameProvider? nameProvider = null,
         ILoggerFactory? loggerFactory = null)
@@ -95,6 +107,7 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
             adapter,
             rssiToSignalStrengthConverter,
             ticker,
+            deviceFactory,
             nameProvider,
             loggerFactory);
 #elif __IOS__ || __MACCATALYST__
@@ -111,6 +124,7 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
             adapter,
             rssiToSignalStrengthConverter,
             ticker,
+            deviceFactory,
             nameProvider,
             loggerFactory);
 #else

@@ -1,9 +1,5 @@
 using Bluetooth.Abstractions.Scanning;
-// TODO: Uncomment when Abstractions factory infrastructure exists
-// using Bluetooth.Abstractions.Scanning.Factories;
 using Bluetooth.Abstractions.Scanning.Options;
-// TODO: Uncomment when Core factory infrastructure exists
-// using Bluetooth.Core.Scanning.Factories;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
