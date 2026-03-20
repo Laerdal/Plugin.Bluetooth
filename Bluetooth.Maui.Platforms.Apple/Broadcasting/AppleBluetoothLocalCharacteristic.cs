@@ -50,7 +50,9 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
         try
         {
             ArgumentNullException.ThrowIfNull(central);
+#pragma warning disable CA2000 // Device lifetime is managed by the broadcaster's client device registry
             var device = GetOrCreateClientDevice(central);
+#pragma warning restore CA2000
             OnCharacteristicSubscribed(device);
         }
         catch (Exception e)
@@ -65,7 +67,9 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
         try
         {
             ArgumentNullException.ThrowIfNull(central);
+#pragma warning disable CA2000 // Device lifetime is managed by the broadcaster's client device registry
             var device = GetOrCreateClientDevice(central);
+#pragma warning restore CA2000
             OnCharacteristicUnsubscribed(device);
         }
         catch (Exception e)
@@ -82,7 +86,9 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
             ArgumentNullException.ThrowIfNull(request);
             ArgumentNullException.ThrowIfNull(request.Central);
 
+#pragma warning disable CA2000 // Device lifetime is managed by the broadcaster's client device registry
             var device = GetOrCreateClientDevice(request.Central);
+#pragma warning restore CA2000
             var value = OnReadRequestReceived(device);
             var bytes = value.ToArray();
             request.Value = new ReadOnlyMemory<byte>(bytes).ToNSData();
@@ -105,7 +111,9 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
             ArgumentNullException.ThrowIfNull(request.Central);
             ArgumentNullException.ThrowIfNull(request.Value);
 
+#pragma warning disable CA2000 // Device lifetime is managed by the broadcaster's client device registry
             var device = GetOrCreateClientDevice(request.Central);
+#pragma warning restore CA2000
             await OnWriteRequestReceivedAsync(device, request.Value.ToArray()).ConfigureAwait(false);
 
             AppleService.AppleBluetoothBroadcaster.CbPeripheralManagerWrapper.CbPeripheralManager.RespondToRequest(request, CBATTError.Success);
@@ -142,22 +150,24 @@ public class AppleBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristi
     {
         return AppleService.AppleBluetoothBroadcaster.GetOrCreateClientDevice(central);
     }
-    
+
     /// <inheritdoc />
     protected override ValueTask<IBluetoothLocalDescriptor> NativeCreateDescriptorAsync(Guid id, string? name = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Create a new CBMutableDescriptor with the specified ID and an initial value of null (iOS requires a value at creation time, but it can be updated later)
         var cbDescriptor = new CBMutableDescriptor(id.ToCBUuid(), null);
-        
+
         // Create the corresponding AppleBluetoothLocalDescriptor instance
         var logger = Service.Broadcaster.LoggerFactory?.CreateLogger<AppleBluetoothLocalDescriptor>();
+#pragma warning disable CA2000 // Descriptor is returned via ValueTask; caller takes ownership
         var localDescriptor = new AppleBluetoothLocalDescriptor(cbDescriptor, this, id, null, name, logger);
-        
+#pragma warning restore CA2000
+
         // Add the descriptor to the characteristic's list of descriptors
         var descriptors = CbCharacteristic.Descriptors?.ToList() ?? new List<CBDescriptor>();
         descriptors.Add(cbDescriptor);
         CbCharacteristic.Descriptors = descriptors.ToArray();
-        
+
         return new ValueTask<IBluetoothLocalDescriptor>(localDescriptor);
     }
 }

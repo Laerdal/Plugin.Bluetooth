@@ -76,16 +76,18 @@ public class AppleBluetoothLocalService : BaseBluetoothLocalService, CbPeriphera
     {
         // Create a new CBMutableCharacteristic with the specified properties and permissions
         var cbCharacteristic = new CBMutableCharacteristic(id.ToCBUuid(), properties.ToNative(), null, permissions.ToNative());
-        
+
         // Create the corresponding AppleBluetoothLocalCharacteristic instance
         var logger = Broadcaster.LoggerFactory?.CreateLogger<AppleBluetoothLocalCharacteristic>();
+#pragma warning disable CA2000 // Characteristic is returned via ValueTask; caller takes ownership
         var localCharacteristic = new AppleBluetoothLocalCharacteristic(cbCharacteristic, this, id, properties, permissions, null, name, logger);
-        
+#pragma warning restore CA2000
+
         // Add the new characteristic to the service's list of characteristics
         var characteristics = CbService.Characteristics?.ToList() ?? new List<CBCharacteristic>();
         characteristics.Add(cbCharacteristic);
         CbService.Characteristics = characteristics.ToArray();
-        
+
         return new ValueTask<IBluetoothLocalCharacteristic>(localCharacteristic);
     }
 }

@@ -17,11 +17,14 @@ public static class ServiceCollectionExtensions
     public static void AddBluetoothMauiAppleBroadcastingServices(this IServiceCollection services)
     {
         services.AddSingleton<IBluetoothBroadcaster, AppleBluetoothBroadcaster>();
-        
-        services.AddSingleton<CBPeripheralManagerDelegate, CbPeripheralManagerWrapper>();
+
+        // Configure CBPeripheralManager options
         services.Configure<CbPeripheralManagerOptions>(options => {
             options.ShowPowerAlert = true;
             options.RestoreIdentifierKey = "com.bluetooth.maui.peripheralmanager.restore";
         });
+
+        // Note: CbPeripheralManagerWrapper is NOT registered in DI - it's created by AppleBluetoothBroadcaster
+        // because it needs the broadcaster as its delegate (circular dependency)
     }
 }

@@ -18,10 +18,13 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IBluetoothScanner, AppleBluetoothScanner>();
 
-        services.AddSingleton<CbCentralManagerWrapper>();
+        // Configure CBCentralManager options
         services.Configure<CBCentralInitOptions>(options => {
             options.ShowPowerAlert = true;
             options.RestoreIdentifier = "com.bluetooth.maui.centralmanager.restore";
         });
+
+        // Note: CbCentralManagerWrapper is NOT registered in DI - it's created by AppleBluetoothScanner
+        // because it needs the scanner as its delegate (circular dependency)
     }
 }

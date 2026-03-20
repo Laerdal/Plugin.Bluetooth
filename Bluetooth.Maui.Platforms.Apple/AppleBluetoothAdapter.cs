@@ -1,3 +1,5 @@
+using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
+
 namespace Bluetooth.Maui.Platforms.Apple;
 
 /// <summary>

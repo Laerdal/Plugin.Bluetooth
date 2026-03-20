@@ -10,6 +10,14 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 /// <inheritdoc cref="BaseBluetoothRemoteDevice" />
 public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeripheralWrapper.ICbPeripheralDelegate, CbCentralManagerWrapper.ICbPeripheralDelegate
 {
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteDevice" /> class from an Apple advertisement.
+    /// </summary>
+    /// <param name="parentScanner">The Bluetooth scanner that discovered this device.</param>
+    /// <param name="advertisement">The Apple-specific Bluetooth advertisement containing the Core Bluetooth peripheral.</param>
+    /// <param name="signalStrengthSmoothingOptions">The options for smoothing signal strength jitter.</param>
+    /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
+    /// <param name="logger">An optional logger for logging device-related events and errors.</param>
     public AppleBluetoothRemoteDevice(IBluetoothScanner parentScanner,
         AppleBluetoothAdvertisement advertisement,
         SignalStrengthSmoothingOptions signalStrengthSmoothingOptions,
@@ -135,7 +143,9 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
             }
 
             var logger = AppleBluetoothScanner?.LoggerFactory?.CreateLogger<IBluetoothRemoteDevice>() ?? new NullLogger<IBluetoothRemoteDevice>();
+#pragma warning disable CA2000 // Channel is passed to OnL2CapChannelOpened which takes ownership
             var appleChannel = new AppleBluetoothRemoteL2CapChannel(this, channel, logger);
+#pragma warning restore CA2000
 
             OnL2CapChannelOpened(appleChannel);
         }

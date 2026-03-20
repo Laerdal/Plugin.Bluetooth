@@ -11,9 +11,9 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <inheritdoc />
     public AppleBluetoothScanner(IBluetoothAdapter adapter,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
-        IOptions<CBCentralInitOptions> options,
-        IDispatchQueueProvider dispatchQueueProvider,
         ITicker ticker,
+        IOptions<CBCentralInitOptions> cbCentralInitOptions,
+        IDispatchQueueProvider dispatchQueueProvider,
         IBluetoothNameProvider? nameProvider = null,
         ILoggerFactory? loggerFactory = null) : base(adapter,
                                                      rssiToSignalStrengthConverter,
@@ -21,7 +21,11 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
                                                      nameProvider,
                                                      loggerFactory)
     {
-        CbCentralManagerWrapper = new CbCentralManagerWrapper(this, options, dispatchQueueProvider, ticker);
+        ArgumentNullException.ThrowIfNull(cbCentralInitOptions);
+        ArgumentNullException.ThrowIfNull(dispatchQueueProvider);
+
+        // Create CbCentralManagerWrapper with this scanner as the delegate
+        CbCentralManagerWrapper = new CbCentralManagerWrapper(this, cbCentralInitOptions, dispatchQueueProvider, ticker);
     }
 
     /// <summary>
@@ -176,12 +180,16 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         });
     }
 
+    /// <inheritdoc />
     protected override IBluetoothRemoteDevice NativeCreateDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
+        ArgumentNullException.ThrowIfNull(advertisement);
+
         if (advertisement is AppleBluetoothAdvertisement appleAd)
         {
             var logger = LoggerFactory?.CreateLogger<IBluetoothRemoteDevice>() ?? new NullLogger<IBluetoothRemoteDevice>();
-            var signalStrengthSmoothingOptions = SignalStrengthSmoothingOptionsFactory.Create(Options.DefaultName);
+            var signalStrengthSmoothingOptions = SignalStrengthSmoothingOptionsFactory?.Create(Options.DefaultName)
+                                                  ?? new SignalStrengthSmoothingOptions();
             return new AppleBluetoothRemoteDevice(this,
                                                   appleAd,
                                                   signalStrengthSmoothingOptions,
@@ -190,7 +198,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         }
         else
         {
-            throw new ArgumentException($"Expected advertisement of type {typeof(AppleBluetoothAdvertisement)}, but got {advertisement.GetType()}");
+            throw new ArgumentException($"Expected advertisement of type {typeof(AppleBluetoothAdvertisement)}, but got {advertisement.GetType()}", nameof(advertisement));
         }
     }
 
