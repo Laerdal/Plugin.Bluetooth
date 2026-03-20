@@ -3,9 +3,13 @@ namespace Bluetooth.Maui.Platforms.DotNetCore.Scanning;
 /// <inheritdoc />
 public class DotNetCoreBluetoothRemoteService : BaseBluetoothRemoteService
 {
+
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    public DotNetCoreBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory) : base(device, spec, characteristicFactory)
+    public DotNetCoreBluetoothRemoteService(IBluetoothRemoteDevice parentDevice,
+        Guid id,
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteService>? logger = null) : base(parentDevice, id, nameProvider, logger)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

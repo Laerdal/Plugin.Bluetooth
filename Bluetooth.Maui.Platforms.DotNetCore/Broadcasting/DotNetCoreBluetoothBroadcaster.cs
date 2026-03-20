@@ -5,15 +5,7 @@ public class DotNetCoreBluetoothBroadcaster : BaseBluetoothBroadcaster
 {
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    public DotNetCoreBluetoothBroadcaster(IBluetoothAdapter adapter,
-        IBluetoothLocalServiceFactory localServiceFactory,
-        IBluetoothConnectedDeviceFactory connectedDeviceFactory,
-        ITicker ticker,
-        ILogger<IBluetoothBroadcaster>? logger = null) : base(adapter,
-        localServiceFactory,
-        connectedDeviceFactory,
-        ticker,
-        logger)
+    public DotNetCoreBluetoothBroadcaster(IBluetoothAdapter adapter, ITicker ticker, ILoggerFactory? loggerFactory = null) : base(adapter, ticker, loggerFactory)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
@@ -27,14 +19,39 @@ public class DotNetCoreBluetoothBroadcaster : BaseBluetoothBroadcaster
 
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    protected async override ValueTask NativeStartAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeStartAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+        try
+        {
+            throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+        }
+        catch (Exception exception)
+        {
+            return ValueTask.FromException(exception);
+        }
     }
 
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    protected async override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+        }
+        catch (Exception exception)
+        {
+            return ValueTask.FromException(exception);
+        }
+    }
+
+    /// <inheritdoc />
+    /// <exception cref="PlatformNotSupportedException"></exception>
+    protected override ValueTask<IBluetoothLocalService> NativeCreateServiceAsync(Guid id,
+        string? name = null,
+        bool isPrimary = true,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

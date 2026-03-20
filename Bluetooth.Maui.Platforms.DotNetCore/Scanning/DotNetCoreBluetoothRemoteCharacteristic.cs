@@ -5,8 +5,10 @@ public class DotNetCoreBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharac
 {
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    public DotNetCoreBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec, IBluetoothRemoteDescriptorFactory descriptorFactory) :
-        base(remoteService, spec, descriptorFactory)
+    public DotNetCoreBluetoothRemoteCharacteristic(IBluetoothRemoteService parentService,
+        Guid id,
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteCharacteristic>? logger = null) : base(parentService, id, nameProvider, logger)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
@@ -107,4 +109,5 @@ public class DotNetCoreBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharac
     }
 
     #endregion
+
 }
