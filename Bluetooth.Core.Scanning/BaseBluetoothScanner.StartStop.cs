@@ -187,6 +187,12 @@ public abstract partial class BaseBluetoothScanner
         }
     }
 
+    /// <summary>
+    ///     Handles permissions using the strategy specified in the provided <see cref="PermissionOptions"/>.
+    ///     This is a convenience overload that extracts strategy and background-location flag from the options object.
+    /// </summary>
+    /// <param name="permissionOptions">The permission options to apply. Defaults to <see cref="PermissionRequestStrategy.RequestAutomatically"/> if null.</param>
+    /// <param name="cancellationToken">An optional cancellation token to cancel the permission handling operation.</param>
     protected virtual Task HandlePermissionsAsync(PermissionOptions permissionOptions, CancellationToken cancellationToken = default)
     {
         permissionOptions ??= Options.Create(new PermissionOptions()).Value;

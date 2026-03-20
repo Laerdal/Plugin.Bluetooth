@@ -17,17 +17,17 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     /// <summary>
     ///     The factory for creating options related to Bluetooth scanning, such as signal strength smoothing and other scanning parameters. This allows for flexible configuration of scanning behavior and properties, enabling developers to customize the scanning experience based on their application's needs and the specific requirements of different platforms.
     /// </summary>
-    public IOptionsFactory<ScanningOptions> ScanningOptionsFactory { get; }
+    public IOptionsFactory<ScanningOptions>? ScanningOptionsFactory { get; }
 
     /// <summary>
     ///     The factory for creating options related to signal strength smoothing in Bluetooth scanning. This allows for configuring how the signal strength readings are averaged over time to provide a more stable and accurate representation of the device's signal strength, especially in environments with fluctuating signal conditions.
     /// </summary>
-    public IOptionsFactory<SignalStrengthSmoothingOptions> SignalStrengthSmoothingOptionsFactory { get; }
+    public IOptionsFactory<SignalStrengthSmoothingOptions>? SignalStrengthSmoothingOptionsFactory { get; }
 
     /// <summary>
     ///     The options for smoothing signal strength jitter in Bluetooth scanning. This allows for configuring how the signal strength readings are averaged over time to provide a more stable and accurate representation of the device's signal strength, especially in environments with fluctuating signal conditions.
     /// </summary>
-    protected IOptionsMonitor<ScanningOptions> ScanningOptions { get; }
+    protected IOptionsMonitor<ScanningOptions>? ScanningOptions { get; }
 
     /// <summary>
     ///     The converter used to convert RSSI values to signal strength levels. This allows for consistent interpretation of signal strength across different platforms and devices, as RSSI values can vary in scale and meaning depending on the underlying Bluetooth implementation.
@@ -63,6 +63,7 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
         LoggerFactory = loggerFactory;
         RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
         NameProvider = nameProvider;
+        AdvertisementFilter = _ => true;
 
         _refreshSubscription = ticker.Register("Scanner Refresh Tick", TimeSpan.FromSeconds(2), RefreshAsync);
     }

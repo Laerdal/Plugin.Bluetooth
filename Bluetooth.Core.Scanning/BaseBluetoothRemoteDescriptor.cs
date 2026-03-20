@@ -35,6 +35,20 @@ public abstract partial class BaseBluetoothRemoteDescriptor : BaseBindableObject
         LazyCanWrite = new Lazy<bool>(NativeCanWrite);
     }
 
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="parentCharacteristic">The Bluetooth characteristic associated with this descriptor.</param>
+    /// <param name="spec">The factory spec containing descriptor information.</param>
+    /// <param name="logger">The logger instance to use for logging (optional).</param>
+    protected BaseBluetoothRemoteDescriptor(
+        IBluetoothRemoteCharacteristic parentCharacteristic,
+        IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec spec,
+        ILogger<IBluetoothRemoteDescriptor>? logger = null)
+        : this(parentCharacteristic, (spec ?? throw new ArgumentNullException(nameof(spec))).DescriptorId, null, logger)
+    {
+    }
+
     /// <inheritdoc />
     public Guid Id { get; }
 

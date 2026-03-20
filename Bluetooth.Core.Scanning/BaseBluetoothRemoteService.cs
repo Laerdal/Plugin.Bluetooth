@@ -7,6 +7,11 @@ public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, I
     public IBluetoothRemoteDevice Device { get; }
 
     /// <summary>
+    ///     Gets the factory for creating Bluetooth remote characteristics.
+    /// </summary>
+    protected IBluetoothRemoteCharacteristicFactory? CharacteristicFactory { get; }
+
+    /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteService" /> class.
     /// </summary>
     /// <param name="parentDevice">The Bluetooth device associated with this service.</param>
@@ -23,12 +28,30 @@ public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, I
 
         Device = parentDevice;
         Id = id;
-        
+
         // Name
         if (nameProvider != null)
         {
             Name = nameProvider.GetKnownServiceName(Id) ?? Name;
         }
+    }
+
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="parentDevice">The Bluetooth device associated with this service.</param>
+    /// <param name="spec">The factory spec containing service information.</param>
+    /// <param name="characteristicFactory">The factory for creating Bluetooth remote characteristics.</param>
+    /// <param name="logger">The logger instance to use for logging (optional).</param>
+    protected BaseBluetoothRemoteService(
+        IBluetoothRemoteDevice parentDevice,
+        IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec,
+        IBluetoothRemoteCharacteristicFactory characteristicFactory,
+        ILogger<IBluetoothRemoteService>? logger = null)
+        : this(parentDevice, (spec ?? throw new ArgumentNullException(nameof(spec))).ServiceId, null, logger)
+    {
+        ArgumentNullException.ThrowIfNull(characteristicFactory);
+        CharacteristicFactory = characteristicFactory;
     }
 
     /// <inheritdoc />

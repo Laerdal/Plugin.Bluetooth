@@ -10,6 +10,20 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
     public IBluetoothRemoteDevice Device { get; }
 
     /// <summary>
+    ///     Gets the L2CAP channel options.
+    /// </summary>
+    protected L2CapChannelOptions Options { get; }
+
+    /// <summary>
+    ///     Gets or sets the negotiated MTU for this channel. Updated after the channel is opened.
+    /// </summary>
+    public int Mtu
+    {
+        get => GetValue(0);
+        protected set => SetValue(value);
+    }
+
+    /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteL2CapChannel"/> class.
     /// </summary>
     /// <param name="parentDevice">The Bluetooth device this channel belongs to.</param>
@@ -20,6 +34,23 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
     protected BaseBluetoothRemoteL2CapChannel(
         IBluetoothRemoteDevice parentDevice,
         int psm,
+        ILogger? logger = null) : this(parentDevice, psm, null, logger)
+    {
+    }
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteL2CapChannel"/> class with options.
+    /// </summary>
+    /// <param name="parentDevice">The Bluetooth device this channel belongs to.</param>
+    /// <param name="psm">The Protocol/Service Multiplexer (PSM) for this channel.</param>
+    /// <param name="options">Optional L2CAP channel configuration options.</param>
+    /// <param name="logger">Optional logger for logging channel operations.</param>
+    /// <exception cref="ArgumentNullException">Thrown when device is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when PSM is not positive.</exception>
+    protected BaseBluetoothRemoteL2CapChannel(
+        IBluetoothRemoteDevice parentDevice,
+        int psm,
+        L2CapChannelOptions? options,
         ILogger? logger = null) : base(logger)
     {
         // Validate constructor arguments
@@ -32,6 +63,7 @@ public abstract partial class BaseBluetoothRemoteL2CapChannel : BaseBindableObje
         // Parent
         Device = parentDevice;
         Psm = psm;
+        Options = options ?? new L2CapChannelOptions();
     }
 
     /// <inheritdoc />

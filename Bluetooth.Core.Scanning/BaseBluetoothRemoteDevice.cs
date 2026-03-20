@@ -17,6 +17,11 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
     protected IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
 
     /// <summary>
+    ///     Gets the factory for creating Bluetooth remote services.
+    /// </summary>
+    protected IBluetoothRemoteServiceFactory? ServiceFactory { get; }
+
+    /// <summary>
     ///    Initializes a new instance of the <see cref="BaseBluetoothRemoteDevice" /> class using the provided Bluetooth advertisement and parent scanner.
     /// </summary>
     /// <param name="parentScanner">The Bluetooth scanner associated with this remote device.</param>
@@ -72,6 +77,34 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
         SignalStrengthSmoothingOptions = signalStrengthSmoothingOptions;
         Id = id;
         Manufacturer = manufacturer;
+    }
+
+    /// <summary>
+    ///     Initializes a new instance using a factory spec, enabling the spec-based creation pattern.
+    /// </summary>
+    /// <param name="parentScanner">The Bluetooth scanner associated with this device.</param>
+    /// <param name="spec">The factory spec containing device information (ID, manufacturer).</param>
+    /// <param name="serviceFactory">The factory for creating Bluetooth remote services.</param>
+    /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
+    /// <param name="logger">Optional logger instance for logging purposes.</param>
+    protected BaseBluetoothRemoteDevice(
+        IBluetoothScanner parentScanner,
+        IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec,
+        IBluetoothRemoteServiceFactory serviceFactory,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILogger<IBluetoothRemoteDevice>? logger = null) : base(logger)
+    {
+        ArgumentNullException.ThrowIfNull(parentScanner);
+        ArgumentNullException.ThrowIfNull(spec);
+        ArgumentNullException.ThrowIfNull(serviceFactory);
+        ArgumentNullException.ThrowIfNull(rssiToSignalStrengthConverter);
+
+        Scanner = parentScanner;
+        ServiceFactory = serviceFactory;
+        RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
+        SignalStrengthSmoothingOptions = new SignalStrengthSmoothingOptions();
+        Id = spec.DeviceId;
+        Manufacturer = spec.Manufacturer;
     }
 
     /// <inheritdoc />
