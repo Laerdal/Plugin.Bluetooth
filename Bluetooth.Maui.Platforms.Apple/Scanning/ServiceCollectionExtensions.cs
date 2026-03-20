@@ -1,3 +1,4 @@
+using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
@@ -17,6 +18,11 @@ public static class ServiceCollectionExtensions
     public static void AddBluetoothMauiAppleScanningServices(this IServiceCollection services)
     {
         services.AddSingleton<IBluetoothScanner, AppleBluetoothScanner>();
+
+        services.AddSingleton<IBluetoothRemoteDeviceFactory, AppleBluetoothRemoteDeviceFactory>();
+        services.AddSingleton<IBluetoothRemoteServiceFactory, AppleBluetoothRemoteServiceFactory>();
+        services.AddSingleton<IBluetoothRemoteCharacteristicFactory, AppleBluetoothRemoteCharacteristicFactory>();
+        services.AddSingleton<IBluetoothRemoteDescriptorFactory, AppleBluetoothRemoteDescriptorFactory>();
 
         // Configure CBCentralManager options
         services.Configure<CBCentralInitOptions>(options => {

@@ -1,4 +1,5 @@
 using Bluetooth.Maui.Platforms.Apple.Logging;
+using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 using Bluetooth.Maui.Platforms.Apple.Threading;
 
@@ -78,6 +79,25 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
                                                                logger)
     {
         CbPeripheralWrapper = new CbPeripheralWrapper(this, cbPeripheral);
+    }
+
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="parentScanner">The Bluetooth scanner that discovered this device.</param>
+    /// <param name="spec">The Apple-specific factory spec containing the native peripheral.</param>
+    /// <param name="serviceFactory">The factory for creating remote services.</param>
+    /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
+    /// <param name="logger">An optional logger for logging device-related events and errors.</param>
+    public AppleBluetoothRemoteDevice(
+        IBluetoothScanner parentScanner,
+        AppleBluetoothRemoteDeviceFactorySpec spec,
+        IBluetoothRemoteServiceFactory serviceFactory,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILogger<IBluetoothRemoteDevice>? logger = null) : base(parentScanner, spec, serviceFactory, rssiToSignalStrengthConverter, logger)
+    {
+        ArgumentNullException.ThrowIfNull(spec);
+        CbPeripheralWrapper = new CbPeripheralWrapper(this, spec.CbPeripheral);
     }
 
     /// <summary>
@@ -362,14 +382,8 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
         IBluetoothRemoteService FromInputTypeToOutputTypeConversion(CBService native)
         {
-            var id = native.UUID.ToGuid();
-            var logger = AppleBluetoothScanner?.LoggerFactory?.CreateLogger<IBluetoothRemoteService>() ?? new NullLogger<IBluetoothRemoteService>();
-            var nameProvider = AppleBluetoothScanner?.NameProvider;
-            return new AppleBluetoothRemoteService(native,
-                                                   this,
-                                                   id,
-                                                   nameProvider,
-                                                   logger);
+            var spec = new AppleBluetoothRemoteServiceFactorySpec(native);
+            return (ServiceFactory ?? throw new InvalidOperationException("ServiceFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 

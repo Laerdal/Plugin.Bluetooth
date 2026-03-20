@@ -1,4 +1,5 @@
 using Bluetooth.Maui.Platforms.Apple.Logging;
+using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
@@ -23,6 +24,21 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
         ILogger<IBluetoothRemoteDescriptor>? logger = null) : base(parentCharacteristic, id, nameProvider, logger)
     {
         CbDescriptor = cbDescriptor;
+    }
+
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="parentCharacteristic">The Bluetooth characteristic to which this descriptor belongs.</param>
+    /// <param name="spec">The Apple-specific factory spec containing the native descriptor.</param>
+    /// <param name="logger">An optional logger for logging descriptor-related events and errors.</param>
+    public AppleBluetoothRemoteDescriptor(
+        IBluetoothRemoteCharacteristic parentCharacteristic,
+        AppleBluetoothRemoteDescriptorFactorySpec spec,
+        ILogger<IBluetoothRemoteDescriptor>? logger = null) : base(parentCharacteristic, spec, logger)
+    {
+        ArgumentNullException.ThrowIfNull(spec);
+        CbDescriptor = spec.CbDescriptor;
     }
 
     /// <summary>

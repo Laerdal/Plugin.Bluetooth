@@ -1,4 +1,5 @@
 using Bluetooth.Maui.Platforms.Apple.Logging;
+using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
 using DescriptorNotFoundException = Bluetooth.Abstractions.Scanning.Exceptions.DescriptorNotFoundException;
@@ -25,6 +26,23 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
         ILogger<IBluetoothRemoteCharacteristic>? logger = null) : base(parentService, id, nameProvider, logger)
     {
         CbCharacteristic = cbCharacteristic;
+    }
+
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="parentService">The Bluetooth service to which this characteristic belongs.</param>
+    /// <param name="spec">The Apple-specific factory spec containing the native characteristic.</param>
+    /// <param name="descriptorFactory">The factory for creating remote descriptors.</param>
+    /// <param name="logger">An optional logger for logging characteristic-related events and errors.</param>
+    public AppleBluetoothRemoteCharacteristic(
+        IBluetoothRemoteService parentService,
+        AppleBluetoothRemoteCharacteristicFactorySpec spec,
+        IBluetoothRemoteDescriptorFactory descriptorFactory,
+        ILogger<IBluetoothRemoteCharacteristic>? logger = null) : base(parentService, spec, descriptorFactory, logger)
+    {
+        ArgumentNullException.ThrowIfNull(spec);
+        CbCharacteristic = spec.CbCharacteristic;
     }
 
     /// <summary>
@@ -247,16 +265,8 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
 
         IBluetoothRemoteDescriptor FromInputTypeToOutputTypeConversion(CBDescriptor native)
         {
-            var id = native.UUID.ToGuid();
-            var logger = AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.AppleBluetoothScanner?.LoggerFactory?.CreateLogger<IBluetoothRemoteDescriptor>()
-                      ?? new NullLogger<IBluetoothRemoteDescriptor>();
-            var nameProvider = AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.AppleBluetoothScanner?.NameProvider;
-            var descriptor = new AppleBluetoothRemoteDescriptor(native,
-                                                                this,
-                                                                id,
-                                                                nameProvider,
-                                                                logger);
-            return descriptor;
+            var spec = new AppleBluetoothRemoteDescriptorFactorySpec(native);
+            return (DescriptorFactory ?? throw new InvalidOperationException("DescriptorFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 

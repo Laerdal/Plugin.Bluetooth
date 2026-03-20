@@ -1,4 +1,5 @@
 using Bluetooth.Maui.Platforms.Apple.Logging;
+using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 
 using CharacteristicNotFoundException = Bluetooth.Abstractions.Scanning.Exceptions.CharacteristicNotFoundException;
@@ -24,6 +25,23 @@ public class AppleBluetoothRemoteService : BaseBluetoothRemoteService, CbPeriphe
         ILogger<IBluetoothRemoteService>? logger = null) : base(parentDevice, id, nameProvider, logger)
     {
         CbService = cbService;
+    }
+
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="parentDevice">The Bluetooth device associated with this service.</param>
+    /// <param name="spec">The Apple-specific factory spec containing the native service.</param>
+    /// <param name="characteristicFactory">The factory for creating remote characteristics.</param>
+    /// <param name="logger">An optional logger for logging service-related events and errors.</param>
+    public AppleBluetoothRemoteService(
+        IBluetoothRemoteDevice parentDevice,
+        AppleBluetoothRemoteServiceFactorySpec spec,
+        IBluetoothRemoteCharacteristicFactory characteristicFactory,
+        ILogger<IBluetoothRemoteService>? logger = null) : base(parentDevice, spec, characteristicFactory, logger)
+    {
+        ArgumentNullException.ThrowIfNull(spec);
+        CbService = spec.CbService;
     }
 
     /// <summary>
@@ -64,11 +82,8 @@ public class AppleBluetoothRemoteService : BaseBluetoothRemoteService, CbPeriphe
 
         IBluetoothRemoteCharacteristic FromInputTypeToOutputTypeConversion(CBCharacteristic native)
         {
-            var id = native.UUID.ToGuid();
-            var logger = AppleBluetoothRemoteDevice.AppleBluetoothScanner?.LoggerFactory?.CreateLogger<IBluetoothRemoteCharacteristic>()
-                      ?? new NullLogger<IBluetoothRemoteCharacteristic>();
-            var nameProvider = AppleBluetoothRemoteDevice.AppleBluetoothScanner?.NameProvider;
-            return new AppleBluetoothRemoteCharacteristic(native, this, id, nameProvider, logger);
+            var spec = new AppleBluetoothRemoteCharacteristicFactorySpec(native);
+            return (CharacteristicFactory ?? throw new InvalidOperationException("CharacteristicFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 

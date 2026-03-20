@@ -65,6 +65,7 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
     /// <param name="cbCentralInitOptions">Apple-specific: CBCentralManager initialization options.</param>
     /// <param name="dispatchQueueProvider">Apple-specific: Dispatch queue provider for Core Bluetooth.</param>
+    /// <param name="deviceFactory">The factory for creating platform-specific remote device instances.</param>
     /// <param name="nameProvider">Optional provider for Bluetooth device names.</param>
     /// <param name="loggerFactory">Optional logger factory for creating loggers.</param>
 #elif __ANDROID__ || WINDOWS
@@ -95,6 +96,7 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
 #if __IOS__ || __MACCATALYST__
         IOptions<CBCentralInitOptions> cbCentralInitOptions,
         IDispatchQueueProvider dispatchQueueProvider,
+        IBluetoothRemoteDeviceFactory deviceFactory,
 #elif __ANDROID__ || WINDOWS
         IBluetoothRemoteDeviceFactory deviceFactory,
 #endif
@@ -117,6 +119,7 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
             ticker,
             cbCentralInitOptions,
             dispatchQueueProvider,
+            deviceFactory,
             nameProvider,
             loggerFactory);
 #elif WINDOWS

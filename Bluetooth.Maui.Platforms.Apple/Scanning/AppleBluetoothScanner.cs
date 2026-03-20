@@ -1,5 +1,6 @@
 using Bluetooth.Maui.Platforms.Apple.Logging;
 using Bluetooth.Maui.Platforms.Apple.Permissions;
+using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Apple.Scanning.NativeObjects;
 using Bluetooth.Maui.Platforms.Apple.Threading;
 
@@ -14,6 +15,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         ITicker ticker,
         IOptions<CBCentralInitOptions> cbCentralInitOptions,
         IDispatchQueueProvider dispatchQueueProvider,
+        IBluetoothRemoteDeviceFactory deviceFactory,
         IBluetoothNameProvider? nameProvider = null,
         ILoggerFactory? loggerFactory = null) : base(adapter,
                                                      rssiToSignalStrengthConverter,
@@ -24,6 +26,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         ArgumentNullException.ThrowIfNull(cbCentralInitOptions);
         ArgumentNullException.ThrowIfNull(dispatchQueueProvider);
 
+        _deviceFactory = deviceFactory;
         // Create CbCentralManagerWrapper with this scanner as the delegate
         CbCentralManagerWrapper = new CbCentralManagerWrapper(this, cbCentralInitOptions, dispatchQueueProvider, ticker);
     }
@@ -32,6 +35,8 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     ///     Gets the CbCentralManagerWrapper instance used for managing Core Bluetooth central manager interactions.
     /// </summary>
     public CbCentralManagerWrapper CbCentralManagerWrapper { get; }
+
+    private readonly IBluetoothRemoteDeviceFactory _deviceFactory;
 
     /// <inheritdoc />
     public void Dispose()
@@ -187,14 +192,8 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
 
         if (advertisement is AppleBluetoothAdvertisement appleAd)
         {
-            var logger = LoggerFactory?.CreateLogger<IBluetoothRemoteDevice>() ?? new NullLogger<IBluetoothRemoteDevice>();
-            var signalStrengthSmoothingOptions = SignalStrengthSmoothingOptionsFactory?.Create(Options.DefaultName)
-                                                  ?? new SignalStrengthSmoothingOptions();
-            return new AppleBluetoothRemoteDevice(this,
-                                                  appleAd,
-                                                  signalStrengthSmoothingOptions,
-                                                  RssiToSignalStrengthConverter,
-                                                  logger);
+            var spec = new AppleBluetoothRemoteDeviceFactorySpec(appleAd);
+            return _deviceFactory.Create(this, spec);
         }
         else
         {

@@ -23,7 +23,8 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
     /// </summary>
     protected ILogger Logger => _logger;
 
-    
+    /// <summary>The logger instance used by <see cref="LoggerMessage" /> source-generated methods in derived classes.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification = "Required by LoggerMessage source generator which resolves _logger through the class hierarchy.")]
     protected ILogger _logger;
 
     /// <summary>
