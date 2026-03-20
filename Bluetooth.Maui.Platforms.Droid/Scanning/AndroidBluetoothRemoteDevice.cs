@@ -449,6 +449,31 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     }
 
     /// <summary>
+    ///     Attempts to reconnect to the remote device using the existing GATT connection.
+    /// </summary>
+    /// <remarks>
+    ///     Calls <see cref="BluetoothGatt.Connect()" /> which is intended for reconnection when
+    ///     <c>autoConnect = false</c> was specified during the initial connection. The GATT
+    ///     connection must already exist (i.e., the device must have been previously connected).
+    ///     <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#connect()">Android BluetoothGatt.connect()</seealso>
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">Thrown when the device is not currently connected (GATT proxy is null).</exception>
+    /// <exception cref="DeviceFailedToConnectException">Thrown when the reconnection attempt fails.</exception>
+    public void Reconnect()
+    {
+        if (_bluetoothGattProxy == null)
+        {
+            throw new InvalidOperationException("Device not connected - GATT proxy is null");
+        }
+
+        var result = _bluetoothGattProxy.BluetoothGatt.Connect();
+        if (!result)
+        {
+            throw new DeviceFailedToConnectException(this, "BluetoothGatt.Connect() returned false");
+        }
+    }
+
+    /// <summary>
     ///     Gets or sets the current connection state of the device.
     ///     This is updated based on Android's GATT connection state changes.
     /// </summary>
