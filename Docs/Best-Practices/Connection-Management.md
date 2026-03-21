@@ -1,6 +1,6 @@
 # Connection Management Best Practices
 
-Effective connection management is crucial for building reliable BLE applications. This guide covers connection lifecycle management, handling disconnections, and implementing robust connection strategies.
+This guide covers connection lifecycle management, handling disconnections, and connection strategies for BLE applications.
 
 ## Table of Contents
 

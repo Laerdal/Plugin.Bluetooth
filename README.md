@@ -31,12 +31,12 @@ A cross-platform .NET MAUI Bluetooth Low Energy (BLE) library providing a clean,
 
 | Platform        | Scanning | Connection | GATT Operations | Broadcasting |
 |-----------------|----------|------------|-----------------|--------------|
-| **Android**     | ✅        | ✅          | ✅               | ✅            |
-| **iOS**         | ✅        | ✅          | ✅               | ❌            |
-| **MacCatalyst** | ✅        | ✅          | ✅               | ❌            |
-| **Windows**     | ✅        | ✅          | ✅               | ❌            |
+| **Android**     | ✅       | ✅         | ✅              | ✅           |
+| **iOS**         | ✅       | ✅         | ✅              | ✅           |
+| **MacCatalyst** | ✅       | ✅         | ✅              | ✅           |
+| **Windows**     | ✅       | ✅         | ✅              | ❌           |
 
-> **Note**: Broadcasting (peripheral mode) is currently Android-only. iOS/MacCatalyst/Windows throw `NotImplementedException`.
+> **Note**: Broadcasting is implemented on Android and Apple platforms. Windows broadcaster operations currently throw `NotSupportedException`.
 
 ## Installation
 
@@ -414,8 +414,8 @@ Plugin.Bluetooth/
 └── Platform Implementations/
     ├── Bluetooth.Maui.Platforms.Apple/     # iOS & MacCatalyst
     ├── Bluetooth.Maui.Platforms.Droid/     # Android
-    ├── Bluetooth.Maui.Platforms.Windows/   # Windows
-    └── Bluetooth.Maui.Platforms.DotNetCore # Fallback (throws NotImplementedException)
+    ├── Bluetooth.Maui.Platforms.Win/       # Windows
+    └── Bluetooth.Maui.Platforms.DotNetCore # Fallback (throws PlatformNotSupportedException)
 ```
 
 ## Core Interfaces
@@ -428,7 +428,7 @@ Plugin.Bluetooth/
 - **`IBluetoothRemoteCharacteristic`** - GATT characteristic with read/write/notify
 - **`IBluetoothRemoteDescriptor`** - GATT descriptor
 
-### Broadcasting (Android only)
+### Broadcasting
 
 - **`IBluetoothBroadcaster`** - Peripheral/advertising mode
 - **`IBluetoothLocalService`** - Local GATT service
@@ -504,6 +504,7 @@ See [LICENSE.md](LICENSE.md) for details.
 ## Support
 
 For issues, feature requests, or questions:
+
 - 🐛 [GitHub Issues](https://github.com/laerdal/Plugin.Bluetooth/issues)
 - 💬 [Discussions](https://github.com/laerdal/Plugin.Bluetooth/discussions)
 
@@ -512,6 +513,7 @@ For issues, feature requests, or questions:
 ### Recent Changes
 
 **v1.0.0** (Current)
+
 - ✅ Windows platform implementation complete
 - ✅ Simplified exploration APIs (single method with options)
 - ✅ Modern DI registration with `AddBluetoothServices()`

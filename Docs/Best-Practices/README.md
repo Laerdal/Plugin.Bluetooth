@@ -1,6 +1,6 @@
 # Best Practices for Plugin.Bluetooth
 
-This section provides comprehensive best practices, patterns, and recommendations for building robust, efficient, and maintainable Bluetooth Low Energy applications with Plugin.Bluetooth.
+This section covers common patterns and guidelines for BLE applications built with Plugin.Bluetooth.
 
 ## Overview
 
@@ -31,7 +31,7 @@ Optimize your application for battery life while maintaining functionality and r
 - Service caching strategies
 
 ### [Error Handling](Error-Handling.md)
-Implement robust error handling with proper exception management and recovery strategies.
+Exception management, RetryOptions configuration, and recovery patterns.
 
 **Key Topics:**
 - Try-catch patterns for BLE operations
@@ -53,7 +53,7 @@ Maximize throughput and minimize latency for data-intensive BLE applications.
 - Batch operations and queuing
 
 ### [MVVM Integration](MVVM-Integration.md)
-Integrate Plugin.Bluetooth seamlessly with MVVM pattern and data binding frameworks.
+Integrate Plugin.Bluetooth with MVVM pattern and data binding frameworks.
 
 **Key Topics:**
 - INotifyPropertyChanged support
@@ -345,9 +345,9 @@ catch (BluetoothException ex)
 
 ## Additional Resources
 
-- [Core Concepts](../Core-Concepts/README.md) - Understanding fundamental concepts
-- [Advanced Topics](../Advanced/README.md) - Deep dives into advanced features
-- [Troubleshooting](../Troubleshooting/README.md) - Solutions to common issues
+- [Core Concepts](../Core-Concepts/Scanner.md) - Entry point to scanning and device workflows
+- [Architecture Guidelines](../ARCHITECTURE_GUIDELINES.md) - Conventions and implementation rules
+- [Troubleshooting](../Troubleshooting/Common-Issues.md) - Solutions to common issues
 - [API Reference](../API-Reference/README.md) - Complete API documentation
 
 ## Contributing
@@ -359,4 +359,4 @@ Have a best practice to share? Please contribute to this documentation by openin
 **Next Steps:**
 1. Read [Connection Management](Connection-Management.md) for connection best practices
 2. Study [Battery Optimization](Battery-Optimization.md) for power efficiency
-3. Review [Error Handling](Error-Handling.md) for robust error management
+3. Review [Error Handling](Error-Handling.md) for exception management patterns

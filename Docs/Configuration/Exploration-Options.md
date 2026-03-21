@@ -129,7 +129,7 @@ Full exploration: services, characteristics, and descriptors.
 - Complete device profile discovery
 - Enabling notifications (requires CCCD descriptor)
 - Reading characteristic user descriptions
-- Comprehensive device analysis
+- Full device profile discovery
 
 **Example**:
 ```csharp
@@ -858,7 +858,7 @@ catch (TimeoutException)
 
 ### 8. Exploration vs Explorer Pattern
 
-For comprehensive device analysis, consider using the Explorer pattern:
+For full device analysis, consider using the Explorer pattern:
 
 ```csharp
 // Exploration options approach - manual

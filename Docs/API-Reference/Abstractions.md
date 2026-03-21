@@ -219,7 +219,7 @@ var device = await scanner.WaitForDeviceAsync(
 await scanner.StopScanningAsync();
 ```
 
-**See also:** [Scanning Concept](../SCANNING.md), [ScanningOptions](./Enums.md#scanningoptions)
+**See also:** [Scanning Concept](../Core-Concepts/Scanner.md), [ScanningOptions](./Enums.md#scanningoptions)
 
 ---
 
@@ -410,7 +410,7 @@ Console.WriteLine($"Signal strength: {device.Rssi} dBm");
 await device.DisconnectAsync();
 ```
 
-**See also:** [Connecting Concept](../CONNECTING.md), [ConnectionOptions](./Enums.md#connectionoptions)
+**See also:** [Connecting Concept](../Core-Concepts/Device.md), [ConnectionOptions](./Enums.md#connectionoptions)
 
 ---
 
@@ -704,7 +704,7 @@ await channel.CloseAsync();
 
 **Platform support:** Android 10+, iOS 11+, macOS 10.13+
 
-**See also:** [L2CAP Documentation](../L2CAP_ADDITIONAL_OPTIONS.md)
+**See also:** [L2CAP Documentation](../Configuration/L2CAP-Options.md)
 
 ---
 
@@ -938,7 +938,7 @@ broadcaster.ClientConnected += (s, e) =>
 await broadcaster.StopBroadcastingAsync();
 ```
 
-**See also:** [Broadcasting Concept](../BROADCASTING.md), [BroadcastingOptions](./Enums.md#broadcastingoptions)
+**See also:** [Broadcasting Concept](../Core-Concepts/Broadcaster.md), [BroadcastingOptions](./Enums.md#broadcastingoptions)
 
 ---
 

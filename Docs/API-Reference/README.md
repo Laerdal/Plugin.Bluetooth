@@ -313,7 +313,7 @@ Central/client role - scanning and connecting to peripherals:
 - `IBluetoothRemoteDescriptor` - GATT descriptor access
 - Extensive exception hierarchy for error handling
 
-Related concepts: [Device Scanning](../SCANNING.md), [Connecting to Devices](../CONNECTING.md)
+Related concepts: [Device Scanning](../Core-Concepts/Scanner.md), [Connecting to Devices](../Core-Concepts/Device.md)
 
 ### Bluetooth.Abstractions.Broadcasting
 
@@ -324,7 +324,7 @@ Peripheral/server role - advertising and serving GATT services:
 - `IBluetoothLocalDescriptor` - Local descriptor management
 - `IBluetoothConnectedDevice` - Connected central device information
 
-Related concepts: [Broadcasting](../BROADCASTING.md)
+Related concepts: [Broadcasting](../Core-Concepts/Broadcaster.md)
 
 ## Platform-Specific Behavior
 

@@ -16,9 +16,9 @@ Advertisements allow you to:
 - Determine if a device is connectable
 - Receive manufacturer-specific data
 
-## Why Advertisements Matter
+## Role of Advertisements
 
-Advertisements are crucial because:
+Advertisements are used to:
 - **No connection required**: Read basic device info without connecting
 - **Battery efficient**: Devices can broadcast without being connected
 - **Quick discovery**: Find devices rapidly by listening for broadcasts

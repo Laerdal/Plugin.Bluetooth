@@ -1,323 +1,167 @@
-# Bluetooth Plugin - Architecture & Coding Guidelines
+# Bluetooth Plugin Architecture Guidelines
 
-> **Purpose**: This document defines the comprehensive naming conventions, architectural patterns, and coding style used throughout the Bluetooth Plugin solution. All new code must follow these guidelines to maintain consistency.
+This document describes the current architecture and coding rules used by this repository.
 
----
+## 1. Solution Layers
 
-## 📁 PROJECT STRUCTURE
-
-### Project Hierarchy (4 Tiers)
-
-```
-Tier 1: Abstractions (Interfaces)
-├── Bluetooth.Abstractions (base types, enums, IBluetoothAdapter)
-├── Bluetooth.Abstractions.Scanning (IBluetoothScanner, IBluetoothRemote*)
-└── Bluetooth.Abstractions.Broadcasting (IBluetoothBroadcaster, IBluetoothLocal*)
-
-Tier 2: Core (Base Implementations)
-├── Bluetooth.Core (BaseBindableObject, infrastructure)
-├── Bluetooth.Core.Scanning (BaseBluetoothScanner, BaseBluetoothRemote*)
-└── Bluetooth.Core.Broadcasting (BaseBluetoothBroadcaster, BaseBluetoothLocal*)
-
-Tier 3: Platform Implementations
-├── Bluetooth.Maui.Platforms.Apple (iOS/macOS - CoreBluetooth)
-├── Bluetooth.Maui.Platforms.Droid (Android)
-├── Bluetooth.Maui.Platforms.Win (Windows)
-└── Bluetooth.Maui.Platforms.DotNetCore (Desktop .NET stub)
-
-Tier 4: Composition Root
-└── Bluetooth.Maui (Multi-targeted DI wiring)
+```mermaid
+flowchart LR
+        A[Abstractions] --> B[Core]
+        B --> C[Platform Implementations]
+        C --> D[Bluetooth.Maui]
 ```
 
-### Dependency Flow (Strict One-Directional)
+Projects by layer:
+- Abstractions:
+    - Bluetooth.Abstractions
+    - Bluetooth.Abstractions.Scanning
+    - Bluetooth.Abstractions.Broadcasting
+- Core:
+    - Bluetooth.Core
+    - Bluetooth.Core.Scanning
+    - Bluetooth.Core.Broadcasting
+- Platform implementations:
+    - Bluetooth.Maui.Platforms.Apple
+    - Bluetooth.Maui.Platforms.Droid
+    - Bluetooth.Maui.Platforms.Win
+    - Bluetooth.Maui.Platforms.DotNetCore
+- Facade/composition:
+    - Bluetooth.Maui
 
-```
-Abstractions  ←  Core  ←  Platforms  ←  Maui  ←  Sample
-```
+Rules:
+- Lower layers do not reference upper layers.
+- Public contracts stay in Abstractions projects.
+- Cross-platform orchestration stays in Core projects.
+- Native API calls stay in platform projects.
 
-**Rules:**
-- Lower tiers NEVER reference higher tiers
-- All project references use `PrivateAssets="all"`
-- Namespaces mirror folder paths exactly
+## 2. Entity Pattern
 
-### Standard Folder Structure
+Most entities follow this chain:
+- Interface in Abstractions
+- Base implementation in Core
+- Platform implementation in platform project
 
-Every platform project must use:
+Example:
+- IBluetoothScanner -> BaseBluetoothScanner -> AndroidBluetoothScanner / AppleBluetoothScanner / WindowsBluetoothScanner
 
-```
-Scanning/
-  Factories/          -- Platform factory + request types
-  NativeObjects/      -- Wrappers around native SDK objects
-  Options/            -- Platform-specific option types
-Broadcasting/
-  Factories/
-  NativeObjects/
-Logging/              -- LoggerMessage source-generated classes
-Exceptions/           -- Platform-specific exception types
-Permissions/          -- Platform permission handlers
-Tools/                -- Extension methods, converters
-Threading/            -- Main thread dispatchers (Apple only)
-```
+Remote vs local naming:
+- Remote* types are central role entities (scanner side).
+- Local* types are peripheral role entities (broadcaster side).
 
----
+## 3. File Structure Pattern
 
-## 🏷️ NAMING CONVENTIONS
+Partial files are split by concern.
 
-### Class Naming
+Pattern:
+- Main type file: TypeName.cs
+- Concern files: TypeName.Connection.cs, TypeName.ServiceList.cs, TypeName.StartStop.cs, TypeName.Logging.cs
 
-| Layer | Pattern | Example |
-|-------|---------|---------|
-| Interface | `IBluetooth{Entity}` | `IBluetoothScanner` |
-| Core Base | `BaseBluetooth{Entity}` | `BaseBluetoothScanner` |
-| Apple | `AppleBluetooth{Entity}` | `AppleBluetoothScanner` |
-| Android | `AndroidBluetooth{Entity}` | `AndroidBluetoothScanner` |
-| Windows | `WindowsBluetooth{Entity}` | `WindowsBluetoothScanner` |
-| DotNetCore | `DotNetCoreBluetooth{Entity}` | `DotNetCoreBluetoothScanner` |
-| Factory Interface | `IBluetooth{Entity}Factory` | `IBluetoothRemoteDeviceFactory` |
-| Base Factory | `BaseBluetooth{Entity}Factory` | `BaseBluetoothDeviceFactory` |
-| Platform Factory | `{Platform}Bluetooth{Entity}Factory` | `AppleBluetoothDeviceFactory` |
-| Factory Request | `{Platform}Bluetooth{Entity}FactoryRequest` | `AppleBluetoothRemoteDeviceFactoryRequest` |
-| Exception | `{Domain}{Action}Exception` | `ScannerFailedToStartException` |
-| EventArgs | `{Domain}{Event}EventArgs` | `DeviceListChangedEventArgs` |
-| Options | `{Feature}Options` | `ScanningOptions` |
-| Native Wrapper (Apple) | `Cb{Type}Wrapper` | `CbPeripheralWrapper` |
-| Native Wrapper (Android) | `Bluetooth{Type}Proxy` | `BluetoothGattProxy` |
+Expected effects:
+- Lifecycle operations are isolated.
+- Collections and event handling are isolated.
+- Logging declarations are isolated in Logging partials.
 
-**Important Qualifiers:**
-- **Scanner-side entities**: Use `Remote` prefix → `IBluetoothRemoteDevice`, `BaseBluetoothRemoteService`
-- **Broadcaster-side entities**: Use `Local` prefix → `IBluetoothLocalService`, `BaseBluetoothLocalCharacteristic`
+## 4. Naming Rules
 
-### File Naming
+Type naming:
+- Interfaces: I*
+- Base classes: Base*
+- Platform classes: Apple*, Android*, Windows*, DotNetCore*
+- Options records/classes: *Options
+- Event args: *EventArgs
+- Exceptions: *Exception
 
-Partial classes split by concern: `{ClassName}.{Aspect}.cs`
+Method naming:
+- Public async methods: *Async
+- Platform override seam: Native*
+- Event callback methods: On*
+- Idempotent helpers: *IfNeededAsync
 
-**Examples:**
-```
-IBluetoothScanner.cs
-IBluetoothScanner.StartStop.cs
-IBluetoothScanner.DeviceList.cs
+Field and property naming:
+- Private fields: _camelCase
+- Public/protected members: PascalCase
+- Boolean state/capability: Is* or Can*
 
-BaseBluetoothScanner.cs
-BaseBluetoothScanner.StartStop.cs
-BaseBluetoothScanner.DeviceList.cs
-BaseBluetoothScanner.Logging.cs
-BaseBluetoothScanner.Advertisement.cs
-```
+## 5. Async Coordination Rules
 
-Logging is ALWAYS in a separate `.Logging.cs` partial file.
+Core classes use TaskCompletionSource and state flags for lifecycle operations.
 
-### Method Naming
+Expected operation shape:
+1. Validate current state.
+2. Merge concurrent calls when operation is already running.
+3. Set transitional state flags.
+4. Call Native* method.
+5. Complete through On*Succeeded / On*Failed callback path.
+6. Clear transitional state in finally block.
 
-| Pattern | Usage | Example |
-|---------|-------|---------|
-| `{Action}Async` | Public async operations | `StartScanningAsync` |
-| `{Action}IfNeededAsync` | Idempotent operations | `ConnectIfNeededAsync` |
-| `Native{Action}Async` | Platform hook (abstract) | `NativeStartAsync` |
-| `NativeRefresh{Prop}` | Platform state sync | `NativeRefreshIsRunning` |
-| `NativeCan{Action}` | Platform capability check | `NativeCanRead` |
-| `On{Event}Succeeded` | Native success callback | `OnStartSucceeded` |
-| `On{Event}Failed` | Native failure callback | `OnStartFailed` |
-| `On{Event}` | Event raiser | `OnDisconnect` |
-| `WaitFor{State}Async` | Wait for condition | `WaitForIsConnectedAsync` |
-| `Get{Entity}` | Throws if not found | `GetDevice(filter)` |
-| `Get{Entity}OrDefault` | Returns null if not found | `GetDeviceOrDefault(filter)` |
-| `Has{Entity}` | Boolean check | `HasDevice(id)` |
-| `Clear{Entity}Async` | Cleanup operation | `ClearDevicesAsync` |
-| `Log{Action}` | Logging method | `LogScannerStarting` |
-| `AddBluetooth{Layer}{Platform}Services` | DI registration | `AddBluetoothMauiAppleScanningServices` |
+All async public methods must expose:
+- Optional timeout parameter where operation can block on external/native callbacks.
+- CancellationToken cancellationToken = default.
 
-### Property & Field Naming
+## 6. Logging Rules
 
-| Type | Convention | Example |
-|------|-----------|---------|
-| Boolean state | `Is{State}` | `IsRunning`, `IsConnected`, `IsOpen` |
-| Boolean capability | `Can{Action}` | `CanRead`, `CanWrite`, `CanListen` |
-| Active config | `Current{Config}` | `CurrentScanningOptions` |
-| Private field | `_camelCase` | `_logger`, `_operationSemaphore` |
-| Private TCS | `{Name}Tcs` | `StartTcs`, `ConnectionTcs` |
-| Protected property | `PascalCase` | `DeviceFactory`, `ServiceFactory` |
-| Public property | `PascalCase` | `Scanner`, `Name`, `Adapter` |
+Logging uses LoggerMessage-generated extension methods in platform logging files.
 
-### Event Naming
+EventId ranges:
+- 1000-1999: scanner
+- 2000-2999: connection
+- 3000-3999: service/characteristic discovery
+- 4000-4999: GATT read/write
+- 5000-5999: notifications/indications
+- 6000-6999: broadcaster and MTU (platform-dependent)
+- 7000-7999: platform-dependent advanced operations
+- 8000-8999: Apple L2CAP range
 
-- State change: bare name → `Starting`, `Started`, `Stopping`, `Stopped`
-- State changed: `{State}Changed` → `RunningStateChanged`, `ConnectionStateChanged`
-- List changed: `{Entity}ListChanged` → `DeviceListChanged`, `ServiceListChanged`
-- List mutations: `{Entities}Added` / `{Entities}Removed` → `DevicesAdded`, `ServicesRemoved`
-- Data events: `{Entity}{Action}` → `AdvertisementReceived`, `ValueUpdated`, `DataReceived`
+Rules:
+- Use structured logging parameters.
+- Keep logger nullable and null-safe.
+- Add logs at lifecycle boundaries and failure paths.
 
----
+## 7. Exception Rules
 
-## 🏛️ ARCHITECTURAL PATTERNS
+Rules:
+- Throw specific domain exceptions from abstraction/core APIs.
+- Wrap native exceptions in platform-specific exception types.
+- Keep unsupported feature behavior explicit with NotSupportedException or PlatformNotSupportedException.
+- Preserve inner exception context when wrapping.
 
-### 1. Three-Tier Entity Pattern
+## 8. DI Registration Rules
 
-**Every Bluetooth entity MUST follow this hierarchy:**
+DI composition flow in Bluetooth.Maui:
+1. Core services.
+2. Core scanning and broadcasting services.
+3. Platform services.
+4. Facade wrappers registered as default IBluetoothScanner and IBluetoothBroadcaster.
 
-```
-Interface (Abstractions) → Base Class (Core) → Platform Implementation
-```
+Consequence:
+- Platform scanner/broadcaster services can exist in DI, but default interface resolution maps to facade wrappers.
 
-**Example:**
-```
-IBluetoothScanner → BaseBluetoothScanner → AppleBluetoothScanner
-                                        → AndroidBluetoothScanner
-                                        → WindowsBluetoothScanner
-```
+## 9. Platform Capability Reality
 
-**Each tier has specific responsibilities:**
+- Android:
+    - Scanning/connection/GATT implemented.
+    - L2CAP implemented with API-level guards.
+    - Broadcasting implemented.
+- Apple (iOS/macOS):
+    - Scanning/connection/GATT implemented.
+    - L2CAP implemented.
+    - Broadcasting implemented.
+    - Some operations are intentionally restricted by CoreBluetooth behavior.
+- Windows:
+    - Scanning/connection/GATT implemented.
+    - L2CAP and broadcasting not implemented.
+    - Several advanced operations throw NotSupportedException.
+- DotNetCore fallback:
+    - Runtime BLE operations throw PlatformNotSupportedException.
 
-1. **Interface** (Abstractions):
-   - Defines public contract via partial interfaces
-   - Split across multiple files by concern
-   - Contains XML documentation for end users
+## 10. Known Architectural Divergence
 
-2. **Base Class** (Core):
-   - Implements cross-platform orchestration logic
-   - Contains TCS-based async coordination
-   - Declares `abstract` methods prefixed `Native*` for platform hooks
-   - Contains logging via partial `.Logging.cs` file
+Broadcasting factories are not fully standardized across platforms:
+- Android uses broadcasting factories.
+- Apple broadcaster currently creates local services directly in broadcaster flow.
+- Windows broadcaster-side factory registrations exist, but runtime behavior is not implemented.
 
-3. **Platform Class** (Platforms):
-   - Implements `Native*` abstract methods
-   - Implements native delegate interfaces
-   - Wraps platform-specific SDK objects
-
-### 2. Factory Pattern with Request Records
-
-**Structure:**
-
-```csharp
-// 1. Interface with nested request record (Abstractions)
-public interface IBluetoothRemoteDeviceFactory
-{
-    IBluetoothRemoteDevice CreateDevice(
-        IBluetoothScanner scanner,
-        BluetoothRemoteDeviceFactoryRequest request);
-
-    record BluetoothRemoteDeviceFactoryRequest
-    {
-        protected BluetoothRemoteDeviceFactoryRequest(string id, string? name) { ... }
-        public string Id { get; }
-        public string? Name { get; }
-    }
-}
-
-// 2. Base factory (Core)
-public abstract class BaseBluetoothDeviceFactory : IBluetoothRemoteDeviceFactory
-{
-    protected IBluetoothRemoteServiceFactory ServiceFactory { get; }
-    protected IBluetoothRssiToSignalStrengthConverter RssiConverter { get; }
-
-    public abstract IBluetoothRemoteDevice CreateDevice(...);
-}
-
-// 3. Platform request (extends nested record) (Platform)
-public sealed record AppleBluetoothRemoteDeviceFactoryRequest(
-    string Id,
-    string? Name,
-    CBPeripheral NativePeripheral)  // Platform-specific!
-    : IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactoryRequest(Id, Name);
-
-// 4. Platform factory (Platform)
-public class AppleBluetoothDeviceFactory : BaseBluetoothDeviceFactory
-{
-    private readonly IBluetoothRemoteL2CapChannelFactory _l2CapFactory;
-
-    public override IBluetoothRemoteDevice CreateDevice(
-        IBluetoothScanner scanner,
-        IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactoryRequest request)
-    {
-        if (request is not AppleBluetoothRemoteDeviceFactoryRequest appleRequest)
-            throw new ArgumentException("Must be Apple request");
-
-        return new AppleBluetoothRemoteDevice(
-            scanner,
-            appleRequest,
-            ServiceFactory,
-            _l2CapFactory,
-            RssiConverter);
-    }
-}
-```
-
-**Key Rules:**
-- Nested request records MUST have `protected` constructors
-- Platform requests MUST extend the nested base record
-- Platform requests contain native SDK objects
-- Factories are registered as `Singleton` in DI
-
-### 3. TaskCompletionSource (TCS) Async Coordination Pattern
-
-**This is THE central async pattern. Every async operation MUST follow these steps:**
-
-```csharp
-public async Task StartScanningAsync(
-    ScanningOptions options,
-    TimeSpan? timeout = null,
-    CancellationToken cancellationToken = default)
-{
-    // 1. Check preconditions
-    ScannerIsAlreadyStartedException.ThrowIfAlreadyStarting(this);
-    ScannerIsAlreadyStartedException.ThrowIfAlreadyStarted(this);
-
-    // 2. Merge concurrent attempts
-    if (StartTcs is { Task.IsCompleted: false })
-    {
-        LogMergingScanAttempts();
-        return await StartTcs.Task.ConfigureAwait(false);
-    }
-
-    // 3. Create new TCS
-    StartTcs = new TaskCompletionSource();
-
-    try
-    {
-        // 4. Set transitional state
-        IsStarting = true;
-
-        // 5. Raise event
-        Starting?.Invoke(this, EventArgs.Empty);
-
-        // 6. Call platform hook (with exception handling)
-        try
-        {
-            await NativeStartAsync(options, timeout, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch (Exception e)
-        {
-            OnStartFailed(new ScannerFailedToStartException("...", e));
-            throw;
-        }
-
-        // 7. Wait for native callback
-        await StartTcs.Task.WaitBetterAsync(timeout, cancellationToken)
-            .ConfigureAwait(false);
-
-        // 8. Verify final state
-        if (!IsRunning)
-            throw new ScannerFailedToStartException("...");
-    }
-    finally
-    {
-        // 9. Reset transitional state
-        IsStarting = false;
-        Started?.Invoke(this, EventArgs.Empty);
-        StartTcs = null;
-    }
-}
-
-// Called by platform implementation from native callback
-protected void OnStartSucceeded()
-{
-    if (StartTcs is { Task.IsCompleted: false })
-    {
-        IsRunning = true;
-        StartTcs.TrySetResult();
-    }
-    else
-    {
+This divergence is documented for follow-up alignment, not as a public API contract.
         // Unexpected callback - log warning
         LogUnexpectedScanStarted();
     }

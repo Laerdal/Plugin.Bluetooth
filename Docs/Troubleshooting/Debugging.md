@@ -1,6 +1,6 @@
 # Debugging Bluetooth Issues
 
-This guide provides comprehensive debugging techniques, logging strategies, and platform-specific tools to diagnose and resolve Bluetooth issues.
+This guide covers debugging techniques, logging strategies, and platform-specific tools for diagnosing Bluetooth issues.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ This guide provides comprehensive debugging techniques, logging strategies, and 
 
 ## Enabling Logging
 
-Plugin.Bluetooth uses Microsoft.Extensions.Logging for comprehensive structured logging across all operations.
+Plugin.Bluetooth uses Microsoft.Extensions.Logging for structured logging across all operations.
 
 ### Basic Logging Setup
 
@@ -602,7 +602,7 @@ For apps debugged in Android Studio:
 
 #### 1. LightBlue
 
-Excellent BLE debugging app for iOS/macOS.
+BLE debugging app for iOS/macOS.
 
 **Features:**
 - Device scanning and filtering
@@ -947,7 +947,7 @@ When troubleshooting issues, work through this checklist:
 ## Next Steps
 
 - [Common Issues](./Common-Issues.md) - Solutions to frequent problems
-- [Logging Documentation](../Advanced/Logging.md) - Comprehensive logging guide
+- [Logging Rules](../ARCHITECTURE_GUIDELINES.md) - EventId ranges and logging conventions
 - [Platform Setup](../Getting-Started/Platform-Setup.md) - Platform configuration
 - [Error Handling](../Best-Practices/Error-Handling.md) - Exception handling strategies
 

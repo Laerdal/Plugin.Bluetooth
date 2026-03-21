@@ -370,7 +370,7 @@ var options = new ScanningOptions
 await _scanner.StartScanningAsync(options);
 ```
 
-> For comprehensive permission details, see the [Permissions Guide](./Permissions.md).
+> For full permission details, see the [Permissions Guide](./Permissions.md).
 
 ## Best Practices
 

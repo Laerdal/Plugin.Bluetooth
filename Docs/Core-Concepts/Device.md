@@ -391,7 +391,7 @@ async Task<IBluetoothRemoteDevice> FindAndConnectAsync(string deviceName)
 }
 ```
 
-### Robust Connection with Retry
+### Connection with Retry
 
 ```csharp
 async Task RobustConnectAsync(IBluetoothRemoteDevice device, int maxRetries = 3)

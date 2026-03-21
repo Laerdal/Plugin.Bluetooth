@@ -211,7 +211,7 @@ Allows clients to access platform-specific APIs using conditional compilation wh
 
 ---
 
-## Benefits
+## Design Notes
 
 ### For Client Projects:
 1. **Single Inheritance Point:** Inherit `BluetoothScanner`/`BluetoothBroadcaster` once, works on all platforms
@@ -222,7 +222,7 @@ Allows clients to access platform-specific APIs using conditional compilation wh
 ### For Maintainers:
 1. **Centralized Logic:** Common cross-platform behavior in one place
 2. **Platform Flexibility:** Platform-specific implementations remain independent
-3. **Clean Separation:** Facade layer clearly separated from platform layer
+3. **Layer Separation:** Facade layer clearly separated from platform layer
 4. **DI Integration:** Standard dependency injection patterns maintained
 
 ---

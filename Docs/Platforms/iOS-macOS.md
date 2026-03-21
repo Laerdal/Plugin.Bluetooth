@@ -230,7 +230,7 @@ device.L2CapChannelOpened += async (sender, args) =>
 - Higher throughput than GATT characteristics
 - Lower latency
 - Default MTU: 672 bytes (minimum guaranteed by Bluetooth spec)
-- MTU cannot be changed on iOS (see [L2CAP_ADDITIONAL_OPTIONS.md](../L2CAP_ADDITIONAL_OPTIONS.md))
+- MTU cannot be changed on iOS (see [L2CAP-Options.md](../Configuration/L2CAP-Options.md))
 
 #### 7. RSSI (Signal Strength)
 ```csharp
@@ -320,7 +320,7 @@ None. All major BLE features are supported on iOS/macOS, though some are automat
 - Connection parameters adjust dynamically
 - No control over connection interval, slave latency, or supervision timeout
 
-**Workaround**: Trust iOS to optimize. In practice, iOS does an excellent job of balancing performance and battery.
+**Workaround**: iOS manages these parameters automatically. No manual tuning is available.
 
 ### 2. Background Scanning Limitations
 
@@ -583,4 +583,4 @@ User must manually enable in Settings app.
 ### Related Documentation
 - [Platform Comparison](Comparison.md)
 - [Android Platform Guide](Android.md)
-- [L2CAP Configuration](../L2CAP_ADDITIONAL_OPTIONS.md)
+- [L2CAP Configuration](../Configuration/L2CAP-Options.md)

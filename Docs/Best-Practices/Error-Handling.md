@@ -1,6 +1,6 @@
 # Error Handling Best Practices
 
-Robust error handling is essential for reliable BLE applications. This guide covers exception management, retry strategies, and recovery patterns for Plugin.Bluetooth.
+This guide covers exception management, retry strategies, and recovery patterns for Plugin.Bluetooth.
 
 ## Table of Contents
 
