@@ -10,8 +10,12 @@ public class AndroidBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteris
     BluetoothGattServerCallbackProxy.IBluetoothGattCharacteristicDelegate
 {
     /// <inheritdoc />
-    public AndroidBluetoothLocalCharacteristic(IBluetoothLocalService service, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec, IBluetoothLocalDescriptorFactory descriptorFactory) : base(service, spec ?? throw new ArgumentNullException(nameof(spec)),
-        descriptorFactory)
+    public AndroidBluetoothLocalCharacteristic(IBluetoothLocalService service, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec) : base(service,
+        (spec ?? throw new ArgumentNullException(nameof(spec))).CharacteristicId,
+        spec.Properties,
+        spec.Permissions,
+        null,
+        spec.Name)
     {
         NativeCharacteristic = new BluetoothGattCharacteristic(spec.CharacteristicId.ToUuid(), spec.Properties.ToNative(), spec.Permissions.ToNative());
     }
@@ -30,20 +34,18 @@ public class AndroidBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteris
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (DescriptorFactory == null)
-        {
-            throw new InvalidOperationException("DescriptorFactory is not configured for Android local characteristic creation.");
-        }
-
-        var descriptorSpec = new IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec(id, name);
-        var descriptor = DescriptorFactory.Create(this, descriptorSpec);
-        if (descriptor is not AndroidBluetoothLocalDescriptor androidDescriptor)
-        {
-            throw new InvalidOperationException("Descriptor created by factory is not AndroidBluetoothLocalDescriptor.");
-        }
+        var nativeDescriptor = new BluetoothGattDescriptor(id.ToUuid(), GattDescriptorPermission.Read | GattDescriptorPermission.Write);
+#pragma warning disable CA2000 // Descriptor lifetime is owned by characteristic descriptor registry
+        var androidDescriptor = new AndroidBluetoothLocalDescriptor(nativeDescriptor,
+                                                                    this,
+                                                                    id,
+                                                                    null,
+                                                                    name,
+                                                                    null);
+#pragma warning restore CA2000
 
         NativeCharacteristic.AddDescriptor(androidDescriptor.NativeDescriptor);
-        return new ValueTask<IBluetoothLocalDescriptor>(descriptor);
+        return new ValueTask<IBluetoothLocalDescriptor>(androidDescriptor);
     }
 
     /// <inheritdoc />

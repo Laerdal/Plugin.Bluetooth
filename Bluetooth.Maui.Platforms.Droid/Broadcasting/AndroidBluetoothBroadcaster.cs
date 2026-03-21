@@ -11,11 +11,6 @@ namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCallbackProxy.IAdvertiseCallbackProxyDelegate,
                                            BluetoothGattServerCallbackProxy.IBluetoothGattServerCallbackProxyDelegate, IAsyncDisposable
 {
-
-    private readonly IBluetoothLocalServiceFactory? _localServiceFactory;
-
-    private readonly IBluetoothConnectedDeviceFactory? _connectedDeviceFactory;
-
     /// <summary>
     ///     Initializes a new instance of the <see cref="AndroidBluetoothBroadcaster" /> class.
     /// </summary>
@@ -24,12 +19,8 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     /// <param name="loggerFactory">An optional logger factory for creating loggers used by this broadcaster and its components.</param>
     public AndroidBluetoothBroadcaster(IBluetoothAdapter adapter,
         ITicker ticker,
-        IBluetoothLocalServiceFactory? localServiceFactory = null,
-        IBluetoothConnectedDeviceFactory? connectedDeviceFactory = null,
         ILoggerFactory? loggerFactory = null) : base(adapter, ticker, loggerFactory)
     {
-        _localServiceFactory = localServiceFactory;
-        _connectedDeviceFactory = connectedDeviceFactory;
     }
 
     /// <summary>
@@ -66,17 +57,12 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
         {
             var spec = new IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec(native.Address);
 #pragma warning disable CA2000 // Device lifetime is managed by broadcaster client-device registry
-            var createdDevice = _connectedDeviceFactory?.Create(this, spec) ?? new AndroidBluetoothConnectedDevice(this, spec);
+            var createdDevice = new AndroidBluetoothConnectedDevice(this, spec);
 #pragma warning restore CA2000
 
-            if (createdDevice is not AndroidBluetoothConnectedDevice androidCreatedDevice)
-            {
-                throw new InvalidOperationException("ConnectedDevice created by factory is not AndroidBluetoothConnectedDevice.");
-            }
-
-            androidCreatedDevice.SetNativeDevice(native);
-            AddClientDevice(androidCreatedDevice);
-            return androidCreatedDevice;
+            createdDevice.SetNativeDevice(native);
+            AddClientDevice(createdDevice);
+            return createdDevice;
         }
 
         device.SetNativeDevice(native);
@@ -257,22 +243,18 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-
-        var localServiceFactory = _localServiceFactory ?? throw new InvalidOperationException("IBluetoothLocalServiceFactory is not configured for Android broadcasting.");
         var spec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec(id, name, isPrimary);
 
-        var service = localServiceFactory.Create(this, spec);
-        if (service is not AndroidBluetoothLocalService androidService)
-        {
-            throw new InvalidOperationException("Service created by factory is not AndroidBluetoothLocalService.");
-        }
+#pragma warning disable CA2000 // Service lifetime is owned by broadcaster service registry
+        var androidService = new AndroidBluetoothLocalService(this, spec);
+#pragma warning restore CA2000
 
         if (_gattServerProxy != null && androidService.NativeService != null)
         {
             _gattServerProxy.BluetoothGattServer.AddService(androidService.NativeService);
         }
 
-        return new ValueTask<IBluetoothLocalService>(service);
+        return new ValueTask<IBluetoothLocalService>(androidService);
     }
 
     #region Permission Methods

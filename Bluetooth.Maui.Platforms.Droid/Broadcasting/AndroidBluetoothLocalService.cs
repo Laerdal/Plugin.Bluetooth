@@ -7,8 +7,11 @@ namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 public class AndroidBluetoothLocalService : BaseBluetoothLocalService, BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate
 {
     /// <inheritdoc />
-    public AndroidBluetoothLocalService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec, IBluetoothLocalCharacteristicFactory characteristicFactory) :
-        base(broadcaster, spec ?? throw new ArgumentNullException(nameof(spec)), characteristicFactory)
+    public AndroidBluetoothLocalService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec) :
+        base(broadcaster,
+            (spec ?? throw new ArgumentNullException(nameof(spec))).ServiceId,
+            spec.Name,
+            spec.IsPrimary)
     {
         NativeService = new BluetoothGattService(spec.ServiceId.ToUuid(), spec.IsPrimary ? GattServiceType.Primary : GattServiceType.Secondary);
     }
@@ -50,24 +53,16 @@ public class AndroidBluetoothLocalService : BaseBluetoothLocalService, Bluetooth
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (CharacteristicFactory == null)
-        {
-            throw new InvalidOperationException("CharacteristicFactory is not configured for Android local service creation.");
-        }
-
         var characteristicSpec = new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec(id,
                                                                                                            properties,
                                                                                                            permissions,
                                                                                                            name);
-        var characteristic = CharacteristicFactory.Create(this, characteristicSpec);
-
-        if (characteristic is not AndroidBluetoothLocalCharacteristic androidCharacteristic)
-        {
-            throw new InvalidOperationException("Characteristic created by factory is not AndroidBluetoothLocalCharacteristic.");
-        }
+    #pragma warning disable CA2000 // Characteristic lifetime is owned by service characteristic registry
+        var androidCharacteristic = new AndroidBluetoothLocalCharacteristic(this, characteristicSpec);
+    #pragma warning restore CA2000
 
         NativeService?.AddCharacteristic(androidCharacteristic.NativeCharacteristic);
-        return new ValueTask<IBluetoothLocalCharacteristic>(characteristic);
+        return new ValueTask<IBluetoothLocalCharacteristic>(androidCharacteristic);
     }
 
     void BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate.OnServiceAdded(GattStatus status)

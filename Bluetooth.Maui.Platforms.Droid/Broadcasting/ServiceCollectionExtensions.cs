@@ -1,5 +1,3 @@
-using Bluetooth.Maui.Platforms.Droid.Broadcasting.Factories;
-
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 
 /// <summary>
@@ -17,10 +15,5 @@ public static class ServiceCollectionExtensions
     public static void AddBluetoothMauiAndroidBroadcastingServices(this IServiceCollection services)
     {
         services.AddSingleton<IBluetoothBroadcaster, AndroidBluetoothBroadcaster>();
-
-        services.AddSingleton<IBluetoothLocalCharacteristicFactory, AndroidBluetoothLocalCharacteristicFactory>();
-        services.AddSingleton<IBluetoothLocalServiceFactory, AndroidBluetoothLocalServiceFactory>();
-        services.AddSingleton<IBluetoothLocalDescriptorFactory, AndroidBluetoothLocalDescriptorFactory>();
-        services.AddSingleton<IBluetoothConnectedDeviceFactory, AndroidBluetoothConnectedDeviceFactory>();
     }
 }
