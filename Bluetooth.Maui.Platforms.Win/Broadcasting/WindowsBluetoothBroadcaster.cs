@@ -6,7 +6,7 @@ using Bluetooth.Maui.Platforms.Win.Exceptions;
 namespace Bluetooth.Maui.Platforms.Win.Broadcasting;
 
 /// <inheritdoc />
-public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster,
+public partial class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster,
                                          BluetoothLeAdvertisementPublisherWrapper.IBluetoothLeAdvertisementPublisherProxyDelegate
 {
     private readonly ITicker _ticker;
@@ -32,9 +32,13 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster,
         BluetoothError errorCode,
         short? selectedTransmitPowerLevelInDBm = null)
     {
+        LogAdvertisementPublisherStatusChanged(status, errorCode, selectedTransmitPowerLevelInDBm);
+
         if (errorCode != BluetoothError.Success)
         {
             var exception = new WindowsNativeBluetoothErrorException(errorCode);
+            LogAdvertisementPublisherStatusError(errorCode, exception);
+
             if (IsStarting)
             {
                 OnStartFailed(exception);
@@ -68,6 +72,8 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster,
 
         try
         {
+            LogNativeStartRequested(options.AdvertisedServiceUuids?.Count ?? 0, options.IncludeDeviceName);
+
             var publisher = PublisherWrapper.BluetoothLeAdvertisementPublisher;
 
             var serviceUuids = publisher.Advertisement.ServiceUuids;
@@ -81,6 +87,10 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster,
             {
                 publisher.Advertisement.LocalName = options.LocalDeviceName;
             }
+            else
+            {
+                publisher.Advertisement.LocalName = string.Empty;
+            }
 
             var serviceAdvertisingParameters = new GattServiceProviderAdvertisingParameters
             {
@@ -88,12 +98,15 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster,
                 IsDiscoverable = true
             };
 
-            foreach (var localService in GetServices().OfType<WindowsBluetoothLocalService>())
+            var localServices = GetServices().OfType<WindowsBluetoothLocalService>().ToList();
+            foreach (var localService in localServices)
             {
                 localService.ServiceProvider.StartAdvertising(serviceAdvertisingParameters);
+                LogServiceAdvertisingStarted(localService.Id);
             }
 
             publisher.Start();
+            LogNativeStartCompleted(localServices.Count);
             return ValueTask.CompletedTask;
         }
         catch (COMException e)
@@ -114,12 +127,24 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster,
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        LogNativeStopRequested();
+
         foreach (var localService in GetServices().OfType<WindowsBluetoothLocalService>())
         {
             localService.ServiceProvider.StopAdvertising();
+            LogServiceAdvertisingStopped(localService.Id);
         }
 
         _publisherWrapper?.BluetoothLeAdvertisementPublisher.Stop();
+
+        foreach (var device in GetClientDevices().ToList())
+        {
+            device.RemoveAllCharacteristicSubscriptions();
+            RemoveClientDevice(device);
+            LogClientDeviceRemovedOnStop(device.Id);
+        }
+
+        LogNativeStopCompleted();
         return ValueTask.CompletedTask;
     }
 
@@ -149,6 +174,8 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster,
                                                        name,
                                                        isPrimary);
 
+        LogNativeServiceCreated(id, isPrimary);
+
         if (IsRunning)
         {
             service.ServiceProvider.StartAdvertising(new GattServiceProviderAdvertisingParameters
@@ -156,6 +183,8 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster,
                 IsConnectable = true,
                 IsDiscoverable = true
             });
+
+            LogServiceAdvertisingStarted(id);
         }
 
         return service;
@@ -169,6 +198,7 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster,
         if (existing != null)
         {
             existing.SetNativeClient(nativeClient);
+            LogClientDeviceUpdated(resolvedId);
             return existing;
         }
 
@@ -177,7 +207,26 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster,
 #pragma warning restore CA2000
         device.SetNativeClient(nativeClient);
         AddClientDevice(device);
+        LogClientDeviceCreated(resolvedId);
         return device;
+    }
+
+    internal void RemoveClientDeviceIfNoSubscriptions(string deviceId)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            return;
+        }
+
+        var device = GetClientDeviceOrDefault(deviceId);
+        if (device == null || device.SubscribedCharacteristics.Count != 0)
+        {
+            return;
+        }
+
+        device.RemoveAllCharacteristicSubscriptions();
+        RemoveClientDevice(device);
+        LogClientDeviceRemovedNoSubscriptions(deviceId);
     }
 
     #region Permission Methods

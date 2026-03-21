@@ -4,7 +4,7 @@ using Bluetooth.Maui.Platforms.Win.Exceptions;
 namespace Bluetooth.Maui.Platforms.Win.Broadcasting;
 
 /// <inheritdoc cref="BaseBluetoothLocalService" />
-public class WindowsBluetoothLocalService : BaseBluetoothLocalService
+public partial class WindowsBluetoothLocalService : BaseBluetoothLocalService
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="WindowsBluetoothLocalService" /> class.
@@ -57,6 +57,18 @@ public class WindowsBluetoothLocalService : BaseBluetoothLocalService
         var result = await NativeService.CreateCharacteristicAsync(id, parameters).AsTask(cancellationToken).ConfigureAwait(false);
         WindowsNativeBluetoothErrorException.ThrowIfNotSuccess(result.Error);
 
+        LogNativeCharacteristicCreated(id, Id);
+
         return new WindowsBluetoothLocalCharacteristic(result.Characteristic, this, id, properties, permissions, name);
+    }
+
+    /// <inheritdoc />
+    protected override async ValueTask DisposeAsyncCore()
+    {
+        ServiceProvider.StopAdvertising();
+
+        LogServiceDisposeCleanup(Id);
+
+        await base.DisposeAsyncCore().ConfigureAwait(false);
     }
 }

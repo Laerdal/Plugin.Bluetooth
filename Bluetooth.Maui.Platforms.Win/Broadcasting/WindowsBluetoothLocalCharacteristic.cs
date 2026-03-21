@@ -5,7 +5,7 @@ using Bluetooth.Maui.Platforms.Win.Exceptions;
 namespace Bluetooth.Maui.Platforms.Win.Broadcasting;
 
 /// <inheritdoc cref="BaseBluetoothLocalCharacteristic" />
-public class WindowsBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristic
+public partial class WindowsBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteristic
 {
     private readonly HashSet<string> _subscribedDeviceIds = new(StringComparer.OrdinalIgnoreCase);
 
@@ -41,41 +41,132 @@ public class WindowsBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteris
 
     private async void OnReadRequested(GattLocalCharacteristic sender, GattReadRequestedEventArgs args)
     {
+        GattReadRequest? request = null;
+
         try
         {
-            var request = await args.GetRequestAsync().AsTask().ConfigureAwait(false);
+            request = await args.GetRequestAsync().AsTask().ConfigureAwait(false);
             if (request == null)
             {
                 return;
             }
 
+            var offset = (int) request.Offset;
             var device = WindowsBroadcaster.GetOrCreateClientDevice(null, null);
-            var value = OnReadRequestReceived(device).ToArray();
-            request.RespondWithValue(value.AsBuffer());
+
+            LogReadRequestReceived(Id, Service.Id, device.Id, offset);
+
+            var fullValue = OnReadRequestReceived(device).ToArray();
+            if (offset < 0 || offset > fullValue.Length)
+            {
+                LogReadRequestInvalidOffset(Id, Service.Id, offset, fullValue.Length);
+
+                request.RespondWithProtocolError(GattProtocolError.InvalidOffset);
+                return;
+            }
+
+            var response = offset == 0 ? fullValue : fullValue[offset..];
+            request.RespondWithValue(response.AsBuffer());
+
+            LogReadRequestSucceeded(Id, Service.Id, response.Length);
+        }
+        catch (NotSupportedException e)
+        {
+            LogReadRequestMappedToRequestNotSupported(Id, Service.Id, e);
+            request?.RespondWithProtocolError(GattProtocolError.RequestNotSupported);
+        }
+        catch (ArgumentException e)
+        {
+            LogReadRequestMappedToInvalidValueLength(Id, Service.Id, e);
+            request?.RespondWithProtocolError(GattProtocolError.InvalidAttributeValueLength);
         }
         catch (Exception e)
         {
+            LogReadRequestFailed(Id, Service.Id, e);
+            request?.RespondWithProtocolError(GattProtocolError.UnlikelyError);
             BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
         }
     }
 
     private async void OnWriteRequested(GattLocalCharacteristic sender, GattWriteRequestedEventArgs args)
     {
+        GattWriteRequest? request = null;
+
         try
         {
-            var request = await args.GetRequestAsync().AsTask().ConfigureAwait(false);
+            request = await args.GetRequestAsync().AsTask().ConfigureAwait(false);
             if (request == null)
             {
                 return;
             }
 
+            var requiresResponse = request.Option == GattWriteOption.WriteWithResponse;
+            var offset = (int) request.Offset;
             var data = ReadBufferBytes(request.Value);
             var device = WindowsBroadcaster.GetOrCreateClientDevice(null, null);
+
+            LogWriteRequestReceived(Id, Service.Id, device.Id, request.Option, offset, data.Length);
+
+            var supportsWriteWithResponse = Properties.HasFlag(BluetoothCharacteristicProperties.Write);
+            var supportsWriteWithoutResponse = Properties.HasFlag(BluetoothCharacteristicProperties.WriteWithoutResponse) ||
+                                               Properties.HasFlag(BluetoothCharacteristicProperties.SignedWrite);
+            if ((request.Option == GattWriteOption.WriteWithResponse && !supportsWriteWithResponse) ||
+                (request.Option == GattWriteOption.WriteWithoutResponse && !supportsWriteWithoutResponse))
+            {
+                LogWriteRequestNotPermitted(Id, Service.Id, request.Option);
+
+                if (requiresResponse)
+                {
+                    request.RespondWithProtocolError(GattProtocolError.WriteNotPermitted);
+                }
+
+                return;
+            }
+
+            if (offset != 0)
+            {
+                LogWriteRequestInvalidOffset(Id, Service.Id, offset);
+
+                if (requiresResponse)
+                {
+                    request.RespondWithProtocolError(GattProtocolError.InvalidOffset);
+                }
+
+                return;
+            }
+
             await OnWriteRequestReceivedAsync(device, data).ConfigureAwait(false);
-            request.Respond();
+
+            if (requiresResponse)
+            {
+                request.Respond();
+            }
+
+            LogWriteRequestSucceeded(Id, Service.Id);
+        }
+        catch (NotSupportedException e)
+        {
+            LogWriteRequestMappedToRequestNotSupported(Id, Service.Id, e);
+            if (request?.Option == GattWriteOption.WriteWithResponse)
+            {
+                request.RespondWithProtocolError(GattProtocolError.RequestNotSupported);
+            }
+        }
+        catch (ArgumentException e)
+        {
+            LogWriteRequestMappedToInvalidValueLength(Id, Service.Id, e);
+            if (request?.Option == GattWriteOption.WriteWithResponse)
+            {
+                request.RespondWithProtocolError(GattProtocolError.InvalidAttributeValueLength);
+            }
         }
         catch (Exception e)
         {
+            LogWriteRequestFailed(Id, Service.Id, e);
+            if (request?.Option == GattWriteOption.WriteWithResponse)
+            {
+                request.RespondWithProtocolError(GattProtocolError.UnlikelyError);
+            }
             BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
         }
     }
@@ -95,6 +186,8 @@ public class WindowsBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteris
                 var device = WindowsBroadcaster.GetOrCreateClientDevice(subscribedClient.Key, subscribedClient.Value);
                 OnCharacteristicSubscribed(device);
                 _subscribedDeviceIds.Add(subscribedClient.Key);
+
+                LogSubscriptionAdded(subscribedClient.Key, Id, Service.Id);
             }
 
             var removedDeviceIds = _subscribedDeviceIds.Where(id => !currentClients.ContainsKey(id)).ToList();
@@ -107,6 +200,9 @@ public class WindowsBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteris
                 }
 
                 _subscribedDeviceIds.Remove(removedDeviceId);
+                WindowsBroadcaster.RemoveClientDeviceIfNoSubscriptions(removedDeviceId);
+
+                LogSubscriptionRemoved(removedDeviceId, Id, Service.Id);
             }
         }
         catch (Exception e)
@@ -164,8 +260,11 @@ public class WindowsBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteris
 
         if (!notifyClients)
         {
+            LogNotifySkipped(Id, Service.Id);
             return;
         }
+
+        LogNotifyDispatch(Id, Service.Id, value.Length, NativeCharacteristic.SubscribedClients.Count);
 
         await NativeCharacteristic.NotifyValueAsync(value.ToArray().AsBuffer()).AsTask(cancellationToken).ConfigureAwait(false);
     }
@@ -173,6 +272,20 @@ public class WindowsBluetoothLocalCharacteristic : BaseBluetoothLocalCharacteris
     /// <inheritdoc />
     protected override ValueTask DisposeAsyncCore()
     {
+        foreach (var deviceId in _subscribedDeviceIds.ToArray())
+        {
+            var device = WindowsBroadcaster.GetClientDeviceOrDefault(deviceId);
+            if (device != null)
+            {
+                OnCharacteristicUnsubscribed(device);
+            }
+
+            WindowsBroadcaster.RemoveClientDeviceIfNoSubscriptions(deviceId);
+
+            LogSubscriptionDisposeCleanup(deviceId, Id, Service.Id);
+        }
+
+        _subscribedDeviceIds.Clear();
         NativeCharacteristic.ReadRequested -= OnReadRequested;
         NativeCharacteristic.WriteRequested -= OnWriteRequested;
         NativeCharacteristic.SubscribedClientsChanged -= OnSubscribedClientsChanged;
