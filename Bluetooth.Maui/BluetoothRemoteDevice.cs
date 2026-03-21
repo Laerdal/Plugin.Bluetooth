@@ -30,6 +30,8 @@ namespace Bluetooth.Maui;
 /// </remarks>
 public class BluetoothRemoteDevice : IBluetoothRemoteDevice
 {
+    private readonly Dictionary<IBluetoothRemoteService, IBluetoothRemoteService> _serviceWrappers = new();
+
     #region Platform-Specific Device
 
     /// <summary>
@@ -367,37 +369,47 @@ public class BluetoothRemoteDevice : IBluetoothRemoteDevice
     /// <inheritdoc />
     public IBluetoothRemoteService GetService(Func<IBluetoothRemoteService, bool> filter)
     {
-        return _platformDevice.GetService(filter);
+        ArgumentNullException.ThrowIfNull(filter);
+        return GetServices(filter).Single();
     }
 
     /// <inheritdoc />
     public IBluetoothRemoteService GetService(Guid id)
     {
-        return _platformDevice.GetService(id);
+        return WrapService(_platformDevice.GetService(id));
     }
 
     /// <inheritdoc />
     public IBluetoothRemoteService? GetServiceOrDefault(Func<IBluetoothRemoteService, bool> filter)
     {
-        return _platformDevice.GetServiceOrDefault(filter);
+        ArgumentNullException.ThrowIfNull(filter);
+        return GetServices(filter).SingleOrDefault();
     }
 
     /// <inheritdoc />
     public IBluetoothRemoteService? GetServiceOrDefault(Guid id)
     {
-        return _platformDevice.GetServiceOrDefault(id);
+        var service = _platformDevice.GetServiceOrDefault(id);
+        return service == null ? null : WrapService(service);
     }
 
     /// <inheritdoc />
     public IReadOnlyList<IBluetoothRemoteService> GetServices(Func<IBluetoothRemoteService, bool>? filter = null)
     {
-        return _platformDevice.GetServices(filter);
+        var services = _platformDevice.GetServices().Select(WrapService);
+        if (filter != null)
+        {
+            services = services.Where(filter);
+        }
+
+        return services.ToList();
     }
 
     /// <inheritdoc />
     public bool HasService(Func<IBluetoothRemoteService, bool> filter)
     {
-        return _platformDevice.HasService(filter);
+        ArgumentNullException.ThrowIfNull(filter);
+        return GetServices(filter).Any();
     }
 
     /// <inheritdoc />
@@ -527,11 +539,41 @@ public class BluetoothRemoteDevice : IBluetoothRemoteDevice
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
+        _serviceWrappers.Clear();
+
         if (_platformDevice is IAsyncDisposable disposable)
         {
             await disposable.DisposeAsync().ConfigureAwait(false);
         }
         GC.SuppressFinalize(this);
+    }
+
+    #endregion
+
+    #region Service Wrapping Extension Point
+
+    /// <summary>
+    ///     Creates a wrapped service facade for a platform service.
+    /// </summary>
+    /// <param name="platformService">The platform service to wrap.</param>
+    /// <returns>The wrapped service facade.</returns>
+    protected virtual IBluetoothRemoteService CreateServiceFacade(IBluetoothRemoteService platformService)
+    {
+        return new BluetoothRemoteService(platformService, this);
+    }
+
+    private IBluetoothRemoteService WrapService(IBluetoothRemoteService platformService)
+    {
+        ArgumentNullException.ThrowIfNull(platformService);
+
+        if (_serviceWrappers.TryGetValue(platformService, out var wrappedService))
+        {
+            return wrappedService;
+        }
+
+        var facade = CreateServiceFacade(platformService);
+        _serviceWrappers[platformService] = facade;
+        return facade;
     }
 
     #endregion

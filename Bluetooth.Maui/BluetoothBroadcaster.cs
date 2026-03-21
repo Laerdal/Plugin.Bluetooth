@@ -84,7 +84,7 @@ public class BluetoothBroadcaster : IBluetoothBroadcaster
         _platformBroadcaster = new Platforms.Droid.Broadcasting.AndroidBluetoothBroadcaster(
             adapter,
             ticker,
-            loggerFactory);
+            loggerFactory: loggerFactory);
 #elif __IOS__ || __MACCATALYST__
         _platformBroadcaster = new Platforms.Apple.Broadcasting.AppleBluetoothBroadcaster(
             adapter,
