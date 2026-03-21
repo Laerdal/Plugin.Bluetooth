@@ -14,6 +14,6 @@ public class WindowsBluetoothLocalCharacteristicFactory : IBluetoothLocalCharact
     /// <inheritdoc />
     public IBluetoothLocalCharacteristic Create(IBluetoothLocalService service, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec)
     {
-        throw new NotImplementedException("Windows local characteristic factory implementation pending.");
+        throw new NotSupportedException("Windows local GATT characteristic creation is not implemented yet.");
     }
 }

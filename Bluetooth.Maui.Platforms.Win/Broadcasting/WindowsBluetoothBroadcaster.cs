@@ -16,19 +16,19 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster
     /// <inheritdoc />
     protected override void NativeRefreshIsRunning()
     {
-        throw new NotImplementedException("WindowsBluetoothBroadcaster is not yet implemented on Windows.");
+        throw new NotSupportedException("Windows broadcaster runtime state refresh is not implemented yet. Windows GATT server broadcasting support is pending.");
     }
 
     /// <inheritdoc />
     protected override ValueTask NativeStartAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("WindowsBluetoothBroadcaster is not yet implemented on Windows.");
+        throw new NotSupportedException("Starting Windows GATT server broadcasting is not implemented yet.");
     }
 
     /// <inheritdoc />
     protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("WindowsBluetoothBroadcaster is not yet implemented on Windows.");
+        throw new NotSupportedException("Stopping Windows GATT server broadcasting is not implemented yet.");
     }
 
     /// <inheritdoc />
@@ -38,8 +38,7 @@ public class WindowsBluetoothBroadcaster : BaseBluetoothBroadcaster
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement Windows GATT server support
-        throw new NotImplementedException("Windows GATT server implementation pending");
+        throw new NotSupportedException("Creating Windows local GATT services is not implemented yet.");
     }
 
     #region Permission Methods

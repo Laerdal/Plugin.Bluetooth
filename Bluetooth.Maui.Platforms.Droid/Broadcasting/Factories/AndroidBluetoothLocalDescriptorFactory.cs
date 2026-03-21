@@ -1,3 +1,5 @@
+using Bluetooth.Maui.Platforms.Droid.Tools;
+
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting.Factories;
 
 /// <inheritdoc />
@@ -6,6 +8,16 @@ public class AndroidBluetoothLocalDescriptorFactory : IBluetoothLocalDescriptorF
     /// <inheritdoc />
     public IBluetoothLocalDescriptor Create(IBluetoothLocalCharacteristic characteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
     {
-        throw new NotImplementedException("Android GATT local descriptor creation is not yet implemented.");
+        ArgumentNullException.ThrowIfNull(characteristic);
+        ArgumentNullException.ThrowIfNull(spec);
+
+        var nativeDescriptor = new BluetoothGattDescriptor(spec.DescriptorId.ToUuid(), GattDescriptorPermission.Read | GattDescriptorPermission.Write);
+
+        return new AndroidBluetoothLocalDescriptor(nativeDescriptor,
+                                                   characteristic,
+                                                   spec.DescriptorId,
+                                                   null,
+                                                   spec.Name,
+                                                   null);
     }
 }

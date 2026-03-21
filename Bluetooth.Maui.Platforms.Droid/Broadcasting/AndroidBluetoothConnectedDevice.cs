@@ -16,11 +16,15 @@ public class AndroidBluetoothConnectedDevice : BaseBluetoothConnectedDevice,
     /// </summary>
     public BluetoothDevice? NativeDevice { get; private set; }
 
+    internal void SetNativeDevice(BluetoothDevice nativeDevice)
+    {
+        NativeDevice = nativeDevice ?? throw new ArgumentNullException(nameof(nativeDevice));
+    }
+
     // BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate implementation
     void BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate.OnMtuChanged(int mtu)
     {
-        // MTU changed for this device
-        // Can be used for optimizing data transfer
+        OnMtuChanged(mtu);
     }
 
     void BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate.OnExecuteWrite(int requestId, bool execute)
@@ -45,9 +49,10 @@ public class AndroidBluetoothConnectedDevice : BaseBluetoothConnectedDevice,
         // PHY settings updated
     }
 
-    void BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate.OnConnectionStateChange(ProfileState status, ProfileState newState)
+    /// <inheritdoc />
+    public void OnConnectionStateChange(ProfileState status, ProfileState newState)
     {
-        // Connection state changed
+        OnConnectionStatusChanged(newState == ProfileState.Connected);
     }
 
     /// <inheritdoc />
@@ -61,6 +66,19 @@ public class AndroidBluetoothConnectedDevice : BaseBluetoothConnectedDevice,
     /// <inheritdoc />
     protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("Client device disconnect is not yet implemented on Android.");
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var nativeDevice = NativeDevice ?? throw new InvalidOperationException("Native Android BluetoothDevice is not assigned for this connected device.");
+        var androidBroadcaster = (AndroidBluetoothBroadcaster) Broadcaster;
+
+        var gattServer = androidBroadcaster.GetGattServerOrDefault();
+        if (gattServer == null)
+        {
+            throw new InvalidOperationException("Android GATT server is not available.");
+        }
+
+        gattServer.CancelConnection(nativeDevice);
+        OnConnectionStatusChanged(false);
+        return ValueTask.CompletedTask;
     }
 }

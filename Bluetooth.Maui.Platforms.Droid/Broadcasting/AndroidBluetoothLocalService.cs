@@ -1,4 +1,5 @@
 using Bluetooth.Maui.Platforms.Droid.Broadcasting.NativeObjects;
+using Bluetooth.Maui.Platforms.Droid.Tools;
 
 namespace Bluetooth.Maui.Platforms.Droid.Broadcasting;
 
@@ -7,9 +8,9 @@ public class AndroidBluetoothLocalService : BaseBluetoothLocalService, Bluetooth
 {
     /// <inheritdoc />
     public AndroidBluetoothLocalService(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec, IBluetoothLocalCharacteristicFactory characteristicFactory) :
-        base(broadcaster, spec, characteristicFactory)
+        base(broadcaster, spec ?? throw new ArgumentNullException(nameof(spec)), characteristicFactory)
     {
-        throw new NotImplementedException("AndroidBluetoothLocalService is not yet implemented on Android.");
+        NativeService = new BluetoothGattService(spec.ServiceId.ToUuid(), spec.IsPrimary ? GattServiceType.Primary : GattServiceType.Secondary);
     }
 
     /// <summary>
@@ -47,8 +48,26 @@ public class AndroidBluetoothLocalService : BaseBluetoothLocalService, Bluetooth
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement Android GATT characteristic creation
-        throw new NotImplementedException("Android GATT characteristic creation pending");
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (CharacteristicFactory == null)
+        {
+            throw new InvalidOperationException("CharacteristicFactory is not configured for Android local service creation.");
+        }
+
+        var characteristicSpec = new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec(id,
+                                                                                                           properties,
+                                                                                                           permissions,
+                                                                                                           name);
+        var characteristic = CharacteristicFactory.Create(this, characteristicSpec);
+
+        if (characteristic is not AndroidBluetoothLocalCharacteristic androidCharacteristic)
+        {
+            throw new InvalidOperationException("Characteristic created by factory is not AndroidBluetoothLocalCharacteristic.");
+        }
+
+        NativeService?.AddCharacteristic(androidCharacteristic.NativeCharacteristic);
+        return new ValueTask<IBluetoothLocalCharacteristic>(characteristic);
     }
 
     void BluetoothGattServerCallbackProxy.IBluetoothGattServiceDelegate.OnServiceAdded(GattStatus status)

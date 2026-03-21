@@ -14,6 +14,6 @@ public class WindowsBluetoothLocalServiceFactory : IBluetoothLocalServiceFactory
     /// <inheritdoc />
     public IBluetoothLocalService Create(IBluetoothBroadcaster broadcaster, IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec)
     {
-        throw new NotImplementedException("Windows local service factory implementation pending.");
+        throw new NotSupportedException("Windows local GATT service creation is not implemented yet.");
     }
 }

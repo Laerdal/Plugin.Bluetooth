@@ -6,6 +6,6 @@ public class WindowsBluetoothConnectedDeviceFactory : IBluetoothConnectedDeviceF
     /// <inheritdoc />
     public IBluetoothConnectedDevice Create(IBluetoothBroadcaster broadcaster, IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec)
     {
-        throw new NotImplementedException("Windows connected device factory implementation pending.");
+        throw new NotSupportedException("Windows broadcaster connected-device creation is not implemented yet.");
     }
 }

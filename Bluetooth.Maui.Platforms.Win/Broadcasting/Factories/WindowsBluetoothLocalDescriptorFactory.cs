@@ -6,6 +6,6 @@ public class WindowsBluetoothLocalDescriptorFactory : IBluetoothLocalDescriptorF
     /// <inheritdoc />
     public IBluetoothLocalDescriptor Create(IBluetoothLocalCharacteristic characteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
     {
-        throw new NotImplementedException("Windows local descriptor factory implementation pending.");
+        throw new NotSupportedException("Windows local GATT descriptor creation is not implemented yet.");
     }
 }

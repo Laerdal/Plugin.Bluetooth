@@ -12,14 +12,24 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
                                            BluetoothGattServerCallbackProxy.IBluetoothGattServerCallbackProxyDelegate, IAsyncDisposable
 {
 
+    private readonly IBluetoothLocalServiceFactory? _localServiceFactory;
+
+    private readonly IBluetoothConnectedDeviceFactory? _connectedDeviceFactory;
+
     /// <summary>
     ///     Initializes a new instance of the <see cref="AndroidBluetoothBroadcaster" /> class.
     /// </summary>
     /// <param name="adapter">The Bluetooth adapter associated with this broadcaster.</param>
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
     /// <param name="loggerFactory">An optional logger factory for creating loggers used by this broadcaster and its components.</param>
-    public AndroidBluetoothBroadcaster(IBluetoothAdapter adapter, ITicker ticker, ILoggerFactory? loggerFactory = null) : base(adapter, ticker, loggerFactory)
+    public AndroidBluetoothBroadcaster(IBluetoothAdapter adapter,
+        ITicker ticker,
+        IBluetoothLocalServiceFactory? localServiceFactory = null,
+        IBluetoothConnectedDeviceFactory? connectedDeviceFactory = null,
+        ILoggerFactory? loggerFactory = null) : base(adapter, ticker, loggerFactory)
     {
+        _localServiceFactory = localServiceFactory;
+        _connectedDeviceFactory = connectedDeviceFactory;
     }
 
     /// <summary>
@@ -34,12 +44,14 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     public void OnStartSuccess(AdvertiseSettings? settingsInEffect)
     {
         SettingsInEffect = settingsInEffect;
-        OnStartSucceeded();
+        IsRunning = true;
     }
 
     /// <inheritdoc />
     public void OnStartFailure(AdvertiseFailure errorCode)
     {
+        SettingsInEffect = null;
+        IsRunning = false;
         OnStartFailed(new AndroidNativeAdvertiseFailureException(errorCode));
     }
     
@@ -49,18 +61,26 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
         ArgumentNullException.ThrowIfNull(native);
         ArgumentNullException.ThrowIfNull(native.Address);
 
-        var device = GetClientDeviceOrDefault(native.Address);
+        var device = GetClientDeviceOrDefault(native.Address) as AndroidBluetoothConnectedDevice;
         if (device == null)
         {
-            throw new ClientDeviceNotFoundException(this, native.Address);
+            var spec = new IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec(native.Address);
+#pragma warning disable CA2000 // Device lifetime is managed by broadcaster client-device registry
+            var createdDevice = _connectedDeviceFactory?.Create(this, spec) ?? new AndroidBluetoothConnectedDevice(this, spec);
+#pragma warning restore CA2000
+
+            if (createdDevice is not AndroidBluetoothConnectedDevice androidCreatedDevice)
+            {
+                throw new InvalidOperationException("ConnectedDevice created by factory is not AndroidBluetoothConnectedDevice.");
+            }
+
+            androidCreatedDevice.SetNativeDevice(native);
+            AddClientDevice(androidCreatedDevice);
+            return androidCreatedDevice;
         }
 
-        if (device is not AndroidBluetoothConnectedDevice droidDevice)
-        {
-            throw new InvalidOperationException("ConnectedDevice is not Android AndroidBluetoothConnectedDevice");
-        }
-
-        return droidDevice;
+        device.SetNativeDevice(native);
+        return device;
     }
 
     /// <inheritdoc />
@@ -88,12 +108,49 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     private AdvertiseCallbackProxy? _advertiseProxy;
 
     private BluetoothGattServerCallbackProxy? _gattServerProxy;
+
+    private BluetoothLeAdvertiser? _bluetoothLeAdvertiser;
+
+    internal bool TrySendResponse(BluetoothDevice device, int requestId, GattStatus status, int offset, byte[] value)
+    {
+        ArgumentNullException.ThrowIfNull(device);
+        ArgumentNullException.ThrowIfNull(value);
+
+        return _gattServerProxy?.BluetoothGattServer.SendResponse(device, requestId, status, offset, value) ?? false;
+    }
+
+    internal BluetoothGattServer? GetGattServerOrDefault()
+    {
+        return _gattServerProxy?.BluetoothGattServer;
+    }
+
+    internal bool TryNotifyCharacteristicChanged(BluetoothDevice device, BluetoothGattCharacteristic characteristic, bool requiresConfirmation, byte[] value)
+    {
+        ArgumentNullException.ThrowIfNull(device);
+        ArgumentNullException.ThrowIfNull(characteristic);
+        ArgumentNullException.ThrowIfNull(value);
+
+        var gattServer = _gattServerProxy?.BluetoothGattServer;
+        if (gattServer == null)
+        {
+            return false;
+        }
+
+        if (OperatingSystem.IsAndroidVersionAtLeast(33))
+        {
+            var status = gattServer.NotifyCharacteristicChanged(device, characteristic, requiresConfirmation, value);
+            return (CurrentBluetoothStatusCodes) status == CurrentBluetoothStatusCodes.Success;
+        }
+
+#pragma warning disable CA1422 // Guarded by Android version check for legacy API
+        return gattServer.NotifyCharacteristicChanged(device, characteristic, requiresConfirmation);
+#pragma warning restore CA1422
+    }
     
     /// <inheritdoc />
     protected override void NativeRefreshIsRunning()
     {
-        // On Android, there is no direct way to check if advertising is running.
-        // We rely on the IsRunning flag being set correctly during start/stop operations.
+        IsRunning = SettingsInEffect != null;
     }
 
     /// <inheritdoc />
@@ -101,11 +158,44 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(BluetoothManager.Adapter);
+            ArgumentNullException.ThrowIfNull(options);
+            cancellationToken.ThrowIfCancellationRequested();
 
-            _advertiseProxy ??= new AdvertiseCallbackProxy(this);
+            var adapter = BluetoothManager.Adapter ?? throw new InvalidOperationException("Bluetooth adapter is not available.");
 
-            _gattServerProxy ??= new BluetoothGattServerCallbackProxy(this, BluetoothManager);
+            var bluetoothLeAdvertiser = adapter.BluetoothLeAdvertiser ?? throw new PlatformNotSupportedException("Bluetooth LE advertising is not supported on this Android device.");
+            _bluetoothLeAdvertiser = bluetoothLeAdvertiser;
+
+            var advertiseProxy = _advertiseProxy ??= new AdvertiseCallbackProxy(this);
+
+            var gattServerProxy = _gattServerProxy ??= new BluetoothGattServerCallbackProxy(this, BluetoothManager);
+
+            foreach (var service in GetServices().OfType<AndroidBluetoothLocalService>())
+            {
+                if (service.NativeService != null)
+                {
+                    gattServerProxy.BluetoothGattServer.AddService(service.NativeService);
+                }
+            }
+
+            using var advertiseSettingsBuilder = new AdvertiseSettings.Builder();
+            advertiseSettingsBuilder.SetAdvertiseMode(AdvertiseMode.Balanced);
+            advertiseSettingsBuilder.SetConnectable(true);
+            advertiseSettingsBuilder.SetTimeout(0);
+            advertiseSettingsBuilder.SetTxPowerLevel(AdvertiseTx.PowerMedium);
+            using var advertiseSettings = advertiseSettingsBuilder.Build() ?? throw new InvalidOperationException("Failed to build Android advertise settings.");
+
+            using var advertiseDataBuilder = new AdvertiseData.Builder();
+            advertiseDataBuilder.SetIncludeDeviceName(options.IncludeDeviceName);
+            foreach (var advertisedServiceUuid in options.AdvertisedServiceUuids ?? [])
+            {
+                var nativeUuid = advertisedServiceUuid.ToUuid() ?? throw new InvalidOperationException($"Failed to map advertised service UUID {advertisedServiceUuid} to Android UUID.");
+                using var parcelUuid = new ParcelUuid(nativeUuid);
+                advertiseDataBuilder.AddServiceUuid(parcelUuid);
+            }
+            using var advertiseData = advertiseDataBuilder.Build() ?? throw new InvalidOperationException("Failed to build Android advertise data.");
+
+            bluetoothLeAdvertiser.StartAdvertising(advertiseSettings, advertiseData, advertiseProxy);
             
             return ValueTask.CompletedTask;
         }
@@ -118,15 +208,31 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     /// <inheritdoc />
     protected async override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (_bluetoothLeAdvertiser != null && _advertiseProxy != null)
+        {
+            _bluetoothLeAdvertiser.StopAdvertising(_advertiseProxy);
+        }
+
+        _bluetoothLeAdvertiser = null;
+
+        SettingsInEffect = null;
+
         if (_gattServerProxy != null)
         {
+            _gattServerProxy.BluetoothGattServer.ClearServices();
             await CastAndDispose(_gattServerProxy).ConfigureAwait(false);
+            _gattServerProxy = null;
         }
 
         if (_advertiseProxy != null)
         {
             await CastAndDispose(_advertiseProxy).ConfigureAwait(false);
+            _advertiseProxy = null;
         }
+
+        IsRunning = false;
         return;
         
         async static ValueTask CastAndDispose(IDisposable resource)
@@ -150,7 +256,23 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var localServiceFactory = _localServiceFactory ?? throw new InvalidOperationException("IBluetoothLocalServiceFactory is not configured for Android broadcasting.");
+        var spec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec(id, name, isPrimary);
+
+        var service = localServiceFactory.Create(this, spec);
+        if (service is not AndroidBluetoothLocalService androidService)
+        {
+            throw new InvalidOperationException("Service created by factory is not AndroidBluetoothLocalService.");
+        }
+
+        if (_gattServerProxy != null && androidService.NativeService != null)
+        {
+            _gattServerProxy.BluetoothGattServer.AddService(androidService.NativeService);
+        }
+
+        return new ValueTask<IBluetoothLocalService>(service);
     }
 
     #region Permission Methods
