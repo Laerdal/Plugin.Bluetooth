@@ -18,8 +18,12 @@ public abstract partial class BaseBluetoothLocalCharacteristic
         ArgumentNullException.ThrowIfNull(device);
         ArgumentNullException.ThrowIfNull(data);
         LogWriteRequest(Id, Service.Id, device.Id, data.Length);
-        WriteRequested?.Invoke(this, new CharacteristicWriteRequestEventArgs(device.Id, Service.Id, Id, data));
-        await UpdateValueAsync(data, true, timeout, cancellationToken).ConfigureAwait(false);
+        var args = new CharacteristicWriteRequestEventArgs(device.Id, Service.Id, Id, data);
+        WriteRequested?.Invoke(this, args);
+        if (args.Accept)
+        {
+            await UpdateValueAsync(args.Value, true, timeout, cancellationToken).ConfigureAwait(false);
+        }
         LogWriteRequestCompleted(Id, Service.Id);
     }
 }

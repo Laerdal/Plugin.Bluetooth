@@ -39,4 +39,11 @@ public class CharacteristicWriteRequestEventArgs : System.EventArgs
     ///     Gets the value being written.
     /// </summary>
     public ReadOnlyMemory<byte> Value { get; }
+
+    /// <summary>
+    ///     Gets or sets a value indicating whether the write request is accepted.
+    ///     Defaults to <see langword="true" />. Set to <see langword="false" /> to reject the write
+    ///     and prevent the characteristic value from being updated.
+    /// </summary>
+    public bool Accept { get; set; } = true;
 }

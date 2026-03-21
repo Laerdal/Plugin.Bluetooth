@@ -14,8 +14,9 @@ public abstract partial class BaseBluetoothLocalCharacteristic
     {
         ArgumentNullException.ThrowIfNull(device);
         LogReadRequest(Id, Service.Id, device.Id);
-        ReadRequested?.Invoke(this, new CharacteristicReadRequestEventArgs(device.Id, Service.Id, Id));
-        var response = ValueSpan;
+        var args = new CharacteristicReadRequestEventArgs(device.Id, Service.Id, Id, Value);
+        ReadRequested?.Invoke(this, args);
+        var response = args.ResponseValue.Span;
         LogReadResponse(Id, Service.Id, response.Length);
         return response;
     }
