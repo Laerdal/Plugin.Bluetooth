@@ -10,7 +10,7 @@ Explain the reason for this change.
 
 - [ ] Feature
 - [ ] Bug fix
-- [ ] Refactor
+- [ ] Refactor (`refa`)
 - [ ] Docs only
 - [ ] CI/build/tooling
 
@@ -69,10 +69,12 @@ Risk level:
 - [ ] High
 
 Known limitations or deferred follow-ups:
-- 
+-
 
 ## Checklist
 
 - [ ] I reviewed [Docs/Best-Practices/Contribution-DoD.md](../Docs/Best-Practices/Contribution-DoD.md)
-- [ ] Commit messages follow [Docs/Best-Practices/Commit-Message-Format.md](../Docs/Best-Practices/Commit-Message-Format.md)
+- [ ] Commit header follows `type (scope): short imperative` and is <= 72 chars
+- [ ] Commit type is one of: feat, fix, refa, perf, docs, ci, chore, test, build
+- [ ] Commit body is 1-2 factual sentences (what/why), no emojis, refs, or co-authors
 - [ ] If architectural behavior changed, an ADR was added or updated under [Docs/Architecture/ADR](../Docs/Architecture/ADR/README.md)

@@ -32,15 +32,15 @@ List expected technical and process consequences.
 
 ### Positive
 
-- 
+-
 
 ### Negative
 
-- 
+-
 
 ### Neutral
 
-- 
+-
 
 ## Follow-up Actions
 

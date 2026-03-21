@@ -1,94 +1,100 @@
 # Commit Message Format
 
-This guide defines a commit message format aligned with the current history of this repository and suitable for Copilot-generated commits.
+This guide defines the canonical commit format for this repository.
 
-## 1. Current Pattern Observed In Repository
+## 1. Canonical Rules
+
+Use this exact header format:
+
+type (scope): short imperative summary
+
+Header constraints:
+
+- Max length: 72 characters
+- No trailing period
+- Lowercase `type` and `scope`
+
+Allowed types (only these):
+
+- feat
+- fix
+- refa
+- perf
+- docs
+- ci
+- chore
+- test
+- build
+
+Scope rules:
+
+- Scope is required
+- Use the most specific scope possible
+- Scope should be a folder, file, platform, or topic
+- Examples: `maui`, `android`, `ble`, `docs`, `ui`, `ci`, `pkg`, `targets`
+
+Body constraints:
+
+- 1-2 short sentences
+- Explain what changed and why
+- Do not explain how
+- Keep factual tone
+- No co-authors
+- No emojis
+- No issue references
+
+Multiple-scope rule:
+
+- If a change touches multiple scopes, pick the most specific one
+- Otherwise collapse to a broader topic scope
+
+## 2. Current Pattern Observed In Repository
 
 Most commits follow this subject format:
 
 type (scope): summary
 
 Examples from current history:
+
 - feat (android): implement full Android Bluetooth LE GATT server broadcaster
 - fix (maui): standardize logging property names for service identifiers
 - refa (core): unify permission options and enhance name resolution for scanning and broadcasting
 - docs(api-reference): add comprehensive Plugin.Bluetooth API documentation
 - ci: update GitHub Actions artifact and dotnet tool versions
 
-## 2. Standard Format To Use Going Forward
-
-Use:
-
-type (scope): short imperative summary
-
-Optional body (recommended for non-trivial changes):
-- Explain what changed.
-- Explain why the change was made.
-- Add risk, migration, or platform notes when relevant.
-
-## 3. Header Rules
-
-- type:
-  - feat, fix, refa, docs, ci, build, chore, test
-- scope:
-  - Lowercase area name, usually project or domain.
-  - Examples: android, apple, windows, maui, core, abstractions, scanning, broadcasting, docs
-- summary:
-  - Imperative mood (add, remove, rename, implement, refactor, update)
-  - No trailing period
-  - Keep concise and specific
-
-Recommended limits:
-- Header target: up to 100 characters
-- Header hard limit: 120 characters
-- Body lines: up to 100 characters
-
-## 4. Body Rules
-
-Use body for any change that is not obvious from the header.
-
-Good body structure:
-- Paragraph 1: what changed
-- Paragraph 2: why this approach
-- Paragraph 3 (optional): side effects, limitations, or follow-ups
-
-Include platform notes when behavior differs by platform.
-
-## 5. Consistency Notes
+## 3. Consistency Notes
 
 The history currently includes both forms below:
+
 - docs(scope): ...
 - docs (scope): ...
 
-And this alias:
-- refa
+This guide standardizes on:
 
-To stay compatible with existing history, this guide keeps:
-- a space before scope, as in type (scope):
-- refa as an accepted type
+- type (scope): ...
+- `refa` (not `refactor`)
 
-If you later want strict Conventional Commits compatibility, migrate in one dedicated cleanup decision:
-- type(scope): summary
-- refactor instead of refa
-
-## 6. Copilot Prompt Template
+## 4. Copilot Prompt Template
 
 Use this prompt when asking Copilot to draft a commit message:
 
 Draft a git commit message for the staged changes in this repository.
 Use this exact format:
+
 - Header: type (scope): short imperative summary
 - Blank line
-- Body: 1-3 short paragraphs describing what changed and why.
+- Body: 1-2 short sentences describing what changed and why.
 Rules:
-- Use one of: feat, fix, refa, docs, ci, build, chore, test
+- Use one of: feat, fix, refa, perf, docs, ci, chore, test, build
 - Scope must be lowercase and specific to changed area
-- Keep header <= 100 chars
+- Keep header <= 72 chars
 - No trailing period in header
-- Mention platform differences if applicable
-- Do not use bullet lists unless absolutely necessary
+- No co-authors
+- No emojis
+- No issue references
+- Keep the body factual and do not explain implementation details
 
-## 7. Copilot Prompt Template (Description Only)
+## 5. Copilot Prompt Template (Description Only)
 
 If header is already written and only description is needed:
 
@@ -96,13 +102,14 @@ Write a commit description body for this header:
 <PASTE HEADER>
 
 Constraints:
-- 1-3 short paragraphs
-- Explain what changed, then why
-- Mention risks/limitations only when relevant
-- Keep each line <= 100 chars
-- No marketing language
 
-## 8. Examples
+- 1-2 short sentences
+- Explain what changed and why
+- Do not explain how
+- No co-authors, emojis, or issue references
+- Keep factual tone
+
+## 6. Examples
 
 Example A:
 feat (windows): add advertiser lifecycle logging for broadcaster operations
