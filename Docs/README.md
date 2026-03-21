@@ -56,6 +56,7 @@ Goal of these docs:
 
 ### Operational Guidance
 - [Best Practices](Best-Practices/README.md)
+- [Commit Message Format](Best-Practices/Commit-Message-Format.md)
 - [Troubleshooting](Troubleshooting/Common-Issues.md)
 - [Debugging](Troubleshooting/Debugging.md)
 

@@ -74,6 +74,15 @@ Strategies for testing BLE functionality, including mocking and dependency injec
 - Simulating BLE devices
 - Testing edge cases and error conditions
 
+### [Commit Message Format](Commit-Message-Format.md)
+Repository-specific commit header and description conventions, plus Copilot prompt templates for consistent commit generation.
+
+**Key Topics:**
+- Header schema: type (scope): summary
+- Accepted types and scopes
+- Body structure and line-length targets
+- Copilot prompts for full message and description-only generation
+
 ## Quick Reference
 
 ### Common Patterns
