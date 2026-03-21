@@ -45,5 +45,7 @@ Each ADR should include:
 ## ADR Index
 
 - [0000 - Template](0000-template.md)
+- [0001 - Facade Registrations Override Platform Interface Bindings](0001-facade-overrides-platform-registrations.md)
+- [0002 - Broadcasting Factory Consistency Strategy](0002-broadcasting-factory-consistency-strategy.md)
 
 When adding new ADRs, append them to this index.
