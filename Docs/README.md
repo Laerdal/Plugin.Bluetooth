@@ -18,6 +18,7 @@ Goal of these docs:
 - [Architecture Guidelines](ARCHITECTURE_GUIDELINES.md)
 - [Architecture Diagrams](ARCHITECTURE_DIAGRAMS.md)
 - [Facade Pattern Summary](FACADE_PATTERN_SUMMARY.md)
+- [Architecture Decision Records (ADR)](Architecture/ADR/README.md)
 
 ### Core Concepts
 - [Scanner](Core-Concepts/Scanner.md)
@@ -57,6 +58,7 @@ Goal of these docs:
 ### Operational Guidance
 - [Best Practices](Best-Practices/README.md)
 - [Commit Message Format](Best-Practices/Commit-Message-Format.md)
+- [Contribution Definition of Done](Best-Practices/Contribution-DoD.md)
 - [Troubleshooting](Troubleshooting/Common-Issues.md)
 - [Debugging](Troubleshooting/Debugging.md)
 

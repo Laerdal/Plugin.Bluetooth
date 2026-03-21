@@ -83,6 +83,15 @@ Repository-specific commit header and description conventions, plus Copilot prom
 - Body structure and line-length targets
 - Copilot prompts for full message and description-only generation
 
+### [Contribution Definition of Done](Contribution-DoD.md)
+Merge-readiness checklist for features, fixes, refactors, and docs updates.
+
+**Key Topics:**
+- Platform impact validation
+- Exception and EventId review
+- Test and docs completeness gates
+- PR readiness criteria
+
 ## Quick Reference
 
 ### Common Patterns
