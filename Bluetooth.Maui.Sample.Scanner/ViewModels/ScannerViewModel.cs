@@ -39,6 +39,7 @@ public class ScannerViewModel : BaseViewModel
         StopScanCommand = new AsyncRelayCommand(StopScanAsync, () => IsScanning);
         SelectDeviceCommand = new AsyncRelayCommand<IBluetoothRemoteDevice>(SelectDeviceAsync);
         ClearFiltersCommand = new RelayCommand(ClearFilters);
+        OpenClosestDeviceScanCommand = new AsyncRelayCommand(OpenClosestDeviceScanAsync);
 
         // Subscribe to scanner events
         _scanner.RunningStateChanged += OnRunningStateChanged;
@@ -145,6 +146,11 @@ public class ScannerViewModel : BaseViewModel
     ///     Command to clear all scanner filters.
     /// </summary>
     public IRelayCommand ClearFiltersCommand { get; }
+
+    /// <summary>
+    ///     Command to open closest-device scan mode.
+    /// </summary>
+    public IAsyncRelayCommand OpenClosestDeviceScanCommand { get; }
 
     /// <summary>
     ///     Starts BLE scanning when the page appears.
@@ -271,6 +277,11 @@ public class ScannerViewModel : BaseViewModel
         HideUnnamedDevices = true;
         MinimumSignalStrengthDbm = MinRssiValue;
         NamePattern = string.Empty;
+    }
+
+    private async Task OpenClosestDeviceScanAsync()
+    {
+        await _navigation.NavigateToAsync<ClosestDeviceScanPage>();
     }
 
     private void ApplyFilters()

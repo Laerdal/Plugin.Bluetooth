@@ -80,7 +80,7 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     protected virtual Task RefreshAsync(CancellationToken cancellationToken)
     {
         NativeRefreshIsRunning();
-        return Task.CompletedTask;
+        return HandleDeviceDisappearanceAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -93,6 +93,15 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     }
 
     private readonly IDisposable? _refreshSubscription;
+
+    /// <summary>
+    ///     Gets or sets the scanning options for the currently running scan session.
+    /// </summary>
+    private ScanningOptions? ActiveScanningOptions
+    {
+        get => GetValue<ScanningOptions?>(null);
+        set => SetValue(value);
+    }
 
     /// <summary>
     ///     Platform-specific implementation to check if scanner permissions are granted.

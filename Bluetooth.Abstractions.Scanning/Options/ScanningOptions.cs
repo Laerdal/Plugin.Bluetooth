@@ -162,6 +162,25 @@ public record ScanningOptions
     /// </remarks>
     public int? RssiThreshold { get; init; }
 
+    /// <summary>
+    ///     Gets the inactivity timeout after which a device is considered disappeared.
+    /// </summary>
+    /// <remarks>
+    ///     When null (default), no inactivity-based disappearance handling is applied.
+    ///     When set, devices with no new advertisement for at least this duration are treated
+    ///     according to <see cref="DeviceDisappearanceBehavior" />.
+    /// </remarks>
+    public TimeSpan? DeviceDisappearTimeout { get; init; }
+
+    /// <summary>
+    ///     Gets how devices should be handled once they exceed <see cref="DeviceDisappearTimeout" />.
+    /// </summary>
+    /// <remarks>
+    ///     Defaults to <see cref="BluetoothDeviceDisappearanceBehavior.MarkAsStale" /> to avoid breaking callers
+    ///     that expect previously discovered devices to remain accessible.
+    /// </remarks>
+    public BluetoothDeviceDisappearanceBehavior DeviceDisappearanceBehavior { get; init; } = BluetoothDeviceDisappearanceBehavior.MarkAsStale;
+
     #endregion
 
     #region Platform-Specific Scanning Options

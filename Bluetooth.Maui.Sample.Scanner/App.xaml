@@ -3,6 +3,7 @@
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:Bluetooth.Maui.Sample.Scanner.Converters"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="Bluetooth.Maui.Sample.Scanner.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -14,6 +15,7 @@
             <!-- Value Converters -->
             <converters:IsNotZeroConverter x:Key="IsNotZeroConverter" />
             <converters:BoolToStringConverter x:Key="BoolToStringConverter" />
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

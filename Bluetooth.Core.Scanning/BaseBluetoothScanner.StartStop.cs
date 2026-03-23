@@ -153,6 +153,8 @@ public abstract partial class BaseBluetoothScanner
 
         try // try-catch to dispatch exceptions rising from start through OnStartFailed
         {
+            ActiveScanningOptions = scanningOptions;
+
             // Handle permissions based on strategy
             await HandlePermissionsAsync(permissionOptions, cancellationToken).ConfigureAwait(false);
 
@@ -180,6 +182,10 @@ public abstract partial class BaseBluetoothScanner
             IsStarting = false; // Reset the starting state
             Started?.Invoke(this, EventArgs.Empty);
             StartTcs = null;
+            if (!IsRunning)
+            {
+                ActiveScanningOptions = null;
+            }
             if (IsRunning)
             {
                 LogScannerStarted();
@@ -367,6 +373,7 @@ public abstract partial class BaseBluetoothScanner
             IsStopping = false; // Reset the stopping state
             Stopped?.Invoke(this, EventArgs.Empty);
             StopTcs = null;
+            ActiveScanningOptions = null;
             if (!IsRunning)
             {
                 LogScannerStopped();

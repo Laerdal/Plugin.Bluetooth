@@ -221,6 +221,9 @@ public class BluetoothRemoteDevice : IBluetoothRemoteDevice
     /// <inheritdoc />
     public DateTimeOffset LastSeen => _platformDevice.LastSeen;
 
+    /// <inheritdoc />
+    public bool IsStale => _platformDevice.IsStale;
+
     #endregion
 
     #region IBluetoothRemoteDevice Implementation - Connection State

@@ -38,6 +38,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         LastAdvertisement = advertisement ?? throw new ArgumentNullException(nameof(advertisement));
         IntervalBetweenAdvertisement = LastAdvertisement.DateReceived - LastSeen;
         LastSeen = LastAdvertisement.DateReceived;
+        SetStaleState(false);
 
         // Name
         if (!string.IsNullOrWhiteSpace(advertisement.DeviceName))
