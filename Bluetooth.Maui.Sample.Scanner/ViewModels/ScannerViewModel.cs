@@ -7,6 +7,11 @@ namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
 /// </summary>
 public class ScannerViewModel : BaseViewModel
 {
+    private const int MinRssiValue = -100;
+    private const int MaxRssiValue = -30;
+
+    private IReadOnlyList<IBluetoothRemoteDevice> _allDevices = [];
+
     private readonly ILogger<ScannerViewModel> _logger;
 
     private readonly INavigationService _navigation;
@@ -25,10 +30,15 @@ public class ScannerViewModel : BaseViewModel
         _navigation = navigation;
         _logger = logger;
 
+        HideUnnamedDevices = true;
+        MinimumSignalStrengthDbm = MinRssiValue;
+        NamePattern = string.Empty;
+
         // Initialize commands
         StartScanCommand = new AsyncRelayCommand(StartScanAsync, () => !IsScanning);
         StopScanCommand = new AsyncRelayCommand(StopScanAsync, () => IsScanning);
         SelectDeviceCommand = new AsyncRelayCommand<IBluetoothRemoteDevice>(SelectDeviceAsync);
+        ClearFiltersCommand = new RelayCommand(ClearFilters);
 
         // Subscribe to scanner events
         _scanner.RunningStateChanged += OnRunningStateChanged;
@@ -60,6 +70,58 @@ public class ScannerViewModel : BaseViewModel
     }
 
     /// <summary>
+    ///     Gets or sets a value indicating whether nameless devices are hidden.
+    /// </summary>
+    public bool HideUnnamedDevices
+    {
+        get => GetValue(true);
+        set
+        {
+            if (SetValue(value))
+            {
+                ApplyFilters();
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Gets or sets the minimum RSSI threshold (dBm) for displayed devices.
+    /// </summary>
+    public int MinimumSignalStrengthDbm
+    {
+        get => GetValue(MinRssiValue);
+        set
+        {
+            var clamped = Math.Clamp(value, MinRssiValue, MaxRssiValue);
+            if (SetValue(clamped))
+            {
+                OnPropertyChanged(nameof(MinimumSignalStrengthText));
+                ApplyFilters();
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Gets or sets a case-insensitive name substring filter.
+    /// </summary>
+    public string NamePattern
+    {
+        get => GetValue(string.Empty);
+        set
+        {
+            if (SetValue(value ?? string.Empty))
+            {
+                ApplyFilters();
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Gets the minimum RSSI threshold display text.
+    /// </summary>
+    public string MinimumSignalStrengthText => $">= {MinimumSignalStrengthDbm} dBm";
+
+    /// <summary>
     ///     Gets the number of discovered devices.
     /// </summary>
     public int DeviceCount => Devices.Count;
@@ -78,6 +140,11 @@ public class ScannerViewModel : BaseViewModel
     ///     Command to select a device from the list.
     /// </summary>
     public IAsyncRelayCommand<IBluetoothRemoteDevice> SelectDeviceCommand { get; }
+
+    /// <summary>
+    ///     Command to clear all scanner filters.
+    /// </summary>
+    public IRelayCommand ClearFiltersCommand { get; }
 
     /// <summary>
     ///     Starts BLE scanning when the page appears.
@@ -107,7 +174,7 @@ public class ScannerViewModel : BaseViewModel
             // Create scanning options (cross-platform)
             var options = new ScanningOptions
             {
-                IgnoreNamelessAdvertisements = true
+                IgnoreNamelessAdvertisements = false
 
                 // Using defaults - scans for all devices
             };
@@ -192,11 +259,40 @@ public class ScannerViewModel : BaseViewModel
     {
         // Update the ObservableCollection on the UI thread
         MainThread.BeginInvokeOnMainThread(() => {
-            // Use Plugin.BaseTypeExtensions to efficiently sync collections
-            Devices.UpdateFrom(_scanner.GetDevices());
-            OnPropertyChanged(nameof(DeviceCount));
+            _allDevices = [.. _scanner.GetDevices()];
+            ApplyFilters();
 
             _logger.LogDebug("Device list updated - Total devices: {DeviceCount}", DeviceCount);
         });
+    }
+
+    private void ClearFilters()
+    {
+        HideUnnamedDevices = true;
+        MinimumSignalStrengthDbm = MinRssiValue;
+        NamePattern = string.Empty;
+    }
+
+    private void ApplyFilters()
+    {
+        IEnumerable<IBluetoothRemoteDevice> filtered = _allDevices;
+
+        if (HideUnnamedDevices)
+        {
+            filtered = filtered.Where(device => !string.IsNullOrWhiteSpace(device.Name));
+        }
+
+        if (!string.IsNullOrWhiteSpace(NamePattern))
+        {
+            var pattern = NamePattern.Trim();
+            filtered = filtered.Where(device =>
+                !string.IsNullOrWhiteSpace(device.Name) &&
+                device.Name.Contains(pattern, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filtered = filtered.Where(device => device.SignalStrengthDbm >= MinimumSignalStrengthDbm);
+
+        Devices.UpdateFrom(filtered.OrderByDescending(device => device.SignalStrengthDbm));
+        OnPropertyChanged(nameof(DeviceCount));
     }
 }
