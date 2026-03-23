@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Bluetooth.Maui.Sample.Scanner.ViewModels;
+namespace Bluetooth.Maui.Sample.Broadcaster.ViewModels;
 
 /// <summary>
 ///     ViewModel for the broadcaster demo page.

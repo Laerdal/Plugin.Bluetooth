@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Bluetooth.Maui.Sample.Broadcaster": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

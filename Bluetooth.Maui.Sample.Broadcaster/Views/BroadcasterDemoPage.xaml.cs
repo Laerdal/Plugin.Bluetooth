@@ -1,4 +1,4 @@
-namespace Bluetooth.Maui.Sample.Scanner.Views;
+namespace Bluetooth.Maui.Sample.Broadcaster.Views;
 
 /// <summary>
 ///     Page providing a practical broadcaster demo playground.

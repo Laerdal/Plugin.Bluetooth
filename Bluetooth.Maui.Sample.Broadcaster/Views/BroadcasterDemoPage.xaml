@@ -2,9 +2,9 @@
 
 <base:BaseContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-                      xmlns:base="clr-namespace:Bluetooth.Maui.Sample.Scanner.Infrastructure"
-                      xmlns:vm="clr-namespace:Bluetooth.Maui.Sample.Scanner.ViewModels"
-                      x:Class="Bluetooth.Maui.Sample.Scanner.Views.BroadcasterDemoPage"
+                      xmlns:base="clr-namespace:Bluetooth.Maui.Sample.Broadcaster.Infrastructure"
+                      xmlns:vm="clr-namespace:Bluetooth.Maui.Sample.Broadcaster.ViewModels"
+                      x:Class="Bluetooth.Maui.Sample.Broadcaster.Views.BroadcasterDemoPage"
                       x:TypeArguments="vm:BroadcasterDemoViewModel"
                       x:DataType="vm:BroadcasterDemoViewModel"
                       Title="Broadcaster Demo">

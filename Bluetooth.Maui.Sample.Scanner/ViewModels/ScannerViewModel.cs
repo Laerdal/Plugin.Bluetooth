@@ -29,7 +29,6 @@ public class ScannerViewModel : BaseViewModel
         StartScanCommand = new AsyncRelayCommand(StartScanAsync, () => !IsScanning);
         StopScanCommand = new AsyncRelayCommand(StopScanAsync, () => IsScanning);
         SelectDeviceCommand = new AsyncRelayCommand<IBluetoothRemoteDevice>(SelectDeviceAsync);
-          OpenBroadcasterDemoCommand = new AsyncRelayCommand(OpenBroadcasterDemoAsync);
 
         // Subscribe to scanner events
         _scanner.RunningStateChanged += OnRunningStateChanged;
@@ -79,11 +78,6 @@ public class ScannerViewModel : BaseViewModel
     ///     Command to select a device from the list.
     /// </summary>
     public IAsyncRelayCommand<IBluetoothRemoteDevice> SelectDeviceCommand { get; }
-
-    /// <summary>
-    ///     Command to navigate to the broadcaster demo page.
-    /// </summary>
-    public IAsyncRelayCommand OpenBroadcasterDemoCommand { get; }
 
     /// <summary>
     ///     Starts BLE scanning when the page appears.
@@ -178,14 +172,6 @@ public class ScannerViewModel : BaseViewModel
             ["Device"] = device
         });
     }
-
-      /// <summary>
-      ///     Navigates to the broadcaster demo page.
-      /// </summary>
-      private async Task OpenBroadcasterDemoAsync()
-      {
-          await _navigation.NavigateToAsync<BroadcasterDemoPage>();
-      }
 
     /// <summary>
     ///     Handles changes to the scanner's running state.

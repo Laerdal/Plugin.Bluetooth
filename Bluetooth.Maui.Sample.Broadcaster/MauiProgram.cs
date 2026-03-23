@@ -1,4 +1,4 @@
-namespace Bluetooth.Maui.Sample.Scanner;
+namespace Bluetooth.Maui.Sample.Broadcaster;
 
 /// <summary>
 ///     Main entry point for MAUI application configuration.
@@ -33,16 +33,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<INavigationService, NavigationService>();
 
         // Register pages and view models
-        builder.Services.AddTransient<ScannerPage>();
-        builder.Services.AddTransient<ScannerViewModel>();
-        builder.Services.AddTransient<DevicePage>();
-        builder.Services.AddTransient<DeviceViewModel>();
-        builder.Services.AddTransient<CharacteristicsPage>();
-        builder.Services.AddTransient<CharacteristicsViewModel>();
-        builder.Services.AddTransient<CharacteristicDetailPage>();
-        builder.Services.AddTransient<CharacteristicDetailViewModel>();
-        builder.Services.AddTransient<WriteListenLabPage>();
-        builder.Services.AddTransient<WriteListenLabViewModel>();
+        builder.Services.AddTransient<BroadcasterDemoPage>();
+        builder.Services.AddTransient<BroadcasterDemoViewModel>();
 
         return builder.Build();
     }

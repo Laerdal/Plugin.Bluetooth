@@ -14,9 +14,9 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <RootNamespace>Bluetooth.Maui.Sample.Scanner</RootNamespace>
-        <ApplicationTitle>Bluetooth.Maui.Sample.Scanner</ApplicationTitle>
-        <ApplicationId>com.bluetooth.sample.scanner</ApplicationId>
+      <RootNamespace>Bluetooth.Maui.Sample.Broadcaster</RootNamespace>
+      <ApplicationTitle>Bluetooth.Maui.Sample.Broadcaster</ApplicationTitle>
+      <ApplicationId>com.bluetooth.sample.broadcaster</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -59,7 +59,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Bluetooth.Maui\Bluetooth.Maui.csproj" />
         <ProjectReference Include="..\Bluetooth.Abstractions\Bluetooth.Abstractions.csproj" />
-        <ProjectReference Include="..\Bluetooth.Abstractions.Scanning\Bluetooth.Abstractions.Scanning.csproj" />
+        <ProjectReference Include="..\Bluetooth.Abstractions.Broadcasting\Bluetooth.Abstractions.Broadcasting.csproj" />
     </ItemGroup>
 
     <ItemGroup>
