@@ -30,7 +30,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
 
     private BluetoothManager BluetoothManager =>
         ((AndroidBluetoothAdapter) Adapter).NativeBluetoothManager;
-    
+
     /// <inheritdoc />
     public void OnStartSuccess(AdvertiseSettings? settingsInEffect)
     {
@@ -45,7 +45,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
         IsRunning = false;
         OnStartFailed(new AndroidNativeAdvertiseFailureException(errorCode));
     }
-    
+
     /// <inheritdoc />
     public BluetoothGattServerCallbackProxy.IBluetoothDeviceDelegate GetDevice(BluetoothDevice? native)
     {
@@ -88,7 +88,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
 
         return droidService;
     }
-    
+
     #region Start / Stop
 
     private AdvertiseCallbackProxy? _advertiseProxy;
@@ -132,7 +132,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
         return gattServer.NotifyCharacteristicChanged(device, characteristic, requiresConfirmation);
 #pragma warning restore CA1422
     }
-    
+
     /// <inheritdoc />
     protected override void NativeRefreshIsRunning()
     {
@@ -182,7 +182,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
             using var advertiseData = advertiseDataBuilder.Build() ?? throw new InvalidOperationException("Failed to build Android advertise data.");
 
             bluetoothLeAdvertiser.StartAdvertising(advertiseSettings, advertiseData, advertiseProxy);
-            
+
             return ValueTask.CompletedTask;
         }
         catch (Exception exception)
@@ -220,7 +220,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
 
         IsRunning = false;
         return;
-        
+
         async static ValueTask CastAndDispose(IDisposable resource)
         {
             if (resource is IAsyncDisposable resourceAsyncDisposable)
@@ -233,7 +233,7 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
             }
         }
     }
-    
+
     #endregion
 
     protected override ValueTask<IBluetoothLocalService> NativeCreateServiceAsync(Guid id,
