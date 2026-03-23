@@ -126,7 +126,7 @@ public class CharacteristicsViewModel : BaseViewModel
     }
 
     /// <summary>
-    ///     Handles characteristic selection and navigates to the detail page.
+    ///     Handles characteristic selection and navigates to the write/listen lab page.
     /// </summary>
     private async Task SelectCharacteristicAsync(IBluetoothRemoteCharacteristic? characteristic)
     {
@@ -137,12 +137,12 @@ public class CharacteristicsViewModel : BaseViewModel
 
         _logger.LogInformation("Characteristic selected: {CharacteristicId} from service: {Id}", characteristic.Id, ServiceId);
 
-        // Navigate to the characteristic detail page with the selected characteristic
+          // Navigate to the write/listen lab page with the selected characteristic
         var parameters = new Dictionary<string, object>
         {
             ["Characteristic"] = characteristic
         };
-        await _navigation.NavigateToAsync<CharacteristicDetailPage>(parameters);
+          await _navigation.NavigateToAsync<WriteListenLabPage>(parameters);
     }
 
     /// <summary>

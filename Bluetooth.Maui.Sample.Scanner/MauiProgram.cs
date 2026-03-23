@@ -41,6 +41,10 @@ public static class MauiProgram
         builder.Services.AddTransient<CharacteristicsViewModel>();
         builder.Services.AddTransient<CharacteristicDetailPage>();
         builder.Services.AddTransient<CharacteristicDetailViewModel>();
+        builder.Services.AddTransient<BroadcasterDemoPage>();
+        builder.Services.AddTransient<BroadcasterDemoViewModel>();
+        builder.Services.AddTransient<WriteListenLabPage>();
+        builder.Services.AddTransient<WriteListenLabViewModel>();
 
         return builder.Build();
     }

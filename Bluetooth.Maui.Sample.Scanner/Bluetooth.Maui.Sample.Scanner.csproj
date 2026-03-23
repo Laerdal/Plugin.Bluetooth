@@ -59,6 +59,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Bluetooth.Maui\Bluetooth.Maui.csproj" />
         <ProjectReference Include="..\Bluetooth.Abstractions\Bluetooth.Abstractions.csproj" />
+          <ProjectReference Include="..\Bluetooth.Abstractions.Broadcasting\Bluetooth.Abstractions.Broadcasting.csproj" />
         <ProjectReference Include="..\Bluetooth.Abstractions.Scanning\Bluetooth.Abstractions.Scanning.csproj" />
     </ItemGroup>
 

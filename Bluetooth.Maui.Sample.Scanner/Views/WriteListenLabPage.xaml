@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<base:BaseContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                      xmlns:base="clr-namespace:Bluetooth.Maui.Sample.Scanner.Infrastructure"
+                      xmlns:vm="clr-namespace:Bluetooth.Maui.Sample.Scanner.ViewModels"
+                      xmlns:sys="clr-namespace:System;assembly=netstandard"
+                      x:Class="Bluetooth.Maui.Sample.Scanner.Views.WriteListenLabPage"
+                      x:TypeArguments="vm:WriteListenLabViewModel"
+                      x:DataType="vm:WriteListenLabViewModel"
+                      Title="Write/Listen Lab">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Characteristic Lab"
+                           FontAttributes="Bold"
+                           FontSize="18" />
+                    <Label Text="{Binding CharacteristicId}"
+                           FontFamily="Courier"
+                           FontSize="12"
+                           LineBreakMode="WordWrap"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+
+                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                        <Border IsVisible="{Binding CanRead}" Padding="8,4" BackgroundColor="{StaticResource Primary}" StrokeShape="RoundRectangle 4">
+                            <Label Text="READ" FontSize="11" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Border IsVisible="{Binding CanWrite}" Padding="8,4" BackgroundColor="{StaticResource Secondary}" StrokeShape="RoundRectangle 4">
+                            <Label Text="WRITE" FontSize="11" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Border IsVisible="{Binding CanListen}" Padding="8,4" BackgroundColor="{StaticResource Tertiary}" StrokeShape="RoundRectangle 4">
+                            <Label Text="LISTEN" FontSize="11" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Label Grid.Column="0" Text="Current Value" FontAttributes="Bold" FontSize="16" VerticalOptions="Center" />
+                        <Button Grid.Column="1"
+                                Text="{Binding DisplayModeText}"
+                                Command="{Binding ToggleDisplayModeCommand}"
+                                FontSize="10"
+                                Padding="8,4"
+                                HeightRequest="32" />
+                    </Grid>
+
+                    <Border Padding="12"
+                            BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#2A2A2A}"
+                            StrokeShape="RoundRectangle 8"
+                            MinimumHeightRequest="60">
+                        <Label Text="{Binding CurrentValue}"
+                               FontFamily="Courier"
+                               FontSize="13"
+                               LineBreakMode="WordWrap" />
+                    </Border>
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Read"
+                                Command="{Binding ReadValueCommand}"
+                                IsVisible="{Binding CanRead}"
+                                BackgroundColor="{StaticResource Primary}"
+                                TextColor="White"
+                            HorizontalOptions="Fill" />
+                        <Button Text="{Binding IsListening, Converter={StaticResource BoolToStringConverter}, ConverterParameter='Stop Listening|Start Listening'}"
+                                Command="{Binding ToggleListenCommand}"
+                                IsVisible="{Binding CanListen}"
+                                BackgroundColor="{StaticResource Tertiary}"
+                                TextColor="White"
+                            HorizontalOptions="Fill" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}"
+                    IsVisible="{Binding CanWrite}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Write Payload" FontAttributes="Bold" FontSize="16" />
+                    <Label FontSize="12"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Input mode: " />
+                                <Span Text="{Binding IsHexMode, Converter={StaticResource BoolToStringConverter}, ConverterParameter='HEX|TEXT'}" FontAttributes="Bold" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+
+                    <Entry Placeholder="01 02 03 or Hello"
+                           Text="{Binding WriteValueInput}"
+                           FontFamily="Courier"
+                           ClearButtonVisibility="WhileEditing" />
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Write"
+                                Command="{Binding WriteValueCommand}"
+                                BackgroundColor="{StaticResource Secondary}"
+                                TextColor="White"
+                            HorizontalOptions="Fill" />
+                        <Button Text="PING"
+                                Command="{Binding WritePingCommand}"
+                            HorizontalOptions="Fill" />
+                        <Button Text="HELLO"
+                                Command="{Binding WriteHelloCommand}"
+                            HorizontalOptions="Fill" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Lab Timeline" FontAttributes="Bold" FontSize="16" />
+                    <CollectionView ItemsSource="{Binding ActivityLog}" HeightRequest="220">
+                        <CollectionView.EmptyView>
+                            <Label Text="No activity yet"
+                                   HorizontalOptions="Center"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <Label Text="{Binding .}"
+                                       FontFamily="Courier"
+                                       FontSize="12"
+                                       LineBreakMode="WordWrap" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</base:BaseContentPage>

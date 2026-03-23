@@ -57,6 +57,11 @@
                         WidthRequest="120" />
             </HorizontalStackLayout>
 
+                <Button Text="Open Broadcaster Demo"
+                    Command="{Binding OpenBroadcasterDemoCommand}"
+                    HorizontalOptions="Center"
+                    WidthRequest="220" />
+
             <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDividerColor}}" Margin="0,8" />
         </VerticalStackLayout>
 

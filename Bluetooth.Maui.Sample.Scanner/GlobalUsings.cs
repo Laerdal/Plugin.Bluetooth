@@ -17,6 +17,9 @@ global using System.Threading;
 global using System.Threading.Tasks;
 
 global using Bluetooth.Abstractions;
+global using Bluetooth.Abstractions.Broadcasting;
+global using Bluetooth.Abstractions.Broadcasting.Enums;
+global using Bluetooth.Abstractions.Broadcasting.Options;
 global using Bluetooth.Abstractions.Enums;
 global using Bluetooth.Abstractions.EventArgs;
 global using Bluetooth.Abstractions.Exceptions;
