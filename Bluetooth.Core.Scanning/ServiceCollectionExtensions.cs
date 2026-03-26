@@ -1,5 +1,7 @@
 namespace Bluetooth.Core.Scanning;
 
+using Bluetooth.Core.Scanning.Profiles.BluetoothSig;
+
 /// <summary>
 ///     Extension methods for registering Bluetooth services in a service collection.
 /// </summary>
@@ -18,7 +20,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBluetoothRssiToSignalStrengthConverter, LinearRssiToSignalStrengthConverter>();
 
         // Profile registry and name provider
-        services.AddSingleton<IBluetoothProfileRegistry, BluetoothProfileRegistry>();
+        services.AddSingleton<IBluetoothProfileRegistry>(_ =>
+        {
+            var registry = new BluetoothProfileRegistry();
+            BatteryProfile.Register(registry);
+            return registry;
+        });
         services.AddSingleton<IBluetoothNameProvider, ProfileNameProvider>();
     }
 }

@@ -34,7 +34,9 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
         // Name
         if (nameProvider != null)
         {
-            Name = nameProvider.GetKnownCharacteristicName(Id) ?? Name;
+            Name = nameProvider.GetKnownCharacteristicName(Service.Id, Id)
+                   ?? nameProvider.GetKnownCharacteristicName(Id)
+                   ?? Name;
         }
 
         LazyCanRead = new Lazy<bool>(NativeCanRead);
