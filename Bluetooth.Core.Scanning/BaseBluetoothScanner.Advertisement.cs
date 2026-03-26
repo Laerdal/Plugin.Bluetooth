@@ -8,7 +8,7 @@ public abstract partial class BaseBluetoothScanner
     public event EventHandler<AdvertisementReceivedEventArgs>? AdvertisementReceived;
 
     /// <inheritdoc />
-    public Func<IBluetoothAdvertisement, bool> AdvertisementFilter { get; set; }
+    public Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; set; }
 
     #endregion
 
@@ -29,7 +29,7 @@ public abstract partial class BaseBluetoothScanner
 
         return device;
     }
-    
+
     /// <summary>
     ///     Creates a factory request for creating a Bluetooth device based on the received advertisement.
     /// </summary>
@@ -48,8 +48,8 @@ public abstract partial class BaseBluetoothScanner
     protected void OnAdvertisementReceived<TAdvertisement>(TAdvertisement advertisement)
         where TAdvertisement : struct, IBluetoothAdvertisement
     {
-        // Filter
-        if (!AdvertisementFilter.Invoke(advertisement))
+        // Filter (null means accept all)
+        if (AdvertisementFilter?.Invoke(advertisement) == false)
         {
             return;
         }
@@ -80,8 +80,8 @@ public abstract partial class BaseBluetoothScanner
     /// </remarks>
     protected void OnAdvertisementsReceived(IEnumerable<IBluetoothAdvertisement> advertisements)
     {
-        // Filter
-        var filteredAdvertisements = advertisements.Where(adv => AdvertisementFilter.Invoke(adv)).ToList();
+        // Filter (null means accept all)
+        var filteredAdvertisements = advertisements.Where(adv => AdvertisementFilter?.Invoke(adv) ?? true).ToList();
 
         // Throw event
         foreach (var advertisement in filteredAdvertisements)

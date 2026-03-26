@@ -240,12 +240,12 @@ options.ServiceUuids = new[]
 ### AdvertisementFilter
 
 ```csharp
-public Func<IBluetoothAdvertisement, bool> AdvertisementFilter { get; init; } = _ => true;
+public Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; init; }
 ```
 
-**Default**: Accept all (`_ => true`)
+**Default**: `null` (accept all advertisements)
 
-Custom filter predicate for fine-grained advertisement filtering.
+Custom filter predicate for fine-grained advertisement filtering. When `null` (default), all advertisements are accepted. When set, only advertisements where the filter returns `true` are processed.
 
 **Use Cases**:
 - Filter by manufacturer data

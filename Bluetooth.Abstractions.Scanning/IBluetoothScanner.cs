@@ -16,7 +16,11 @@ public partial interface IBluetoothScanner : IAsyncDisposable
     /// <summary>
     ///     Gets or sets the advertisement filter used to determine which Bluetooth advertisements should be processed.
     /// </summary>
-    Func<IBluetoothAdvertisement,bool> AdvertisementFilter { get; set; }
+    /// <remarks>
+    ///     When <c>null</c> (default), all advertisements are accepted.
+    ///     When set, only advertisements where the filter returns <c>true</c> are processed.
+    /// </remarks>
+    Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; set; }
 
     #endregion
 

@@ -323,7 +323,7 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
     public bool IsStopping => _platformScanner.IsStopping;
 
     /// <inheritdoc />
-    public Func<IBluetoothAdvertisement, bool> AdvertisementFilter
+    public Func<IBluetoothAdvertisement, bool>? AdvertisementFilter
     {
         get => _platformScanner.AdvertisementFilter;
         set => _platformScanner.AdvertisementFilter = value;

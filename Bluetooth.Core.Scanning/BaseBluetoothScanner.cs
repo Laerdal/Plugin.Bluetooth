@@ -63,7 +63,7 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
         LoggerFactory = loggerFactory;
         RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
         NameProvider = nameProvider;
-        AdvertisementFilter = _ => true;
+        AdvertisementFilter = null; // null = accept all
 
         _refreshSubscription = ticker.Register("Scanner Refresh Tick", TimeSpan.FromSeconds(2), RefreshAsync);
     }

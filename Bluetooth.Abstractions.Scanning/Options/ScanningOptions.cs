@@ -25,7 +25,11 @@ public record ScanningOptions
     /// <summary>
     ///     Advertisement filter. If set, only advertisements that pass the filter will be processed.
     /// </summary>
-    public Func<IBluetoothAdvertisement, bool> AdvertisementFilter { get; init; } = _ => true;
+    /// <remarks>
+    ///     When <c>null</c> (default), all advertisements are accepted.
+    ///     When set, only advertisements where the filter returns <c>true</c> are processed.
+    /// </remarks>
+    public Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; init; }
 
     /// <summary>
     ///     Gets a value indicating whether duplicate advertisements should be ignored.
