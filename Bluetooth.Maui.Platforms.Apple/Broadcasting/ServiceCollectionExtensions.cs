@@ -1,4 +1,3 @@
-using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 
 namespace Bluetooth.Maui.Platforms.Apple.Broadcasting;
@@ -19,15 +18,13 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IBluetoothBroadcaster, AppleBluetoothBroadcaster>();
 
-        services.AddSingleton<IBluetoothLocalCharacteristicFactory, AppleBluetoothLocalCharacteristicFactory>();
-        services.AddSingleton<IBluetoothLocalServiceFactory, AppleBluetoothLocalServiceFactory>();
-        services.AddSingleton<IBluetoothLocalDescriptorFactory, AppleBluetoothLocalDescriptorFactory>();
-        services.AddSingleton<IBluetoothConnectedDeviceFactory, AppleBluetoothConnectedDeviceFactory>();
-
-        services.AddSingleton<CBPeripheralManagerDelegate, CbPeripheralManagerWrapper>();
+        // Configure CBPeripheralManager options
         services.Configure<CbPeripheralManagerOptions>(options => {
             options.ShowPowerAlert = true;
             options.RestoreIdentifierKey = "com.bluetooth.maui.peripheralmanager.restore";
         });
+
+        // Note: CbPeripheralManagerWrapper is NOT registered in DI - it's created by AppleBluetoothBroadcaster
+        // because it needs the broadcaster as its delegate (circular dependency)
     }
 }

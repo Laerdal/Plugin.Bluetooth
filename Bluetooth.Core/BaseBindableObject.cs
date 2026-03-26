@@ -15,13 +15,17 @@ public abstract partial class BaseBindableObject : INotifyPropertyChanged
     /// <param name="logger">Optional logger instance for tracking property changes.</param>
     protected BaseBindableObject(ILogger? logger = null)
     {
-        Logger = logger;
+        _logger = logger ?? NullLogger.Instance;
     }
 
     /// <summary>
     ///     The logger instance for this object.
     /// </summary>
-    protected ILogger? Logger { get; }
+    protected ILogger Logger => _logger;
+
+    /// <summary>The logger instance used by <see cref="LoggerMessage" /> source-generated methods in derived classes.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification = "Required by LoggerMessage source generator which resolves _logger through the class hierarchy.")]
+    protected ILogger _logger;
 
     /// <summary>
     ///     Occurs when a property value changes.

@@ -2,7 +2,7 @@ using Bluetooth.Maui.Platforms.Droid.Exceptions;
 
 using BluetoothPhy = Android.Bluetooth.BluetoothPhy;
 using Boolean = Java.Lang.Boolean;
-using ConnectionOptions = Bluetooth.Maui.Platforms.Droid.Scanning.Options.ConnectionOptions;
+using ConnectionOptions = Bluetooth.Abstractions.Scanning.Options.ConnectionOptions;
 using Exception = System.Exception;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
@@ -56,22 +56,6 @@ public partial class BluetoothGattProxy : BluetoothGattCallback
 
         base.Dispose(disposing);
     }
-
-    /*
-     TODO : Move this to into the Device class
-
-    /// <summary>
-    /// Attempts to reconnect to the remote device using the existing GATT connection.
-    /// </summary>
-    /// <exception cref="DeviceFailedToConnectException">Thrown when the reconnection attempt fails.</exception>
-    public void Reconnect()
-    {
-        var result = BluetoothGatt.Connect();
-        if (!result)
-        {
-            throw new DeviceFailedToConnectException(BluetoothGattDelegate, "BluetoothGatt.Connect() returned false");
-        }
-    }*/
 
     /// <summary>
     ///     Attempts to refresh the GATT cache using Android's hidden refresh method.

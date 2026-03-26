@@ -3,7 +3,7 @@ using Bluetooth.Abstractions.Options;
 namespace Bluetooth.Abstractions.Scanning.Options;
 
 /// <summary>
-///     Represents a Bluetooth scanner configuration.
+///     Represents Bluetooth scanner configuration options.
 /// </summary>
 public record ScanningOptions
 {
@@ -18,21 +18,18 @@ public record ScanningOptions
     /// </remarks>
     public PermissionRequestStrategy PermissionStrategy { get; init; } = PermissionRequestStrategy.RequestAutomatically;
 
+    #endregion
+
+    #region Advertisement Filtering
+
     /// <summary>
-    ///     Gets a value indicating whether background location permission should be requested on Android.
+    ///     Advertisement filter. If set, only advertisements that pass the filter will be processed.
     /// </summary>
     /// <remarks>
-    ///     <b>Platform Support:</b>
-    ///     <list type="bullet">
-    ///         <item><b>Android</b>: API 29-30 (Android 10-11) requests ACCESS_BACKGROUND_LOCATION if true; required for background scanning</item>
-    ///         <item><b>iOS/macOS</b>: Ignored (background permissions handled by Info.plist)</item>
-    ///         <item><b>Windows</b>: Ignored (no background permission needed)</item>
-    ///     </list>
-    ///     Defaults to false (foreground scanning only).
+    ///     When <c>null</c> (default), all advertisements are accepted.
+    ///     When set, only advertisements where the filter returns <c>true</c> are processed.
     /// </remarks>
-    public bool RequireBackgroundLocation { get; init; }
-
-    #endregion
+    public Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; init; }
 
     /// <summary>
     ///     Gets a value indicating whether duplicate advertisements should be ignored.
@@ -44,10 +41,7 @@ public record ScanningOptions
     /// </summary>
     public bool IgnoreNamelessAdvertisements { get; init; }
 
-    /// <summary>
-    ///     Advertisement filter. If set, only advertisements that pass the filter will be processed.
-    /// </summary>
-    public Func<IBluetoothAdvertisement, bool> AdvertisementFilter { get; init; } = _ => true;
+    #endregion
 
     #region Service UUID Filtering
 
@@ -172,6 +166,25 @@ public record ScanningOptions
     /// </remarks>
     public int? RssiThreshold { get; init; }
 
+    /// <summary>
+    ///     Gets the inactivity timeout after which a device is considered disappeared.
+    /// </summary>
+    /// <remarks>
+    ///     When null (default), no inactivity-based disappearance handling is applied.
+    ///     When set, devices with no new advertisement for at least this duration are treated
+    ///     according to <see cref="DeviceDisappearanceBehavior" />.
+    /// </remarks>
+    public TimeSpan? DeviceDisappearTimeout { get; init; }
+
+    /// <summary>
+    ///     Gets how devices should be handled once they exceed <see cref="DeviceDisappearTimeout" />.
+    /// </summary>
+    /// <remarks>
+    ///     Defaults to <see cref="BluetoothDeviceDisappearanceBehavior.MarkAsStale" /> to avoid breaking callers
+    ///     that expect previously discovered devices to remain accessible.
+    /// </remarks>
+    public BluetoothDeviceDisappearanceBehavior DeviceDisappearanceBehavior { get; init; } = BluetoothDeviceDisappearanceBehavior.MarkAsStale;
+
     #endregion
 
     #region Platform-Specific Scanning Options
@@ -181,7 +194,7 @@ public record ScanningOptions
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         Should be an instance of <c>Bluetooth.Maui.Platforms.Droid.Scanning.Options.AndroidScanningOptions</c>.
+    ///         Should be an instance of <c>Bluetooth.Abstractions.Scanning.Options.Android.AndroidScanningOptions</c>.
     ///         These options are only used on Android platforms and are ignored on other platforms.
     ///     </para>
     ///     <para>
@@ -198,89 +211,4 @@ public record ScanningOptions
     public object? Android { get; init; }
 
     #endregion
-}
-
-/// <summary>
-///     Defines scan modes that control the power consumption and scan latency trade-off.
-/// </summary>
-public enum BluetoothScanMode
-{
-    /// <summary>
-    ///     Low power mode with infrequent scans. Optimizes for battery life.
-    /// </summary>
-    /// <remarks>
-    ///     Android: SCAN_MODE_LOW_POWER (scan interval ~5 seconds)
-    /// </remarks>
-    LowPower = 0,
-
-    /// <summary>
-    ///     Balanced mode providing a compromise between power consumption and scan latency.
-    /// </summary>
-    /// <remarks>
-    ///     Android: SCAN_MODE_BALANCED (scan interval ~2 seconds)
-    /// </remarks>
-    Balanced = 1,
-
-    /// <summary>
-    ///     Low latency mode with frequent scans. Optimizes for fast discovery at the cost of higher power consumption.
-    /// </summary>
-    /// <remarks>
-    ///     Android: SCAN_MODE_LOW_LATENCY (scan continuously or near-continuously)
-    /// </remarks>
-    LowLatency = 2,
-
-    /// <summary>
-    ///     Opportunistic mode where scans are performed only when other apps are scanning.
-    ///     Provides best battery life but unpredictable scan frequency.
-    /// </summary>
-    /// <remarks>
-    ///     Android: SCAN_MODE_OPPORTUNISTIC (Android 7.0+)
-    ///     Not supported on iOS/Windows (falls back to Balanced)
-    /// </remarks>
-    Opportunistic = -1
-}
-
-/// <summary>
-///     Defines when scan result callbacks should be triggered.
-/// </summary>
-[Flags]
-public enum BluetoothScanCallbackType
-{
-    /// <summary>
-    ///     Do not report any advertisement packets. This can be used when only interested in scan start/stop events or when filtering is performed in software.
-    /// </summary>
-    None = 0,
-
-    /// <summary>
-    ///     Report all advertisement packets as they are received.
-    /// </summary>
-    /// <remarks>
-    ///     Android: CALLBACK_TYPE_ALL_MATCHES
-    /// </remarks>
-    AllMatches = 1,
-
-    /// <summary>
-    ///     Report only the first advertisement packet from each device.
-    /// </summary>
-    /// <remarks>
-    ///     Android: CALLBACK_TYPE_FIRST_MATCH
-    /// </remarks>
-    FirstMatch = 2,
-
-    /// <summary>
-    ///     Report when a device is no longer detected (after a timeout period).
-    /// </summary>
-    /// <remarks>
-    ///     Android: CALLBACK_TYPE_MATCH_LOST
-    ///     Not fully supported on iOS/Windows
-    /// </remarks>
-    MatchLost = 4,
-
-    /// <summary>
-    ///     Report both first match and match lost events.
-    /// </summary>
-    /// <remarks>
-    ///     Android: CALLBACK_TYPE_FIRST_MATCH | CALLBACK_TYPE_MATCH_LOST
-    /// </remarks>
-    FirstMatchAndMatchLost = FirstMatch | MatchLost
 }

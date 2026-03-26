@@ -5,10 +5,9 @@ public class DotNetCoreBluetoothConnectedDevice : BaseBluetoothConnectedDevice
 {
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    public DotNetCoreBluetoothConnectedDevice(IBluetoothBroadcaster broadcaster,
-        IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec,
-        ILogger<IBluetoothConnectedDevice>? logger = null) : base(broadcaster, spec, logger)
+    public DotNetCoreBluetoothConnectedDevice(IBluetoothBroadcaster broadcaster, string id, ILogger<IBluetoothConnectedDevice>? logger = null) : base(broadcaster, id, logger)
     {
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc />

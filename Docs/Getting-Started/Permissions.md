@@ -1,6 +1,6 @@
 # Permissions Guide
 
-This guide provides comprehensive information about Bluetooth permission handling across iOS, Android, and Windows platforms.
+This guide covers Bluetooth permission handling across iOS, Android, and Windows platforms.
 
 ## Overview
 

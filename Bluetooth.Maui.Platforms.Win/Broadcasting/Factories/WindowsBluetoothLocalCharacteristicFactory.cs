@@ -1,18 +1,19 @@
-using Bluetooth.Core.Broadcasting.Factories;
-
 namespace Bluetooth.Maui.Platforms.Win.Broadcasting.Factories;
 
 /// <inheritdoc />
-public class WindowsBluetoothLocalCharacteristicFactory : BaseBluetoothLocalCharacteristicFactory
+public class WindowsBluetoothLocalCharacteristicFactory : IBluetoothLocalCharacteristicFactory
 {
+    private readonly IBluetoothLocalDescriptorFactory _localDescriptorFactory;
+
     /// <inheritdoc />
-    public WindowsBluetoothLocalCharacteristicFactory(IBluetoothLocalDescriptorFactory localDescriptorFactory) : base(localDescriptorFactory)
+    public WindowsBluetoothLocalCharacteristicFactory(IBluetoothLocalDescriptorFactory localDescriptorFactory)
     {
+        _localDescriptorFactory = localDescriptorFactory;
     }
 
     /// <inheritdoc />
-    public override IBluetoothLocalCharacteristic Create(IBluetoothLocalService localService, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec)
+    public IBluetoothLocalCharacteristic Create(IBluetoothLocalService service, IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException("Windows local GATT characteristic creation is not implemented yet.");
     }
 }

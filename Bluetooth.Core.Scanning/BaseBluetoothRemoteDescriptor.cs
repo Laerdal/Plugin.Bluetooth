@@ -3,38 +3,57 @@ namespace Bluetooth.Core.Scanning;
 /// <inheritdoc cref="IBluetoothRemoteDescriptor" />
 public abstract partial class BaseBluetoothRemoteDescriptor : BaseBindableObject, IBluetoothRemoteDescriptor
 {
+    /// <inheritdoc />
+    public IBluetoothRemoteCharacteristic Characteristic { get; }
+
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteDescriptor" /> class.
     /// </summary>
-    /// <param name="remoteCharacteristic">The Bluetooth characteristic associated with this descriptor.</param>
-    /// <param name="spec">The factory spec containing initialization data for the descriptor.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="remoteCharacteristic" /> is null.</exception>
-    protected BaseBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic remoteCharacteristic, IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec spec)
+    /// <param name="parentCharacteristic">The Bluetooth characteristic associated with this descriptor.</param>
+    /// <param name="id">The unique identifier (UUID) of the descriptor.</param>
+    /// <param name="nameProvider">An optional provider for descriptor names, used to resolve the name based on the ID.</param>
+    /// <param name="logger">The logger instance to use for logging (optional).</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="parentCharacteristic" /> is null.</exception>
+    protected BaseBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic parentCharacteristic,
+        Guid id,
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteDescriptor>? logger = null) : base(logger)
     {
-        ArgumentNullException.ThrowIfNull(remoteCharacteristic);
-        ArgumentNullException.ThrowIfNull(spec);
+        // Validate constructor arguments
+        ArgumentNullException.ThrowIfNull(parentCharacteristic);
 
-        RemoteCharacteristic = remoteCharacteristic;
-        Id = spec.DescriptorId;
+        Characteristic = parentCharacteristic;
+        Id = id;
+
+        // Name
+        if (nameProvider != null)
+        {
+            Name = nameProvider.GetKnownDescriptorName(Id) ?? Name;
+        }
 
         LazyCanRead = new Lazy<bool>(NativeCanRead);
         LazyCanWrite = new Lazy<bool>(NativeCanWrite);
     }
 
-    /// <inheritdoc />
-    public IBluetoothRemoteCharacteristic RemoteCharacteristic { get; }
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="parentCharacteristic">The Bluetooth characteristic associated with this descriptor.</param>
+    /// <param name="spec">The factory spec containing descriptor information.</param>
+    /// <param name="logger">The logger instance to use for logging (optional).</param>
+    protected BaseBluetoothRemoteDescriptor(
+        IBluetoothRemoteCharacteristic parentCharacteristic,
+        IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec spec,
+        ILogger<IBluetoothRemoteDescriptor>? logger = null)
+        : this(parentCharacteristic, (spec ?? throw new ArgumentNullException(nameof(spec))).DescriptorId, null, logger)
+    {
+    }
 
     /// <inheritdoc />
     public Guid Id { get; }
 
     /// <inheritdoc />
     public string Name { get; } = "Unknown Descriptor";
-
-    /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"[{Id}] {Name}";
-    }
 
     #region Dispose
 
@@ -61,4 +80,15 @@ public abstract partial class BaseBluetoothRemoteDescriptor : BaseBindableObject
     }
 
     #endregion
+
+    #region ToString
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return $"[{Id}] {Name}";
+    }
+
+    #endregion
+
 }

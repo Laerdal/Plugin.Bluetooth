@@ -349,7 +349,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     #region Connection Priority
 
     /// <inheritdoc />
-    public async ValueTask RequestConnectionPriorityAsync(BluetoothConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask RequestConnectionPriorityAsync(ConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         if (!IsConnected)
         {
@@ -371,7 +371,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <remarks>
     ///     On platforms that don't support this feature (iOS, Windows), this should be a no-op.
     /// </remarks>
-    protected abstract ValueTask NativeRequestConnectionPriorityAsync(BluetoothConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    protected abstract ValueTask NativeRequestConnectionPriorityAsync(ConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 }

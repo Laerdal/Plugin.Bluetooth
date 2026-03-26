@@ -17,9 +17,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBluetoothScanner, WindowsBluetoothScanner>();
 
         // Register factories
-        services.AddSingleton<IBluetoothRemoteDeviceFactory, WindowsBluetoothDeviceFactory>();
+        services.AddSingleton<IBluetoothRemoteDeviceFactory, WindowsBluetoothRemoteDeviceFactory>();
         services.AddSingleton<IBluetoothRemoteServiceFactory, WindowsBluetoothServiceFactory>();
-        services.AddSingleton<IBluetoothRemoteCharacteristicFactory, WindowsBluetoothCharacteristicFactory>();
-        services.AddSingleton<IBluetoothRemoteDescriptorFactory, WindowsBluetoothDescriptorFactory>();
+        services.AddSingleton<IBluetoothRemoteCharacteristicFactory, WindowsBluetoothRemoteCharacteristicFactory>();
+        services.AddSingleton<IBluetoothRemoteDescriptorFactory, WindowsBluetoothRemoteDescriptorFactory>();
     }
 }

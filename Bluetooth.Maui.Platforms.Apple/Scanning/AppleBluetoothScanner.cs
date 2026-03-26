@@ -11,24 +11,32 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
 {
     /// <inheritdoc />
     public AppleBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothRemoteDeviceFactory deviceFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
-        IOptions<CBCentralInitOptions> options,
-        IDispatchQueueProvider dispatchQueueProvider,
         ITicker ticker,
-        ILogger<IBluetoothScanner>? logger = null) : base(adapter,
-        deviceFactory,
-        rssiToSignalStrengthConverter,
-        ticker,
-        logger)
+        IOptions<CBCentralInitOptions> cbCentralInitOptions,
+        IDispatchQueueProvider dispatchQueueProvider,
+        IBluetoothRemoteDeviceFactory deviceFactory,
+        IBluetoothNameProvider? nameProvider = null,
+        ILoggerFactory? loggerFactory = null) : base(adapter,
+                                                     rssiToSignalStrengthConverter,
+                                                     ticker,
+                                                     nameProvider,
+                                                     loggerFactory)
     {
-        CbCentralManagerWrapper = new CbCentralManagerWrapper(this, options, dispatchQueueProvider, ticker);
+        ArgumentNullException.ThrowIfNull(cbCentralInitOptions);
+        ArgumentNullException.ThrowIfNull(dispatchQueueProvider);
+
+        _deviceFactory = deviceFactory;
+        // Create CbCentralManagerWrapper with this scanner as the delegate
+        CbCentralManagerWrapper = new CbCentralManagerWrapper(this, cbCentralInitOptions, dispatchQueueProvider, ticker);
     }
 
     /// <summary>
     ///     Gets the CbCentralManagerWrapper instance used for managing Core Bluetooth central manager interactions.
     /// </summary>
     public CbCentralManagerWrapper CbCentralManagerWrapper { get; }
+
+    private readonly IBluetoothRemoteDeviceFactory _deviceFactory;
 
     /// <inheritdoc />
     public void Dispose()
@@ -50,18 +58,6 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     }
 
     /// <inheritdoc />
-    protected override IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement)
-    {
-        ArgumentNullException.ThrowIfNull(advertisement);
-        if (advertisement is not AppleBluetoothAdvertisement appleAdvertisement)
-        {
-            throw new ArgumentException($"Expected advertisement of type {typeof(AppleBluetoothAdvertisement)}, but got {advertisement.GetType()}");
-        }
-
-        return new AppleBluetoothRemoteDeviceFactorySpec(appleAdvertisement);
-    }
-
-    /// <inheritdoc />
     protected override void NativeRefreshIsRunning()
     {
         IsRunning = CbCentralManagerWrapper.CbCentralManagerIsScanning;
@@ -74,7 +70,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     protected async override ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(scanningOptions);
-        Logger?.LogScanStarting(scanningOptions.ScanMode, scanningOptions.CallbackType);
+        Logger?.LogScanStarting();
         var manager = CbCentralManagerWrapper.CbCentralManager; // initializes it if not already initialized
         var state = await WaitForStateToBeKnownAsync(timeout, cancellationToken).ConfigureAwait(false);
         if (state != CBManagerState.PoweredOn)
@@ -127,7 +123,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <param name="timeout">An optional timeout for the wait operation.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the wait operation.</param>
     /// <returns>A task that completes when the central manager's state is known.</returns>
-    public ValueTask<CBManagerState> WaitForStateToBeKnownAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    private ValueTask<CBManagerState> WaitForStateToBeKnownAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         return WaitForPropertyToBeDifferentThanValue(nameof(State), CBManagerState.Unknown, timeout, cancellationToken);
     }
@@ -141,8 +137,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     {
         return WaitForPropertyToBeOfValue(nameof(State), CBManagerState.PoweredOn, null, cancellationToken);
     }
-    
-    
+
     /// <summary>
     ///     Gets or sets the current state of the Core Bluetooth central manager.
     /// </summary>
@@ -191,6 +186,22 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     }
 
     /// <inheritdoc />
+    protected override IBluetoothRemoteDevice NativeCreateDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
+    {
+        ArgumentNullException.ThrowIfNull(advertisement);
+
+        if (advertisement is AppleBluetoothAdvertisement appleAd)
+        {
+            var spec = new AppleBluetoothRemoteDeviceFactorySpec(appleAd);
+            return _deviceFactory.Create(this, spec);
+        }
+        else
+        {
+            throw new ArgumentException($"Expected advertisement of type {typeof(AppleBluetoothAdvertisement)}, but got {advertisement.GetType()}", nameof(advertisement));
+        }
+    }
+
+    /// <inheritdoc />
     public CbCentralManagerWrapper.ICbPeripheralDelegate GetDevice(CBPeripheral peripheral)
     {
         ArgumentNullException.ThrowIfNull(peripheral);
@@ -210,8 +221,8 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     private static bool AreRepresentingTheSameObject(CBPeripheral peripheral, IBluetoothRemoteDevice device)
     {
         return device is AppleBluetoothRemoteDevice sharedDevice
-               && sharedDevice.CbPeripheralWrapper.CbPeripheral.Identifier.Equals(peripheral.Identifier)
-               && sharedDevice.CbPeripheralWrapper.CbPeripheral.Handle.Handle == peripheral.Handle.Handle;
+            && sharedDevice.CbPeripheralWrapper.CbPeripheral.Identifier.Equals(peripheral.Identifier)
+            && sharedDevice.CbPeripheralWrapper.CbPeripheral.Handle.Handle == peripheral.Handle.Handle;
     }
 
     #endregion
@@ -254,9 +265,8 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
             var status = await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<ApplePermissionForBluetoothAlways>().ConfigureAwait(false);
             if (status != PermissionStatus.Granted)
             {
-                throw new BluetoothPermissionException(
-                    "Bluetooth permission denied on iOS. User must enable Bluetooth permissions in Settings app. " +
-                    "Ensure NSBluetoothAlwaysUsageDescription is set in Info.plist.");
+                throw new BluetoothPermissionException("Bluetooth permission denied on iOS. User must enable Bluetooth permissions in Settings app. "
+                                                     + "Ensure NSBluetoothAlwaysUsageDescription is set in Info.plist.");
             }
         }
 
@@ -264,4 +274,5 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     }
 
     #endregion
+
 }

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<base:BaseContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                      xmlns:base="clr-namespace:Bluetooth.Maui.Sample.Broadcaster.Infrastructure"
+                      xmlns:vm="clr-namespace:Bluetooth.Maui.Sample.Broadcaster.ViewModels"
+                      x:Class="Bluetooth.Maui.Sample.Broadcaster.Views.BroadcasterDemoPage"
+                      x:TypeArguments="vm:BroadcasterDemoViewModel"
+                      x:DataType="vm:BroadcasterDemoViewModel"
+                      Title="Broadcaster Demo">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Peripheral Broadcaster Playground"
+                           FontAttributes="Bold"
+                           FontSize="18"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
+                    <Label Text="Start/stop advertising and push sample characteristic updates to subscribed centrals."
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+                    <Label Text="{Binding StatusMessage, StringFormat='Status: {0}'}"
+                           FontAttributes="Bold"
+                           FontSize="14" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Advertisement Options"
+                           FontAttributes="Bold"
+                           FontSize="16" />
+
+                    <Entry Placeholder="Local device name"
+                           Text="{Binding LocalDeviceName}" />
+
+                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                        <Label Text="Include Device Name" VerticalOptions="Center" />
+                        <Switch IsToggled="{Binding IncludeDeviceName}" HorizontalOptions="End" />
+                    </HorizontalStackLayout>
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Start Broadcasting"
+                                Command="{Binding StartBroadcastingCommand}"
+                                BackgroundColor="{StaticResource Primary}"
+                                TextColor="White"
+                            HorizontalOptions="Fill" />
+                        <Button Text="Stop"
+                                Command="{Binding StopBroadcastingCommand}"
+                            HorizontalOptions="Fill" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Characteristic Payload"
+                           FontAttributes="Bold"
+                           FontSize="16" />
+                    <Label Text="Updates value of a sample characteristic and notifies subscribed clients."
+                           FontSize="12"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+
+                    <Editor Text="{Binding PayloadInput}"
+                            AutoSize="TextChanges"
+                            Placeholder="Payload to push"
+                            MinimumHeightRequest="80" />
+
+                    <Button Text="Push Payload"
+                            Command="{Binding PushPayloadCommand}"
+                            BackgroundColor="{StaticResource Secondary}"
+                            TextColor="White" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="16" StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Activity Log"
+                           FontAttributes="Bold"
+                           FontSize="16" />
+
+                    <CollectionView ItemsSource="{Binding ActivityLog}" HeightRequest="240">
+                        <CollectionView.EmptyView>
+                            <Label Text="No activity yet"
+                                   FontSize="12"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Label Text="{Binding .}"
+                                       FontSize="12"
+                                       FontFamily="Courier"
+                                       LineBreakMode="WordWrap"
+                                       TextColor="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</base:BaseContentPage>

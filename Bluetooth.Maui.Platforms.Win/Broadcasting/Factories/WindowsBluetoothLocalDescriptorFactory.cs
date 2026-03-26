@@ -1,13 +1,11 @@
-using Bluetooth.Core.Broadcasting.Factories;
-
 namespace Bluetooth.Maui.Platforms.Win.Broadcasting.Factories;
 
 /// <inheritdoc />
-public class WindowsBluetoothLocalDescriptorFactory : BaseBluetoothLocalDescriptorFactory
+public class WindowsBluetoothLocalDescriptorFactory : IBluetoothLocalDescriptorFactory
 {
     /// <inheritdoc />
-    public override IBluetoothLocalDescriptor Create(IBluetoothLocalCharacteristic localCharacteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
+    public IBluetoothLocalDescriptor Create(IBluetoothLocalCharacteristic characteristic, IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException("Windows local GATT descriptor creation is not implemented yet.");
     }
 }

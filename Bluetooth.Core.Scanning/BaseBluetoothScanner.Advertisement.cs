@@ -7,6 +7,9 @@ public abstract partial class BaseBluetoothScanner
     /// <inheritdoc />
     public event EventHandler<AdvertisementReceivedEventArgs>? AdvertisementReceived;
 
+    /// <inheritdoc />
+    public Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; set; }
+
     #endregion
 
     #region Device Factory
@@ -16,10 +19,9 @@ public abstract partial class BaseBluetoothScanner
     /// </summary>
     /// <param name="advertisement">The advertisement from which to create and add the device.</param>
     /// <returns>The newly created and added <see cref="IBluetoothRemoteDevice" /> instance.</returns>
-    protected virtual IBluetoothRemoteDevice AddDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
+    private IBluetoothRemoteDevice AddDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
-        var spec = CreateDeviceFactoryRequestFromAdvertisement(advertisement);
-        var device = DeviceFactory.Create(this, spec);
+        var device = NativeCreateDeviceFromAdvertisement(advertisement);
         lock (Devices)
         {
             Devices.Add(device);
@@ -33,7 +35,7 @@ public abstract partial class BaseBluetoothScanner
     /// </summary>
     /// <param name="advertisement">The received Bluetooth advertisement.</param>
     /// <returns>A factory request containing the necessary information to create a Bluetooth device.</returns>
-    protected abstract IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec CreateDeviceFactoryRequestFromAdvertisement(IBluetoothAdvertisement advertisement);
+    protected abstract IBluetoothRemoteDevice NativeCreateDeviceFromAdvertisement(IBluetoothAdvertisement advertisement);
 
     #endregion
 
@@ -46,13 +48,8 @@ public abstract partial class BaseBluetoothScanner
     protected void OnAdvertisementReceived<TAdvertisement>(TAdvertisement advertisement)
         where TAdvertisement : struct, IBluetoothAdvertisement
     {
-        if (CurrentScanningOptions.IgnoreNamelessAdvertisements && string.IsNullOrEmpty(advertisement.DeviceName))
-        {
-            return;
-        }
-
-        // Filter
-        if (!CurrentScanningOptions.AdvertisementFilter.Invoke(advertisement))
+        // Filter (null means accept all)
+        if (AdvertisementFilter?.Invoke(advertisement) == false)
         {
             return;
         }
@@ -63,12 +60,6 @@ public abstract partial class BaseBluetoothScanner
         // Get or create device
         if (GetDeviceOrDefault(advertisement.BluetoothAddress) is { } existingDevice)
         {
-            // Filter out duplicates if needed
-            if (CurrentScanningOptions.IgnoreDuplicateAdvertisements && existingDevice.LastAdvertisement != null && existingDevice.LastAdvertisement.Equals(advertisement))
-            {
-                return;
-            }
-
             // Process advertisement infos
             existingDevice.OnAdvertisementReceived(advertisement);
         }
@@ -89,8 +80,8 @@ public abstract partial class BaseBluetoothScanner
     /// </remarks>
     protected void OnAdvertisementsReceived(IEnumerable<IBluetoothAdvertisement> advertisements)
     {
-        // Filter
-        var filteredAdvertisements = advertisements.Where(advertisement => CurrentScanningOptions.AdvertisementFilter.Invoke(advertisement)).ToList();
+        // Filter (null means accept all)
+        var filteredAdvertisements = advertisements.Where(adv => AdvertisementFilter?.Invoke(adv) ?? true).ToList();
 
         // Throw event
         foreach (var advertisement in filteredAdvertisements)

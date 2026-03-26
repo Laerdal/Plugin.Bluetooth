@@ -3,37 +3,70 @@ namespace Bluetooth.Core.Scanning;
 /// <inheritdoc cref="IBluetoothScanner" />
 public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBluetoothScanner
 {
-    #region Constructor
+
+    /// <summary>
+    ///     The Bluetooth adapter associated with this scanner, used for performing scanning operations and managing Bluetooth interactions.
+    /// </summary>
+    public IBluetoothAdapter Adapter { get; }
+
+    /// <summary>
+    ///     The provider for Bluetooth device names, used to resolve human-readable names for devices based on their identifiers. This allows for a more user-friendly representation of devices in the scanner's device list and related events.
+    /// </summary>
+    public IBluetoothNameProvider? NameProvider { get; }
+
+    /// <summary>
+    ///     The factory for creating options related to Bluetooth scanning, such as signal strength smoothing and other scanning parameters. This allows for flexible configuration of scanning behavior and properties, enabling developers to customize the scanning experience based on their application's needs and the specific requirements of different platforms.
+    /// </summary>
+    public IOptionsFactory<ScanningOptions>? ScanningOptionsFactory { get; }
+
+    /// <summary>
+    ///     The factory for creating options related to signal strength smoothing in Bluetooth scanning. This allows for configuring how the signal strength readings are averaged over time to provide a more stable and accurate representation of the device's signal strength, especially in environments with fluctuating signal conditions.
+    /// </summary>
+    public IOptionsFactory<SignalStrengthSmoothingOptions>? SignalStrengthSmoothingOptionsFactory { get; }
+
+    /// <summary>
+    ///     The options for smoothing signal strength jitter in Bluetooth scanning. This allows for configuring how the signal strength readings are averaged over time to provide a more stable and accurate representation of the device's signal strength, especially in environments with fluctuating signal conditions.
+    /// </summary>
+    protected IOptionsMonitor<ScanningOptions>? ScanningOptions { get; }
+
+    /// <summary>
+    ///     The converter used to convert RSSI values to signal strength levels. This allows for consistent interpretation of signal strength across different platforms and devices, as RSSI values can vary in scale and meaning depending on the underlying Bluetooth implementation.
+    /// </summary>
+    public IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
+
+    /// <summary>
+    ///     The logger factory used for creating loggers within the scanner and its related components. This allows for consistent logging across the scanner and its associated devices, services, and characteristics, and enables the creation of loggers with specific categories for different parts of the Bluetooth scanning implementation.
+    /// </summary>
+    public ILoggerFactory? LoggerFactory { get; }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothScanner" /> class.
     /// </summary>
     /// <param name="adapter">The Bluetooth adapter associated with this scanner.</param>
-    /// <param name="deviceFactory">The factory for creating Bluetooth devices.</param>
     /// <param name="rssiToSignalStrengthConverter">The converter for RSSI to signal strength.</param>
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
-    /// <param name="logger">The logger instance to use for logging.</param>
+    /// <param name="nameProvider">Optional provider for Bluetooth device names.</param>
+    /// <param name="loggerFactory">Optional logger factory for creating loggers.</param>
+    [ActivatorUtilitiesConstructor]
     protected BaseBluetoothScanner(IBluetoothAdapter adapter,
-        IBluetoothRemoteDeviceFactory deviceFactory,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ITicker ticker,
-        ILogger<IBluetoothScanner>? logger = null) : base(logger)
+        IBluetoothNameProvider? nameProvider = null,
+        ILoggerFactory? loggerFactory = null) : base(loggerFactory?.CreateLogger<IBluetoothScanner>())
     {
+        // Validate constructor arguments
         ArgumentNullException.ThrowIfNull(adapter);
-        ArgumentNullException.ThrowIfNull(deviceFactory);
         ArgumentNullException.ThrowIfNull(rssiToSignalStrengthConverter);
         ArgumentNullException.ThrowIfNull(ticker);
 
-        _logger = logger ?? NullLogger<IBluetoothScanner>.Instance;
         Adapter = adapter;
-        DeviceFactory = deviceFactory;
+        LoggerFactory = loggerFactory;
         RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
+        NameProvider = nameProvider;
+        AdvertisementFilter = null; // null = accept all
+
         _refreshSubscription = ticker.Register("Scanner Refresh Tick", TimeSpan.FromSeconds(2), RefreshAsync);
     }
-
-    #endregion
-
-    #region Refresh
 
     /// <summary>
     ///     Refreshes the broadcaster's properties and state.
@@ -47,10 +80,8 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     protected virtual Task RefreshAsync(CancellationToken cancellationToken)
     {
         NativeRefreshIsRunning();
-        return Task.CompletedTask;
+        return HandleDeviceDisappearanceAsync(cancellationToken);
     }
-
-    #endregion
 
     /// <inheritdoc />
     public override string ToString()
@@ -61,33 +92,16 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
         }
     }
 
-    #region Properties
-
-    /// <summary>
-    ///     The logger instance used for logging scanner operations.
-    /// </summary>
-    private readonly ILogger<IBluetoothScanner> _logger;
-
-    /// <summary>
-    ///     The Bluetooth adapter associated with this scanner, used for performing scanning operations and managing Bluetooth interactions.
-    /// </summary>
-    public IBluetoothAdapter Adapter { get; }
-
-    /// <summary>
-    ///     The factory responsible for creating Bluetooth devices managed by this scanner.
-    /// </summary>
-    protected IBluetoothRemoteDeviceFactory DeviceFactory { get; }
-
-    /// <summary>
-    ///     The converter responsible for translating RSSI values to signal strength levels, which can be used for filtering and sorting devices based on signal quality.
-    /// </summary>
-    protected IBluetoothRssiToSignalStrengthConverter RssiToSignalStrengthConverter { get; }
-
     private readonly IDisposable? _refreshSubscription;
 
-    #endregion
-
-    #region Abstract Permission Methods
+    /// <summary>
+    ///     Gets or sets the scanning options for the currently running scan session.
+    /// </summary>
+    private ScanningOptions? ActiveScanningOptions
+    {
+        get => GetValue<ScanningOptions?>(null);
+        set => SetValue(value);
+    }
 
     /// <summary>
     ///     Platform-specific implementation to check if scanner permissions are granted.
@@ -110,10 +124,6 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     ///     Throw native exceptions on failure - base class will wrap them in BluetoothPermissionException.
     /// </remarks>
     protected abstract ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken);
-
-    #endregion
-
-    #region IBluetoothScanner Permission Methods
 
     /// <inheritdoc />
     public async ValueTask<bool> HasScannerPermissionsAsync()
@@ -142,13 +152,9 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
         }
         catch (Exception ex)
         {
-            throw new BluetoothPermissionException(
-                "Failed to request scanner permissions. Ensure required permissions are declared in your app manifest/Info.plist.",
-                ex);
+            throw new BluetoothPermissionException("Failed to request scanner permissions. Ensure required permissions are declared in your app manifest/Info.plist.", ex);
         }
     }
-
-    #endregion
 
     #region Dispose
 
@@ -202,4 +208,5 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     }
 
     #endregion
+
 }

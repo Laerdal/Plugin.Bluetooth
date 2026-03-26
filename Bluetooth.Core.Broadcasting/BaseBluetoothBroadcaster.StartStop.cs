@@ -5,39 +5,17 @@ public abstract partial class BaseBluetoothBroadcaster
 
     #region Configuration
 
-    /// <inheritdoc />
-    public async ValueTask UpdateBroadcastingOptionsAsync(BroadcastingOptions options, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-    {
-        LogUpdatingConfiguration();
-
-        var old = CurrentBroadcastingOptions;
-        try
-        {
-            if (IsRunning)
-            {
-                await StopBroadcastingAsync(timeout, cancellationToken).ConfigureAwait(false);
-                await StartBroadcastingAsync(options, timeout, cancellationToken).ConfigureAwait(false);
-            }
-
-            LogConfigurationUpdated();
-        }
-        catch (Exception e)
-        {
-            CurrentBroadcastingOptions = old;
-            LogConfigurationUpdateFailed(e);
-            throw new BroadcasterConfigurationUpdateFailedException(this, innerException: e);
-        }
-    }
-
-    #endregion
-
-    #region Configuration
-
     /// <summary>
     ///     The default broadcasting options used when starting the broadcaster without specifying options.
     ///     This can be overridden by derived classes to provide platform-specific default options.
     /// </summary>
-    public static BroadcastingOptions DefaultBroadcastingOptions { get; } = new BroadcastingOptions();
+    protected static BroadcastingOptions DefaultBroadcastingOptions { get; } = new BroadcastingOptions();
+
+    /// <summary>
+    ///     The default permission options used when starting the broadcaster without specifying options.
+    ///     This can be overridden by derived classes to provide platform-specific default options.
+    /// </summary>
+    protected static PermissionOptions DefaultPermissionOptions { get; } = new PermissionOptions();
 
     /// <inheritdoc />
     public BroadcastingOptions CurrentBroadcastingOptions
@@ -160,9 +138,13 @@ public abstract partial class BaseBluetoothBroadcaster
     }
 
     /// <inheritdoc />
-    public async ValueTask StartBroadcastingAsync(BroadcastingOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask StartBroadcastingAsync(BroadcastingOptions? broadcastingOptions = null,
+        PermissionOptions? permissionOptions = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
     {
-        options ??= DefaultBroadcastingOptions;
+        broadcastingOptions ??= DefaultBroadcastingOptions;
+        permissionOptions ??= DefaultPermissionOptions;
 
         // Ensure we are not already started
         BroadcasterIsAlreadyStartedException.ThrowIfIsStarted(this);
@@ -183,12 +165,12 @@ public abstract partial class BaseBluetoothBroadcaster
 
         try // try-catch to dispatch exceptions rising from start through OnStartFailed
         {
-            CurrentBroadcastingOptions = options; // Set the options
+            CurrentBroadcastingOptions = broadcastingOptions; // Set the options
 
             // Handle permissions based on strategy
-            await HandlePermissionsAsync(options.PermissionStrategy, cancellationToken).ConfigureAwait(false);
+            await HandlePermissionsAsync(permissionOptions, cancellationToken).ConfigureAwait(false);
 
-            await NativeStartAsync(options, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
+            await NativeStartAsync(broadcastingOptions, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
         }
         catch (Exception e)
         {
@@ -221,11 +203,12 @@ public abstract partial class BaseBluetoothBroadcaster
     ///     Handles permission requests based on the specified strategy in the broadcasting options.
     ///     This method is called by <see cref="StartBroadcastingAsync" /> before starting the broadcaster to ensure necessary permissions are granted.
     /// </summary>
-    /// <param name="strategy">The permission request strategy defined in the broadcasting options.</param>
+    /// <param name="permissionOptions">The permission options containing the strategy for handling permissions.</param>
     /// <param name="cancellationToken">Cancellation token to cancel the permission request operation.</param>
-    protected async virtual ValueTask HandlePermissionsAsync(PermissionRequestStrategy strategy, CancellationToken cancellationToken = default)
+    protected async virtual ValueTask HandlePermissionsAsync(PermissionOptions permissionOptions, CancellationToken cancellationToken = default)
     {
-        switch (strategy)
+        ArgumentNullException.ThrowIfNull(permissionOptions);
+        switch (permissionOptions.PermissionStrategy)
         {
             case PermissionRequestStrategy.RequestAutomatically:
                 await RequestBroadcasterPermissionsAsync(cancellationToken).ConfigureAwait(false);
@@ -235,7 +218,8 @@ public abstract partial class BaseBluetoothBroadcaster
                 var hasPermissions = await HasBroadcasterPermissionsAsync().ConfigureAwait(false);
                 if (!hasPermissions)
                 {
-                    throw new BluetoothPermissionException("Broadcaster permissions not granted. Call broadcaster.RequestBroadcasterPermissionsAsync() before starting the broadcaster.");
+                    throw new
+                        BluetoothPermissionException("Broadcaster permissions not granted. Call broadcaster.RequestBroadcasterPermissionsAsync() before starting the broadcaster.");
                 }
                 break;
 
@@ -244,15 +228,21 @@ public abstract partial class BaseBluetoothBroadcaster
                 break;
 
             default:
-                throw new ArgumentOutOfRangeException(nameof(strategy), strategy, "Invalid permission request strategy.");
+                throw new ArgumentException($"Unsupported permission strategy: {permissionOptions.PermissionStrategy}");
         }
     }
 
     /// <inheritdoc />
-    public ValueTask StartBroadcastingIfNeededAsync(BroadcastingOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public ValueTask StartBroadcastingIfNeededAsync(BroadcastingOptions? broadcastingOptions = null,
+        PermissionOptions? permissionOptions = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
     {
-        options ??= DefaultBroadcastingOptions;
-        return IsRunning && options == CurrentBroadcastingOptions ? ValueTask.CompletedTask : StartBroadcastingAsync(options, timeout, cancellationToken);
+        broadcastingOptions ??= DefaultBroadcastingOptions;
+        permissionOptions ??= DefaultPermissionOptions;
+        return IsRunning && broadcastingOptions == CurrentBroadcastingOptions ?
+                   ValueTask.CompletedTask :
+                   StartBroadcastingAsync(broadcastingOptions, permissionOptions, timeout, cancellationToken);
     }
 
     /// <summary>

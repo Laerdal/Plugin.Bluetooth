@@ -5,8 +5,32 @@ public class DotNetCoreBluetoothRemoteDevice : BaseBluetoothRemoteDevice
 {
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    public DotNetCoreBluetoothRemoteDevice(IBluetoothScanner scanner, IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec spec, IBluetoothRemoteServiceFactory serviceFactory, IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter) :
-        base(scanner, spec, serviceFactory, rssiToSignalStrengthConverter)
+    public DotNetCoreBluetoothRemoteDevice(IBluetoothScanner parentScanner,
+        IBluetoothAdvertisement advertisement,
+        SignalStrengthSmoothingOptions signalStrengthSmoothingOptions,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILogger<IBluetoothRemoteDevice>? logger = null) : base(parentScanner,
+                                                               advertisement,
+                                                               signalStrengthSmoothingOptions,
+                                                               rssiToSignalStrengthConverter,
+                                                               logger)
+    {
+        throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
+    }
+
+    /// <inheritdoc />
+    /// <exception cref="PlatformNotSupportedException"></exception>
+    public DotNetCoreBluetoothRemoteDevice(IBluetoothScanner parentScanner,
+        string id,
+        Manufacturer manufacturer,
+        SignalStrengthSmoothingOptions signalStrengthSmoothingOptions,
+        IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
+        ILogger<IBluetoothRemoteDevice>? logger = null) : base(parentScanner,
+                                                               id,
+                                                               manufacturer,
+                                                               signalStrengthSmoothingOptions,
+                                                               rssiToSignalStrengthConverter,
+                                                               logger)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
@@ -41,14 +65,14 @@ public class DotNetCoreBluetoothRemoteDevice : BaseBluetoothRemoteDevice
 
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    protected override ValueTask NativeRequestConnectionPriorityAsync(BluetoothConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }
 
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeRequestConnectionPriorityAsync(ConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

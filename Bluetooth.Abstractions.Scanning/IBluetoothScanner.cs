@@ -5,12 +5,22 @@ namespace Bluetooth.Abstractions.Scanning;
 /// </summary>
 public partial interface IBluetoothScanner : IAsyncDisposable
 {
+
     #region Advertisement
 
     /// <summary>
     ///     Event triggered when a Bluetooth advertisement is received.
     /// </summary>
     event EventHandler<AdvertisementReceivedEventArgs> AdvertisementReceived;
+
+    /// <summary>
+    ///     Gets or sets the advertisement filter used to determine which Bluetooth advertisements should be processed.
+    /// </summary>
+    /// <remarks>
+    ///     When <c>null</c> (default), all advertisements are accepted.
+    ///     When set, only advertisements where the filter returns <c>true</c> are processed.
+    /// </remarks>
+    Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; set; }
 
     #endregion
 
@@ -56,4 +66,5 @@ public partial interface IBluetoothScanner : IAsyncDisposable
     ValueTask RequestScannerPermissionsAsync(bool requireBackgroundLocation = false, CancellationToken cancellationToken = default);
 
     #endregion
+
 }

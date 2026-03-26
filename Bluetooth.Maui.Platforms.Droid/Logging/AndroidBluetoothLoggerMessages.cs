@@ -17,11 +17,9 @@ internal static partial class AndroidBluetoothLoggerMessages
     [LoggerMessage(
         EventId = 1000,
         Level = LogLevel.Information,
-        Message = "Starting BLE scan with mode: {ScanMode}, callback type: {CallbackType}")]
+        Message = "Starting BLE scan")]
     public static partial void LogScanStarting(
-        this ILogger logger,
-        BluetoothScanMode scanMode,
-        BluetoothScanCallbackType callbackType);
+        this ILogger logger);
 
     [LoggerMessage(
         EventId = 1001,
@@ -140,7 +138,7 @@ internal static partial class AndroidBluetoothLoggerMessages
         Message = "Failed to auto-apply ConnectionPriority {Priority} for device {DeviceAddress}. Connection remains active.")]
     public static partial void LogConnectionPriorityFailed(
         this ILogger logger,
-        BluetoothConnectionPriority priority,
+        ConnectionPriority priority,
         string deviceAddress,
         Exception exception);
 
@@ -150,7 +148,7 @@ internal static partial class AndroidBluetoothLoggerMessages
         Message = "Applied ConnectionPriority {Priority} to device {DeviceAddress}")]
     public static partial void LogConnectionPriorityApplied(
         this ILogger logger,
-        BluetoothConnectionPriority priority,
+        ConnectionPriority priority,
         string deviceAddress);
 
     [LoggerMessage(

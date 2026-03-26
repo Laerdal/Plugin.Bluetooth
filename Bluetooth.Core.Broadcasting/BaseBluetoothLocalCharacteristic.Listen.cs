@@ -6,7 +6,7 @@ namespace Bluetooth.Core.Broadcasting;
 public abstract partial class BaseBluetoothLocalCharacteristic
 {
     /// <inheritdoc />
-    public IReadOnlyList<IBluetoothConnectedDevice> SubscribedDevices => LocalService.Broadcaster.GetClientDevices(d => d.SubscribedCharacteristics.Contains(this)).ToList().AsReadOnly();
+    public IReadOnlyList<IBluetoothConnectedDevice> SubscribedDevices => Service.Broadcaster.GetClientDevices(d => d.SubscribedCharacteristics.Contains(this)).ToList().AsReadOnly();
 
     /// <summary>
     ///     Called when a client device subscribes to the characteristic.
@@ -16,8 +16,8 @@ public abstract partial class BaseBluetoothLocalCharacteristic
     {
         ArgumentNullException.ThrowIfNull(device);
 
-        LogClientSubscribed(Id, LocalService.Id, device.Id);
-        // TODO : EVENT
+        LogClientSubscribed(Id, Service.Id, device.Id);
+        ClientSubscribed?.Invoke(this, new CharacteristicSubscriptionChangedEventArgs(device.Id, Service.Id, Id));
         device.AddCharacteristicSubscription(this);
     }
 
@@ -29,8 +29,8 @@ public abstract partial class BaseBluetoothLocalCharacteristic
     {
         ArgumentNullException.ThrowIfNull(device);
 
-        LogClientUnsubscribed(Id, LocalService.Id, device.Id);
-        // TODO : EVENT
+        LogClientUnsubscribed(Id, Service.Id, device.Id);
+        ClientUnsubscribed?.Invoke(this, new CharacteristicSubscriptionChangedEventArgs(device.Id, Service.Id, Id));
         device.RemoveCharacteristicSubscription(this);
     }
 }

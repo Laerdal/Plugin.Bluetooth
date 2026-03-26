@@ -9,11 +9,13 @@ public partial interface IBluetoothLocalCharacteristic
     /// <summary>
     ///     Adds a descriptor to this characteristic.
     /// </summary>
-    /// <param name="spec">The spec containing the descriptor details.</param>
+    /// <param name="id">The ID of the descriptor to add.</param>
+    /// <param name="name">An optional name for the descriptor. If not provided, a default name may be assigned based on the ID or other heuristics.</param>
     /// <param name="timeout">The timeout for this operation.</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the added descriptor.</returns>
-    ValueTask<IBluetoothLocalDescriptor> AddDescriptorAsync(IBluetoothLocalDescriptorFactory.BluetoothLocalDescriptorSpec spec,
+    ValueTask<IBluetoothLocalDescriptor> CreateDescriptorAsync(Guid id,
+        string? name = null,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default);
 

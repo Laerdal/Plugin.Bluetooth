@@ -19,16 +19,18 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IBluetoothScanner, AppleBluetoothScanner>();
 
-        services.AddSingleton<IBluetoothRemoteCharacteristicFactory, AppleBluetoothCharacteristicFactory>();
-        services.AddSingleton<IBluetoothRemoteServiceFactory, AppleBluetoothServiceFactory>();
-        services.AddSingleton<IBluetoothRemoteDescriptorFactory, AppleBluetoothDescriptorFactory>();
-        services.AddSingleton<IBluetoothRemoteDeviceFactory, AppleBluetoothDeviceFactory>();
-        services.AddSingleton<IBluetoothRemoteL2CapChannelFactory, AppleBluetoothRemoteL2CapChannelFactory>();
+        services.AddSingleton<IBluetoothRemoteDeviceFactory, AppleBluetoothRemoteDeviceFactory>();
+        services.AddSingleton<IBluetoothRemoteServiceFactory, AppleBluetoothRemoteServiceFactory>();
+        services.AddSingleton<IBluetoothRemoteCharacteristicFactory, AppleBluetoothRemoteCharacteristicFactory>();
+        services.AddSingleton<IBluetoothRemoteDescriptorFactory, AppleBluetoothRemoteDescriptorFactory>();
 
-        services.AddSingleton<CbCentralManagerWrapper>();
+        // Configure CBCentralManager options
         services.Configure<CBCentralInitOptions>(options => {
             options.ShowPowerAlert = true;
             options.RestoreIdentifier = "com.bluetooth.maui.centralmanager.restore";
         });
+
+        // Note: CbCentralManagerWrapper is NOT registered in DI - it's created by AppleBluetoothScanner
+        // because it needs the scanner as its delegate (circular dependency)
     }
 }

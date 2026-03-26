@@ -3,40 +3,58 @@ namespace Bluetooth.Core.Scanning;
 /// <inheritdoc cref="IBluetoothRemoteService" />
 public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, IBluetoothRemoteService
 {
+    /// <inheritdoc />
+    public IBluetoothRemoteDevice Device { get; }
+
     /// <summary>
-    ///     The logger instance used for logging service operations.
+    ///     Gets the factory for creating Bluetooth remote characteristics.
     /// </summary>
-    private readonly ILogger<IBluetoothRemoteService> _logger;
+    protected IBluetoothRemoteCharacteristicFactory? CharacteristicFactory { get; }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothRemoteService" /> class.
     /// </summary>
-    /// <param name="device">The Bluetooth device associated with this service.</param>
-    /// <param name="spec">The factory spec containing service information.</param>
-    /// <param name="characteristicFactory">The factory for creating Bluetooth characteristics.</param>
+    /// <param name="parentDevice">The Bluetooth device associated with this service.</param>
+    /// <param name="id">The unique identifier (UUID) of the service.</param>
+    /// <param name="nameProvider">An optional provider for service names, used to resolve the name based on the ID.</param>
     /// <param name="logger">The logger instance to use for logging (optional).</param>
-    protected BaseBluetoothRemoteService(IBluetoothRemoteDevice device,
-        IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec,
-        IBluetoothRemoteCharacteristicFactory characteristicFactory,
-        ILogger<IBluetoothRemoteService>? logger = null)
+    protected BaseBluetoothRemoteService(IBluetoothRemoteDevice parentDevice,
+        Guid id,
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteService>? logger = null) : base(logger)
     {
-        ArgumentNullException.ThrowIfNull(device);
-        ArgumentNullException.ThrowIfNull(characteristicFactory);
-        ArgumentNullException.ThrowIfNull(spec);
+        // Validate constructor arguments
+        ArgumentNullException.ThrowIfNull(parentDevice);
 
-        _logger = logger ?? NullLogger<IBluetoothRemoteService>.Instance;
-        Device = device;
-        CharacteristicFactory = characteristicFactory;
-        Id = spec.ServiceId;
+        Device = parentDevice;
+        Id = id;
+
+        // Name
+        if (nameProvider != null)
+        {
+            Name = nameProvider.GetKnownServiceName(Id) ?? Name;
+        }
     }
 
     /// <summary>
-    ///     The factory responsible for creating characteristics associated with this service.
+    ///     Initializes a new instance using a factory spec.
     /// </summary>
-    protected IBluetoothRemoteCharacteristicFactory CharacteristicFactory { get; }
-
-    /// <inheritdoc />
-    public IBluetoothRemoteDevice Device { get; }
+    /// <param name="parentDevice">The Bluetooth device associated with this service.</param>
+    /// <param name="spec">The factory spec containing service information.</param>
+    /// <param name="characteristicFactory">The factory for creating Bluetooth remote characteristics.</param>
+    /// <param name="nameProvider">An optional provider for service names, used to resolve the name based on the ID.</param>
+    /// <param name="logger">The logger instance to use for logging (optional).</param>
+    protected BaseBluetoothRemoteService(
+        IBluetoothRemoteDevice parentDevice,
+        IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec,
+        IBluetoothRemoteCharacteristicFactory characteristicFactory,
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteService>? logger = null)
+        : this(parentDevice, (spec ?? throw new ArgumentNullException(nameof(spec))).ServiceId, nameProvider, logger)
+    {
+        ArgumentNullException.ThrowIfNull(characteristicFactory);
+        CharacteristicFactory = characteristicFactory;
+    }
 
     /// <inheritdoc />
     public Guid Id { get; }
@@ -44,12 +62,12 @@ public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, I
     /// <inheritdoc />
     public string Name { get; } = "Unknown Service";
 
+    #region Dispose
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore().ConfigureAwait(false);
     }
-
 
     /// <summary>
     ///     Performs the core disposal logic for the service, including canceling pending operations and cleaning up resources.
@@ -71,9 +89,15 @@ public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, I
         await ClearCharacteristicsAsync().ConfigureAwait(false);
     }
 
+    #endregion
+
+    #region ToString
+
     /// <inheritdoc />
     public override string ToString()
     {
         return $"[{Id}] {Name}";
     }
+
+    #endregion
 }

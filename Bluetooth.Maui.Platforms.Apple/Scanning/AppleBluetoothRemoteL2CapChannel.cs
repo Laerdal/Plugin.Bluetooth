@@ -1,11 +1,9 @@
-using Bluetooth.Core.Scanning;
-using Bluetooth.Maui.Platforms.Apple.Exceptions;
 using Bluetooth.Maui.Platforms.Apple.Logging;
 
 namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 
 /// <summary>
-///     Apple (iOS/macOS) implementation of <see cref="IBluetoothL2CapChannel"/> using CBL2CAPChannel.
+///     Apple (iOS/macOS) implementation of <see cref="IBluetoothRemoteL2CapChannel"/> using CBL2CAPChannel.
 ///     Provides stream-based I/O for L2CAP channels with NSStreamDelegate for push-based DataReceived events.
 /// </summary>
 /// <remarks>
@@ -18,27 +16,21 @@ public class AppleBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel,
     private NSInputStream? _inputStream;
     private NSOutputStream? _outputStream;
     private StreamDelegate? _streamDelegate;
-
+    
     /// <summary>
     ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteL2CapChannel"/> class.
     /// </summary>
     /// <param name="device">The Bluetooth device this channel belongs to.</param>
     /// <param name="nativeChannel">The native CBL2CAPChannel from CoreBluetooth.</param>
-    /// <param name="options">Optional configuration options for L2CAP channel timeouts.</param>
     /// <param name="logger">Optional logger for logging channel operations.</param>
     public AppleBluetoothRemoteL2CapChannel(
         IBluetoothRemoteDevice device,
         CBL2CapChannel nativeChannel,
-        IOptions<L2CapChannelOptions>? options = null,
         ILogger? logger = null)
-        : base(device, nativeChannel?.Psm ?? throw new ArgumentNullException(nameof(nativeChannel)), options, logger)
+        : base(device, nativeChannel?.Psm ?? throw new ArgumentNullException(nameof(nativeChannel)), logger)
     {
         ArgumentNullException.ThrowIfNull(nativeChannel);
         _nativeChannel = nativeChannel;
-
-        // Channel is already open when created by CoreBluetooth
-        // Use configured default MTU - iOS doesn't expose actual MTU from CoreBluetooth
-        Mtu = Options.DefaultMtu;
         IsOpen = true;
     }
 
@@ -68,7 +60,7 @@ public class AppleBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel,
             _inputStream.Open();
             _outputStream.Open();
 
-            Logger?.LogL2CapChannelOpened(Psm, Mtu);
+            Logger?.LogL2CapChannelOpened(Psm);
         }
         catch (Exception ex)
         {
@@ -147,10 +139,10 @@ public class AppleBluetoothRemoteL2CapChannel : BaseBluetoothRemoteL2CapChannel,
         {
             try
             {
-                if (eventCode == NSStreamEvent.HasBytesAvailable && stream == _channel._inputStream)
+                if (eventCode == NSStreamEvent.HasBytesAvailable && stream.Equals(_channel._inputStream))
                 {
                     // Data available - read and raise event
-                    var bufferSize = _channel.Options.ReadBufferSize ?? _channel.Mtu;
+                    var bufferSize = 1024; // Read in 1KB chunks
                     var buffer = new byte[bufferSize];
                     var bytesRead = (int)_channel._inputStream!.Read(buffer, 0, (nuint)buffer.Length);
                     if (bytesRead > 0)

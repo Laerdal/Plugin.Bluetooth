@@ -17,26 +17,43 @@ public abstract partial class BaseBluetoothLocalService
     #region Characteristics - Add
 
     /// <inheritdoc />
-    public ValueTask<IBluetoothLocalCharacteristic> AddCharacteristicAsync(IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec,
+    public async ValueTask<IBluetoothLocalCharacteristic> CreateCharacteristicAsync(Guid id,
+        BluetoothCharacteristicProperties properties,
+        BluetoothCharacteristicPermissions permissions,
+        string? name = null,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(spec);
-
-        var existingCharacteristic = GetCharacteristicOrDefault(spec.Id);
+        var existingCharacteristic = GetCharacteristicOrDefault(id);
         if (existingCharacteristic != null)
         {
-            LogCharacteristicAlreadyExists(Id, spec.Id);
-            throw new CharacteristicAlreadyExistsException(this, spec.Id, existingCharacteristic);
+            LogCharacteristicAlreadyExists(Id, id);
+            throw new CharacteristicAlreadyExistsException(this, id, existingCharacteristic);
         }
 
-        LogAddingCharacteristic(Id, spec.Id);
-        var newCharacteristic = LocalCharacteristicFactory.Create(this, spec);
+        LogAddingCharacteristic(Id, id);
+        var newCharacteristic = await NativeCreateCharacteristicAsync(id,
+                                                                      properties,
+                                                                      permissions,
+                                                                      name,
+                                                                      timeout,
+                                                                      cancellationToken)
+                                   .ConfigureAwait(false);
         Characteristics.Add(newCharacteristic);
-        LogCharacteristicAdded(Id, spec.Id);
+        LogCharacteristicAdded(Id, id);
 
-        return ValueTask.FromResult(newCharacteristic);
+        return newCharacteristic;
     }
+
+    /// <summary>
+    ///     Creates a new local Bluetooth characteristic with the specified parameters.
+    /// </summary>
+    protected abstract ValueTask<IBluetoothLocalCharacteristic> NativeCreateCharacteristicAsync(Guid id,
+        BluetoothCharacteristicProperties properties,
+        BluetoothCharacteristicPermissions permissions,
+        string? name = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -149,4 +166,5 @@ public abstract partial class BaseBluetoothLocalService
     }
 
     #endregion
+
 }

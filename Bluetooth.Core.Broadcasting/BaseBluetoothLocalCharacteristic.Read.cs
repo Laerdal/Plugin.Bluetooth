@@ -13,10 +13,11 @@ public abstract partial class BaseBluetoothLocalCharacteristic
     protected ReadOnlySpan<byte> OnReadRequestReceived(IBluetoothConnectedDevice device)
     {
         ArgumentNullException.ThrowIfNull(device);
-        LogReadRequest(Id, LocalService.Id, device.Id);
-        // TODO : EVENT
-        var response = ValueSpan;
-        LogReadResponse(Id, LocalService.Id, response.Length);
+        LogReadRequest(Id, Service.Id, device.Id);
+        var args = new CharacteristicReadRequestEventArgs(device.Id, Service.Id, Id, Value);
+        ReadRequested?.Invoke(this, args);
+        var response = args.ResponseValue.Span;
+        LogReadResponse(Id, Service.Id, response.Length);
         return response;
     }
 }

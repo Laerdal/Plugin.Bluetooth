@@ -34,7 +34,7 @@ public partial interface IBluetoothRemoteDevice
     ///     </para>
     ///     <para>Valid PSM range is typically 0x0001-0x00FF (dynamic) or vendor-specific values.</para>
     /// </remarks>
-    ValueTask<IBluetoothL2CapChannel> OpenL2CapChannelAsync(int psm, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<IBluetoothRemoteL2CapChannel> OpenL2CapChannelAsync(int psm, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 }

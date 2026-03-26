@@ -15,7 +15,7 @@ public abstract partial class BaseBluetoothConnectedDevice
     {
         ArgumentNullException.ThrowIfNull(localCharacteristic);
         _subscribedCharacteristics.Add(localCharacteristic);
-        LogCharacteristicSubscriptionAdded(Id, localCharacteristic.Id, localCharacteristic.LocalService.Id);
+        LogCharacteristicSubscriptionAdded(Id, localCharacteristic.Id, localCharacteristic.Service.Id);
     }
 
     /// <inheritdoc />
@@ -23,7 +23,7 @@ public abstract partial class BaseBluetoothConnectedDevice
     {
         ArgumentNullException.ThrowIfNull(localCharacteristic);
         _subscribedCharacteristics.Remove(localCharacteristic);
-        LogCharacteristicSubscriptionRemoved(Id, localCharacteristic.Id, localCharacteristic.LocalService.Id);
+        LogCharacteristicSubscriptionRemoved(Id, localCharacteristic.Id, localCharacteristic.Service.Id);
     }
 
     /// <inheritdoc />

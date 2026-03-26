@@ -1,5 +1,6 @@
 using Application = Android.App.Application;
 using ConnectionOptions = Bluetooth.Abstractions.Scanning.Options.ConnectionOptions;
+using TransportType = Bluetooth.Abstractions.Enums.TransportType;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 
@@ -24,8 +25,8 @@ public static class BluetoothDeviceExtensions
 
         // Extract Android-specific options (with defaults)
         var autoConnect = connectionOptions.Android?.AutoConnect ?? false;
-        var transportType = connectionOptions.Android?.TransportType ?? BluetoothTransportType.Auto;
-        var preferredPhy = connectionOptions.Android?.PreferredPhy as Android.Bluetooth.BluetoothPhy?;
+        var transportType = connectionOptions.Android?.TransportType ?? TransportType.Auto;
+        var preferredPhy = (connectionOptions as Bluetooth.Maui.Platforms.Droid.Scanning.Options.ConnectionOptions)?.PreferredPhy;
 
         if (OperatingSystem.IsAndroidVersionAtLeast(26) && preferredPhy.HasValue)
         {

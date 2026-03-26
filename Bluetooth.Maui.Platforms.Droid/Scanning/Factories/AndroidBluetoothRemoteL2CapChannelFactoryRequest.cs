@@ -1,5 +1,4 @@
 using Android.Bluetooth;
-using Bluetooth.Abstractions.Scanning.Factories;
 
 namespace Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 

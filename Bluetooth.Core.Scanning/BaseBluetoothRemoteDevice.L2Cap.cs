@@ -2,14 +2,14 @@ namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteDevice
 {
-    private TaskCompletionSource<IBluetoothL2CapChannel>? OpenL2CapChannelTcs
+    private TaskCompletionSource<IBluetoothRemoteL2CapChannel>? OpenL2CapChannelTcs
     {
-        get => GetValue<TaskCompletionSource<IBluetoothL2CapChannel>?>(null);
+        get => GetValue<TaskCompletionSource<IBluetoothRemoteL2CapChannel>?>(null);
         set => SetValue(value);
     }
 
     /// <inheritdoc />
-    public async ValueTask<IBluetoothL2CapChannel> OpenL2CapChannelAsync(int psm, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public async ValueTask<IBluetoothRemoteL2CapChannel> OpenL2CapChannelAsync(int psm, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Prevents multiple calls for the same PSM
         if (OpenL2CapChannelTcs is { Task.IsCompleted: false })
@@ -17,7 +17,7 @@ public abstract partial class BaseBluetoothRemoteDevice
             return await OpenL2CapChannelTcs.Task.ConfigureAwait(false);
         }
 
-        OpenL2CapChannelTcs = new TaskCompletionSource<IBluetoothL2CapChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
+        OpenL2CapChannelTcs = new TaskCompletionSource<IBluetoothRemoteL2CapChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         try
         {
@@ -46,7 +46,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <summary>
     ///     Called when L2CAP channel is opened successfully.
     /// </summary>
-    protected void OnL2CapChannelOpened(IBluetoothL2CapChannel channel)
+    protected void OnL2CapChannelOpened(IBluetoothRemoteL2CapChannel channel)
     {
         ArgumentNullException.ThrowIfNull(channel);
         OpenL2CapChannelTcs?.TrySetResult(channel);

@@ -7,11 +7,13 @@ public partial interface IBluetoothBroadcaster
     /// <summary>
     ///     Adds a GATT service to be hosted by the broadcaster.
     /// </summary>
-    /// <param name="spec">The spec containing the service details.</param>
+    /// <param name="id">The UUID of the service to add.</param>
+    /// <param name="name">An optional name for the service. If not provided, a default name may be assigned based on the UUID or other heuristics.</param>
+    /// <param name="isPrimary">Indicates whether the service is a primary service. Defaults to true.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>The added service.</returns>
-    ValueTask<IBluetoothLocalService> CreateServiceAsync(IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask<IBluetoothLocalService> CreateServiceAsync(Guid id, string? name = null, bool isPrimary = true, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 

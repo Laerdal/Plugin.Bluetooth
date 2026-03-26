@@ -240,12 +240,12 @@ options.ServiceUuids = new[]
 ### AdvertisementFilter
 
 ```csharp
-public Func<IBluetoothAdvertisement, bool> AdvertisementFilter { get; init; } = _ => true;
+public Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; init; }
 ```
 
-**Default**: Accept all (`_ => true`)
+**Default**: `null` (accept all advertisements)
 
-Custom filter predicate for fine-grained advertisement filtering.
+Custom filter predicate for fine-grained advertisement filtering. When `null` (default), all advertisements are accepted. When set, only advertisements where the filter returns `true` are processed.
 
 **Use Cases**:
 - Filter by manufacturer data
@@ -550,7 +550,7 @@ public object? Android { get; init; }
 
 **Default**: `null`
 
-Android platform-specific scanning options. Cast to `Bluetooth.Maui.Platforms.Droid.Scanning.Options.AndroidScanningOptions`.
+Android platform-specific scanning options. Cast to `Bluetooth.Abstractions.Scanning.Options.Android.AndroidScanningOptions`.
 
 **AndroidScanningOptions Properties**:
 
@@ -600,7 +600,7 @@ Bluetooth 5.0 PHY selection:
 **Example**:
 ```csharp
 #if ANDROID
-using Bluetooth.Maui.Platforms.Droid.Scanning.Options;
+using Bluetooth.Abstractions.Scanning.Options.Android;
 #endif
 
 var options = new ScanningOptions

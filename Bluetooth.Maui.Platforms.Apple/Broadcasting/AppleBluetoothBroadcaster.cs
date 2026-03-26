@@ -1,4 +1,3 @@
-using Bluetooth.Maui.Platforms.Apple.Broadcasting.Factories;
 using Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects;
 using Bluetooth.Maui.Platforms.Apple.Permissions;
 
@@ -14,24 +13,22 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     ///     Initializes a new instance of the <see cref="AppleBluetoothBroadcaster" /> class.
     /// </summary>
     /// <param name="adapter">The Bluetooth adapter associated with this broadcaster.</param>
-    /// <param name="localServiceFactory">The factory for creating broadcast services.</param>
-    /// <param name="connectedDeviceFactory">The factory for creating client devices.</param>
-    /// <param name="cbPeripheralManagerWrapper">The Core Bluetooth peripheral manager wrapper.</param>
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
-    /// <param name="logger">The logger instance to use for logging.</param>
-    public AppleBluetoothBroadcaster(IBluetoothAdapter adapter,
-        IBluetoothLocalServiceFactory localServiceFactory,
-        IBluetoothConnectedDeviceFactory connectedDeviceFactory,
-        CbPeripheralManagerWrapper cbPeripheralManagerWrapper,
+    /// <param name="cbPeripheralManagerOptions">Options for the peripheral manager.</param>
+    /// <param name="dispatchQueueProvider">Provider for dispatch queues.</param>
+    /// <param name="loggerFactory">An optional logger factory for creating loggers used by this broadcaster and its components.</param>
+    public AppleBluetoothBroadcaster(
+        IBluetoothAdapter adapter,
         ITicker ticker,
-        ILogger<IBluetoothBroadcaster>? logger = null) : base(adapter,
-        localServiceFactory,
-        connectedDeviceFactory,
-        ticker,
-        logger)
+        IOptions<CbPeripheralManagerOptions> cbPeripheralManagerOptions,
+        IDispatchQueueProvider dispatchQueueProvider,
+        ILoggerFactory? loggerFactory = null) : base(adapter, ticker, loggerFactory)
     {
-        ArgumentNullException.ThrowIfNull(cbPeripheralManagerWrapper);
-        CbPeripheralManagerWrapper = cbPeripheralManagerWrapper;
+        ArgumentNullException.ThrowIfNull(cbPeripheralManagerOptions);
+        ArgumentNullException.ThrowIfNull(dispatchQueueProvider);
+
+        // Create CbPeripheralManagerWrapper with this broadcaster as the delegate
+        CbPeripheralManagerWrapper = new CbPeripheralManagerWrapper(this, cbPeripheralManagerOptions, dispatchQueueProvider, ticker);
     }
 
     /// <summary>
@@ -80,8 +77,8 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
 
         if (device == null)
         {
-            var spec = new AppleBluetoothConnectedDeviceSpec(central);
-            device = ConnectedDeviceFactory.Create(this, spec);
+            var id = central.Identifier.ToGuid().ToString();
+            device = new AppleBluetoothConnectedDevice(central, this, id, LoggerFactory?.CreateLogger<AppleBluetoothConnectedDevice>());
             AddClientDevice(device);
         }
 
@@ -249,6 +246,33 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     #region Permission Methods
 
     /// <inheritdoc />
+    protected override ValueTask<IBluetoothLocalService> NativeCreateServiceAsync(Guid id,
+        string? name = null,
+        bool isPrimary = true,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Create a new CBMutableService with the specified ID and primary status
+        var cbService = new CBMutableService(id.ToCBUuid(), isPrimary);
+
+        // Create the AppleBluetoothLocalService wrapper for the new service
+        var logger = LoggerFactory?.CreateLogger<AppleBluetoothLocalService>();
+#pragma warning disable CA2000 // Dispose objects before losing scope - Service is returned and caller owns disposal
+        var service = new AppleBluetoothLocalService(cbService,
+                                                     this,
+                                                     id,
+                                                     name,
+                                                     isPrimary,
+                                                     logger);
+#pragma warning restore CA2000
+
+        // Add the service to the peripheral manager
+        CbPeripheralManagerWrapper.CbPeripheralManager.AddService(cbService);
+
+        return new ValueTask<IBluetoothLocalService>(service);
+    }
+
+    /// <inheritdoc />
     /// <remarks>
     ///     On iOS/macOS, broadcaster permissions require both general Bluetooth and Peripheral permissions:
     ///     <list type="bullet">
@@ -263,8 +287,7 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
             // Check both Bluetooth Always and Peripheral permissions
             var bluetoothStatus = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<ApplePermissionForBluetoothAlways>().ConfigureAwait(false);
             var peripheralStatus = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<ApplePermissionForBluetoothPeripheral>().ConfigureAwait(false);
-            return bluetoothStatus == PermissionStatus.Granted &&
-                   peripheralStatus == PermissionStatus.Granted;
+            return bluetoothStatus == PermissionStatus.Granted && peripheralStatus == PermissionStatus.Granted;
         }
 
         // On older iOS versions, Bluetooth permissions are automatically granted
@@ -289,9 +312,8 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
 
             if (bluetoothStatus != PermissionStatus.Granted || peripheralStatus != PermissionStatus.Granted)
             {
-                throw new BluetoothPermissionException(
-                    "Broadcaster permissions denied on iOS. User must enable Bluetooth permissions in Settings app. " +
-                    "Ensure NSBluetoothAlwaysUsageDescription and NSBluetoothPeripheralUsageDescription are set in Info.plist.");
+                throw new BluetoothPermissionException("Broadcaster permissions denied on iOS. User must enable Bluetooth permissions in Settings app. "
+                                                     + "Ensure NSBluetoothAlwaysUsageDescription and NSBluetoothPeripheralUsageDescription are set in Info.plist.");
             }
         }
 
@@ -299,4 +321,5 @@ public class AppleBluetoothBroadcaster : BaseBluetoothBroadcaster, CbPeripheralM
     }
 
     #endregion
+
 }

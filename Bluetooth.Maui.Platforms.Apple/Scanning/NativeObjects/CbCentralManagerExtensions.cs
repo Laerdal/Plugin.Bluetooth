@@ -1,4 +1,4 @@
-using Bluetooth.Maui.Platforms.Apple.Scanning.Options;
+using Bluetooth.Abstractions.Scanning.Options.Apple;
 
 using ScanningOptions = Bluetooth.Abstractions.Scanning.Options.ScanningOptions;
 
@@ -19,17 +19,43 @@ public static class CbCentralManagerExtensions
         ArgumentNullException.ThrowIfNull(cbCentralManager);
         ArgumentNullException.ThrowIfNull(scanningOptions);
 
-        if (scanningOptions is ScanningOptionsWithServiceUuid scannerStartScanningOptionsWithServiceUuid)
+        if (scanningOptions is AppleScanningOptions appleScanningOptions)
         {
-            cbCentralManager.ScanForPeripherals(scannerStartScanningOptionsWithServiceUuid.PeripheralScanningServiceUuid, scannerStartScanningOptionsWithServiceUuid.PeripheralScanningOptions?.Dictionary);
-        }
-        else if (scanningOptions is ScanningOptionsWithPeripheralUuids scannerStartScanningOptionsWithPeripheralUuids)
-        {
-            cbCentralManager.ScanForPeripherals(scannerStartScanningOptionsWithPeripheralUuids.PeripheralScanningPeripheralUuids.ToArray(), scannerStartScanningOptionsWithPeripheralUuids.PeripheralScanningOptions);
-        }
-        else if (scanningOptions is Options.ScanningOptions scannerStartScanningOptions)
-        {
-            cbCentralManager.ScanForPeripherals(null, scannerStartScanningOptions.PeripheralScanningOptions);
+            if (appleScanningOptions is { ServiceUuid: not null, PeripheralUuids: not null })
+            {
+                throw new
+                    ArgumentException("AppleScanningOptions cannot have both ServiceUuid and PeripheralUuids set. Please provide only one of these options to avoid conflicting filters.");
+            }
+            else if (appleScanningOptions.ServiceUuid != null)
+            {
+                // If only ServiceUuid is provided, filter by service UUID
+                cbCentralManager.ScanForPeripherals(appleScanningOptions.ServiceUuid.Value.ToCBUuid(),
+                                                    new PeripheralScanningOptions
+                                                    {
+                                                        AllowDuplicatesKey = appleScanningOptions.AllowDuplicates ?? false
+                                                    }.Dictionary);
+            }
+            else if (appleScanningOptions.PeripheralUuids != null)
+            {
+                // If only PeripheralUuids are provided, filter by peripheral UUIDs
+                foreach (var peripheralUuid in appleScanningOptions.PeripheralUuids)
+                {
+                    cbCentralManager.ScanForPeripherals(peripheralUuid.ToCBUuid(),
+                                                        new PeripheralScanningOptions
+                                                        {
+                                                            AllowDuplicatesKey = appleScanningOptions.AllowDuplicates ?? false
+                                                        }.Dictionary);
+                }
+            }
+            else
+            {
+                // If neither is provided, scan for all peripherals
+                cbCentralManager.ScanForPeripherals((CBUUID[]?)null,
+                                                    new PeripheralScanningOptions
+                                                    {
+                                                        AllowDuplicatesKey = appleScanningOptions.AllowDuplicates ?? false
+                                                    }.Dictionary);
+            }
         }
         else
         {

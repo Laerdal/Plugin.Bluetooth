@@ -12,6 +12,8 @@ namespace Bluetooth.Maui.Platforms.Win;
 /// </remarks>
 public partial class WindowsBluetoothAdapter : BaseBluetoothAdapter, IDisposable
 {
+    private readonly ILoggerFactory _loggerFactory;
+
     private readonly ITicker _ticker;
 
     // Lazy-initialized wrappers
@@ -25,11 +27,13 @@ public partial class WindowsBluetoothAdapter : BaseBluetoothAdapter, IDisposable
     /// <summary>
     ///     Initializes a new instance of the <see cref="WindowsBluetoothAdapter" /> class.
     /// </summary>
+    /// <param name="loggerFactory">Factory for creating loggers for this adapter and its wrappers.</param>
     /// <param name="ticker">The ticker for scheduling periodic property updates in wrappers.</param>
     /// <param name="logger">An optional logger for logging adapter operations.</param>
-    public WindowsBluetoothAdapter(ITicker ticker, ILogger<IBluetoothAdapter>? logger = null) : base(logger)
+    public WindowsBluetoothAdapter(ILoggerFactory loggerFactory, ITicker ticker, ILogger<IBluetoothAdapter>? logger = null) : base(logger)
     {
         ArgumentNullException.ThrowIfNull(ticker);
+        _loggerFactory = loggerFactory;
         _ticker = ticker;
     }
 
@@ -63,7 +67,7 @@ public partial class WindowsBluetoothAdapter : BaseBluetoothAdapter, IDisposable
         {
             Logger?.LogAdapterWrapperInitializing();
 
-            _bluetoothAdapterWrapper = new BluetoothAdapterWrapper(_ticker, Logger as ILogger<IBluetoothAdapterWrapper>);
+            _bluetoothAdapterWrapper = new BluetoothAdapterWrapper(_ticker, _loggerFactory.CreateLogger<IBluetoothAdapterWrapper>());
 
             // Trigger native adapter initialization to validate it works
             await _bluetoothAdapterWrapper.GetBluetoothAdapterAsync(cancellationToken).ConfigureAwait(false);
@@ -118,7 +122,7 @@ public partial class WindowsBluetoothAdapter : BaseBluetoothAdapter, IDisposable
             // Ensure adapter wrapper is initialized first
             var adapterWrapper = await GetBluetoothAdapterWrapperAsync(cancellationToken).ConfigureAwait(false);
 
-            _radioWrapper = new RadioWrapper(adapterWrapper, _ticker, Logger as ILogger<IRadioWrapper>);
+            _radioWrapper = new RadioWrapper(adapterWrapper, _ticker,  _loggerFactory.CreateLogger<IRadioWrapper>());
 
             // Trigger native radio initialization to validate it works
             await _radioWrapper.GetRadioAsync(cancellationToken).ConfigureAwait(false);

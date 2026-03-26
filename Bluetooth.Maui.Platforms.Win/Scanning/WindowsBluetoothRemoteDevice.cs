@@ -90,7 +90,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     ///     Windows does not support connection priority requests. Connection parameters are managed automatically by the platform.
     ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession">GattSession</seealso>
     /// </remarks>
-    protected override ValueTask NativeRequestConnectionPriorityAsync(BluetoothConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeRequestConnectionPriorityAsync(ConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Windows doesn't support connection priority requests
         // Connection parameters are managed automatically by the platform
@@ -268,7 +268,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
         IBluetoothRemoteService FromInputTypeToOutputTypeConversion(GattDeviceService nativeService)
         {
             var spec = new WindowsBluetoothRemoteServiceFactorySpec(nativeService);
-            return ServiceFactory.Create(this, spec);
+            return (ServiceFactory ?? throw new InvalidOperationException("ServiceFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 

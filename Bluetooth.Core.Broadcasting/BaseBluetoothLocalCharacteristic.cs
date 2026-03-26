@@ -5,39 +5,62 @@ namespace Bluetooth.Core.Broadcasting;
 /// </summary>
 public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObject, IBluetoothLocalCharacteristic
 {
+    /// <inheritdoc />
+    public IBluetoothLocalService Service { get; }
+
     /// <summary>
-    ///     The logger instance used for logging characteristic operations.
+    ///     Gets the factory for creating local Bluetooth descriptors.
     /// </summary>
-    private readonly ILogger<IBluetoothLocalCharacteristic> _logger;
+    protected IBluetoothLocalDescriptorFactory? DescriptorFactory { get; }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothLocalCharacteristic" /> class.
     /// </summary>
-    protected BaseBluetoothLocalCharacteristic(IBluetoothLocalService localService,
-        IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec,
-        IBluetoothLocalDescriptorFactory localDescriptorRepository,
-        ILogger<IBluetoothLocalCharacteristic>? logger = null)
+    protected BaseBluetoothLocalCharacteristic(IBluetoothLocalService service,
+        Guid id,
+        BluetoothCharacteristicProperties properties,
+        BluetoothCharacteristicPermissions permissions,
+        ReadOnlyMemory<byte>? initialValue = null,
+        string? name = null,
+        ILogger<IBluetoothLocalCharacteristic>? logger = null) : base(logger)
     {
-        ArgumentNullException.ThrowIfNull(localService);
-        ArgumentNullException.ThrowIfNull(localDescriptorRepository);
-        ArgumentNullException.ThrowIfNull(spec);
+        // Validate constructor arguments
+        ArgumentNullException.ThrowIfNull(service);
 
-        _logger = logger ?? NullLogger<IBluetoothLocalCharacteristic>.Instance;
-        LocalService = localService;
-        LocalDescriptorFactory = localDescriptorRepository;
-        Id = spec.Id;
-        Value = spec.InitialValue ?? new ReadOnlyMemory<byte>([]);
-        Properties = spec.Properties;
-        Permissions = spec.Permissions;
+        Service = service;
+        Id = id;
+        Value = initialValue ?? new ReadOnlyMemory<byte>([]);
+        Properties = properties;
+        Permissions = permissions;
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            Name = name;
+        }
     }
 
     /// <summary>
-    ///     Backing field for the <see cref="Descriptors" /> property.
+    ///     Initializes a new instance using a factory spec.
     /// </summary>
-    protected IBluetoothLocalDescriptorFactory LocalDescriptorFactory { get; }
-
-    /// <inheritdoc />
-    public IBluetoothLocalService LocalService { get; }
+    /// <param name="service">The local service this characteristic belongs to.</param>
+    /// <param name="spec">The factory spec containing characteristic information.</param>
+    /// <param name="descriptorFactory">The factory for creating local descriptors.</param>
+    /// <param name="logger">The logger instance to use for logging (optional).</param>
+    protected BaseBluetoothLocalCharacteristic(
+        IBluetoothLocalService service,
+        IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec,
+        IBluetoothLocalDescriptorFactory descriptorFactory,
+        ILogger<IBluetoothLocalCharacteristic>? logger = null)
+        : this(service,
+            (spec ?? throw new ArgumentNullException(nameof(spec))).CharacteristicId,
+            spec.Properties,
+            spec.Permissions,
+            null,
+            spec.Name,
+            logger)
+    {
+        ArgumentNullException.ThrowIfNull(descriptorFactory);
+        DescriptorFactory = descriptorFactory;
+    }
 
     /// <inheritdoc />
     public Guid Id { get; }
@@ -51,17 +74,13 @@ public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObj
     /// <inheritdoc />
     public BluetoothCharacteristicPermissions Permissions { get; init; }
 
+    #region Dispose
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore().ConfigureAwait(false);
         GC.SuppressFinalize(this);
-    }
-
-    /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"[{Id}] {Name}";
     }
 
     /// <summary>
@@ -71,4 +90,16 @@ public abstract partial class BaseBluetoothLocalCharacteristic : BaseBindableObj
     {
         await RemoveAllDescriptorsAsync().ConfigureAwait(false);
     }
+
+    #endregion
+
+    #region ToString
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return $"[{Id}] {Name}";
+    }
+
+    #endregion
 }

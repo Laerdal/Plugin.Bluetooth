@@ -389,7 +389,7 @@ device.ConnectionStateChanged += async (sender, args) =>
 ```
 
 ✅ **Maintain GattSession**
-The `GattSession` is crucial for reliable connections. Plugin.Bluetooth manages this automatically.
+The `GattSession` maintains the active connection state. Plugin.Bluetooth manages this automatically.
 
 ### 3. Use Uncached Reads for Fresh Data
 ```csharp
@@ -571,7 +571,7 @@ if (DeviceInfo.Platform == DevicePlatform.WinUI)
 - **Event Viewer** - Windows logs for Bluetooth errors
 
 ### Common Windows Bluetooth Adapters
-- **Intel Wireless Bluetooth** - Excellent, found in most laptops
+- **Intel Wireless Bluetooth** - Common in laptops, generally reliable
 - **Broadcom Bluetooth** - Good compatibility
 - **Realtek Bluetooth** - Variable quality, update drivers
 - **USB Dongles**: TP-Link, ASUS USB-BT400/500, Plugable USB-BT4LE

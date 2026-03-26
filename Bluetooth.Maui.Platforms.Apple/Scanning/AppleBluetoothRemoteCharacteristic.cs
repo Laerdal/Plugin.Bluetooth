@@ -10,23 +10,41 @@ namespace Bluetooth.Maui.Platforms.Apple.Scanning;
 /// <inheritdoc cref="BaseBluetoothRemoteCharacteristic" />
 public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteristic, CbPeripheralWrapper.ICbCharacteristicDelegate
 {
+
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteCharacteristic" /> class with the specified service, factory spec, and descriptor factory.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteCharacteristic" /> class with the specified Core Bluetooth characteristic, parent service, ID, and logger.
     /// </summary>
-    /// <param name="remoteService">The Bluetooth service to which this characteristic belongs.</param>
-    /// <param name="spec">The factory spec containing the information needed to create this characteristic.</param>
-    /// <param name="descriptorFactory">The factory used to create descriptors for this characteristic.</param>
-    /// <param name="logger">Optional logger for logging characteristic operations.</param>
-    public AppleBluetoothRemoteCharacteristic(IBluetoothRemoteService remoteService, IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec, IBluetoothRemoteDescriptorFactory descriptorFactory, ILogger<IBluetoothRemoteCharacteristic>? logger = null) :
-        base(remoteService, spec, descriptorFactory, logger)
+    /// <param name="cbCharacteristic">The native iOS Core Bluetooth characteristic represented by this remote characteristic.</param>
+    /// <param name="parentService">The Bluetooth service to which this characteristic belongs.</param>
+    /// <param name="id">The unique identifier for this characteristic.</param>
+    /// <param name="nameProvider">An optional name provider for resolving the characteristic's name based on its ID.</param>
+    /// <param name="logger">An optional logger for logging characteristic-related events and errors.</param>
+    public AppleBluetoothRemoteCharacteristic(CBCharacteristic cbCharacteristic,
+        IBluetoothRemoteService parentService,
+        Guid id,
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteCharacteristic>? logger = null) : base(parentService, id, nameProvider, logger)
+    {
+        CbCharacteristic = cbCharacteristic;
+    }
+
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="parentService">The Bluetooth service to which this characteristic belongs.</param>
+    /// <param name="spec">The Apple-specific factory spec containing the native characteristic.</param>
+    /// <param name="descriptorFactory">The factory for creating remote descriptors.</param>
+    /// <param name="nameProvider">An optional provider for characteristic names.</param>
+    /// <param name="logger">An optional logger for logging characteristic-related events and errors.</param>
+    public AppleBluetoothRemoteCharacteristic(
+        IBluetoothRemoteService parentService,
+        AppleBluetoothRemoteCharacteristicFactorySpec spec,
+        IBluetoothRemoteDescriptorFactory descriptorFactory,
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteCharacteristic>? logger = null) : base(parentService, spec, descriptorFactory, nameProvider, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
-        if (spec is not AppleBluetoothRemoteCharacteristicFactorySpec nativeSpec)
-        {
-            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothRemoteCharacteristicFactorySpec)}, but got {spec.GetType()}");
-        }
-
-        CbCharacteristic = nativeSpec.CbCharacteristic;
+        CbCharacteristic = spec.CbCharacteristic;
     }
 
     /// <summary>
@@ -37,7 +55,7 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     /// <summary>
     ///     Gets the Bluetooth service to which this characteristic belongs, cast to the Apple-specific implementation.
     /// </summary>
-    public AppleBluetoothRemoteService AppleBluetoothRemoteService => (AppleBluetoothRemoteService) RemoteService;
+    public AppleBluetoothRemoteService AppleBluetoothRemoteService => (AppleBluetoothRemoteService) Service;
 
     #region Read
 
@@ -45,7 +63,7 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbperipheral/1518759-readvalue">iOS CBPeripheral.readValue</seealso>
     protected override ValueTask NativeReadValueAsync()
     {
-        Logger?.LogCharacteristicRead(Id, RemoteService.Device.Id);
+        Logger?.LogCharacteristicRead(Id, Service.Device.Id);
         AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.ReadValue(CbCharacteristic);
         return ValueTask.CompletedTask;
     }
@@ -68,18 +86,18 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
             // Check if this is a notification/indication or a read response
             if (characteristic.IsNotifying)
             {
-                Logger?.LogNotificationReceived(Id, RemoteService.Device.Id, data.Length);
+                Logger?.LogNotificationReceived(Id, Service.Device.Id, data.Length);
             }
             else
             {
-                Logger?.LogCharacteristicReadCompleted(Id, RemoteService.Device.Id, data.Length);
+                Logger?.LogCharacteristicReadCompleted(Id, Service.Device.Id, data.Length);
             }
 
             OnReadValueSucceeded(data);
         }
         catch (Exception e)
         {
-            Logger?.LogCharacteristicReadError(Id, RemoteService.Device.Id, e.Message, e);
+            Logger?.LogCharacteristicReadError(Id, Service.Device.Id, e.Message, e);
             OnReadValueFailed(e);
         }
     }
@@ -92,10 +110,13 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbperipheral/1518747-writevalue">iOS CBPeripheral.writeValue</seealso>
     protected override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
-        Logger?.LogCharacteristicWrite(Id, RemoteService.Device.Id, value.Length);
+        Logger?.LogCharacteristicWrite(Id, Service.Device.Id, value.Length);
         AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.WriteValue(value.ToNSData(),
-            CbCharacteristic,
-            CbCharacteristic.Properties.HasFlag(CBCharacteristicProperties.WriteWithoutResponse) ? CBCharacteristicWriteType.WithoutResponse : CBCharacteristicWriteType.WithResponse);
+                                                                                                           CbCharacteristic,
+                                                                                                           CbCharacteristic.Properties.HasFlag(CBCharacteristicProperties
+                                                                                                              .WriteWithoutResponse) ?
+                                                                                                               CBCharacteristicWriteType.WithoutResponse :
+                                                                                                               CBCharacteristicWriteType.WithResponse);
         return ValueTask.CompletedTask;
     }
 
@@ -111,12 +132,12 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
-            Logger?.LogCharacteristicWriteCompleted(Id, RemoteService.Device.Id);
+            Logger?.LogCharacteristicWriteCompleted(Id, Service.Device.Id);
             OnWriteValueSucceeded();
         }
         catch (Exception e)
         {
-            Logger?.LogCharacteristicWriteError(Id, RemoteService.Device.Id, e.Message, e);
+            Logger?.LogCharacteristicWriteError(Id, Service.Device.Id, e.Message, e);
             OnWriteValueFailed(e);
         }
     }
@@ -170,7 +191,7 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     protected override ValueTask NativeWriteIsListeningAsync(bool shouldBeListening)
     {
         var action = shouldBeListening ? "Enabling" : "Disabling";
-        Logger?.LogNotificationStateChange(action, Id, RemoteService.Device.Id);
+        Logger?.LogNotificationStateChange(action, Id, Service.Device.Id);
         AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.SetNotifyValue(shouldBeListening, CbCharacteristic);
         return ValueTask.CompletedTask;
     }
@@ -197,27 +218,24 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     protected override ValueTask NativeBeginReliableWriteAsync()
     {
         // CoreBluetooth doesn't support reliable write transactions
-        throw new NotSupportedException(
-            "Reliable write transactions are not supported on iOS/macOS platforms. " +
-            "CoreBluetooth does not provide native transaction support for characteristic writes.");
+        throw new NotSupportedException("Reliable write transactions are not supported on iOS/macOS platforms. "
+                                      + "CoreBluetooth does not provide native transaction support for characteristic writes.");
     }
 
     /// <inheritdoc />
     protected override ValueTask NativeExecuteReliableWriteAsync()
     {
         // CoreBluetooth doesn't support reliable write transactions
-        throw new NotSupportedException(
-            "Reliable write transactions are not supported on iOS/macOS platforms. " +
-            "CoreBluetooth does not provide native transaction support for characteristic writes.");
+        throw new NotSupportedException("Reliable write transactions are not supported on iOS/macOS platforms. "
+                                      + "CoreBluetooth does not provide native transaction support for characteristic writes.");
     }
 
     /// <inheritdoc />
     protected override ValueTask NativeAbortReliableWriteAsync()
     {
         // CoreBluetooth doesn't support reliable write transactions
-        throw new NotSupportedException(
-            "Reliable write transactions are not supported on iOS/macOS platforms. " +
-            "CoreBluetooth does not provide native transaction support for characteristic writes.");
+        throw new NotSupportedException("Reliable write transactions are not supported on iOS/macOS platforms. "
+                                      + "CoreBluetooth does not provide native transaction support for characteristic writes.");
     }
 
     #endregion
@@ -250,7 +268,7 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
         IBluetoothRemoteDescriptor FromInputTypeToOutputTypeConversion(CBDescriptor native)
         {
             var spec = new AppleBluetoothRemoteDescriptorFactorySpec(native);
-            return DescriptorFactory.Create(this, spec);
+            return (DescriptorFactory ?? throw new InvalidOperationException("DescriptorFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 
@@ -276,4 +294,5 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     }
 
     #endregion
+
 }

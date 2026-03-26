@@ -44,7 +44,7 @@ public class WindowsBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
     /// <inheritdoc />
     protected async override ValueTask NativeReadValueAsync()
     {
-        Logger?.LogDescriptorRead(Id, RemoteCharacteristic.RemoteService.Device.Id);
+        Logger?.LogDescriptorRead(Id, Characteristic.Service.Device.Id);
 
         try
         {
@@ -57,18 +57,18 @@ public class WindowsBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
                 var data = new byte[buffer.Length];
                 using var reader = DataReader.FromBuffer(buffer);
                 reader.ReadBytes(data);
-                Logger?.LogDescriptorReadCompleted(Id, RemoteCharacteristic.RemoteService.Device.Id, data.Length);
+                Logger?.LogDescriptorReadCompleted(Id, Characteristic.Service.Device.Id, data.Length);
                 OnReadValueSucceeded(data);
             }
             else
             {
-                Logger?.LogDescriptorReadCompleted(Id, RemoteCharacteristic.RemoteService.Device.Id, 0);
+                Logger?.LogDescriptorReadCompleted(Id, Characteristic.Service.Device.Id, 0);
                 OnReadValueSucceeded(Array.Empty<byte>());
             }
         }
         catch (Exception ex)
         {
-            Logger?.LogDescriptorReadError(Id, RemoteCharacteristic.RemoteService.Device.Id, ex.Message, ex);
+            Logger?.LogDescriptorReadError(Id, Characteristic.Service.Device.Id, ex.Message, ex);
             OnReadValueFailed(ex);
         }
     }
@@ -88,7 +88,7 @@ public class WindowsBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
     /// <inheritdoc />
     protected async override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
-        Logger?.LogDescriptorWrite(Id, RemoteCharacteristic.RemoteService.Device.Id, value.Length);
+        Logger?.LogDescriptorWrite(Id, Characteristic.Service.Device.Id, value.Length);
 
         try
         {
@@ -106,12 +106,12 @@ public class WindowsBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
 
-            Logger?.LogDescriptorWriteCompleted(Id, RemoteCharacteristic.RemoteService.Device.Id);
+            Logger?.LogDescriptorWriteCompleted(Id, Characteristic.Service.Device.Id);
             OnWriteValueSucceeded();
         }
         catch (Exception ex)
         {
-            Logger?.LogDescriptorWriteError(Id, RemoteCharacteristic.RemoteService.Device.Id, ex.Message, ex);
+            Logger?.LogDescriptorWriteError(Id, Characteristic.Service.Device.Id, ex.Message, ex);
             OnWriteValueFailed(ex);
         }
     }

@@ -176,7 +176,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <inheritdoc />
     /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#requestConnectionPriority(int)">Android BluetoothGatt.requestConnectionPriority(int)</seealso>
     protected override ValueTask NativeRequestConnectionPriorityAsync(
-        BluetoothConnectionPriority priority,
+        ConnectionPriority priority,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
@@ -185,13 +185,12 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             throw new InvalidOperationException("Device not connected - GATT proxy is null");
         }
 
-        // Convert abstract priority to Android GattConnectionPriority using converter
         var androidPriority = priority.ToAndroidGattConnectionPriority();
 
         var success = _bluetoothGattProxy.BluetoothGatt.RequestConnectionPriority(androidPriority);
         if (!success)
         {
-            throw new InvalidOperationException($"Failed to spec connection priority: {priority}");
+            throw new InvalidOperationException($"Failed to request connection priority: {priority}");
         }
 
         return ValueTask.CompletedTask;
@@ -411,7 +410,9 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             Windows = connectionOptions.Windows,
 
             // Add Droid-specific PreferredPhy (extracted from Android sub-options)
-            PreferredPhy = connectionOptions.Android?.PreferredPhy as BluetoothPhy?
+            PreferredPhy = connectionOptions.Android?.PreferredPhy is PhyMode phy && OperatingSystem.IsAndroidVersionAtLeast(26)
+                ? phy.ToAndroidPhyMode()
+                : null
         };
 
         // Create GATT connection
@@ -444,6 +445,31 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             Logger?.LogDisconnectError(Id, e);
             OnDisconnect(e);
             throw;
+        }
+    }
+
+    /// <summary>
+    ///     Attempts to reconnect to the remote device using the existing GATT connection.
+    /// </summary>
+    /// <remarks>
+    ///     Calls <see cref="BluetoothGatt.Connect()" /> which is intended for reconnection when
+    ///     <c>autoConnect = false</c> was specified during the initial connection. The GATT
+    ///     connection must already exist (i.e., the device must have been previously connected).
+    ///     <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#connect()">Android BluetoothGatt.connect()</seealso>
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">Thrown when the device is not currently connected (GATT proxy is null).</exception>
+    /// <exception cref="DeviceFailedToConnectException">Thrown when the reconnection attempt fails.</exception>
+    public void Reconnect()
+    {
+        if (_bluetoothGattProxy == null)
+        {
+            throw new InvalidOperationException("Device not connected - GATT proxy is null");
+        }
+
+        var result = _bluetoothGattProxy.BluetoothGatt.Connect();
+        if (!result)
+        {
+            throw new DeviceFailedToConnectException(this, "BluetoothGatt.Connect() returned false");
         }
     }
 
@@ -633,7 +659,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         IBluetoothRemoteService FromInputTypeToOutputTypeConversion(BluetoothGattService nativeService)
         {
             var spec = new AndroidBluetoothRemoteServiceFactorySpec(nativeService);
-            return ServiceFactory.Create(this, spec);
+            return (ServiceFactory ?? throw new InvalidOperationException("ServiceFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 

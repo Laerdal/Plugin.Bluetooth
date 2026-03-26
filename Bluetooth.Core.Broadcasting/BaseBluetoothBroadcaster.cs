@@ -9,37 +9,32 @@ namespace Bluetooth.Core.Broadcasting;
 /// </remarks>
 public abstract partial class BaseBluetoothBroadcaster : BaseBindableObject, IBluetoothBroadcaster
 {
-    #region Constructor
+    /// <inheritdoc />
+    public IBluetoothAdapter Adapter { get; }
+
+    /// <inheritdoc />
+    public ILoggerFactory? LoggerFactory { get; }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothBroadcaster" /> class.
     /// </summary>
     /// <param name="adapter">The Bluetooth adapter to associate with this broadcaster.</param>
-    /// <param name="localServiceFactory">The factory for creating broadcast services.</param>
-    /// <param name="connectedDeviceFactory">The factory for creating broadcast client devices.</param>
     /// <param name="ticker">The ticker for scheduling periodic refresh tasks.</param>
-    /// <param name="logger">The logger instance to use for logging.</param>
-    protected BaseBluetoothBroadcaster(IBluetoothAdapter adapter,
-        IBluetoothLocalServiceFactory localServiceFactory,
-        IBluetoothConnectedDeviceFactory connectedDeviceFactory,
-        ITicker ticker,
-        ILogger<IBluetoothBroadcaster>? logger = null) : base(logger)
+    /// <param name="loggerFactory">Optional logger factory for creating loggers.</param>
+    protected BaseBluetoothBroadcaster(IBluetoothAdapter adapter, ITicker ticker, ILoggerFactory? loggerFactory = null) :
+        base(loggerFactory?.CreateLogger<BaseBluetoothBroadcaster>())
     {
         ArgumentNullException.ThrowIfNull(adapter);
-        ArgumentNullException.ThrowIfNull(localServiceFactory);
-        ArgumentNullException.ThrowIfNull(connectedDeviceFactory);
         ArgumentNullException.ThrowIfNull(ticker);
 
-        _logger = logger ?? NullLogger<IBluetoothBroadcaster>.Instance;
         Adapter = adapter;
-        LocalServiceFactory = localServiceFactory;
-        ConnectedDeviceFactory = connectedDeviceFactory;
+        LoggerFactory = loggerFactory;
         _refreshSubscription = ticker.Register("Broadcaster Refresh Tick", TimeSpan.FromSeconds(2), RefreshAsync);
     }
 
-    #endregion
-
     #region Refresh
+
+    private readonly IDisposable? _refreshSubscription;
 
     /// <summary>
     ///     Refreshes the broadcaster's properties and state.
@@ -58,37 +53,7 @@ public abstract partial class BaseBluetoothBroadcaster : BaseBindableObject, IBl
 
     #endregion
 
-    /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"Broadcaster ({Services.Count}S/{ClientDevices.Count}C)";
-    }
-
-    #region Properties
-
-    /// <summary>
-    ///     The logger instance used for logging broadcaster operations.
-    /// </summary>
-    private readonly ILogger<IBluetoothBroadcaster> _logger;
-
-    /// <inheritdoc />
-    public IBluetoothAdapter Adapter { get; }
-
-    /// <summary>
-    ///     Gets the factory for creating broadcast services.
-    /// </summary>
-    private IBluetoothLocalServiceFactory LocalServiceFactory { get; }
-
-    /// <summary>
-    ///     Gets the factory for creating broadcast client devices.
-    /// </summary>
-    protected IBluetoothConnectedDeviceFactory ConnectedDeviceFactory { get; }
-
-    private readonly IDisposable? _refreshSubscription;
-
-    #endregion
-
-    #region Abstract Permission Methods
+    #region Permissions
 
     /// <summary>
     ///     Platform-specific implementation to check if broadcaster permissions are granted.
@@ -110,10 +75,6 @@ public abstract partial class BaseBluetoothBroadcaster : BaseBindableObject, IBl
     ///     Throw native exceptions on failure - base class will wrap them in BluetoothPermissionException.
     /// </remarks>
     protected abstract ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken);
-
-    #endregion
-
-    #region IBluetoothBroadcaster Permission Methods
 
     /// <inheritdoc />
     public async ValueTask<bool> HasBroadcasterPermissionsAsync()
@@ -142,9 +103,7 @@ public abstract partial class BaseBluetoothBroadcaster : BaseBindableObject, IBl
         }
         catch (Exception ex)
         {
-            throw new BluetoothPermissionException(
-                "Failed to request broadcaster permissions. Ensure required permissions are declared in your app manifest/Info.plist.",
-                ex);
+            throw new BluetoothPermissionException("Failed to request broadcaster permissions. Ensure required permissions are declared in your app manifest/Info.plist.", ex);
         }
     }
 
@@ -170,4 +129,15 @@ public abstract partial class BaseBluetoothBroadcaster : BaseBindableObject, IBl
     }
 
     #endregion
+
+    #region ToString
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return $"Broadcaster ({Services.Count}S/{ClientDevices.Count}C)";
+    }
+
+    #endregion
+
 }

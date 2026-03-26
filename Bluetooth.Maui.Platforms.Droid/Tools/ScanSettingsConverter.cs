@@ -1,4 +1,4 @@
-using Bluetooth.Maui.Platforms.Droid.Scanning.Options;
+using Bluetooth.Abstractions.Scanning.Options.Android;
 
 namespace Bluetooth.Maui.Platforms.Droid.Tools;
 
@@ -49,6 +49,30 @@ public static class ScanSettingsConverter
             ScanMatchNumber.Few => BluetoothScanMatchNumber.FewAdvertisement,  // MATCH_NUM_FEW_ADVERTISEMENT
             ScanMatchNumber.Max => BluetoothScanMatchNumber.MaxAdvertisement,  // MATCH_NUM_MAX_ADVERTISEMENT
             _ => BluetoothScanMatchNumber.OneAdvertisement
+        };
+    }
+
+    /// <summary>
+    ///     Converts a <see cref="ScanPhy" /> value to the corresponding Android <see cref="Android.Bluetooth.BluetoothPhy" /> value.
+    /// </summary>
+    /// <remarks>
+    ///     Maps abstract scan PHY preferences to native Android PHY types.
+    ///     Requires Android 8.0 (API 26) or higher.
+    ///     Note: None, AllSupported, and combined flag values map to PHY_LE_ALL_SUPPORTED (255).
+    /// </remarks>
+    public static Android.Bluetooth.BluetoothPhy ToAndroidScanPhy(this ScanPhy phy)
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(26))
+        {
+            throw new PlatformNotSupportedException("PHY selection for scanning requires Android 8.0 (API 26) or higher");
+        }
+
+        return phy switch
+        {
+            ScanPhy.Le1M => Android.Bluetooth.BluetoothPhy.Le1m,
+            ScanPhy.Le2M => Android.Bluetooth.BluetoothPhy.Le2m,
+            ScanPhy.LeCoded => (Android.Bluetooth.BluetoothPhy) 4, // PHY_LE_CODED_MASK bitmask value
+            _ => (Android.Bluetooth.BluetoothPhy) 255             // PHY_LE_ALL_SUPPORTED (None, AllSupported, or combined flags)
         };
     }
 }

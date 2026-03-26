@@ -1,6 +1,6 @@
 # Testing Best Practices
 
-Comprehensive testing ensures your BLE application is reliable, maintainable, and bug-free. This guide covers unit testing, integration testing, mocking strategies, and test patterns for Plugin.Bluetooth.
+This guide covers unit testing, integration testing, mocking strategies, and test patterns for Plugin.Bluetooth.
 
 ## Table of Contents
 

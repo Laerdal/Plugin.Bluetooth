@@ -5,41 +5,61 @@ namespace Bluetooth.Core.Broadcasting;
 /// </summary>
 public abstract partial class BaseBluetoothLocalService : BaseBindableObject, IBluetoothLocalService
 {
+    /// <inheritdoc />
+    public IBluetoothBroadcaster Broadcaster { get; }
+
     /// <summary>
-    ///     The logger instance used for logging service operations.
+    ///     Gets the factory for creating local Bluetooth characteristics.
     /// </summary>
-    private readonly ILogger<IBluetoothLocalService> _logger;
+    protected IBluetoothLocalCharacteristicFactory? CharacteristicFactory { get; }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothLocalService" /> class.
     /// </summary>
     /// <param name="broadcaster">The broadcaster that owns this service.</param>
-    /// <param name="spec">The spec for creating the service.</param>
-    /// <param name="localCharacteristicFactory">The factory for creating characteristics.</param>
+    /// <param name="id">The unique identifier of the service.</param>
+    /// <param name="name">The name of the service (optional).</param>
+    /// <param name="isPrimary">Indicates whether this service is a primary service (default: true).</param>
     /// <param name="logger">The logger instance to use for logging (optional).</param>
     protected BaseBluetoothLocalService(IBluetoothBroadcaster broadcaster,
-        IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec,
-        IBluetoothLocalCharacteristicFactory localCharacteristicFactory,
-        ILogger<IBluetoothLocalService>? logger = null)
+        Guid id,
+        string? name = null,
+        bool isPrimary = true,
+        ILogger<IBluetoothLocalService>? logger = null) : base(logger)
     {
+        // Validate constructor arguments
         ArgumentNullException.ThrowIfNull(broadcaster);
-        ArgumentNullException.ThrowIfNull(localCharacteristicFactory);
-        ArgumentNullException.ThrowIfNull(spec);
 
-        _logger = logger ?? NullLogger<IBluetoothLocalService>.Instance;
         Broadcaster = broadcaster;
-        LocalCharacteristicFactory = localCharacteristicFactory;
-        Id = spec.Id;
-        IsPrimary = spec.IsPrimary;
+        Id = id;
+        IsPrimary = isPrimary;
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            Name = name;
+        }
     }
 
     /// <summary>
-    ///     Factory for creating characteristics within this service.
+    ///     Initializes a new instance using a factory spec.
     /// </summary>
-    protected IBluetoothLocalCharacteristicFactory LocalCharacteristicFactory { get; }
-
-    /// <inheritdoc />
-    public IBluetoothBroadcaster Broadcaster { get; }
+    /// <param name="broadcaster">The broadcaster that owns this service.</param>
+    /// <param name="spec">The factory spec containing service information.</param>
+    /// <param name="characteristicFactory">The factory for creating local characteristics.</param>
+    /// <param name="logger">The logger instance to use for logging (optional).</param>
+    protected BaseBluetoothLocalService(
+        IBluetoothBroadcaster broadcaster,
+        IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec spec,
+        IBluetoothLocalCharacteristicFactory characteristicFactory,
+        ILogger<IBluetoothLocalService>? logger = null)
+        : this(broadcaster,
+            (spec ?? throw new ArgumentNullException(nameof(spec))).ServiceId,
+            spec.Name,
+            spec.IsPrimary,
+            logger)
+    {
+        ArgumentNullException.ThrowIfNull(characteristicFactory);
+        CharacteristicFactory = characteristicFactory;
+    }
 
     /// <inheritdoc />
     public Guid Id { get; }
@@ -50,17 +70,13 @@ public abstract partial class BaseBluetoothLocalService : BaseBindableObject, IB
     /// <inheritdoc />
     public bool IsPrimary { get; }
 
+    #region Dispose
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore().ConfigureAwait(false);
         GC.SuppressFinalize(this);
-    }
-
-    /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"[{Id}] {Name}";
     }
 
     /// <summary>
@@ -70,4 +86,17 @@ public abstract partial class BaseBluetoothLocalService : BaseBindableObject, IB
     {
         await RemoveAllCharacteristicsAsync().ConfigureAwait(false);
     }
+
+    #endregion
+
+    #region ToString
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return $"[{Id}] {Name}";
+    }
+
+    #endregion
+
 }

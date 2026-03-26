@@ -18,8 +18,7 @@ public static class ServiceCollectionExtensions
     public static void AddBluetoothMauiDotNetServices(this IServiceCollection services)
     {
         services.AddSingleton<IBluetoothAdapter, DotNetBluetoothAdapter>();
-
-        services.AddBluetoothMauiDotNetScanningServices();
-        services.AddBluetoothMauiDotNetBroadcastingServices();
+        services.AddSingleton<IBluetoothBroadcaster, DotNetCoreBluetoothBroadcaster>();
+        services.AddSingleton<IBluetoothScanner, DotNetCoreBluetoothScanner>();
     }
 }

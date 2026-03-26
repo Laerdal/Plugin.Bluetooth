@@ -21,8 +21,10 @@ public class AndroidBluetoothRemoteService : BaseBluetoothRemoteService, Bluetoo
     /// <param name="device">The Bluetooth device that owns this service.</param>
     /// <param name="spec">The factory spec containing service information.</param>
     /// <param name="characteristicFactory">The factory for creating characteristics.</param>
-    public AndroidBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory, ILogger<IBluetoothRemoteService>? logger = null) :
-        base(device, spec, characteristicFactory, logger)
+    /// <param name="nameProvider">An optional provider for service names.</param>
+    /// <param name="logger">Optional logger for logging service operations.</param>
+    public AndroidBluetoothRemoteService(IBluetoothRemoteDevice device, IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec, IBluetoothRemoteCharacteristicFactory characteristicFactory, IBluetoothNameProvider? nameProvider = null, ILogger<IBluetoothRemoteService>? logger = null) :
+        base(device, spec, characteristicFactory, nameProvider, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
         if (spec is not AndroidBluetoothRemoteServiceFactorySpec nativeSpec)
@@ -95,7 +97,7 @@ public class AndroidBluetoothRemoteService : BaseBluetoothRemoteService, Bluetoo
         IBluetoothRemoteCharacteristic FromInputTypeToOutputTypeConversion(BluetoothGattCharacteristic nativeCharacteristic)
         {
             var spec = new AndroidBluetoothRemoteCharacteristicFactorySpec(nativeCharacteristic);
-            return CharacteristicFactory.Create(this, spec);
+            return (CharacteristicFactory ?? throw new InvalidOperationException("CharacteristicFactory must be initialized via the spec-based constructor.")).Create(this, spec);
         }
     }
 

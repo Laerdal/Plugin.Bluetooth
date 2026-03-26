@@ -62,7 +62,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     // Connection priority (230-239)
     [LoggerMessage(EventId = 230, Level = LogLevel.Information,
         Message = "Device {DeviceId} requesting connection priority: {Priority}")]
-    partial void LogRequestingConnectionPriority(string deviceId, BluetoothConnectionPriority priority);
+    partial void LogRequestingConnectionPriority(string deviceId, ConnectionPriority priority);
 
     [LoggerMessage(EventId = 231, Level = LogLevel.Error,
         Message = "Device {DeviceId} cannot request connection priority - not connected")]

@@ -12,10 +12,21 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
     /// <returns>The updated service collection for method chaining.</returns>
+    /// <remarks>
+    ///     <para>
+    ///         This method registers unified facade implementations (<see cref="BluetoothScanner"/>
+    ///         and <see cref="BluetoothBroadcaster"/>) that wrap platform-specific implementations.
+    ///         Client projects can inherit from these facades to add custom behavior without
+    ///         dealing with platform-specific conditional compilation.
+    ///     </para>
+    /// </remarks>
     public static void AddBluetoothServices(this IServiceCollection services)
     {
+                ArgumentNullException.ThrowIfNull(services);
+
         services.AddSingleton<ITicker, Ticker>();
         services.AddBluetoothCoreServices();
+                services.AddBluetoothSigProfiles();
         services.AddBluetoothCoreScanningServices();
         services.AddBluetoothCoreBroadcastingServices();
 
@@ -28,5 +39,10 @@ public static class ServiceCollectionExtensions
 #else
         services.AddBluetoothMauiDotNetServices();
 #endif
+
+        // Register unified facade wrappers as the default implementations
+        // These allow client projects to inherit a single class across all platforms
+        services.AddSingleton<IBluetoothScanner, BluetoothScanner>();
+        services.AddSingleton<IBluetoothBroadcaster, BluetoothBroadcaster>();
     }
 }

@@ -5,31 +5,38 @@ namespace Bluetooth.Core.Broadcasting;
 /// </summary>
 public abstract partial class BaseBluetoothConnectedDevice : BaseBindableObject, IBluetoothConnectedDevice
 {
-    /// <summary>
-    ///     The logger instance used for logging connected device operations.
-    /// </summary>
-    private readonly ILogger<IBluetoothConnectedDevice> _logger;
+    /// <inheritdoc />
+    public IBluetoothBroadcaster Broadcaster { get; }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothConnectedDevice" /> class.
     /// </summary>
     /// <param name="broadcaster">The broadcaster that owns this client device.</param>
-    /// <param name="spec">The spec for creating the client device.</param>
+    /// <param name="id">The unique identifier for the connected device, typically a UUID or MAC address.</param>
     /// <param name="logger">The logger for logging operations.</param>
     protected BaseBluetoothConnectedDevice(IBluetoothBroadcaster broadcaster,
-        IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec,
+        string id,
         ILogger<IBluetoothConnectedDevice>? logger = null) : base(logger)
     {
         ArgumentNullException.ThrowIfNull(broadcaster);
-        ArgumentNullException.ThrowIfNull(spec);
 
-        _logger = logger ?? NullLogger<IBluetoothConnectedDevice>.Instance;
         Broadcaster = broadcaster;
-        Id = spec.ClientId;
+        Id = id;
     }
 
-    /// <inheritdoc />
-    public IBluetoothBroadcaster Broadcaster { get; }
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="broadcaster">The broadcaster that owns this client device.</param>
+    /// <param name="spec">The factory spec containing connected device information.</param>
+    /// <param name="logger">The logger for logging operations.</param>
+    protected BaseBluetoothConnectedDevice(
+        IBluetoothBroadcaster broadcaster,
+        IBluetoothConnectedDeviceFactory.BluetoothConnectedDeviceSpec spec,
+        ILogger<IBluetoothConnectedDevice>? logger = null)
+        : this(broadcaster, (spec ?? throw new ArgumentNullException(nameof(spec))).DeviceId, logger)
+    {
+    }
 
     /// <inheritdoc />
     public string Id { get; }
@@ -37,19 +44,15 @@ public abstract partial class BaseBluetoothConnectedDevice : BaseBindableObject,
     /// <inheritdoc />
     public string Name { get; } = "Unknown Client Device";
 
+
+    #region Dispose
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore().ConfigureAwait(false);
         GC.SuppressFinalize(this);
     }
-
-    /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"[{Id}] {Name}";
-    }
-
     /// <summary>
     ///     Disposes the resources asynchronously.
     /// </summary>
@@ -58,4 +61,16 @@ public abstract partial class BaseBluetoothConnectedDevice : BaseBindableObject,
         RemoveAllCharacteristicSubscriptions();
         return ValueTask.CompletedTask;
     }
+
+    #endregion
+
+    #region ToString
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return $"[{Id}] {Name}";
+    }
+
+    #endregion
 }

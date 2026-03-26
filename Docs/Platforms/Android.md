@@ -481,7 +481,7 @@ If connection still fails:
 
 Android BLE implementations vary by manufacturer:
 - **Samsung**: Generally reliable, good BLE 5.0 support
-- **Google Pixel**: Excellent, reference implementation
+- **Google Pixel**: Reference implementation, generally consistent behavior
 - **Xiaomi/Huawei**: Variable quality, test thoroughly
 - **Budget devices**: Often unreliable, may have limited concurrent connections
 
@@ -694,9 +694,9 @@ ConnectionPriority = BluetoothConnectionPriority.LowPower
 ### Related Documentation
 - [Platform Comparison](Comparison.md)
 - [iOS Platform Guide](iOS-macOS.md)
-- [L2CAP Configuration](../L2CAP_ADDITIONAL_OPTIONS.md)
-- [Retry Options](../Configuration/RetryOptions.md)
+- [L2CAP Configuration](../Configuration/L2CAP-Options.md)
+- [Connection Options](../Configuration/Connection-Options.md)
 
 ### Community Resources
-- [Making Android BLE Work](https://punchthrough.com/android-ble-guide/) - Excellent troubleshooting guide
+- [Making Android BLE Work](https://punchthrough.com/android-ble-guide/) - Third-party troubleshooting guide
 - [Android BLE Issues Tracker](https://issuetracker.google.com/issues?q=componentid:192697) - Official bug tracker

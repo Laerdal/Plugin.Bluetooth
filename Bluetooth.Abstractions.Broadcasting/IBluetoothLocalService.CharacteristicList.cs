@@ -9,11 +9,17 @@ public partial interface IBluetoothLocalService
     /// <summary>
     ///     Adds a GATT characteristic to be hosted by the broadcaster.
     /// </summary>
-    /// <param name="spec">The spec containing the characteristic details.</param>
+    /// <param name="id">The UUID of the characteristic to add.</param>
+    /// <param name="properties">The GATT properties supported by this characteristic (Read/Write/Notify/Indicate, etc.).</param>
+    /// <param name="permissions">The permissions of the characteristic.</param>
+    /// <param name="name">An optional name for the characteristic. If not provided, a default name may be assigned based on the UUID or other heuristics.</param>
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>The added characteristic.</returns>
-    ValueTask<IBluetoothLocalCharacteristic> AddCharacteristicAsync(IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec spec,
+    ValueTask<IBluetoothLocalCharacteristic> CreateCharacteristicAsync(Guid id,
+        BluetoothCharacteristicProperties properties,
+        BluetoothCharacteristicPermissions permissions,
+        string? name = null,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default);
 
@@ -109,4 +115,5 @@ public partial interface IBluetoothLocalService
     bool HasCharacteristic(Guid id);
 
     #endregion
+
 }

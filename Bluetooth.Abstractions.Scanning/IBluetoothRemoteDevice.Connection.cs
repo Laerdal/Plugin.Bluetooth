@@ -32,7 +32,7 @@ public partial interface IBluetoothRemoteDevice
     ///     </para>
     ///     <para>Changes typically take effect within a few connection intervals after the request.</para>
     /// </remarks>
-    ValueTask RequestConnectionPriorityAsync(BluetoothConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    ValueTask RequestConnectionPriorityAsync(ConnectionPriority priority, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
 

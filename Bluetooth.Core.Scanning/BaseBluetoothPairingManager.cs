@@ -3,6 +3,9 @@ namespace Bluetooth.Core.Scanning;
 /// <inheritdoc cref="IBluetoothPairingManager" />
 public abstract class BaseBluetoothPairingManager : BaseBindableObject, IBluetoothPairingManager
 {
+    /// <inheritdoc />
+    public IBluetoothAdapter Adapter { get; }
+    
     /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothPairingManager" /> class.
     /// </summary>
@@ -10,12 +13,12 @@ public abstract class BaseBluetoothPairingManager : BaseBindableObject, IBluetoo
     /// <param name="logger">The logger instance to use for logging.</param>
     protected BaseBluetoothPairingManager(IBluetoothAdapter adapter, ILogger? logger = null) : base(logger)
     {
+        // Validate constructor arguments
         ArgumentNullException.ThrowIfNull(adapter);
+        
+        // Parent
         Adapter = adapter;
     }
-
-    /// <inheritdoc />
-    public IBluetoothAdapter Adapter { get; }
 
     /// <inheritdoc />
     public event EventHandler<PairingStateChangedEventArgs>? PairingStateChanged;

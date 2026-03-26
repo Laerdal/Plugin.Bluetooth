@@ -4,10 +4,6 @@ public abstract partial class BaseBluetoothScanner
 {
     #region LoggerMessage Definitions (EventId 100-199)
 
-    [LoggerMessage(EventId = 100, Level = LogLevel.Information,
-        Message = "Scanner starting with {ServiceUuidCount} service UUIDs")]
-    partial void LogScannerStarting(int serviceUuidCount);
-
     [LoggerMessage(EventId = 101, Level = LogLevel.Information,
         Message = "Scanner started successfully")]
     partial void LogScannerStarted();

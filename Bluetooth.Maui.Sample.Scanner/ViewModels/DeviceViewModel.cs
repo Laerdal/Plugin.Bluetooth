@@ -231,7 +231,7 @@ public class DeviceViewModel : BaseViewModel
             return;
         }
 
-        _logger.LogInformation("Service selected: {ServiceId} on device: {DeviceName}", service.Id, DeviceName);
+        _logger.LogInformation("Service selected: {Id} on device: {DeviceName}", service.Id, DeviceName);
 
         // Navigate to CharacteristicsPage with the selected service
         var parameters = new Dictionary<string, object>

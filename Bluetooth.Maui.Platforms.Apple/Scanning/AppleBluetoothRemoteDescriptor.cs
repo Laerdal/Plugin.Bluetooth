@@ -10,19 +10,35 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
     private bool _canWrite = true; // iOS doesn't provide explicit write permissions for descriptors, so we optimistically assume we can write until we get an error.
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteDescriptor" /> class with the specified characteristic and factory spec.
+    ///     Initializes a new instance of the <see cref="AppleBluetoothRemoteDescriptor" /> class with the specified Core Bluetooth descriptor, parent characteristic, ID, and logger.
     /// </summary>
-    /// <param name="remoteCharacteristic">The Bluetooth characteristic to which this descriptor belongs.</param>
-    /// <param name="spec">The factory spec containing the native Core Bluetooth descriptor.</param>
-    public AppleBluetoothRemoteDescriptor(IBluetoothRemoteCharacteristic remoteCharacteristic, IBluetoothRemoteDescriptorFactory.BluetoothRemoteDescriptorFactorySpec spec) : base(remoteCharacteristic, spec)
+    /// <param name="cbDescriptor">The native iOS Core Bluetooth descriptor represented by this remote descriptor.</param>
+    /// <param name="parentCharacteristic">The Bluetooth characteristic to which this descriptor belongs.</param>
+    /// <param name="id">The unique identifier for this descriptor.</param>
+    /// <param name="nameProvider">An optional name provider for resolving the descriptor's name based on its ID.</param>
+    /// <param name="logger">An optional logger for logging descriptor-related events and errors.</param>
+    public AppleBluetoothRemoteDescriptor(CBDescriptor cbDescriptor,
+        IBluetoothRemoteCharacteristic parentCharacteristic,
+        Guid id,
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteDescriptor>? logger = null) : base(parentCharacteristic, id, nameProvider, logger)
+    {
+        CbDescriptor = cbDescriptor;
+    }
+
+    /// <summary>
+    ///     Initializes a new instance using a factory spec.
+    /// </summary>
+    /// <param name="parentCharacteristic">The Bluetooth characteristic to which this descriptor belongs.</param>
+    /// <param name="spec">The Apple-specific factory spec containing the native descriptor.</param>
+    /// <param name="logger">An optional logger for logging descriptor-related events and errors.</param>
+    public AppleBluetoothRemoteDescriptor(
+        IBluetoothRemoteCharacteristic parentCharacteristic,
+        AppleBluetoothRemoteDescriptorFactorySpec spec,
+        ILogger<IBluetoothRemoteDescriptor>? logger = null) : base(parentCharacteristic, spec, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
-        if (spec is not AppleBluetoothRemoteDescriptorFactorySpec nativeSpec)
-        {
-            throw new ArgumentException($"Expected spec of type {typeof(AppleBluetoothRemoteDescriptorFactorySpec)}, but got {spec.GetType()}");
-        }
-
-        CbDescriptor = nativeSpec.CbDescriptor;
+        CbDescriptor = spec.CbDescriptor;
     }
 
     /// <summary>
@@ -33,7 +49,7 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
     /// <summary>
     ///     Gets the Bluetooth characteristic to which this descriptor belongs, cast to the Apple-specific implementation.
     /// </summary>
-    public AppleBluetoothRemoteCharacteristic AppleBluetoothRemoteCharacteristic => (AppleBluetoothRemoteCharacteristic) RemoteCharacteristic;
+    public AppleBluetoothRemoteCharacteristic AppleBluetoothRemoteCharacteristic => (AppleBluetoothRemoteCharacteristic) Characteristic;
 
     /// <inheritdoc />
     public void UpdatedValue(NSError? error, CBDescriptor descriptor)
@@ -44,12 +60,12 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
             ArgumentNullException.ThrowIfNull(descriptor);
 
             var data = descriptor.Value.ToReadOnlyMemoryBytes();
-            Logger?.LogDescriptorReadCompleted(Id, RemoteCharacteristic.RemoteService.Device.Id, data.Length);
+            Logger?.LogDescriptorReadCompleted(Id, Characteristic.Service.Device.Id, data.Length);
             OnReadValueSucceeded(data);
         }
         catch (Exception e)
         {
-            Logger?.LogDescriptorReadError(Id, RemoteCharacteristic.RemoteService.Device.Id, e.Message, e);
+            Logger?.LogDescriptorReadError(Id, Characteristic.Service.Device.Id, e.Message, e);
             OnReadValueFailed(e);
         }
     }
@@ -60,7 +76,7 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
-            Logger?.LogDescriptorWriteCompleted(Id, RemoteCharacteristic.RemoteService.Device.Id);
+            Logger?.LogDescriptorWriteCompleted(Id, Characteristic.Service.Device.Id);
             OnWriteValueSucceeded();
         }
         catch (Exception e)
@@ -71,7 +87,7 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
                 _canWrite = false;
             }
 
-            Logger?.LogDescriptorWriteError(Id, RemoteCharacteristic.RemoteService.Device.Id, e.Message, e);
+            Logger?.LogDescriptorWriteError(Id, Characteristic.Service.Device.Id, e.Message, e);
             OnWriteValueFailed(e);
         }
     }
@@ -79,7 +95,7 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
     /// <inheritdoc />
     protected override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
-        Logger?.LogDescriptorWrite(Id, RemoteCharacteristic.RemoteService.Device.Id, value.Length);
+        Logger?.LogDescriptorWrite(Id, Characteristic.Service.Device.Id, value.Length);
         AppleBluetoothRemoteCharacteristic.AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.WriteValue(value.ToNSData(), CbDescriptor);
         return ValueTask.CompletedTask;
     }
@@ -93,7 +109,7 @@ public class AppleBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor, CbP
     /// <inheritdoc />
     protected override ValueTask NativeReadValueAsync()
     {
-        Logger?.LogDescriptorRead(Id, RemoteCharacteristic.RemoteService.Device.Id);
+        Logger?.LogDescriptorRead(Id, Characteristic.Service.Device.Id);
         AppleBluetoothRemoteCharacteristic.AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.ReadValue(CbDescriptor);
         return ValueTask.CompletedTask;
     }

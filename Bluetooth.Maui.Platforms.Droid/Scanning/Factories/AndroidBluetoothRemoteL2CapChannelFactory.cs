@@ -1,7 +1,5 @@
 using Bluetooth.Abstractions.Scanning;
-using Bluetooth.Abstractions.Scanning.Factories;
 using Bluetooth.Abstractions.Scanning.Options;
-using Bluetooth.Core.Scanning.Factories;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -10,8 +8,11 @@ namespace Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 /// <summary>
 ///     Android implementation of the Bluetooth L2CAP channel factory.
 /// </summary>
-public class AndroidBluetoothRemoteL2CapChannelFactory : BaseBluetoothRemoteL2CapChannelFactory
+public class AndroidBluetoothRemoteL2CapChannelFactory : IBluetoothRemoteL2CapChannelFactory
 {
+    private readonly L2CapChannelOptions? _options;
+    private readonly ILoggerFactory? _loggerFactory;
+
     /// <summary>
     ///     Initializes a new instance of the <see cref="AndroidBluetoothRemoteL2CapChannelFactory" /> class.
     /// </summary>
@@ -20,12 +21,13 @@ public class AndroidBluetoothRemoteL2CapChannelFactory : BaseBluetoothRemoteL2Ca
     public AndroidBluetoothRemoteL2CapChannelFactory(
         IOptions<L2CapChannelOptions>? options = null,
         ILoggerFactory? loggerFactory = null)
-        : base(options, loggerFactory)
     {
+        _options = options?.Value;
+        _loggerFactory = loggerFactory;
     }
 
     /// <inheritdoc />
-    public override IBluetoothL2CapChannel Create(
+    public IBluetoothRemoteL2CapChannel Create(
         IBluetoothRemoteDevice device,
         IBluetoothRemoteL2CapChannelFactory.BluetoothRemoteL2CapChannelFactorySpec spec)
     {
@@ -39,12 +41,12 @@ public class AndroidBluetoothRemoteL2CapChannelFactory : BaseBluetoothRemoteL2Ca
             throw new ArgumentException("Request must be AndroidBluetoothRemoteL2CapChannelFactorySpec", nameof(spec));
         }
 
-        var logger = LoggerFactory?.CreateLogger<IBluetoothL2CapChannel>();
+        var logger = _loggerFactory?.CreateLogger<IBluetoothRemoteL2CapChannel>();
         return new AndroidBluetoothRemoteL2CapChannel(
                                                       androidDevice,
                                                       nativeSpec.NativeDevice,
                                                       nativeSpec.Psm,
-                                                      Options,
+                                                      _options,
                                                       logger);
     }
 }

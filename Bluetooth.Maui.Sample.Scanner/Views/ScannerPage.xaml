@@ -11,12 +11,6 @@
                       x:DataType="vm:ScannerViewModel"
                       Title="BLE Scanner">
 
-    <base:BaseContentPage.Resources>
-        <ResourceDictionary>
-            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
-        </ResourceDictionary>
-    </base:BaseContentPage.Resources>
-
     <Grid RowDefinitions="Auto,*" Padding="16">
 
         <!-- Control Panel -->
@@ -56,6 +50,67 @@
                         IsVisible="{Binding IsScanning}"
                         WidthRequest="120" />
             </HorizontalStackLayout>
+
+            <Button Text="Closest Device Mode"
+                    Command="{Binding OpenClosestDeviceScanCommand}"
+                    HorizontalOptions="Center"
+                    WidthRequest="220" />
+
+            <toolkit:Expander IsExpanded="False">
+                <toolkit:Expander.Header>
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" VerticalOptions="Center">
+                        <Label Grid.Column="0"
+                               Text="⚙️"
+                               FontSize="14"
+                               VerticalOptions="Center" />
+                        <Label Grid.Column="1"
+                               Text="Filters"
+                               FontAttributes="Bold"
+                               FontSize="15"
+                               VerticalOptions="Center" />
+                        <Button Grid.Column="2"
+                                Text="Clear"
+                                Command="{Binding ClearFiltersCommand}"
+                                FontSize="12"
+                                Padding="10,6" />
+                    </Grid>
+                </toolkit:Expander.Header>
+
+                <toolkit:Expander.Content>
+                    <!-- Filters -->
+                    <Border Padding="12"
+                            Margin="0,8,0,0"
+                            Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}"
+                            StrokeShape="RoundRectangle 8">
+                        <VerticalStackLayout Spacing="8">
+                            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                                <Switch IsToggled="{Binding HideUnnamedDevices}" />
+                                <Label Text="Hide unnamed devices"
+                                       VerticalOptions="Center"
+                                       FontSize="13" />
+                            </HorizontalStackLayout>
+
+                            <Entry Placeholder="Name contains (e.g. Sensor)"
+                                   Text="{Binding NamePattern}" />
+
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="Minimum signal strength"
+                                       FontSize="13" />
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding MinimumSignalStrengthText}"
+                                       FontSize="13"
+                                       FontAttributes="Bold" />
+                                <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                        Minimum="-100"
+                                        Maximum="-30"
+                                        Value="{Binding MinimumSignalStrengthDbm}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </toolkit:Expander.Content>
+            </toolkit:Expander>
 
             <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDividerColor}}" Margin="0,8" />
         </VerticalStackLayout>

@@ -23,7 +23,7 @@ public abstract partial class BaseBluetoothRemoteDescriptor
     public async ValueTask WriteValueAsync(ReadOnlyMemory<byte> value, bool skipIfOldValueMatchesNewValue = false, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         // Ensure Device is Connected
-        DeviceNotConnectedException.ThrowIfNotConnected(RemoteCharacteristic.RemoteService.Device);
+        DeviceNotConnectedException.ThrowIfNotConnected(Characteristic.Service.Device);
 
         // Ensure WRITE is supported
         if (!CanWrite)

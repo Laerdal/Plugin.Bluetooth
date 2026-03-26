@@ -31,7 +31,7 @@ Infrastructure options are configured once during application startup and affect
 
 ## Key Distinction
 
-Understanding the difference between infrastructure options and operation options is crucial:
+Infrastructure options and operation options differ in scope:
 
 | Aspect | Infrastructure Options | Operation Options |
 |--------|----------------------|-------------------|
