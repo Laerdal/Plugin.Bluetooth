@@ -6,12 +6,14 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning.Factories;
 public class WindowsBluetoothRemoteCharacteristicFactory : IBluetoothRemoteCharacteristicFactory
 {
     private readonly IBluetoothRemoteDescriptorFactory _descriptorFactory;
+    private readonly IBluetoothNameProvider? _nameProvider;
     private readonly ILoggerFactory? _loggerFactory;
 
     /// <inheritdoc/>
-    public WindowsBluetoothRemoteCharacteristicFactory(IBluetoothRemoteDescriptorFactory descriptorFactory, ILoggerFactory? loggerFactory = null)
+    public WindowsBluetoothRemoteCharacteristicFactory(IBluetoothRemoteDescriptorFactory descriptorFactory, IBluetoothNameProvider? nameProvider = null, ILoggerFactory? loggerFactory = null)
     {
         _descriptorFactory = descriptorFactory;
+        _nameProvider = nameProvider;
         _loggerFactory = loggerFactory;
     }
 
@@ -21,6 +23,6 @@ public class WindowsBluetoothRemoteCharacteristicFactory : IBluetoothRemoteChara
         IBluetoothRemoteCharacteristicFactory.BluetoothRemoteCharacteristicFactorySpec spec)
     {
         var logger = _loggerFactory?.CreateLogger<IBluetoothRemoteCharacteristic>();
-        return new WindowsBluetoothRemoteCharacteristic(service, spec, _descriptorFactory, logger);
+        return new WindowsBluetoothRemoteCharacteristic(service, spec, _descriptorFactory, _nameProvider, logger);
     }
 }

@@ -16,5 +16,9 @@ public static class ServiceCollectionExtensions
     {
         // Default Rssi to signal strength converter
         services.AddSingleton<IBluetoothRssiToSignalStrengthConverter, LinearRssiToSignalStrengthConverter>();
+
+        // Profile registry and name provider
+        services.AddSingleton<IBluetoothProfileRegistry, BluetoothProfileRegistry>();
+        services.AddSingleton<IBluetoothNameProvider, ProfileNameProvider>();
     }
 }

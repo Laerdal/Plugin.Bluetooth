@@ -20,6 +20,8 @@ global using Bluetooth.Abstractions.EventArgs;
 global using Bluetooth.Abstractions.Exceptions;
 global using Bluetooth.Abstractions.Scanning;
 global using Bluetooth.Abstractions.Scanning.Converters;
+global using Bluetooth.Abstractions.Scanning.Profiles;
+global using Bluetooth.Core.Scanning.Profiles;
 global using Bluetooth.Abstractions.Scanning.EventArgs;
 global using Bluetooth.Abstractions.Scanning.Exceptions;
 global using Bluetooth.Abstractions.Scanning.Options;

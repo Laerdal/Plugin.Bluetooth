@@ -42,13 +42,15 @@ public abstract partial class BaseBluetoothRemoteService : BaseBindableObject, I
     /// <param name="parentDevice">The Bluetooth device associated with this service.</param>
     /// <param name="spec">The factory spec containing service information.</param>
     /// <param name="characteristicFactory">The factory for creating Bluetooth remote characteristics.</param>
+    /// <param name="nameProvider">An optional provider for service names, used to resolve the name based on the ID.</param>
     /// <param name="logger">The logger instance to use for logging (optional).</param>
     protected BaseBluetoothRemoteService(
         IBluetoothRemoteDevice parentDevice,
         IBluetoothRemoteServiceFactory.BluetoothRemoteServiceFactorySpec spec,
         IBluetoothRemoteCharacteristicFactory characteristicFactory,
+        IBluetoothNameProvider? nameProvider = null,
         ILogger<IBluetoothRemoteService>? logger = null)
-        : this(parentDevice, (spec ?? throw new ArgumentNullException(nameof(spec))).ServiceId, null, logger)
+        : this(parentDevice, (spec ?? throw new ArgumentNullException(nameof(spec))).ServiceId, nameProvider, logger)
     {
         ArgumentNullException.ThrowIfNull(characteristicFactory);
         CharacteristicFactory = characteristicFactory;

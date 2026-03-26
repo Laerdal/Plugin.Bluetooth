@@ -33,12 +33,14 @@ public class AppleBluetoothRemoteService : BaseBluetoothRemoteService, CbPeriphe
     /// <param name="parentDevice">The Bluetooth device associated with this service.</param>
     /// <param name="spec">The Apple-specific factory spec containing the native service.</param>
     /// <param name="characteristicFactory">The factory for creating remote characteristics.</param>
+    /// <param name="nameProvider">An optional provider for service names.</param>
     /// <param name="logger">An optional logger for logging service-related events and errors.</param>
     public AppleBluetoothRemoteService(
         IBluetoothRemoteDevice parentDevice,
         AppleBluetoothRemoteServiceFactorySpec spec,
         IBluetoothRemoteCharacteristicFactory characteristicFactory,
-        ILogger<IBluetoothRemoteService>? logger = null) : base(parentDevice, spec, characteristicFactory, logger)
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteService>? logger = null) : base(parentDevice, spec, characteristicFactory, nameProvider, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
         CbService = spec.CbService;

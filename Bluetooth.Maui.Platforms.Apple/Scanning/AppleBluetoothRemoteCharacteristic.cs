@@ -34,12 +34,14 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
     /// <param name="parentService">The Bluetooth service to which this characteristic belongs.</param>
     /// <param name="spec">The Apple-specific factory spec containing the native characteristic.</param>
     /// <param name="descriptorFactory">The factory for creating remote descriptors.</param>
+    /// <param name="nameProvider">An optional provider for characteristic names.</param>
     /// <param name="logger">An optional logger for logging characteristic-related events and errors.</param>
     public AppleBluetoothRemoteCharacteristic(
         IBluetoothRemoteService parentService,
         AppleBluetoothRemoteCharacteristicFactorySpec spec,
         IBluetoothRemoteDescriptorFactory descriptorFactory,
-        ILogger<IBluetoothRemoteCharacteristic>? logger = null) : base(parentService, spec, descriptorFactory, logger)
+        IBluetoothNameProvider? nameProvider = null,
+        ILogger<IBluetoothRemoteCharacteristic>? logger = null) : base(parentService, spec, descriptorFactory, nameProvider, logger)
     {
         ArgumentNullException.ThrowIfNull(spec);
         CbCharacteristic = spec.CbCharacteristic;
