@@ -550,7 +550,7 @@ public object? Android { get; init; }
 
 **Default**: `null`
 
-Android platform-specific scanning options. Cast to `Bluetooth.Maui.Platforms.Droid.Scanning.Options.AndroidScanningOptions`.
+Android platform-specific scanning options. Cast to `Bluetooth.Abstractions.Scanning.Options.Android.AndroidScanningOptions`.
 
 **AndroidScanningOptions Properties**:
 
@@ -600,7 +600,7 @@ Bluetooth 5.0 PHY selection:
 **Example**:
 ```csharp
 #if ANDROID
-using Bluetooth.Maui.Platforms.Droid.Scanning.Options;
+using Bluetooth.Abstractions.Scanning.Options.Android;
 #endif
 
 var options = new ScanningOptions

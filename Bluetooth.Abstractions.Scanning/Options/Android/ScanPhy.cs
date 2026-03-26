@@ -1,7 +1,5 @@
 namespace Bluetooth.Abstractions.Scanning.Options.Android;
 
-#pragma warning disable CA1008 // Enums should have zero value
-
 /// <summary>
 ///     Android PHY types for scanning (API 26+).
 /// </summary>
@@ -13,10 +11,10 @@ namespace Bluetooth.Abstractions.Scanning.Options.Android;
 public enum ScanPhy
 {
     /// <summary>
-    ///     All supported PHYs (default).
-    ///     Maps to ScanSettings.PHY_LE_ALL_SUPPORTED (value: 0).
+    ///     No specific PHY preference.
+    ///     Not used directly; see <see cref="AllSupported"/> for default behavior.
     /// </summary>
-    AllSupported = 0,
+    None = 0,
 
     /// <summary>
     ///     1M PHY only (standard Bluetooth LE).
@@ -34,7 +32,11 @@ public enum ScanPhy
     ///     Coded PHY (Long Range, Bluetooth 5.0+).
     ///     Maps to ScanSettings.PHY_LE_CODED_MASK (value: 4).
     /// </summary>
-    LeCoded = 4
-}
+    LeCoded = 4,
 
-#pragma warning restore CA1008 // Enums should have zero value
+    /// <summary>
+    ///     All supported PHYs (default).
+    ///     Combination of all PHY masks. Maps to ScanSettings.PHY_LE_ALL_SUPPORTED (value: 255) in platform adapter.
+    /// </summary>
+    AllSupported = Le1M | Le2M | LeCoded
+}

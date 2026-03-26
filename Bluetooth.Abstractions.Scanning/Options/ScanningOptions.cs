@@ -190,7 +190,7 @@ public record ScanningOptions
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         Should be an instance of <c>Bluetooth.Maui.Platforms.Droid.Scanning.Options.AndroidScanningOptions</c>.
+    ///         Should be an instance of <c>Bluetooth.Abstractions.Scanning.Options.Android.AndroidScanningOptions</c>.
     ///         These options are only used on Android platforms and are ignored on other platforms.
     ///     </para>
     ///     <para>
