@@ -12,10 +12,10 @@ public partial interface IBluetoothBroadcaster : IAsyncDisposable
     IBluetoothAdapter Adapter { get; }
 
     /// <summary>
-    ///     Gets the logger factory for creating loggers within the Bluetooth scanner implementation.
+    ///     Gets the logger factory for creating loggers within the Bluetooth broadcaster/server implementation.
     /// </summary>
     ILoggerFactory? LoggerFactory { get; }
-    
+
     #region Permissions
 
     /// <summary>
