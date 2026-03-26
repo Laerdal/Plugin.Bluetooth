@@ -244,6 +244,18 @@ public class BluetoothRemoteDevice : IBluetoothRemoteDevice
         set => _platformDevice.IgnoreNextUnexpectedDisconnection = value;
     }
 
+    /// <inheritdoc />
+    public double? BatteryLevelPercent => _platformDevice.BatteryLevelPercent;
+
+    /// <inheritdoc />
+    public Version? FirmwareVersion => _platformDevice.FirmwareVersion;
+
+    /// <inheritdoc />
+    public Version? SoftwareVersion => _platformDevice.SoftwareVersion;
+
+    /// <inheritdoc />
+    public string? HardwareVersion => _platformDevice.HardwareVersion;
+
     #endregion
 
     #region IBluetoothRemoteDevice Implementation - Events
@@ -286,6 +298,40 @@ public class BluetoothRemoteDevice : IBluetoothRemoteDevice
 
     /// <inheritdoc />
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    #endregion
+
+    #region IBluetoothRemoteDevice Implementation - Profile Convenience APIs
+
+    /// <inheritdoc />
+    public ValueTask<double?> ReadBatteryLevelAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        return _platformDevice.ReadBatteryLevelAsync(timeout, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<Version> ReadFirmwareVersionAsync()
+    {
+        return _platformDevice.ReadFirmwareVersionAsync();
+    }
+
+    /// <inheritdoc />
+    public Task<Version> ReadSoftwareVersionAsync()
+    {
+        return _platformDevice.ReadSoftwareVersionAsync();
+    }
+
+    /// <inheritdoc />
+    public Task<string> ReadHardwareVersionAsync()
+    {
+        return _platformDevice.ReadHardwareVersionAsync();
+    }
+
+    /// <inheritdoc />
+    public Task ReadVersionsAsync()
+    {
+        return _platformDevice.ReadVersionsAsync();
+    }
 
     #endregion
 

@@ -8,6 +8,24 @@ namespace Bluetooth.Core.Scanning.Profiles;
 public static class CharacteristicCodecFactory
 {
     /// <summary>
+    ///     Creates a codec for signed byte values.
+    /// </summary>
+    public static ICharacteristicCodec<sbyte, sbyte> ForSByte()
+    {
+        return new DelegateCharacteristicCodec<sbyte, sbyte>(
+            bytes =>
+            {
+                if (bytes.Length < 1)
+                {
+                    throw new CharacteristicCodecException(typeof(sbyte), bytes, "Cannot decode signed byte from an empty payload.");
+                }
+
+                return unchecked((sbyte) bytes.Span[0]);
+            },
+            value => new[] { unchecked((byte) value) });
+    }
+
+    /// <summary>
     ///     Creates a codec for byte values.
     /// </summary>
     public static ICharacteristicCodec<byte, byte> ForByte()
@@ -102,6 +120,101 @@ public static class CharacteristicCodecFactory
     }
 
     /// <summary>
+    ///     Creates a codec for signed 64-bit integer values using little-endian byte order.
+    /// </summary>
+    public static ICharacteristicCodec<long, long> ForInt64()
+    {
+        return new DelegateCharacteristicCodec<long, long>(
+            bytes =>
+            {
+                EnsureLength(bytes, sizeof(long), typeof(long));
+                return BinaryPrimitives.ReadInt64LittleEndian(bytes.Span);
+            },
+            value =>
+            {
+                var buffer = new byte[sizeof(long)];
+                BinaryPrimitives.WriteInt64LittleEndian(buffer, value);
+                return buffer;
+            });
+    }
+
+    /// <summary>
+    ///     Creates a codec for unsigned 64-bit integer values using little-endian byte order.
+    /// </summary>
+    public static ICharacteristicCodec<ulong, ulong> ForUInt64()
+    {
+        return new DelegateCharacteristicCodec<ulong, ulong>(
+            bytes =>
+            {
+                EnsureLength(bytes, sizeof(ulong), typeof(ulong));
+                return BinaryPrimitives.ReadUInt64LittleEndian(bytes.Span);
+            },
+            value =>
+            {
+                var buffer = new byte[sizeof(ulong)];
+                BinaryPrimitives.WriteUInt64LittleEndian(buffer, value);
+                return buffer;
+            });
+    }
+
+    /// <summary>
+    ///     Creates a codec for character values using UTF-16 little-endian encoding.
+    /// </summary>
+    public static ICharacteristicCodec<char, char> ForChar()
+    {
+        return new DelegateCharacteristicCodec<char, char>(
+            bytes =>
+            {
+                EnsureLength(bytes, sizeof(char), typeof(char));
+                return (char) BinaryPrimitives.ReadUInt16LittleEndian(bytes.Span);
+            },
+            value =>
+            {
+                var buffer = new byte[sizeof(char)];
+                BinaryPrimitives.WriteUInt16LittleEndian(buffer, value);
+                return buffer;
+            });
+    }
+
+    /// <summary>
+    ///     Creates a codec for single precision floating-point values using little-endian byte order.
+    /// </summary>
+    public static ICharacteristicCodec<float, float> ForSingle()
+    {
+        return new DelegateCharacteristicCodec<float, float>(
+            bytes =>
+            {
+                EnsureLength(bytes, sizeof(float), typeof(float));
+                return BinaryPrimitives.ReadSingleLittleEndian(bytes.Span);
+            },
+            value =>
+            {
+                var buffer = new byte[sizeof(float)];
+                BinaryPrimitives.WriteSingleLittleEndian(buffer, value);
+                return buffer;
+            });
+    }
+
+    /// <summary>
+    ///     Creates a codec for double precision floating-point values using little-endian byte order.
+    /// </summary>
+    public static ICharacteristicCodec<double, double> ForDouble()
+    {
+        return new DelegateCharacteristicCodec<double, double>(
+            bytes =>
+            {
+                EnsureLength(bytes, sizeof(double), typeof(double));
+                return BinaryPrimitives.ReadDoubleLittleEndian(bytes.Span);
+            },
+            value =>
+            {
+                var buffer = new byte[sizeof(double)];
+                BinaryPrimitives.WriteDoubleLittleEndian(buffer, value);
+                return buffer;
+            });
+    }
+
+    /// <summary>
     ///     Creates a codec for boolean values.
     /// </summary>
     public static ICharacteristicCodec<bool, bool> ForBool()
@@ -129,6 +242,25 @@ public static class CharacteristicCodecFactory
         return new DelegateCharacteristicCodec<string, string>(
             bytes => effectiveEncoding.GetString(bytes.Span),
             value => effectiveEncoding.GetBytes(value ?? string.Empty));
+    }
+
+    /// <summary>
+    ///     Creates a codec for <see cref="Version" /> values using UTF-8 string serialization.
+    /// </summary>
+    public static ICharacteristicCodec<Version, Version> ForVersion()
+    {
+        return new DelegateCharacteristicCodec<Version, Version>(
+            bytes =>
+            {
+                var text = Encoding.UTF8.GetString(bytes.Span);
+                if (Version.TryParse(text, out var version) && version != null)
+                {
+                    return version;
+                }
+
+                throw new CharacteristicCodecException(typeof(Version), bytes, $"Cannot decode Version from payload '{text}'.");
+            },
+            value => Encoding.UTF8.GetBytes(value?.ToString() ?? string.Empty));
     }
 
     /// <summary>

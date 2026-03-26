@@ -34,6 +34,7 @@ Goal of these docs:
 
 ### Configuration
 - [Dependency Injection](Configuration/Dependency-Injection.md)
+- [Profile Migration](Configuration/Profile-Migration.md)
 - [Infrastructure Options](Configuration/Infrastructure-Options.md)
 - [Scanning Options](Configuration/Scanning-Options.md)
 - [Connection Options](Configuration/Connection-Options.md)

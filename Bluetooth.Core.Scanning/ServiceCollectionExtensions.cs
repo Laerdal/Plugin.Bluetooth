@@ -46,6 +46,9 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton<BluetoothProfileRegistrar>(_ => BatteryProfile.Register);
+        services.AddSingleton<BluetoothProfileRegistrar>(_ => DeviceInformationProfile.Register);
+        services.AddSingleton<BluetoothProfileRegistrar>(_ => GenericAccessProfile.Register);
+        services.AddSingleton<BluetoothProfileRegistrar>(_ => GenericAttributeProfile.Register);
         return services;
     }
 }

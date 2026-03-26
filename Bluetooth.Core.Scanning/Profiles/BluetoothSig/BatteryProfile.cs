@@ -16,6 +16,17 @@ public static class BatteryProfile
     public static readonly Guid BatteryLevelCharacteristicId = Guid.Parse($"00002a19{BluetoothSigConstants.StandardGuidExtension}");
 
     /// <summary>
+    ///     Gets an accessor for the Battery Level characteristic.
+    /// </summary>
+    public static IBluetoothCharacteristicAccessor<byte, byte> BatteryLevel { get; } =
+        new CharacteristicAccessor<byte, byte>(
+            ServiceId,
+            BatteryLevelCharacteristicId,
+            CharacteristicCodecFactory.ForByte(),
+            "Battery Service",
+            "Battery Level");
+
+    /// <summary>
     ///     Registers Battery Service and Battery Level characteristic definitions in the provided profile registry.
     /// </summary>
     /// <param name="registry">The profile registry that receives the profile definitions.</param>
@@ -24,6 +35,6 @@ public static class BatteryProfile
         ArgumentNullException.ThrowIfNull(registry);
 
         registry.Register(new BluetoothServiceDefinition(ServiceId, "Battery Service"));
-        registry.Register(new BluetoothCharacteristicDefinition(ServiceId, BatteryLevelCharacteristicId, "Battery Level"));
+        registry.Register(new BluetoothCharacteristicDefinition(BatteryLevel.ServiceId, BatteryLevel.CharacteristicId, BatteryLevel.CharacteristicName));
     }
 }
