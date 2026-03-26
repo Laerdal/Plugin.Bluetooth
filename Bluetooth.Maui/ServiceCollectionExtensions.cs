@@ -22,8 +22,11 @@ public static class ServiceCollectionExtensions
     /// </remarks>
     public static void AddBluetoothServices(this IServiceCollection services)
     {
+                ArgumentNullException.ThrowIfNull(services);
+
         services.AddSingleton<ITicker, Ticker>();
         services.AddBluetoothCoreServices();
+                services.AddBluetoothSigProfiles();
         services.AddBluetoothCoreScanningServices();
         services.AddBluetoothCoreBroadcastingServices();
 

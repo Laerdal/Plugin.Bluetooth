@@ -16,16 +16,36 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated service collection for method chaining.</returns>
     public static void AddBluetoothCoreScanningServices(this IServiceCollection services)
     {
+        ArgumentNullException.ThrowIfNull(services);
+
         // Default Rssi to signal strength converter
         services.AddSingleton<IBluetoothRssiToSignalStrengthConverter, LinearRssiToSignalStrengthConverter>();
 
         // Profile registry and name provider
-        services.AddSingleton<IBluetoothProfileRegistry>(_ =>
+        services.AddSingleton<IBluetoothProfileRegistry>(serviceProvider =>
         {
             var registry = new BluetoothProfileRegistry();
-            BatteryProfile.Register(registry);
+
+            foreach (var registrar in serviceProvider.GetServices<BluetoothProfileRegistrar>())
+            {
+                registrar(registry);
+            }
+
             return registry;
         });
+
         services.AddSingleton<IBluetoothNameProvider, ProfileNameProvider>();
+    }
+
+    /// <summary>
+    ///     Adds Bluetooth SIG profile definitions to the profile registry pipeline.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <returns>The updated service collection for method chaining.</returns>
+    public static IServiceCollection AddBluetoothSigProfiles(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddSingleton<BluetoothProfileRegistrar>(_ => BatteryProfile.Register);
+        return services;
     }
 }
