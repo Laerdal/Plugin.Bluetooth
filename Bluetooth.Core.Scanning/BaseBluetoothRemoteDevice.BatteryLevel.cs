@@ -14,7 +14,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async ValueTask<double?> ReadBatteryLevelAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        var batteryLevel = await BatteryProfile.BatteryLevel.ReadAsync(this, false, timeout, cancellationToken).ConfigureAwait(false);
+        var batteryLevel = await BatteryServiceDefinition.BatteryLevel.ReadAsync(this, false, timeout, cancellationToken).ConfigureAwait(false);
         BatteryLevelPercent = batteryLevel / 100d;
         return BatteryLevelPercent;
     }

@@ -21,12 +21,12 @@ public static class ServiceCollectionExtensions
         // Default Rssi to signal strength converter
         services.AddSingleton<IBluetoothRssiToSignalStrengthConverter, LinearRssiToSignalStrengthConverter>();
 
-        // Profile registry and name provider
-        services.AddSingleton<IBluetoothProfileRegistry>(serviceProvider =>
+        // Service definition registry and name provider
+        services.AddSingleton<IBluetoothServiceDefinitionRegistry>(serviceProvider =>
         {
-            var registry = new BluetoothProfileRegistry();
+            var registry = new BluetoothServiceDefinitionRegistry();
 
-            foreach (var registrar in serviceProvider.GetServices<BluetoothProfileRegistrar>())
+            foreach (var registrar in serviceProvider.GetServices<BluetoothServiceDefinitionRegistration>())
             {
                 registrar(registry);
             }
@@ -38,17 +38,17 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    ///     Adds Bluetooth SIG profile definitions to the profile registry pipeline.
+    ///     Adds Bluetooth SIG service definitions to the service definition registry pipeline.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
     /// <returns>The updated service collection for method chaining.</returns>
     public static IServiceCollection AddBluetoothSigProfiles(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddSingleton<BluetoothProfileRegistrar>(_ => BatteryProfile.Register);
-        services.AddSingleton<BluetoothProfileRegistrar>(_ => DeviceInformationProfile.Register);
-        services.AddSingleton<BluetoothProfileRegistrar>(_ => GenericAccessProfile.Register);
-        services.AddSingleton<BluetoothProfileRegistrar>(_ => GenericAttributeProfile.Register);
+        services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry => BluetoothServiceDefinitionRegistrar.Register(registry, typeof(BatteryServiceDefinition)));
+        services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry => BluetoothServiceDefinitionRegistrar.Register(registry, typeof(DeviceInformationServiceDefinition)));
+        services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry => BluetoothServiceDefinitionRegistrar.Register(registry, typeof(GenericAccessServiceDefinition)));
+        services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry => BluetoothServiceDefinitionRegistrar.Register(registry, typeof(GenericAttributeServiceDefinition)));
         return services;
     }
 }

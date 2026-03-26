@@ -3,10 +3,10 @@ using Bluetooth.Abstractions.Scanning.Profiles;
 namespace Bluetooth.Core.Scanning.Profiles;
 
 /// <summary>
-///     Thread-safe implementation of <see cref="IBluetoothProfileRegistry" />.
+///     Thread-safe implementation of <see cref="IBluetoothServiceDefinitionRegistry" />.
 ///     Stores service and characteristic definitions in concurrent dictionaries keyed by UUID pair.
 /// </summary>
-public class BluetoothProfileRegistry : IBluetoothProfileRegistry
+public class BluetoothServiceDefinitionRegistry : IBluetoothServiceDefinitionRegistry
 {
     private readonly ConcurrentDictionary<Guid, BluetoothServiceDefinition> _services = new();
     private readonly ConcurrentDictionary<(Guid ServiceId, Guid CharacteristicId), BluetoothCharacteristicDefinition> _characteristics = new();

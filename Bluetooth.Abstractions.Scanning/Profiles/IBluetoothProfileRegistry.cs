@@ -1,10 +1,10 @@
 namespace Bluetooth.Abstractions.Scanning.Profiles;
 
 /// <summary>
-///     Registry for Bluetooth service and characteristic profile definitions.
-///     Provides name resolution and definition lookup for known profiles.
+///     Registry for Bluetooth service and characteristic service definitions.
+///     Provides name resolution and definition lookup for known service definitions.
 /// </summary>
-public interface IBluetoothProfileRegistry
+public interface IBluetoothServiceDefinitionRegistry
 {
     /// <summary>
     ///     Registers a Bluetooth service definition.

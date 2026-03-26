@@ -1,7 +1,7 @@
 namespace Bluetooth.Core.Scanning.Profiles.BluetoothSig;
 
 /// <summary>
-///     Constants used by Bluetooth SIG profile definitions.
+///     Constants used by Bluetooth SIG service definitions.
 /// </summary>
 public static class BluetoothSigConstants
 {

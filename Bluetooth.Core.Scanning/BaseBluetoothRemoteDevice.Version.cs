@@ -14,7 +14,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async Task<Version> ReadFirmwareVersionAsync()
     {
-        FirmwareVersion = await DeviceInformationProfile.FirmwareRevision.ReadAsync(this, true).ConfigureAwait(false);
+        FirmwareVersion = await DeviceInformationServiceDefinition.FirmwareRevision.ReadAsync(this, true).ConfigureAwait(false);
         return FirmwareVersion;
     }
 
@@ -28,7 +28,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async Task<Version> ReadSoftwareVersionAsync()
     {
-        SoftwareVersion = await DeviceInformationProfile.SoftwareRevision.ReadAsync(this, true).ConfigureAwait(false);
+        SoftwareVersion = await DeviceInformationServiceDefinition.SoftwareRevision.ReadAsync(this, true).ConfigureAwait(false);
         return SoftwareVersion;
     }
 
@@ -42,7 +42,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async Task<string> ReadHardwareVersionAsync()
     {
-        HardwareVersion = await DeviceInformationProfile.HardwareRevision.ReadAsync(this, true).ConfigureAwait(false);
+        HardwareVersion = await DeviceInformationServiceDefinition.HardwareRevision.ReadAsync(this, true).ConfigureAwait(false);
         return HardwareVersion;
     }
 
