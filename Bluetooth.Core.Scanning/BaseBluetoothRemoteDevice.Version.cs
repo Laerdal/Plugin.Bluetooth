@@ -1,5 +1,6 @@
 namespace Bluetooth.Core.Scanning;
 
+using Bluetooth.Core.Scanning.Profiles;
 using Bluetooth.Core.Scanning.Profiles.BluetoothSig;
 
 public abstract partial class BaseBluetoothRemoteDevice
@@ -14,7 +15,10 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async Task<Version> ReadFirmwareVersionAsync()
     {
-        FirmwareVersion = await DeviceInformationServiceDefinition.FirmwareRevision.ReadAsync(this, true).ConfigureAwait(false);
+        var defaultVersion = FirmwareVersion ?? new Version(0, 0);
+        FirmwareVersion = await DeviceInformationServiceDefinition.FirmwareRevision
+            .ReadValueOrDefaultAsync(this, defaultVersion, skipIfPreviouslyRead: true)
+            .ConfigureAwait(false);
         return FirmwareVersion;
     }
 
@@ -28,7 +32,10 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async Task<Version> ReadSoftwareVersionAsync()
     {
-        SoftwareVersion = await DeviceInformationServiceDefinition.SoftwareRevision.ReadAsync(this, true).ConfigureAwait(false);
+        var defaultVersion = SoftwareVersion ?? new Version(0, 0);
+        SoftwareVersion = await DeviceInformationServiceDefinition.SoftwareRevision
+            .ReadValueOrDefaultAsync(this, defaultVersion, skipIfPreviouslyRead: true)
+            .ConfigureAwait(false);
         return SoftwareVersion;
     }
 
@@ -42,7 +49,10 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async Task<string> ReadHardwareVersionAsync()
     {
-        HardwareVersion = await DeviceInformationServiceDefinition.HardwareRevision.ReadAsync(this, true).ConfigureAwait(false);
+        var defaultVersion = HardwareVersion ?? string.Empty;
+        HardwareVersion = await DeviceInformationServiceDefinition.HardwareRevision
+            .ReadValueOrDefaultAsync(this, defaultVersion, skipIfPreviouslyRead: true)
+            .ConfigureAwait(false);
         return HardwareVersion;
     }
 
