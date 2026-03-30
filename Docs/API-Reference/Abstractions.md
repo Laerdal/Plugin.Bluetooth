@@ -15,6 +15,12 @@ Complete reference for all Plugin.Bluetooth interfaces organized by namespace.
   - [IBluetoothL2CapChannel](#ibletoothL2capchannel)
   - [IBluetoothPairingManager](#ibletoothpairingmanager)
   - [IBluetoothAdvertisement](#ibluetoothadvertisement)
+- [Bluetooth.Abstractions.Scanning.Profiles](#bluetoothabstractionsscanningprofiles)
+  - [IBluetoothServiceDefinitionRegistry](#ibletoothservicedefinitionregistry)
+  - [IBluetoothCharacteristicAccessor](#ibletoothcharacteristicaccessor)
+  - [IBluetoothCharacteristicAccessorListener](#ibletoothcharacteristicaccessorlistener)
+  - [ICharacteristicCodec](#icharacteristiccodec)
+  - [IBluetoothNameProvider](#ibluetoothnarneprovider)
 - [Bluetooth.Abstractions.Broadcasting](#bluetoothabstractionsbroadcasting)
   - [IBluetoothBroadcaster](#ibletoothbroadcaster)
   - [IBluetoothLocalService](#ibletoothLocalService)
@@ -784,6 +790,153 @@ device.AdvertisementReceived += (s, e) =>
         Console.WriteLine($"Manufacturer {company}: {BitConverter.ToString(data.ToArray())}");
     }
 };
+```
+
+---
+
+## Bluetooth.Abstractions.Scanning.Profiles
+
+Interfaces for typed service definitions and characteristic accessors, providing strongly-typed access to known Bluetooth services and characteristics.
+
+> **See Also:** [Service Definitions and Profiles](../Core-Concepts/Service-Definitions-And-Profiles.md) for comprehensive guide and examples.
+
+### IBluetoothServiceDefinitionRegistry
+
+**Namespace:** `Bluetooth.Abstractions.Scanning.Profiles`
+
+Registry for Bluetooth service and characteristic definitions. Provides name resolution for known services and characteristics.
+
+#### Methods
+
+```csharp
+void Register(BluetoothServiceDefinition definition);
+void Register(BluetoothCharacteristicDefinition definition);
+string? GetServiceName(Guid serviceId);
+string? GetCharacteristicName(Guid serviceId, Guid characteristicId);
+string? GetCharacteristicName(Guid characteristicId);
+```
+
+#### Usage
+
+This is automatically populated by `AddBluetoothSigProfiles()` during DI registration.
+
+### IBluetoothCharacteristicAccessor
+
+**Namespace:** `Bluetooth.Abstractions.Scanning.Profiles`
+
+Base interface for resolving a specific remote Bluetooth characteristic on a device.
+
+#### Properties
+
+```csharp
+Guid ServiceId { get; }
+Guid CharacteristicId { get; }
+string ServiceName { get; }
+string CharacteristicName { get; }
+```
+
+#### Methods
+
+```csharp
+ValueTask<IBluetoothRemoteCharacteristic> ResolveCharacteristicAsync(
+    IBluetoothRemoteDevice device,
+    TimeSpan? timeout = null,
+    CancellationToken cancellationToken = default);
+
+bool CanRead(IBluetoothRemoteDevice device);
+bool CanWrite(IBluetoothRemoteDevice device);
+bool CanListen(IBluetoothRemoteDevice device);
+```
+
+### IBluetoothCharacteristicAccessor<TRead, TWrite>
+
+**Namespace:** `Bluetooth.Abstractions.Scanning.Profiles`
+**Inherits:** `IBluetoothCharacteristicAccessor`
+
+Typed accessor for reading and writing a known Bluetooth characteristic with automatic encoding/decoding.
+
+#### Methods
+
+```csharp
+ValueTask<TRead> ReadAsync(
+    IBluetoothRemoteDevice device,
+    bool skipIfPreviouslyRead = false,
+    TimeSpan? timeout = null,
+    CancellationToken cancellationToken = default);
+
+ValueTask WriteAsync(
+    IBluetoothRemoteDevice device,
+    TWrite value,
+    bool skipIfOldValueMatchesNewValue = false,
+    TimeSpan? timeout = null,
+    CancellationToken cancellationToken = default);
+```
+
+#### Usage
+
+```csharp
+// Using built-in Battery Service definition
+var batteryLevel = await BatteryServiceDefinition.BatteryLevel.ReadAsync(device);
+Console.WriteLine($"Battery: {batteryLevel}%");
+
+// Writing a value
+await myAccessor.WriteAsync(device, newValue);
+```
+
+### IBluetoothCharacteristicAccessorListener<TRead>
+
+**Namespace:** `Bluetooth.Abstractions.Scanning.Profiles`
+**Inherits:** `IBluetoothCharacteristicAccessor`
+
+Coordinates typed notification listeners for a known Bluetooth characteristic.
+
+#### Methods
+
+```csharp
+ValueTask SubscribeAsync(
+    IBluetoothRemoteDevice device,
+    Action<TRead> listener,
+    TimeSpan? timeout = null,
+    CancellationToken cancellationToken = default);
+
+ValueTask UnsubscribeAsync(
+    IBluetoothRemoteDevice device,
+    Action<TRead> listener,
+    TimeSpan? timeout = null,
+    CancellationToken cancellationToken = default);
+
+ValueTask UnsubscribeAllAsync(
+    IBluetoothRemoteDevice device,
+    TimeSpan? timeout = null,
+    CancellationToken cancellationToken = default);
+```
+
+### ICharacteristicCodec<TRead, TWrite>
+
+**Namespace:** `Bluetooth.Abstractions.Scanning.Profiles`
+
+Codec for converting between raw bytes and typed values for characteristic read/write operations.
+
+#### Methods
+
+```csharp
+TRead FromBytes(ReadOnlyMemory<byte> bytes);
+ReadOnlyMemory<byte> ToBytes(TWrite value);
+```
+
+### IBluetoothNameProvider
+
+**Namespace:** `Bluetooth.Abstractions.Scanning.Profiles`
+
+Provides human-readable names for Bluetooth services, characteristics, and descriptors based on registered definitions.
+
+#### Methods
+
+```csharp
+string? GetKnownServiceName(Guid service);
+string? GetKnownCharacteristicName(Guid characteristic);
+string? GetKnownCharacteristicName(Guid serviceId, Guid characteristicId);
+string? GetKnownDescriptorName(Guid descriptor);
 ```
 
 ---

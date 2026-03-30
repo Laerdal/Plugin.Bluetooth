@@ -39,16 +39,32 @@ public static class ServiceCollectionExtensions
 
     /// <summary>
     ///     Adds Bluetooth SIG service definitions to the service definition registry pipeline.
+    ///     <para>
+    ///     Registers the following Bluetooth SIG standard services:
+    ///     Battery Service (0x180F), Device Information (0x180A), Generic Access (0x1800),
+    ///     Generic Attribute (0x1801), Heart Rate (0x180D), Health Thermometer (0x1809),
+    ///     and Environmental Sensing (0x181A).
+    ///     </para>
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
     /// <returns>The updated service collection for method chaining.</returns>
     public static IServiceCollection AddBluetoothSigProfiles(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
+
+        // Core infrastructure services
         services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry => BluetoothServiceDefinitionRegistrar.Register(registry, typeof(BatteryServiceDefinition)));
         services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry => BluetoothServiceDefinitionRegistrar.Register(registry, typeof(DeviceInformationServiceDefinition)));
         services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry => BluetoothServiceDefinitionRegistrar.Register(registry, typeof(GenericAccessServiceDefinition)));
         services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry => BluetoothServiceDefinitionRegistrar.Register(registry, typeof(GenericAttributeServiceDefinition)));
+
+        // Health and fitness services
+        services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry => BluetoothServiceDefinitionRegistrar.Register(registry, typeof(HeartRateServiceDefinition)));
+        services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry => BluetoothServiceDefinitionRegistrar.Register(registry, typeof(HealthThermometerServiceDefinition)));
+
+        // Environmental monitoring services
+        services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry => BluetoothServiceDefinitionRegistrar.Register(registry, typeof(EnvironmentalSensingServiceDefinition)));
+
         return services;
     }
 }

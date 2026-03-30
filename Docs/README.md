@@ -25,6 +25,7 @@ Goal of these docs:
 - [Device](Core-Concepts/Device.md)
 - [Service](Core-Concepts/Service.md)
 - [Characteristic](Core-Concepts/Characteristic.md)
+- [Service Definitions and Profiles](Core-Concepts/Service-Definitions-And-Profiles.md)
 - [Descriptor](Core-Concepts/Descriptor.md)
 - [Advertisement](Core-Concepts/Advertisement.md)
 - [Broadcaster](Core-Concepts/Broadcaster.md)

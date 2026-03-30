@@ -2,6 +2,8 @@
 
 This document explains how to move from the archived characteristic access model to the current service-definition-based architecture.
 
+> **📚 For comprehensive documentation of the current service definitions system, see [Service Definitions and Profiles](../Core-Concepts/Service-Definitions-And-Profiles.md).**
+
 ## Why This Changed
 
 The archived implementation centered around:

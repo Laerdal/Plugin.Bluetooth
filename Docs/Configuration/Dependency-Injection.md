@@ -57,6 +57,7 @@ public static void AddBluetoothServices(this IServiceCollection services)
 {
     services.AddSingleton<ITicker, Ticker>();
     services.AddBluetoothCoreServices();
+    services.AddBluetoothSigProfiles();  // Registers Bluetooth SIG service definitions
     services.AddBluetoothCoreScanningServices();
     services.AddBluetoothCoreBroadcastingServices();
 
@@ -77,9 +78,46 @@ public static void AddBluetoothServices(this IServiceCollection services)
 | Method | Purpose | Services Registered |
 |--------|---------|-------------------|
 | `AddBluetoothCoreServices()` | Core infrastructure services | Ticker, Infrastructure options |
-| `AddBluetoothCoreScanningServices()` | Scanning-related services | RSSI converters, signal strength smoothing |
+| `AddBluetoothSigProfiles()` | Bluetooth SIG service definitions | Battery, Device Information, Generic Access/Attribute, Heart Rate, Health Thermometer, Environmental Sensing |
+| `AddBluetoothCoreScanningServices()` | Scanning-related services | RSSI converters, signal strength smoothing, service definition registry, name provider |
 | `AddBluetoothCoreBroadcastingServices()` | Broadcasting-related services | Broadcaster services |
 | Platform-specific methods | Platform implementations | Native Bluetooth managers, adapters, scanners |
+
+---
+
+## Service Definitions
+
+The `AddBluetoothSigProfiles()` method registers standard Bluetooth SIG service definitions, providing typed accessors for known characteristics. This is automatically called by `AddBluetoothServices()`.
+
+### Built-in SIG Services
+
+The following Bluetooth SIG services are automatically registered:
+
+- **Battery Service** (0x180F) - Battery level monitoring
+- **Device Information** (0x180A) - Manufacturer, model, firmware/hardware versions
+- **Generic Access** (0x1800) - Device name, appearance
+- **Generic Attribute** (0x1801) - Service change notifications
+- **Heart Rate** (0x180D) - Heart rate measurements and control
+- **Health Thermometer** (0x1809) - Temperature measurements
+- **Environmental Sensing** (0x181A) - Temperature, humidity, pressure, UV index
+
+For details on using service definitions, see [Service Definitions and Profiles](../Core-Concepts/Service-Definitions-And-Profiles.md).
+
+### Registering Custom Service Definitions
+
+You can register your own service definitions:
+
+```csharp
+builder.Services.AddBluetoothServices();
+
+// Register custom service definition
+builder.Services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => registry =>
+{
+    BluetoothServiceDefinitionRegistrar.Register(registry, typeof(MyCustomServiceDefinition));
+});
+```
+
+**Note:** Custom service definitions must be marked with `[BluetoothServiceDefinition]` attribute and follow the service definition pattern. See [Service Definitions and Profiles](../Core-Concepts/Service-Definitions-And-Profiles.md#defining-a-service) for details.
 
 ---
 

@@ -6,6 +6,8 @@ A **Characteristic** is where the real data lives in BLE. It represents a single
 
 **Interface:** `IBluetoothRemoteCharacteristic`
 
+> **💡 Tip:** For known Bluetooth services (Battery, Device Information, etc.), consider using [Service Definitions and Profiles](./Service-Definitions-And-Profiles.md) for typed, reusable characteristic accessors instead of manually handling raw bytes.
+
 ## What Does It Do?
 
 A Characteristic allows you to:
@@ -570,6 +572,7 @@ async Task ReadDeviceInfoAsync(IBluetoothRemoteDevice device)
 
 ## Related Topics
 
+- [Service Definitions and Profiles](./Service-Definitions-And-Profiles.md) - Typed, reusable characteristic accessors
 - [Service](./Service.md) - Organizing characteristics
 - [Descriptor](./Descriptor.md) - Characteristic configuration
 - [Device](./Device.md) - Connection management
