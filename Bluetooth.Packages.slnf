@@ -12,7 +12,8 @@
       "Bluetooth.Maui.Platforms.Apple\\Bluetooth.Maui.Platforms.Apple.csproj",
       "Bluetooth.Maui.Platforms.DotNetCore\\Bluetooth.Maui.Platforms.DotNetCore.csproj",
       "Bluetooth.Maui.Platforms.Droid\\Bluetooth.Maui.Platforms.Droid.csproj",
-      "Bluetooth.Maui.Platforms.Win\\Bluetooth.Maui.Platforms.Win.csproj"
+      "Bluetooth.Maui.Platforms.Win\\Bluetooth.Maui.Platforms.Win.csproj",
+      "Bluetooth.Unity\\Bluetooth.Unity.csproj"
     ]
   }
 }

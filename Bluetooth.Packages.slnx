@@ -16,6 +16,9 @@
     <Project Path="Bluetooth.Maui.Platforms.Win\Bluetooth.Maui.Platforms.Win.csproj" />
     <Project Path="Bluetooth.Maui/Bluetooth.Maui.csproj" />
   </Folder>
+  <Folder Name="/Unity/">
+    <Project Path="Bluetooth.Unity/Bluetooth.Unity.csproj" />
+  </Folder>
   <Folder Name="/_Extras/">
     <File Path="Directory.Packages.props" />
     <File Path="nuget.config" />
