@@ -31,6 +31,10 @@
         <PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageVersion Include="Microsoft.Maui.Essentials" Version="$(MauiVersion)" />
     </ItemGroup>
+    <!-- ==================== LINUX DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <PackageVersion Include="Tmds.DBus.Protocol" Version="0.92.0" />
+    </ItemGroup>
     <!-- ==================== COMMUNITY DEPENDENCIES ==================== -->
     <ItemGroup>
         <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />

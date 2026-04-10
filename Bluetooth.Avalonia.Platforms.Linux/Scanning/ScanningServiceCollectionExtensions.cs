@@ -1,3 +1,5 @@
+using Bluetooth.Avalonia.Platforms.Linux.Scanning.Factories;
+
 namespace Bluetooth.Avalonia.Platforms.Linux.Scanning;
 
 /// <summary>
@@ -6,11 +8,15 @@ namespace Bluetooth.Avalonia.Platforms.Linux.Scanning;
 public static class ScanningServiceCollectionExtensions
 {
     /// <summary>
-    ///     Adds Linux BLE scanning services to the service collection.
-    ///     All operations throw <see cref="PlatformNotSupportedException"/> until a BlueZ implementation is provided.
+    ///     Adds Linux BLE scanning services backed by BlueZ to the service collection.
     /// </summary>
     public static void AddBluetoothAvaloniaLinuxScanningServices(this IServiceCollection services)
     {
-        // Placeholder: BlueZ-backed scanning services will be registered here.
+        services.AddSingleton<IBluetoothScanner, LinuxBluetoothScanner>();
+
+        services.AddSingleton<IBluetoothRemoteDeviceFactory, LinuxBluetoothRemoteDeviceFactory>();
+        services.AddSingleton<IBluetoothRemoteServiceFactory, LinuxBluetoothRemoteServiceFactory>();
+        services.AddSingleton<IBluetoothRemoteCharacteristicFactory, LinuxBluetoothRemoteCharacteristicFactory>();
+        services.AddSingleton<IBluetoothRemoteDescriptorFactory, LinuxBluetoothRemoteDescriptorFactory>();
     }
 }

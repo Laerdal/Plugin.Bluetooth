@@ -45,6 +45,7 @@
         <PackageReference Include="Plugin.ByteArrays" />
         <PackageReference Include="Plugin.BaseTypeExtensions" />
         <PackageReference Include="Plugin.ExceptionListeners" />
+        <PackageReference Include="Tmds.DBus.Protocol" />
     </ItemGroup>
 
 </Project>

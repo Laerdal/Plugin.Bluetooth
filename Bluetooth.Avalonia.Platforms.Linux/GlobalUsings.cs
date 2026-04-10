@@ -43,4 +43,7 @@ global using Plugin.BaseTypeExtensions;
 global using Plugin.ByteArrays;
 global using Plugin.ExceptionListeners;
 
+global using Tmds.DBus.Protocol;
+
 global using Bluetooth.Avalonia.Platforms.Linux;
+global using Bluetooth.Avalonia.Platforms.Linux.BlueZ;
