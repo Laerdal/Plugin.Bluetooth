@@ -78,11 +78,17 @@
         <Compile Remove="**/Documentation/**/*.*" />
     </ItemGroup>
 
-    <!-- ==================== UNITY INTEGRATION ==================== -->
+    <!-- ==================== MAUI INTEGRATION ==================== -->
     <PropertyGroup>
-        <UnityTargetsFile Condition=" $(UnityTargetsFile) == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `Directory.Build.Unity.targets`))</UnityTargetsFile>
+        <MauiTargetsFile Condition=" $(MauiTargetsFile) == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `Directory.Build.Maui.targets`))</MauiTargetsFile>
     </PropertyGroup>
-    <Import Condition=" Exists('$(UnityTargetsFile)')" Project="$(UnityTargetsFile)" />
+    <Import Condition=" Exists('$(MauiTargetsFile)')" Project="$(MauiTargetsFile)" />
+
+    <!-- ==================== MAUI INTEGRATION ==================== -->
+    <PropertyGroup>
+        <MauiAppTargetsFile Condition=" $(MauiAppTargetsFile) == ''">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `Directory.Build.MauiApp.targets`))</MauiAppTargetsFile>
+    </PropertyGroup>
+    <Import Condition=" Exists('$(MauiAppTargetsFile)')" Project="$(MauiAppTargetsFile)" />
 
     <!-- ==================== NUGET INTEGRATION ==================== -->
     <PropertyGroup>

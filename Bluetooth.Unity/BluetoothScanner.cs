@@ -34,13 +34,9 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
 {
     #region Platform-Specific Scanner
 
-    // Note: The preprocessor symbols used here (__ANDROID__, __IOS__, __MACCATALYST__, WINDOWS)
-    // are .NET SDK multi-targeting symbols, not Unity scripting define symbols (UNITY_ANDROID etc.).
-    // This project uses .NET multi-targeting for platform selection at compile time,
-    // which is compatible with Unity's IL2CPP and Mono backends when consuming NuGet packages.
-#if __ANDROID__
+#if ANDROID
     private readonly Bluetooth.Maui.Platforms.Droid.Scanning.AndroidBluetoothScanner _platformScanner;
-#elif __IOS__ || __MACCATALYST__
+#elif IOS || MACCATALYST
     private readonly Bluetooth.Maui.Platforms.Apple.Scanning.AppleBluetoothScanner _platformScanner;
 #elif WINDOWS
     private readonly Bluetooth.Maui.Platforms.Win.Scanning.WindowsBluetoothScanner _platformScanner;
@@ -60,7 +56,7 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
 
     #region Constructor
 
-#if __IOS__ || __MACCATALYST__
+#if IOS || MACCATALYST
     /// <summary>
     ///     Initializes a new instance of the <see cref="BluetoothScanner"/> class.
     /// </summary>
@@ -72,7 +68,7 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
     /// <param name="deviceFactory">The factory for creating platform-specific remote device instances.</param>
     /// <param name="nameProvider">Optional provider for Bluetooth device names.</param>
     /// <param name="loggerFactory">Optional logger factory for creating loggers.</param>
-#elif __ANDROID__ || WINDOWS
+#elif ANDROID || WINDOWS
     /// <summary>
     ///     Initializes a new instance of the <see cref="BluetoothScanner"/> class.
     /// </summary>
@@ -97,18 +93,18 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
         IBluetoothAdapter adapter,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
         ITicker ticker,
-#if __IOS__ || __MACCATALYST__
+#if IOS || MACCATALYST
         IOptions<CBCentralInitOptions> cbCentralInitOptions,
         IDispatchQueueProvider dispatchQueueProvider,
         IBluetoothRemoteDeviceFactory deviceFactory,
-#elif __ANDROID__ || WINDOWS
+#elif ANDROID || WINDOWS
         IBluetoothRemoteDeviceFactory deviceFactory,
 #endif
         IBluetoothNameProvider? nameProvider = null,
         ILoggerFactory? loggerFactory = null)
     {
         // Create platform-specific scanner instance
-#if __ANDROID__
+#if ANDROID
         _platformScanner = new Bluetooth.Maui.Platforms.Droid.Scanning.AndroidBluetoothScanner(
             adapter,
             rssiToSignalStrengthConverter,
@@ -116,7 +112,7 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
             deviceFactory,
             nameProvider,
             loggerFactory);
-#elif __IOS__ || __MACCATALYST__
+#elif IOS || MACCATALYST
         _platformScanner = new Bluetooth.Maui.Platforms.Apple.Scanning.AppleBluetoothScanner(
             adapter,
             rssiToSignalStrengthConverter,

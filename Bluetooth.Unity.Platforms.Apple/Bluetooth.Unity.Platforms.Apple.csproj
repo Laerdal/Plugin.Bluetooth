@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- ==================== CORE VARIABLES ==================== -->
+    <PropertyGroup>
+        <Project_Name>Bluetooth.Unity.Platforms.Apple</Project_Name>
+        <Project_Tags>Bluetooth;Unity;iOS;macOS;Tools;Toolkit</Project_Tags>
+        <Project_Copyright>Francois Raminosona</Project_Copyright>
+        <Project_Description>iOS/macOS platform implementation for Bluetooth.Unity</Project_Description>
+        <AssemblyName>Bluetooth.Unity.Platforms.Apple</AssemblyName>
+        <PackageId>Bluetooth.Unity.Platforms.Apple</PackageId>
+    </PropertyGroup>
+
+    <!-- ==================== NOWARNINGS ==================== -->
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);CA1034</NoWarn>
+        <NoWarn>$(NoWarn);CA1032</NoWarn>
+        <NoWarn>$(NoWarn);CA1816</NoWarn>
+    </PropertyGroup>
+
+    <!-- ==================== TARGET FRAMEWORKS ==================== -->
+    <PropertyGroup>
+        <TargetFrameworks>net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    </PropertyGroup>
+
+    <!-- ==================== PACKAGING ==================== -->
+    <PropertyGroup>
+        <IsPackable Condition="'$(Configuration)' == 'Release'">false</IsPackable>
+    </PropertyGroup>
+
+    <!-- ==================== SOURCE : link MAUI Apple platform code ==================== -->
+    <!-- Excludes GlobalUsings, root ServiceCollectionExtensions, Permissions/, and Threading/
+         (all replaced by Unity-compatible versions in this project).
+         Also excludes obj/ to avoid picking up generated files. -->
+    <ItemGroup>
+        <Compile Include="../Bluetooth.Maui.Platforms.Apple/**/*.cs"
+                 Exclude="../Bluetooth.Maui.Platforms.Apple/GlobalUsings.cs;
+                          ../Bluetooth.Maui.Platforms.Apple/ServiceCollectionExtensions.cs;
+                          ../Bluetooth.Maui.Platforms.Apple/Permissions/*.cs;
+                          ../Bluetooth.Maui.Platforms.Apple/Threading/*.cs;
+                          ../Bluetooth.Maui.Platforms.Apple/obj/**/*.cs" />
+    </ItemGroup>
+
+    <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <ProjectReference Include="../Bluetooth.Abstractions/Bluetooth.Abstractions.csproj" PrivateAssets="all" />
+        <ProjectReference Include="../Bluetooth.Abstractions.Scanning/Bluetooth.Abstractions.Scanning.csproj" PrivateAssets="all" />
+        <ProjectReference Include="../Bluetooth.Abstractions.Broadcasting/Bluetooth.Abstractions.Broadcasting.csproj" PrivateAssets="all" />
+
+        <ProjectReference Include="../Bluetooth.Core/Bluetooth.Core.csproj" PrivateAssets="all" />
+        <ProjectReference Include="../Bluetooth.Core.Broadcasting/Bluetooth.Core.Broadcasting.csproj" PrivateAssets="all" />
+        <ProjectReference Include="../Bluetooth.Core.Scanning/Bluetooth.Core.Scanning.csproj" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Plugin.ByteArrays" />
+        <PackageReference Include="Plugin.BaseTypeExtensions" />
+        <PackageReference Include="Plugin.ExceptionListeners" />
+    </ItemGroup>
+
+</Project>

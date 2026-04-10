@@ -19,6 +19,10 @@ public static class ServiceCollectionExtensions
     ///         Client projects can inherit from these facades to add custom behavior without
     ///         dealing with platform-specific conditional compilation.
     ///     </para>
+    ///     <para>
+    ///         Alternatively, use <see cref="BluetoothLocator.Initialize"/> for a DI-free
+    ///         initialization suitable for Unity's MonoBehaviour lifecycle.
+    ///     </para>
     /// </remarks>
     public static void AddBluetoothUnityServices(this IServiceCollection services)
     {
@@ -30,17 +34,14 @@ public static class ServiceCollectionExtensions
         services.AddBluetoothCoreScanningServices();
         services.AddBluetoothCoreBroadcastingServices();
 
-        // Note: The platform registration methods are named AddBluetoothMaui*Services() because the
-        // Unity facade reuses the platform implementations from the Bluetooth.Maui.Platforms.* projects.
-        // The "Maui" prefix in these method names refers to the platform package, not the UI framework.
 #if WINDOWS
-        services.AddBluetoothMauiWindowsServices();
+        services.AddBluetoothUnityWindowsServices();
 #elif ANDROID
-        services.AddBluetoothMauiAndroidServices();
+        services.AddBluetoothUnityAndroidServices();
 #elif IOS || MACCATALYST
-        services.AddBluetoothMauiAppleServices();
+        services.AddBluetoothUnityAppleServices();
 #else
-        services.AddBluetoothMauiDotNetServices();
+        services.AddBluetoothUnityDefaultServices();
 #endif
 
         // Register unified facade wrappers as the default implementations

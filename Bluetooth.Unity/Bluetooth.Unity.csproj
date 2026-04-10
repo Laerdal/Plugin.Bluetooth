@@ -21,11 +21,15 @@
     </PropertyGroup>
 
     <!-- ==================== TARGET FRAMEWORKS ==================== -->
+    <!-- Targets net10.0-* to match the stack's dependency chain (Bluetooth.Abstractions etc. target net10.0).
+         Lowering these TFMs would require the entire package ecosystem to also multi-target.
+         The key difference from Bluetooth.Maui is the ABSENCE of UseMaui=true and MAUI-specific
+         platform code, making this package compatible with Unity projects that use .NET 10 scripting. -->
     <PropertyGroup>
-        <TargetFrameworks>net10.0;net10.0-android36.1</TargetFrameworks>
+        <TargetFrameworks>net10.0;net10.0-android</TargetFrameworks>
         <TargetFrameworks>$(TargetFrameworks);net10.0-maccatalyst</TargetFrameworks>
         <TargetFrameworks>$(TargetFrameworks);net10.0-ios</TargetFrameworks>
-        <TargetFrameworks>$(TargetFrameworks);net10.0-windows10.0.22621.0</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-windows10.0.17763.0</TargetFrameworks>
     </PropertyGroup>
 
     <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
@@ -38,10 +42,10 @@
         <ProjectReference Include="../Bluetooth.Core.Broadcasting/Bluetooth.Core.Broadcasting.csproj" PrivateAssets="all"/>
         <ProjectReference Include="../Bluetooth.Core.Scanning/Bluetooth.Core.Scanning.csproj" PrivateAssets="all"/>
 
-        <ProjectReference Condition=" '$(IsForAndroid)' == 'true' " Include="../Bluetooth.Maui.Platforms.Droid/Bluetooth.Maui.Platforms.Droid.csproj" PrivateAssets="all"/>
-        <ProjectReference Condition=" '$(IsForAppleStuff)' == 'true' " Include="../Bluetooth.Maui.Platforms.Apple/Bluetooth.Maui.Platforms.Apple.csproj" PrivateAssets="all"/>
-        <ProjectReference Condition=" '$(IsForWindows)' == 'true' " Include="../Bluetooth.Maui.Platforms.Win/Bluetooth.Maui.Platforms.Win.csproj" PrivateAssets="all" />
-        <ProjectReference Condition=" '$(IsForPlainNetX)' == 'true' " Include="../Bluetooth.Maui.Platforms.DotNetCore/Bluetooth.Maui.Platforms.DotNetCore.csproj" PrivateAssets="all"/>
+        <ProjectReference Condition=" '$(IsForAndroid)' == 'true' " Include="../Bluetooth.Unity.Platforms.Droid/Bluetooth.Unity.Platforms.Droid.csproj" PrivateAssets="all"/>
+        <ProjectReference Condition=" '$(IsForAppleStuff)' == 'true' " Include="../Bluetooth.Unity.Platforms.Apple/Bluetooth.Unity.Platforms.Apple.csproj" PrivateAssets="all"/>
+        <ProjectReference Condition=" '$(IsForWindows)' == 'true' " Include="../Bluetooth.Unity.Platforms.Win/Bluetooth.Unity.Platforms.Win.csproj" PrivateAssets="all" />
+        <ProjectReference Condition=" '$(IsForPlainNetX)' == 'true' " Include="../Bluetooth.Unity.Platforms.Default/Bluetooth.Unity.Platforms.Default.csproj" PrivateAssets="all"/>
     </ItemGroup>
 
     <ItemGroup>

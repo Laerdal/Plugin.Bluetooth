@@ -30,13 +30,9 @@ public class BluetoothBroadcaster : IBluetoothBroadcaster
 {
     #region Platform-Specific Broadcaster
 
-    // Note: The preprocessor symbols used here (__ANDROID__, __IOS__, __MACCATALYST__, WINDOWS)
-    // are .NET SDK multi-targeting symbols, not Unity scripting define symbols (UNITY_ANDROID etc.).
-    // This project uses .NET multi-targeting for platform selection at compile time,
-    // which is compatible with Unity's IL2CPP and Mono backends when consuming NuGet packages.
-#if __ANDROID__
+#if ANDROID
     private readonly Bluetooth.Maui.Platforms.Droid.Broadcasting.AndroidBluetoothBroadcaster _platformBroadcaster;
-#elif __IOS__ || __MACCATALYST__
+#elif IOS || MACCATALYST
     private readonly Bluetooth.Maui.Platforms.Apple.Broadcasting.AppleBluetoothBroadcaster _platformBroadcaster;
 #elif WINDOWS
     private readonly Bluetooth.Maui.Platforms.Win.Broadcasting.WindowsBluetoothBroadcaster _platformBroadcaster;
@@ -56,7 +52,7 @@ public class BluetoothBroadcaster : IBluetoothBroadcaster
 
     #region Constructor
 
-#if __IOS__ || __MACCATALYST__
+#if IOS || MACCATALYST
     /// <summary>
     ///     Initializes a new instance of the <see cref="BluetoothBroadcaster"/> class.
     /// </summary>
@@ -77,19 +73,19 @@ public class BluetoothBroadcaster : IBluetoothBroadcaster
     public BluetoothBroadcaster(
         IBluetoothAdapter adapter,
         ITicker ticker,
-#if __IOS__ || __MACCATALYST__
+#if IOS || MACCATALYST
         IOptions<Bluetooth.Maui.Platforms.Apple.Broadcasting.NativeObjects.CbPeripheralManagerOptions> cbPeripheralManagerOptions,
         IDispatchQueueProvider dispatchQueueProvider,
 #endif
         ILoggerFactory? loggerFactory = null)
     {
         // Create platform-specific broadcaster instance
-#if __ANDROID__
+#if ANDROID
         _platformBroadcaster = new Bluetooth.Maui.Platforms.Droid.Broadcasting.AndroidBluetoothBroadcaster(
             adapter,
             ticker,
             loggerFactory: loggerFactory);
-#elif __IOS__ || __MACCATALYST__
+#elif IOS || MACCATALYST
         _platformBroadcaster = new Bluetooth.Maui.Platforms.Apple.Broadcasting.AppleBluetoothBroadcaster(
             adapter,
             ticker,

@@ -17,6 +17,10 @@
     <Project Path="Bluetooth.Maui/Bluetooth.Maui.csproj" />
   </Folder>
   <Folder Name="/Unity/">
+    <Project Path="Bluetooth.Unity.Platforms.Default/Bluetooth.Unity.Platforms.Default.csproj" />
+    <Project Path="Bluetooth.Unity.Platforms.Droid/Bluetooth.Unity.Platforms.Droid.csproj" />
+    <Project Path="Bluetooth.Unity.Platforms.Apple/Bluetooth.Unity.Platforms.Apple.csproj" />
+    <Project Path="Bluetooth.Unity.Platforms.Win/Bluetooth.Unity.Platforms.Win.csproj" />
     <Project Path="Bluetooth.Unity/Bluetooth.Unity.csproj" />
   </Folder>
   <Folder Name="/_Extras/">

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Project>
+    <!-- Note : This is read AFTER the initial project file -->
+
+    <!-- ==================== SELF REF ==================== -->
+    <ItemGroup>
+        <None Include="$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), $(MSBuildThisFile)))" Pack="false" />
+    </ItemGroup>
+
+    <!-- =================== UNITY : TARGET PLATFORM ===================== -->
+    <PropertyGroup>
+        <TargetPlatformBeingBuiltNow>$([MSBuild]::GetTargetPlatformIdentifier($(TargetFramework)))</TargetPlatformBeingBuiltNow>
+
+        <IsForIOS Condition=" '$(IsForIOS)' == '' ">false</IsForIOS>
+        <IsForIOS Condition=" '$(TargetPlatformBeingBuiltNow)' == 'ios' ">true</IsForIOS>
+
+        <IsForAndroid Condition=" '$(IsForAndroid)' == '' ">false</IsForAndroid>
+        <IsForAndroid Condition=" '$(TargetPlatformBeingBuiltNow)' == 'android' ">true</IsForAndroid>
+
+        <IsForWindows Condition=" '$(IsForWindows)' == '' ">false</IsForWindows>
+        <IsForWindows Condition=" '$(TargetPlatformBeingBuiltNow)' == 'windows' ">true</IsForWindows>
+
+        <IsForMacCatalyst Condition=" '$(IsForMacCatalyst)' == '' ">false</IsForMacCatalyst>
+        <IsForMacCatalyst Condition=" '$(TargetPlatformBeingBuiltNow)' == 'maccatalyst' ">true</IsForMacCatalyst>
+
+        <IsForAppleStuff Condition=" '$(IsForAppleStuff)' == '' ">false</IsForAppleStuff>
+        <IsForAppleStuff Condition=" $(IsForIOS) Or $(IsForMacCatalyst) ">true</IsForAppleStuff>
+
+        <IsForPlainNetX Condition=" '$(IsForPlainNetX)' == '' ">false</IsForPlainNetX>
+        <IsForPlainNetX Condition=" '$(TargetPlatformBeingBuiltNow)' == '' ">true</IsForPlainNetX>
+
+        <IsFor></IsFor>
+        <IsFor Condition=" '$(IsForIOS)' == 'true' ">$(IsFor)iOS;</IsFor>
+        <IsFor Condition=" '$(IsForAndroid)' == 'true' ">$(IsFor)Android;</IsFor>
+        <IsFor Condition=" '$(IsForWindows)' == 'true' ">$(IsFor)Windows;</IsFor>
+        <IsFor Condition=" '$(IsForMacCatalyst)' == 'true' ">$(IsFor)MacCatalyst;</IsFor>
+        <IsFor Condition=" '$(IsForAppleStuff)' == 'true' ">$(IsFor)AppleStuff;</IsFor>
+        <IsFor Condition=" '$(IsForPlainNetX)' == 'true' ">$(IsFor)PlainNetX;</IsFor>
+
+        <EnableWindowsTargeting Condition=" '$(IsForWindows)' == 'true' ">true</EnableWindowsTargeting>
+        <RuntimeIdentifiers Condition=" '$(IsForAppleStuff)' == 'true' ">ios-arm64;iossimulator-arm64;iossimulator-x64</RuntimeIdentifiers>
+    </PropertyGroup>
+
+    <!-- ==================== UNITY : TARGET PLATFORM VERSIONS ====================
+         Unity 6 (2023.2+) with .NET 9 backend targets:
+           Android : API level 21+ (BLE requires API 18, 21 is the practical minimum)
+           iOS     : 13.0+ (CoreBluetooth authorization API available from iOS 13)
+           Windows : 10.0.17763.0 (Windows 10 1809, WinRT BLE stable)
+    ==================== -->
+    <PropertyGroup>
+        <!-- android -->
+        <TargetPlatformMinVersion Condition=" '$(IsForAndroid)' == 'true' ">21.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForAndroid)' == 'true' ">21.0</SupportedOSPlatformVersion>
+
+        <!-- ios -->
+        <TargetPlatformMinVersion Condition=" '$(IsForIOS)' == 'true' ">13.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForIOS)' == 'true' ">13.0</SupportedOSPlatformVersion>
+
+        <!-- mac-catalyst -->
+        <TargetPlatformMinVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">13.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForMacCatalyst)' == 'true' ">13.0</SupportedOSPlatformVersion>
+
+        <!-- windows -->
+        <TargetPlatformMinVersion Condition=" '$(IsForWindows)' == 'true' ">10.0.17763.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition=" '$(IsForWindows)' == 'true' ">10.0.17763.0</SupportedOSPlatformVersion>
+    </PropertyGroup>
+
+    <!-- ==================== LOGGING ==================== -->
+    <Target Name="PrintUnityBuildInfo" BeforeTargets="CoreCompile" AfterTargets="PrintBuildInfo">
+        <Message Importance="High" Text="TargetPlatform    : $(TargetPlatformBeingBuiltNow) (Min: $(TargetPlatformMinVersion); Supported: $(SupportedOSPlatformVersion))" />
+        <Message Importance="High" Text="Is for            : $(IsFor)" />
+        <Message Importance="High" Text="DefineConstants    : $(DefineConstants)" />
+    </Target>
+</Project>
