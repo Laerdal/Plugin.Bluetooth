@@ -16,6 +16,13 @@
     <Project Path="Bluetooth.Maui.Platforms.Win\Bluetooth.Maui.Platforms.Win.csproj" />
     <Project Path="Bluetooth.Maui/Bluetooth.Maui.csproj" />
   </Folder>
+  <Folder Name="/Avalonia/">
+    <Project Path="Bluetooth.Avalonia.Platforms.Android/Bluetooth.Avalonia.Platforms.Android.csproj" />
+    <Project Path="Bluetooth.Avalonia.Platforms.Apple/Bluetooth.Avalonia.Platforms.Apple.csproj" />
+    <Project Path="Bluetooth.Avalonia.Platforms.Linux/Bluetooth.Avalonia.Platforms.Linux.csproj" />
+    <Project Path="Bluetooth.Avalonia.Platforms.Windows/Bluetooth.Avalonia.Platforms.Windows.csproj" />
+    <Project Path="Bluetooth.Avalonia/Bluetooth.Avalonia.csproj" />
+  </Folder>
   <Folder Name="/_Extras/">
     <File Path="Directory.Packages.props" />
     <File Path="nuget.config" />

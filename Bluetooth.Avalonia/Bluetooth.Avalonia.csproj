@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- ==================== CORE VARIABLES ==================== -->
+    <PropertyGroup>
+        <Project_Name>Bluetooth.Avalonia</Project_Name>
+        <Project_Tags>Bluetooth;Avalonia;Android;iOS;macOS;Windows;Linux;Tools;Toolkit</Project_Tags>
+        <Project_Copyright>Francois Raminosona</Project_Copyright>
+        <Project_Description>Bluetooth for Avalonia UI — Android, iOS, macOS, Windows and Linux</Project_Description>
+    </PropertyGroup>
+
+    <!-- ==================== NOWARNINGS ==================== -->
+    <PropertyGroup>
+        <!-- CA1034 : Nested types should not be externally visible-->
+        <NoWarn>$(NoWarn);CA1034</NoWarn>
+        <!-- CA1032 : Implement standard exception constructors -->
+        <NoWarn>$(NoWarn);CA1032</NoWarn>
+        <!-- CA1816 : Call GC.SuppressFinalize correctly -->
+        <NoWarn>$(NoWarn);CA1816</NoWarn>
+    </PropertyGroup>
+
+    <!-- ==================== TARGET FRAMEWORKS ==================== -->
+    <!-- Avalonia supports more platforms than MAUI:                 -->
+    <!--   net10.0           → Linux / Desktop fallback             -->
+    <!--   net10.0-android   → Android (same as MAUI)              -->
+    <!--   net10.0-ios       → iOS (same as MAUI)                  -->
+    <!--   net10.0-macos     → macOS native (NEW vs MAUI)          -->
+    <!--   net10.0-windows   → Windows (same as MAUI)              -->
+    <!-- Note: MacCatalyst is MAUI-specific and not used here.      -->
+    <!-- Note: Browser/WASM excluded (WebBluetooth not production-ready). -->
+    <PropertyGroup>
+        <TargetFrameworks>net10.0;net10.0-android36.1</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-ios</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-macos</TargetFrameworks>
+        <TargetFrameworks>$(TargetFrameworks);net10.0-windows10.0.22621.0</TargetFrameworks>
+    </PropertyGroup>
+
+    <!-- ==================== PACKAGE REFERENCES / DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <ProjectReference Include="../Bluetooth.Abstractions/Bluetooth.Abstractions.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="../Bluetooth.Abstractions.Scanning/Bluetooth.Abstractions.Scanning.csproj" PrivateAssets="all" />
+        <ProjectReference Include="../Bluetooth.Abstractions.Broadcasting/Bluetooth.Abstractions.Broadcasting.csproj" PrivateAssets="all" />
+
+        <ProjectReference Include="../Bluetooth.Core/Bluetooth.Core.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="../Bluetooth.Core.Broadcasting/Bluetooth.Core.Broadcasting.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="../Bluetooth.Core.Scanning/Bluetooth.Core.Scanning.csproj" PrivateAssets="all"/>
+
+        <ProjectReference Condition=" '$(IsForAndroid)' == 'true' " Include="../Bluetooth.Avalonia.Platforms.Android/Bluetooth.Avalonia.Platforms.Android.csproj" PrivateAssets="all"/>
+        <ProjectReference Condition=" '$(IsForAppleStuff)' == 'true' " Include="../Bluetooth.Avalonia.Platforms.Apple/Bluetooth.Avalonia.Platforms.Apple.csproj" PrivateAssets="all"/>
+        <ProjectReference Condition=" '$(IsForWindows)' == 'true' " Include="../Bluetooth.Avalonia.Platforms.Windows/Bluetooth.Avalonia.Platforms.Windows.csproj" PrivateAssets="all"/>
+        <ProjectReference Condition=" '$(IsForLinux)' == 'true' " Include="../Bluetooth.Avalonia.Platforms.Linux/Bluetooth.Avalonia.Platforms.Linux.csproj" PrivateAssets="all"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Plugin.ByteArrays"/>
+        <PackageReference Include="Plugin.BaseTypeExtensions"/>
+        <PackageReference Include="Plugin.ExceptionListeners"/>
+    </ItemGroup>
+
+</Project>
