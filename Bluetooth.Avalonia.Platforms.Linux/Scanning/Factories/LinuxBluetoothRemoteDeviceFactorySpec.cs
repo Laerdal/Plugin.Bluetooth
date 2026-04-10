@@ -20,6 +20,19 @@ internal sealed record LinuxBluetoothRemoteDeviceFactorySpec : IBluetoothRemoteD
     }
 
     /// <summary>
+    ///     Initializes a new instance from a resolved D-Bus object path and a Bluetooth advertisement.
+    ///     Used when the scanner has already mapped the Bluetooth address to its D-Bus path.
+    /// </summary>
+    public LinuxBluetoothRemoteDeviceFactorySpec(string objectPath, IBluetoothAdvertisement advertisement)
+        : base(
+            (advertisement ?? throw new ArgumentNullException(nameof(advertisement))).BluetoothAddress,
+            advertisement.Manufacturer)
+    {
+        ArgumentNullException.ThrowIfNullOrEmpty(objectPath);
+        ObjectPath = objectPath;
+    }
+
+    /// <summary>
     ///     Gets the D-Bus object path of the device (e.g. <c>/org/bluez/hci0/dev_AA_BB_CC_DD_EE_FF</c>).
     /// </summary>
     public string ObjectPath { get; init; }

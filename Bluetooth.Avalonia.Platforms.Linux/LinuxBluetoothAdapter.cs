@@ -22,7 +22,15 @@ public class LinuxBluetoothAdapter : BaseBluetoothAdapter, IAsyncDisposable
     ///     Gets the D-Bus connection to the system bus.
     ///     All BlueZ operations share this connection.
     /// </summary>
+#pragma warning disable CA1822
     internal DBusConnection Connection => DBusConnection.System;
+#pragma warning restore CA1822
+
+    /// <summary>
+    ///     Returns the cached adapter path without triggering discovery.
+    ///     Returns <see langword="null" /> if the adapter path has not yet been discovered.
+    /// </summary>
+    internal string? CachedAdapterPath => _adapterPath;
 
     /// <summary>
     ///     Returns the D-Bus object path of the first available Bluetooth adapter

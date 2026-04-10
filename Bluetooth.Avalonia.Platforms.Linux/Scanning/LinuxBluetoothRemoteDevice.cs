@@ -285,15 +285,16 @@ public class LinuxBluetoothRemoteDevice : BaseBluetoothRemoteDevice, IAsyncDispo
     }
 
     /// <summary>
-    ///     Converts a Bluetooth address (e.g. <c>AA:BB:CC:DD:EE:FF</c>) to a BlueZ D-Bus path
-    ///     using the cached adapter path.
+    ///     Converts a Bluetooth address (e.g. <c>AA:BB:CC:DD:EE:FF</c>) to a BlueZ D-Bus path.
+    ///     Uses the adapter path if already discovered, otherwise falls back to <c>/org/bluez/hci0</c>.
     /// </summary>
     private static string DeviceAddressToPath(string address, LinuxBluetoothAdapter adapter)
     {
-        // Synchronous best-effort path — adapter path may not be resolved yet.
-        // Prefer using the LinuxBluetoothRemoteDeviceFactorySpec ObjectPath instead.
+        // Synchronous best-effort path — prefer using LinuxBluetoothRemoteDeviceFactorySpec.ObjectPath.
+        // The adapter path should be available if the scanner started discovery successfully.
+        var adapterPrefix = adapter.CachedAdapterPath ?? "/org/bluez/hci0";
         var normalized = address.Replace(':', '_').ToUpperInvariant();
-        return $"/org/bluez/hci0/dev_{normalized}";
+        return $"{adapterPrefix}/dev_{normalized}";
     }
 
     /// <summary>

@@ -15,6 +15,7 @@ public class LinuxBluetoothScanner : BaseBluetoothScanner
 {
     private readonly LinuxBluetoothAdapter _linuxAdapter;
     private readonly IBluetoothRemoteDeviceFactory _deviceFactory;
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _addressToObjectPath = new();
 
     private IDisposable? _interfacesAddedSubscription;
     private IDisposable? _interfacesRemovedSubscription;
@@ -123,8 +124,16 @@ public class LinuxBluetoothScanner : BaseBluetoothScanner
     protected override IBluetoothRemoteDevice NativeCreateDeviceFromAdvertisement(
         IBluetoothAdvertisement advertisement)
     {
-        var spec = new IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec(advertisement);
-        return _deviceFactory.Create(this, spec);
+        // Try to resolve the D-Bus object path from the cached address-to-path map.
+        if (_addressToObjectPath.TryGetValue(advertisement.BluetoothAddress, out var objectPath))
+        {
+            var spec = new LinuxBluetoothRemoteDeviceFactorySpec(objectPath, advertisement);
+            return _deviceFactory.Create(this, spec);
+        }
+
+        // Fallback: create device with address only (path guessed from address).
+        var fallbackSpec = new IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec(advertisement);
+        return _deviceFactory.Create(this, fallbackSpec);
     }
 
     // ==================== Helpers ====================
@@ -201,6 +210,13 @@ public class LinuxBluetoothScanner : BaseBluetoothScanner
     /// </summary>
     private void ProcessDeviceObject(BlueZObjectInfo obj)
     {
+        // Cache address → D-Bus path so NativeCreateDeviceFromAdvertisement can look it up.
+        var address = obj.GetStringProp(BlueZConstants.Device1Interface, BlueZConstants.PropAddress);
+        if (address != null)
+        {
+            _addressToObjectPath[address] = obj.Path;
+        }
+
         var advertisement = BuildAdvertisement(obj);
         OnAdvertisementReceived(advertisement);
     }
