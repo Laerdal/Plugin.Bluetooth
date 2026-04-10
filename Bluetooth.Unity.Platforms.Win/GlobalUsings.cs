@@ -1,5 +1,4 @@
 // ReSharper disable RedundantUsingDirective.Global
-// ReSharper disable RedundantUsingDirective.Global
 
 global using System;
 global using System.Collections.Concurrent;
@@ -44,26 +43,6 @@ global using Plugin.BaseTypeExtensions;
 global using Plugin.ByteArrays;
 global using Plugin.ExceptionListeners;
 
-#if IOS || MACCATALYST
-global using CoreBluetooth;
-global using CoreFoundation;
-global using Foundation;
-
-global using Bluetooth.Maui.Platforms.Apple;
-global using Bluetooth.Maui.Platforms.Apple.Tools;
-global using Bluetooth.Maui.Platforms.Apple.NativeObjects;
-global using Bluetooth.Maui.Platforms.Apple.Exceptions;
-#elif ANDROID
-global using Android.Bluetooth;
-global using Android.Bluetooth.LE;
-global using Android.Content;
-global using Android.OS;
-
-global using Java.Lang.Reflect;
-global using Java.Util;
-
-global using Bluetooth.Maui.Platforms.Droid;
-#elif WINDOWS
 global using System.Runtime.InteropServices.WindowsRuntime;
 
 global using Windows.Devices.Bluetooth;
@@ -74,7 +53,3 @@ global using Windows.Devices.Radios;
 global using Windows.Security.Authorization.AppCapabilityAccess;
 
 global using Bluetooth.Maui.Platforms.Win;
-
-#else
-global using Bluetooth.Maui.Platforms.DotNetCore;
-#endif

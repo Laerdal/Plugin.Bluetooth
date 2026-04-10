@@ -27,7 +27,7 @@ namespace Bluetooth.Unity;
 ///
 ///     async void Start()
 ///     {
-///         await BluetoothLocator.Scanner.StartScanAsync();
+///         await BluetoothLocator.Scanner.StartScanningAsync();
 ///         BluetoothLocator.Scanner.DeviceDiscovered += OnDeviceDiscovered;
 ///     }
 ///     </code>

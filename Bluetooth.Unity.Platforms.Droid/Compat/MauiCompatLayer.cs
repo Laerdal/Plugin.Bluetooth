@@ -69,9 +69,14 @@ public abstract class BasePlatformPermission
     }
 
     /// <summary>
-    ///     Returns the current permission status without attempting to request permissions.
-    ///     For Unity projects, runtime permissions must be requested via
-    ///     <c>UnityEngine.Android.Permission.RequestUserPermission()</c>.
+    ///     Returns the current permission status without proactively requesting permissions.
+    ///     <para>
+    ///         <strong>Unity limitation:</strong> Runtime permission requesting from a library requires
+    ///         an Android <c>Activity</c> reference, which is not available here. Use
+    ///         <c>UnityEngine.Android.Permission.RequestUserPermission()</c> in your MonoBehaviour
+    ///         before initializing Bluetooth, or declare all required permissions in
+    ///         <c>AndroidManifest.xml</c>.
+    ///     </para>
     /// </summary>
     public virtual Task<PermissionStatus> RequestAsync() => CheckStatusAsync();
 }

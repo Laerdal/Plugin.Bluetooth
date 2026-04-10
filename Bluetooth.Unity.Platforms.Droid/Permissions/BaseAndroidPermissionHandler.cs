@@ -1,5 +1,8 @@
 namespace Bluetooth.Maui.Platforms.Droid.Permissions;
 
+// NOTE: 'Microsoft.Maui.ApplicationModel.Permissions' here is NOT the real MAUI assembly.
+// It is a Unity-compatible compat shim defined in Bluetooth.Unity.Platforms.Droid/Compat/MauiCompatLayer.cs
+// that replaces MAUI's permission framework with standard Android PackageManager calls.
 using Microsoft.Maui.ApplicationModel.Permissions;
 
 /// <summary>
