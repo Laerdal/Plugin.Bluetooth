@@ -12,6 +12,10 @@
         <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.26" />
         <PackageVersion Include="Plugin.ExceptionListeners.Maui" Version="1.0.5" />
     </ItemGroup>
+    <!-- ==================== LINUX DEPENDENCIES ==================== -->
+    <ItemGroup>
+        <PackageVersion Include="Linux.Bluetooth" Version="5.67.1" />
+    </ItemGroup>
     <!-- ==================== CORE DEPENDENCIES ==================== -->
     <ItemGroup>
         <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />

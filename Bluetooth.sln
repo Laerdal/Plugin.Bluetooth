@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui.Platforms.Dr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui.Platforms.Win", "Bluetooth.Maui.Platforms.Win\Bluetooth.Maui.Platforms.Win.csproj", "{B8C9D0E1-F2A3-4B5C-8D9E-0F1A2B3C4D5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Linux", "Bluetooth.Linux\Bluetooth.Linux.csproj", "{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui", "Bluetooth.Maui\Bluetooth.Maui.csproj", "{B64B9C4F-0C25-46A4-B2C2-45CB27E0512B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bluetooth.Maui.Sample.Scanner", "Bluetooth.Maui.Sample.Scanner\Bluetooth.Maui.Sample.Scanner.csproj", "{2966EA1B-C6E4-4F9F-9982-23CF837909FC}"
@@ -213,6 +215,18 @@ Global
 		{BA489F10-A9B7-49C3-851F-1302431E49F0}.Release|x64.Build.0 = Release|Any CPU
 		{BA489F10-A9B7-49C3-851F-1302431E49F0}.Release|x86.ActiveCfg = Release|Any CPU
 		{BA489F10-A9B7-49C3-851F-1302431E49F0}.Release|x86.Build.0 = Release|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Debug|x64.Build.0 = Debug|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Debug|x86.Build.0 = Debug|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Release|x64.ActiveCfg = Release|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Release|x64.Build.0 = Release|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Release|x86.ActiveCfg = Release|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
