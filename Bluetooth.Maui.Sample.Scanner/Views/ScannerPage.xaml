@@ -69,7 +69,7 @@
                                FontSize="15"
                                VerticalOptions="Center" />
                         <Button Grid.Column="2"
-                                Text="Clear"
+                                Text="Reset Filters"
                                 Command="{Binding ClearFiltersCommand}"
                                 FontSize="12"
                                 Padding="10,6" />

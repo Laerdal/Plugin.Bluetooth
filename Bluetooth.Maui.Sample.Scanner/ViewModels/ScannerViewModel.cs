@@ -143,7 +143,7 @@ public class ScannerViewModel : BaseViewModel
     public IAsyncRelayCommand<IBluetoothRemoteDevice> SelectDeviceCommand { get; }
 
     /// <summary>
-    ///     Command to clear all scanner filters.
+    ///     Command to reset all scanner filters to their defaults.
     /// </summary>
     public IRelayCommand ClearFiltersCommand { get; }
 
