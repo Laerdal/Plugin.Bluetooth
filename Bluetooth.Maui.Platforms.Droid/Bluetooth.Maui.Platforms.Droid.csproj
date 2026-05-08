@@ -22,7 +22,7 @@
 
     <!-- ==================== TARGET FRAMEWORKS ==================== -->
     <PropertyGroup>
-        <TargetFramework>net10.0-android36.1</TargetFramework>
+        <TargetFramework>net10.0-android</TargetFramework>
     </PropertyGroup>
 
     <!-- ==================== PACKAGING ==================== -->

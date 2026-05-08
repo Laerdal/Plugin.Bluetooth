@@ -281,7 +281,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// <inheritdoc />
     protected override IBluetoothRemoteDevice NativeCreateDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
-        var spec = new IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec(advertisement);
+        var spec = new AndroidBluetoothRemoteDeviceFactorySpec(advertisement);
         return _deviceFactory.Create(this, spec);
     }
 
