@@ -130,6 +130,17 @@
                         </Label.FormattedText>
                     </Label>
 
+                    <Button Text="📋 Use Last Read Value"
+                            Command="{Binding CopyReadValueToWriteInputCommand}"
+                            IsVisible="{Binding HasCurrentValue}"
+                            BackgroundColor="Transparent"
+                            BorderWidth="1"
+                            BorderColor="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                            TextColor="{AppThemeBinding Light={StaticResource LightTextPrimary}, Dark={StaticResource DarkTextPrimary}}"
+                            FontSize="12"
+                            HorizontalOptions="Start"
+                            Padding="10,6" />
+
                     <Entry Placeholder="{Binding IsHexMode, Converter={StaticResource BoolToStringConverter}, ConverterParameter='01 02 03 or 0x010203|Hello World'}"
                            Text="{Binding WriteValueInput}"
                            FontFamily="Courier"

@@ -23,6 +23,7 @@ public class CharacteristicDetailViewModel : BaseViewModel
         WriteValueCommand = new AsyncRelayCommand(WriteValueAsync, () => Characteristic?.CanWrite ?? false);
         ToggleListenCommand = new AsyncRelayCommand(ToggleListenAsync, () => Characteristic?.CanListen ?? false);
         ToggleDisplayModeCommand = new RelayCommand(ToggleDisplayMode);
+        CopyReadValueToWriteInputCommand = new RelayCommand(CopyReadValueToWriteInput);
     }
 
     /// <summary>
@@ -86,7 +87,23 @@ public class CharacteristicDetailViewModel : BaseViewModel
     public string CurrentValue
     {
         get => GetValue(string.Empty);
-        set => SetValue(value);
+        set
+        {
+            SetValue(value);
+            OnPropertyChanged(nameof(HasCurrentValue));
+        }
+    }
+
+    /// <summary>
+    ///     Gets whether there is a valid current value that can be copied to the write input.
+    /// </summary>
+    public bool HasCurrentValue
+    {
+        get
+        {
+            var v = CurrentValue;
+            return !string.IsNullOrEmpty(v) && v != "(empty)" && !v.StartsWith("Error:");
+        }
     }
 
     /// <summary>
@@ -136,6 +153,11 @@ public class CharacteristicDetailViewModel : BaseViewModel
     ///     Gets the command to toggle between hex and text display modes.
     /// </summary>
     public IRelayCommand ToggleDisplayModeCommand { get; }
+
+    /// <summary>
+    ///     Gets the command to copy the last read value into the write input.
+    /// </summary>
+    public IRelayCommand CopyReadValueToWriteInputCommand { get; }
 
     /// <summary>
     ///     Sets the characteristic to interact with.
@@ -267,6 +289,17 @@ public class CharacteristicDetailViewModel : BaseViewModel
     {
         IsHexMode = !IsHexMode;
         _logger.LogDebug("Display mode toggled to: {Mode}", IsHexMode ? "HEX" : "TEXT");
+    }
+
+    /// <summary>
+    ///     Copies the current read value into the write input field, stripping display prefixes.
+    /// </summary>
+    private void CopyReadValueToWriteInput()
+    {
+        var value = CurrentValue;
+        if (value.StartsWith("📬 ")) value = value["📬 ".Length..];
+        else if (value.StartsWith("✓ Wrote: ")) value = value["✓ Wrote: ".Length..];
+        WriteValueInput = value;
     }
 
     /// <summary>
