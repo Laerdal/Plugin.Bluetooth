@@ -72,7 +72,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         ArgumentNullException.ThrowIfNull(scanningOptions);
         Logger?.LogScanStarting();
         var manager = CbCentralManagerWrapper.CbCentralManager; // initializes it if not already initialized
-        var state = await WaitForStateToBeKnownAsync(timeout, cancellationToken).ConfigureAwait(false);
+        var state = await WaitForStateToBePoweredOnAsync(timeout, cancellationToken).ConfigureAwait(false);
         if (state != CBManagerState.PoweredOn)
         {
             throw new ScannerFailedToStartException(this, $"Failed to start scanning because Bluetooth is not powered on. Current state: {state}");
@@ -131,11 +131,12 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <summary>
     /// Asynchronously waits until the Core Bluetooth central manager is powered on.
     /// </summary>
+    /// <param name="timeout">An optional timeout for the wait operation.</param>
     /// <param name="cancellationToken">A cancellation token to cancel the wait operation.</param>
     /// <returns>A task that completes when the central manager is powered on.</returns>
-    public ValueTask<CBManagerState> WaitForStateToBePoweredOnAsync(CancellationToken cancellationToken = default)
+    public ValueTask<CBManagerState> WaitForStateToBePoweredOnAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return WaitForPropertyToBeOfValue(nameof(State), CBManagerState.PoweredOn, null, cancellationToken);
+        return WaitForPropertyToBeOfValue(nameof(State), CBManagerState.PoweredOn, timeout, cancellationToken);
     }
 
     /// <summary>
