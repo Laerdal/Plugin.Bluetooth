@@ -13,6 +13,13 @@
         <!-- For example: <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
     </PropertyGroup>
 
+    <!-- iOS signing — automatic provisioning with personal development certificate -->
+    <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+        <CodesignKey>Apple Development: Francois Raminosona (ALVPAK9Q7C)</CodesignKey>
+        <AutomaticProvisioningStyle>Automatic</AutomaticProvisioningStyle>
+        <CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
+    </PropertyGroup>
+
     <PropertyGroup>
         <RootNamespace>Bluetooth.Maui.Sample.Scanner</RootNamespace>
         <ApplicationTitle>Bluetooth.Maui.Sample.Scanner</ApplicationTitle>
