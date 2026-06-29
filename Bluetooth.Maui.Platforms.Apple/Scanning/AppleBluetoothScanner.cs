@@ -75,7 +75,7 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         var state = await WaitForStateToBeKnownAsync(timeout, cancellationToken).ConfigureAwait(false);
         if (state != CBManagerState.PoweredOn)
         {
-            throw new ScannerFailedToStopException(this, $"Failed to start scanning because Bluetooth is not powered on. Current state: {state}");
+            throw new ScannerFailedToStartException(this, $"Failed to start scanning because Bluetooth is not powered on. Current state: {state}");
         }
         manager.ScanForPeripherals(scanningOptions);
     }
