@@ -173,8 +173,19 @@ public class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAdapterWrap
         // Basic adapter properties
         BluetoothAdapterState = BluetoothAdapter.State;
         BluetoothAdapterIsEnabled = BluetoothAdapter.IsEnabled;
-        BluetoothAdapterName = BluetoothAdapter.Name ?? string.Empty;
-        BluetoothAdapterAddress = BluetoothAdapter.Address ?? string.Empty;
+
+        // Name and Address require BLUETOOTH_CONNECT at runtime on Android 12+.
+        // Silently skip when the permission hasn't been granted yet — the ticker
+        // will succeed on the next cycle once the user grants permission.
+        try
+        {
+            BluetoothAdapterName = BluetoothAdapter.Name ?? string.Empty;
+            BluetoothAdapterAddress = BluetoothAdapter.Address ?? string.Empty;
+        }
+        catch (Java.Lang.SecurityException)
+        {
+            // BLUETOOTH_CONNECT not yet granted — leave previous values unchanged
+        }
 
         // Scanning and discovery properties
         BluetoothAdapterScanMode = BluetoothAdapter.ScanMode;
