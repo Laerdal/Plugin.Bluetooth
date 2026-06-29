@@ -62,4 +62,40 @@ public static class PlistExtensions
     {
         AppleMissingInfoPlistKeyException.ThrowIfMissingInfoPlistKey(key);
     }
+
+    /// <summary>
+    ///     Retrieves all keys from the app's Info.plist file.
+    /// </summary>
+    /// <returns>A list of strings representing all Info.plist keys.</returns>
+    public static IEnumerable<string> GetAllInfoPlistKeys()
+    {
+        var infoPlist = NSBundle.MainBundle.InfoDictionary;
+        var keys = new List<string>();
+
+
+        foreach (var key in infoPlist.Keys)
+        {
+            keys.Add(key.ToString());
+        }
+
+        return new ReadOnlyCollection<string>(keys);
+    }
+
+    /// <summary>
+    ///     Retrieves all entries from the app's Info.plist file as a list of key:value pairs.
+    /// </summary>
+    /// <returns>A list of strings representing all Info.plist entries.</returns>
+    public static IEnumerable<string> GetAllInfoPlistEntries()
+    {
+        var infoPlist = NSBundle.MainBundle.InfoDictionary;
+        var entries = new List<string>();
+
+        foreach (var key in infoPlist.Keys)
+        {
+            var value = infoPlist[key];
+            entries.Add($"{key}: {value}");
+        }
+
+        return new ReadOnlyCollection<string>(entries);
+    }
 }

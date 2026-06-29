@@ -15,6 +15,11 @@ public class AppleMissingInfoPlistKeyException : BluetoothException
     public string Key { get; private set; }
 
     /// <summary>
+    ///     Gets the list of keys currently present in the Info.plist file.
+    /// </summary>
+    public IEnumerable<string> KeysInInfoPlist { get; private set; }
+
+    /// <summary>
     ///     Initializes a new instance of the <see cref="AppleMissingInfoPlistKeyException" /> class
     ///     for a missing Info.plist key.
     /// </summary>
@@ -22,6 +27,7 @@ public class AppleMissingInfoPlistKeyException : BluetoothException
     public AppleMissingInfoPlistKeyException(string key) : base($"Your Info.plist is missing the required '{key}' entry. Add this key to your Info.plist file.")
     {
         Key = key;
+        KeysInInfoPlist = PlistExtensions.GetAllInfoPlistKeys();
     }
 
     /// <summary>
