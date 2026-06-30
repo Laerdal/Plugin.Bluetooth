@@ -198,63 +198,6 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
     }
 
     /// <summary>
-    ///     Virtual method called when a new device is detected and about to be added to the device list.
-    ///     Override this to create custom device types based on advertisement data.
-    /// </summary>
-    /// <param name="device">The device created by the platform scanner.</param>
-    /// <param name="advertisement">The advertisement that triggered device creation.</param>
-    /// <returns>
-    ///     The device to add to the list. Return the original device, a wrapped device,
-    ///     or a completely custom device implementation. Return null to prevent the device from being added.
-    /// </returns>
-    /// <remarks>
-    ///     <para>
-    ///         This method enables custom device factory patterns where you can:
-    ///     </para>
-    ///     <list type="bullet">
-    ///         <item>Parse manufacturer data to identify device types</item>
-    ///         <item>Create typed device subclasses (e.g., SimManDevice, HeartStartDevice)</item>
-    ///         <item>Pre-configure expected services based on device type</item>
-    ///         <item>Add device-specific behavior or metadata</item>
-    ///         <item>Filter out devices by returning null</item>
-    ///     </list>
-    ///     <para>
-    ///         <b>Important:</b> The returned device must have the same Id as the original.
-    ///     </para>
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// protected override IBluetoothRemoteDevice? OnDeviceCreated(
-    ///     IBluetoothRemoteDevice device,
-    ///     IBluetoothAdvertisement advertisement)
-    /// {
-    ///     // Parse manufacturer data to determine device type
-    ///     var manufacturerData = advertisement.ManufacturerData;
-    ///     if (manufacturerData != null &amp;&amp; manufacturerData.Length > 0)
-    ///     {
-    ///         var deviceType = manufacturerData[0]; // First byte indicates device type
-    ///
-    ///         return deviceType switch
-    ///         {
-    ///             0x01 => new SimManDevice(device), // Wrap with SimMan-specific behavior
-    ///             0x02 => new HeartStartDevice(device), // Wrap with HeartStart-specific behavior
-    ///             _ => device // Unknown type, use default
-    ///         };
-    ///     }
-    ///
-    ///     return device;
-    /// }
-    /// </code>
-    /// </example>
-    protected virtual IBluetoothRemoteDevice? OnDeviceCreated(
-        IBluetoothRemoteDevice device,
-        IBluetoothAdvertisement advertisement)
-    {
-        // Default: return device unmodified
-        return device;
-    }
-
-    /// <summary>
     ///     Virtual method called before scanning starts.
     ///     Override this in client projects to add custom pre-scan logic.
     /// </summary>
@@ -327,6 +270,13 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
     {
         get => _platformScanner.AdvertisementFilter;
         set => _platformScanner.AdvertisementFilter = value;
+    }
+
+    /// <inheritdoc />
+    public Func<IBluetoothRemoteDevice, IBluetoothAdvertisement, IBluetoothRemoteDevice?>? DeviceWrapper
+    {
+        get => _platformScanner.DeviceWrapper;
+        set => _platformScanner.DeviceWrapper = value;
     }
 
     #endregion

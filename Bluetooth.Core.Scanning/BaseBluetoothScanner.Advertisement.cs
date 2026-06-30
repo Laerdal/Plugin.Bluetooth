@@ -10,6 +10,9 @@ public abstract partial class BaseBluetoothScanner
     /// <inheritdoc />
     public Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; set; }
 
+    /// <inheritdoc cref="IBluetoothScanner.DeviceWrapper"/>
+    public Func<IBluetoothRemoteDevice, IBluetoothAdvertisement, IBluetoothRemoteDevice?>? DeviceWrapper { get; set; }
+
     #endregion
 
     #region Device Factory
@@ -22,6 +25,8 @@ public abstract partial class BaseBluetoothScanner
     private IBluetoothRemoteDevice AddDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
         var device = NativeCreateDeviceFromAdvertisement(advertisement);
+        if (DeviceWrapper != null)
+            device = DeviceWrapper(device, advertisement) ?? device;
         lock (Devices)
         {
             Devices.Add(device);

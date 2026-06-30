@@ -22,6 +22,30 @@ public partial interface IBluetoothScanner : IAsyncDisposable
     /// </remarks>
     Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; set; }
 
+    /// <summary>
+    ///     Gets or sets an optional function that wraps a newly created device before it is added to the device list.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Called once per new device, after the platform has created the raw <see cref="IBluetoothRemoteDevice"/>.
+    ///         Return a richer subtype (e.g. a product-specific device class) or <see langword="null"/> to keep
+    ///         the original device unchanged.
+    ///     </para>
+    ///     <para>
+    ///         This follows the same pattern as <see cref="AdvertisementFilter"/>: set it once on the scanner
+    ///         instance, and the scanner calls it automatically for every new device.
+    ///     </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// scanner.DeviceWrapper = (device, advertisement) =>
+    ///     advertisement.Manufacturer == Manufacturer.Laerdal_Medical_AS
+    ///         ? new LaerdalDevice(device, advertisement)
+    ///         : null;
+    /// </code>
+    /// </example>
+    Func<IBluetoothRemoteDevice, IBluetoothAdvertisement, IBluetoothRemoteDevice?>? DeviceWrapper { get; set; }
+
     #endregion
 
     #region Permissions
