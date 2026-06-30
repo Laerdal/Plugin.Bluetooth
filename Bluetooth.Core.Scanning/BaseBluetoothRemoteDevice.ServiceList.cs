@@ -191,6 +191,10 @@ public abstract partial class BaseBluetoothRemoteDevice
         Services.UpdateFrom(services, areRepresentingTheSameObject, fromInputTypeToOutputTypeConversion);
 
         LogServiceExplorationSucceeded(Id, Services.Count);
+        foreach (var service in Services)
+        {
+            LogServiceFound(service.Id.ToString());
+        }
 
         // Attempt to dispatch success to the TaskCompletionSource
         var success = ServicesExplorationTcs?.TrySetResult() ?? false;

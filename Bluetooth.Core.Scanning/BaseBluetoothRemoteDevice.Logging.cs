@@ -105,5 +105,8 @@ public abstract partial class BaseBluetoothRemoteDevice
         Message = "Device {DeviceId} cleared {ServiceCount} services")]
     partial void LogServicesCleared(string deviceId, int serviceCount);
 
+    [LoggerMessage(EventId = 249, Level = LogLevel.Information,
+        Message = "  Service: {ServiceId}")]
+    partial void LogServiceFound(Guid serviceId);
     #endregion
 }
