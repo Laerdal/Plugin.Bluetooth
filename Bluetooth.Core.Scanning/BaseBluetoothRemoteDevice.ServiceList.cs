@@ -193,7 +193,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         LogServiceExplorationSucceeded(Id, Services.Count);
         foreach (var service in Services)
         {
-            LogServiceFound(service.Id.ToString());
+            LogServiceFound(service.Id);
         }
 
         // Attempt to dispatch success to the TaskCompletionSource
