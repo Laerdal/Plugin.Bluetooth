@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.csdevkit",
+    "ms-dotnettools.dotnet-maui",
+    "ms-dotnettools.vscode-dotnet-runtime",
+    "editorconfig.editorconfig"
+  ]
+}
