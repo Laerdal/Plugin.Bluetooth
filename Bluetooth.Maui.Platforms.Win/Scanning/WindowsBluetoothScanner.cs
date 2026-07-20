@@ -162,7 +162,14 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     /// <inheritdoc />
     protected override IBluetoothRemoteDevice NativeCreateDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
     {
-        var spec = new IBluetoothRemoteDeviceFactory.BluetoothRemoteDeviceFactorySpec(advertisement);
+        ArgumentNullException.ThrowIfNull(advertisement);
+
+        if (advertisement is not WindowsBluetoothAdvertisement windowsAd)
+        {
+            throw new ArgumentException($"Expected advertisement of type {typeof(WindowsBluetoothAdvertisement)}, but got {advertisement.GetType()}", nameof(advertisement));
+        }
+
+        var spec = new WindowsBluetoothRemoteDeviceFactorySpec(windowsAd);
         return _deviceFactory.Create(this, spec);
     }
 
