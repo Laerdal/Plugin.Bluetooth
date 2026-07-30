@@ -478,6 +478,13 @@ public class BluetoothRemoteDevice : IBluetoothRemoteDevice
     public double SignalStrengthPercent => _platformDevice.SignalStrengthPercent;
 
     /// <inheritdoc />
+    public bool IsSignalStrengthProbingEnabled
+    {
+        get => _platformDevice.IsSignalStrengthProbingEnabled;
+        set => _platformDevice.IsSignalStrengthProbingEnabled = value;
+    }
+
+    /// <inheritdoc />
     public ValueTask<int> ReadSignalStrengthAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)

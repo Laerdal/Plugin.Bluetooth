@@ -7,6 +7,12 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async ValueTask<int> ReadSignalStrengthAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        if (!IsSignalStrengthProbingEnabled)
+        {
+            LogSignalStrengthProbingSkipped(Id);
+            return SignalStrengthDbm;
+        }
+
         // Prevents multiple calls to ReadValueAsync, if already reading signal strength, we merge the calls
         if (SignalStrengthReadingTcs is { Task.IsCompleted: false })
         {
@@ -54,6 +60,9 @@ public abstract partial class BaseBluetoothRemoteDevice
     #region Properties
 
     private readonly ConcurrentQueue<int> _rssiHistory = new ConcurrentQueue<int>();
+
+    /// <inheritdoc />
+    public bool IsSignalStrengthProbingEnabled { get; set; } = true;
 
     /// <inheritdoc />
     public int SignalStrengthDbm
