@@ -389,4 +389,32 @@ public abstract partial class BaseBluetoothScanner
 
     #endregion
 
+    #region Clean Restart
+
+    /// <inheritdoc />
+    public async virtual Task CleanRestartScanningAsync(Func<IBluetoothAdvertisement, bool>? newAdvertisementFilter = null,
+        ScanningOptions? scanningOptions = null,
+        PermissionOptions? permissionOptions = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        LogScannerCleanRestarting();
+
+        scanningOptions ??= ActiveScanningOptions; // captured before stopping, which clears it
+
+        await StopScanningIfNeededAsync(timeout, cancellationToken).ConfigureAwait(false);
+
+        // must come after the stop, otherwise the in-flight scan repopulates the registry as we drain it
+        await ClearDevicesAsync().ConfigureAwait(false);
+
+        if (newAdvertisementFilter != null)
+        {
+            AdvertisementFilter = newAdvertisementFilter;
+        }
+
+        await StartScanningAsync(scanningOptions, permissionOptions, timeout, cancellationToken).ConfigureAwait(false);
+    }
+
+    #endregion
+
 }

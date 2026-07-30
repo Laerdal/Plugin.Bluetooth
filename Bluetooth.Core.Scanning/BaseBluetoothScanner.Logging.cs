@@ -60,5 +60,9 @@ public abstract partial class BaseBluetoothScanner
         Message = "Error checking scanner permissions")]
     partial void LogScannerPermissionCheckFailed(Exception exception);
 
+    [LoggerMessage(EventId = 115, Level = LogLevel.Information,
+        Message = "Scanner clean restarting, dropping the device registry")]
+    partial void LogScannerCleanRestarting();
+
     #endregion
 }
