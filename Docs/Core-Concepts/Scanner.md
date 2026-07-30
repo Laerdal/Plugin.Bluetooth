@@ -217,6 +217,32 @@ await scanner.StartScanningIfNeededAsync();
 await scanner.StopScanningIfNeededAsync();
 ```
 
+### Clean Restart
+
+`CleanRestartScanningAsync` stops the scanner, discards every device in the registry, then starts scanning again:
+
+```csharp
+await scanner.CleanRestartScanningAsync();
+```
+
+Use it when a device changes identity while the scanner is running - typically a device rebooting into or out of
+firmware-update mode, where a stale registry entry plus an in-flight scan session stop it from being rediscovered under
+its new advertisement. It also accepts a replacement advertisement filter, applied while the scanner is stopped so it is
+already in effect when scanning resumes:
+
+```csharp
+await scanner.CleanRestartScanningAsync(ad => ad.DeviceName.Contains("DfuTarg"));
+```
+
+Every device is disconnected, removed and disposed, so `IBluetoothRemoteDevice` instances do not survive the restart.
+Keep the device id instead and re-acquire the instance afterwards:
+
+```csharp
+var deviceId = device.Id;
+await scanner.CleanRestartScanningAsync();
+device = await scanner.WaitForDeviceToAppearAsync(deviceId, TimeSpan.FromSeconds(30));
+```
+
 ### Timeouts and Cancellation
 
 All operations support timeouts and cancellation:

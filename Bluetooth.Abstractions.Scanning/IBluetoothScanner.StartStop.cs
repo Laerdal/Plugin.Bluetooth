@@ -106,4 +106,49 @@ public partial interface IBluetoothScanner
 
     #endregion
 
+    #region Clean Restart
+
+    /// <summary>
+    ///     Stops the scanner, discards every device in the scanner's registry, then starts scanning again.
+    /// </summary>
+    /// <param name="newAdvertisementFilter">
+    ///     An optional replacement for <see cref="AdvertisementFilter" />, applied while the scanner is stopped so it is
+    ///     already in effect when scanning resumes. When null the current filter is left untouched.
+    /// </param>
+    /// <param name="scanningOptions">
+    ///     The options to restart with. When null the options of the scan session being restarted are reused, falling back to
+    ///     defaults if the scanner was not running.
+    /// </param>
+    /// <param name="permissionOptions">The options for requesting permissions. If null, default options will be used.</param>
+    /// <param name="timeout">The timeout applied to the stop and the start leg individually. Does not bound the registry-clear step in between.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
+    /// <returns>A task that represents the asynchronous clean restart operation.</returns>
+    /// <remarks>
+    ///     <para>
+    ///         Unlike <see cref="StopScanningAsync" /> followed by <see cref="StartScanningAsync" />, this also drops the
+    ///         device registry, so devices discovered before the restart are gone: every device is disconnected, removed and
+    ///         disposed. Hold on to device identifiers rather than <see cref="IBluetoothRemoteDevice" /> instances across a
+    ///         clean restart, and re-acquire the instance afterwards with <see cref="WaitForDeviceToAppearAsync(string, TimeSpan?, CancellationToken)" />.
+    ///     </para>
+    ///     <para>
+    ///         The intended use case is a device that changes identity while the scanner is running - most notably a device
+    ///         rebooting into or out of firmware-update mode, where a stale registry entry and an in-flight scan session
+    ///         otherwise prevent it from being rediscovered under its new advertisement.
+    ///     </para>
+    ///     <para>
+    ///         Restarting a scanner that is already stopped is valid: the stop leg is skipped and the registry is still dropped.
+    ///     </para>
+    /// </remarks>
+    /// <exception cref="ScannerFailedToStopException">Thrown when the scanner fails to stop.</exception>
+    /// <exception cref="ScannerFailedToStartException">Thrown when the scanner fails to start again.</exception>
+    /// <exception cref="TimeoutException">Thrown when either leg of the operation times out.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
+    Task CleanRestartScanningAsync(Func<IBluetoothAdvertisement, bool>? newAdvertisementFilter = null,
+        ScanningOptions? scanningOptions = null,
+        PermissionOptions? permissionOptions = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default);
+
+    #endregion
+
 }

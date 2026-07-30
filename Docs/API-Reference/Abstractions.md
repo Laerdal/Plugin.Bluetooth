@@ -161,6 +161,14 @@ ValueTask StopScanningIfNeededAsync(
     TimeSpan? timeout = null,
     CancellationToken cancellationToken = default);
 
+// Stop, drop the device registry, start again
+Task CleanRestartScanningAsync(
+    Func<IBluetoothAdvertisement, bool>? newAdvertisementFilter = null,
+    ScanningOptions? scanningOptions = null,
+    PermissionOptions? permissionOptions = null,
+    TimeSpan? timeout = null,
+    CancellationToken cancellationToken = default);
+
 // Runtime configuration
 ValueTask UpdateScannerOptionsAsync(
     ScanningOptions options,

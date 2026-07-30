@@ -360,6 +360,22 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
         await _platformScanner.StopScanningIfNeededAsync(timeout, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task CleanRestartScanningAsync(
+        Func<IBluetoothAdvertisement, bool>? newAdvertisementFilter = null,
+        ScanningOptions? scanningOptions = null,
+        Abstractions.Scanning.Options.PermissionOptions? permissionOptions = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        await _platformScanner.CleanRestartScanningAsync(
+            newAdvertisementFilter,
+            scanningOptions,
+            permissionOptions,
+            timeout,
+            cancellationToken).ConfigureAwait(false);
+    }
+
     #endregion
 
     #region IBluetoothScanner Implementation - Permissions
