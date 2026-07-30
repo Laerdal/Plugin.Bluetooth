@@ -120,7 +120,7 @@ public partial interface IBluetoothScanner
     ///     defaults if the scanner was not running.
     /// </param>
     /// <param name="permissionOptions">The options for requesting permissions. If null, default options will be used.</param>
-    /// <param name="timeout">The timeout applied to the stop and the start leg individually.</param>
+    /// <param name="timeout">The timeout applied to the stop and the start leg individually. Does not bound the registry-clear step in between.</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous clean restart operation.</returns>
     /// <remarks>
