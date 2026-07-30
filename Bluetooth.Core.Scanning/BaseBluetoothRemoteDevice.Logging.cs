@@ -108,5 +108,10 @@ public abstract partial class BaseBluetoothRemoteDevice
     [LoggerMessage(EventId = 249, Level = LogLevel.Information,
         Message = "  Service: {ServiceId}")]
     partial void LogServiceFound(Guid serviceId);
+
+    // Signal strength (260-269)
+    [LoggerMessage(EventId = 260, Level = LogLevel.Debug,
+        Message = "Device {DeviceId} signal strength read skipped (IsSignalStrengthProbingEnabled was false)")]
+    partial void LogSignalStrengthProbingSkipped(string deviceId);
     #endregion
 }

@@ -16,6 +16,21 @@ public partial interface IBluetoothRemoteDevice
     double SignalStrengthPercent { get; }
 
     /// <summary>
+    ///     Gets or sets a value indicating whether this device may be probed for its signal strength. Defaults to <c>true</c>.
+    ///     When set to <c>false</c>, <see cref="ReadSignalStrengthAsync" /> stops issuing native RSSI reads and returns the
+    ///     last known <see cref="SignalStrengthDbm" /> instead.
+    /// </summary>
+    /// <remarks>
+    ///     Set this to <c>false</c> before starting a firmware update. Nordic's DFU bootloader tends to drop the connection
+    ///     when it is spammed with RSSI reads, which is particularly dangerous while an update is in flight. A read that is
+    ///     already in flight when this is set to <c>false</c> still completes normally.
+    ///     <para>
+    ///         Signal strengths carried by advertisements are unaffected — those are passive and cost the device nothing.
+    ///     </para>
+    /// </remarks>
+    bool IsSignalStrengthProbingEnabled { get; set; }
+
+    /// <summary>
     ///     Reads the signal strength asynchronously.
     ///     This is an operation running on a ticker when the device is connected.
     ///     We can't get that value from advertisement anymore.
@@ -40,6 +55,10 @@ public partial interface IBluetoothRemoteDevice
     ///         - Accuracy varies by platform and hardware capabilities
     ///     </para>
     ///     <para>Call frequency should be limited to avoid impacting performance - recommended interval: 1-5 seconds.</para>
+    ///     <para>
+    ///         Returns the last known <see cref="SignalStrengthDbm" /> without touching the radio when
+    ///         <see cref="IsSignalStrengthProbingEnabled" /> is <c>false</c>.
+    ///     </para>
     /// </remarks>
     ValueTask<int> ReadSignalStrengthAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 }
