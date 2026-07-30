@@ -28,7 +28,7 @@ public partial interface IBluetoothRemoteDevice
     ///         Signal strengths carried by advertisements are unaffected — those are passive and cost the device nothing.
     ///     </para>
     /// </remarks>
-    bool IsSignalStrengthProbingEnabled { get; set; }
+    bool IsSignalStrengthProbingEnabled { get => true; set { } }
 
     /// <summary>
     ///     Reads the signal strength asynchronously.
