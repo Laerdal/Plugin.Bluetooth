@@ -34,9 +34,9 @@ A cross-platform .NET MAUI Bluetooth Low Energy (BLE) library providing a clean,
 | **Android**     | ✅       | ✅         | ✅              | ✅           |
 | **iOS**         | ✅       | ✅         | ✅              | ✅           |
 | **MacCatalyst** | ✅       | ✅         | ✅              | ✅           |
-| **Windows**     | ✅       | ✅         | ✅              | ❌           |
+| **Windows**     | ✅       | ✅         | ✅              | ✅           |
 
-> **Note**: Broadcasting is implemented on Android and Apple platforms. Windows broadcaster operations currently throw `NotSupportedException`.
+> **Note**: Broadcasting (advertising and hosting local GATT services/characteristics/descriptors) is implemented on Android, Apple, and Windows. One known Windows limitation: `IBluetoothConnectedDevice.DisconnectAsync()` throws `NotSupportedException` on Windows, because the WinRT GATT server API has no direct way to force-disconnect a subscribed central — it drops on its own once the central stops interacting or the app stops advertising.
 
 ## Installation
 
