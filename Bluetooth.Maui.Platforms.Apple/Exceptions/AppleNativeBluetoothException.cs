@@ -25,7 +25,12 @@ public class AppleNativeBluetoothException : BluetoothException
         Domain = nsError.Domain;
         Description = nsError.LocalizedDescription;
         FailureReason = nsError.LocalizedFailureReason;
-        RecoveryOptions = string.Join(";", nsError.LocalizedRecoveryOptions);
+        // LocalizedRecoveryOptions is null for the vast majority of NSErrors - it's only populated
+        // when the error carries an NSErrorRecoveryAttempting mechanism, which most native Bluetooth
+        // errors (including ordinary disconnects) never do. string.Join throws ArgumentNullException
+        // on a null array, which made constructing this exception itself throw - always, for any
+        // NSError without recovery options - rather than describing the original native error.
+        RecoveryOptions = string.Join(";", nsError.LocalizedRecoveryOptions ?? []);
         RecoverySuggestion = nsError.LocalizedRecoverySuggestion;
     }
 

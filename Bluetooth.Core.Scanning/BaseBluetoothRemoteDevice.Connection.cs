@@ -221,24 +221,30 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <param name="e">Optional exception that caused the disconnection.</param>
     protected void OnDisconnect(Exception? e = null)
     {
-        if (e == null)
-        {
-            LogDeviceDisconnected(Id);
-        }
-        else
-        {
-            LogDeviceDisconnectionFailed(Id, e);
-        }
-
         NativeRefreshIsConnected();
 
-        // Attempt to dispatch success to the TaskCompletionSource
+        // Attempt to dispatch success/failure to a pending explicit Connect/Disconnect await.
         var success = (DisconnectionTcs?.TrySetResultOrException(e) ?? false) || (ConnectionTcs?.TrySetResultOrException(e) ?? false);
         if (success)
         {
+            // Explicitly requested (someone is awaiting DisconnectAsync/ConnectAsync) - log its
+            // outcome directly. This is not an unexpected disconnection, regardless of e.
+            if (e == null)
+            {
+                LogDeviceDisconnected(Id);
+            }
+            else
+            {
+                LogDeviceDisconnectionFailed(Id, e);
+            }
             return;
         }
 
+        // No pending explicit await - this is an unexpected disconnection (e.g. a device rebooting
+        // mid-DFU). OnUnexpectedDisconnection() owns all logging for this path: WARNING normally, or
+        // a quiet DEBUG entry when IgnoreNextUnexpectedDisconnection suppresses it. Do NOT also log a
+        // second, always-ERROR entry here - that bypassed IgnoreNextUnexpectedDisconnection entirely
+        // and turned every expected DFU-reboot disconnection into ERROR-level noise.
         OnUnexpectedDisconnection(e);
     }
 

@@ -47,6 +47,14 @@ public class BluetoothRemoteDevice : IBluetoothRemoteDevice
     /// </remarks>
     public IBluetoothRemoteDevice PlatformDevice => _platformDevice;
 
+    /// <inheritdoc />
+    /// <remarks>
+    ///     Delegates to the wrapped platform device's own <see cref="IBluetoothRemoteDevice.UnderlyingPlatformDevice"/>,
+    ///     so a chain of nested <see cref="BluetoothRemoteDevice"/> subtypes still resolves to the
+    ///     innermost raw platform device, not just the immediate wrapper.
+    /// </remarks>
+    public IBluetoothRemoteDevice UnderlyingPlatformDevice => _platformDevice.UnderlyingPlatformDevice;
+
     #endregion
 
     #region Constructor
