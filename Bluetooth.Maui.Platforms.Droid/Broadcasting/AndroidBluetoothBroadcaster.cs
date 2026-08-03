@@ -297,14 +297,19 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     /// </remarks>
     protected async override ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken)
     {
-        await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
-
         // For API 31+ (Android 12+), spec BLUETOOTH_ADVERTISE only (not CONNECT)
         if (OperatingSystem.IsAndroidVersionAtLeast(31))
         {
             await AndroidBluetoothPermissions.BluetoothAdvertisePermission.RequestIfNeededAsync().ConfigureAwait(false);
             return;
         }
+
+        // Legacy BLUETOOTH permission only applies below API 31 - on API 31+ it's superseded by
+        // BLUETOOTH_ADVERTISE/CONNECT, and the OS elides it from the installed package's reported
+        // permission list for apps targeting SDK 31+. Requesting it unconditionally makes
+        // Permissions.BasePlatformPermission.CheckStatusAsync() falsely report it as "not declared in
+        // AndroidManifest.xml" even when it is - see the matching fix in AndroidBluetoothScanner.
+        await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
 
         // For older versions, no special permissions needed
     }
