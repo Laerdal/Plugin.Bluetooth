@@ -210,7 +210,13 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         try
         {
             var match = GetDeviceOrDefault(device => AreRepresentingTheSameObject(peripheral, device));
-            return match as CbCentralManagerWrapper.ICbPeripheralDelegate ?? throw new DeviceNotFoundException(this, peripheral.Identifier.ToString());
+
+            // Resolve to the innermost platform device before casting: a scanner DeviceWrapper may have
+            // substituted a custom subtype (e.g. Bluetooth.Maui.BluetoothRemoteDevice) into the registry,
+            // and only the real AppleBluetoothRemoteDevice implements ICbPeripheralDelegate - the wrapper
+            // never does, since it doesn't inherit from it.
+            var platformMatch = match?.UnderlyingPlatformDevice;
+            return platformMatch as CbCentralManagerWrapper.ICbPeripheralDelegate ?? throw new DeviceNotFoundException(this, peripheral.Identifier.ToString());
         }
         catch (InvalidOperationException e)
         {
@@ -221,14 +227,17 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
 
     private static bool AreRepresentingTheSameObject(CBPeripheral peripheral, IBluetoothRemoteDevice device)
     {
-        // Identifier alone is the correct, sufficient identity check - CoreBluetooth assigns a stable
-        // UUID per remembered peripheral. Do NOT also require the native object handle to match: a
-        // peripheral retrieved via a fresh connect/reconnect/state-restoration path can be a different
-        // CBPeripheral instance with the same identifier, which previously made this method return
-        // false for the exact same physical peripheral and caused GetDevice() to throw
-        // DeviceNotFoundException on ordinary connect/disconnect callbacks.
-        return device is AppleBluetoothRemoteDevice sharedDevice
-            && sharedDevice.CbPeripheralWrapper.CbPeripheral.Identifier.Equals(peripheral.Identifier);
+        // Compare by Id (delegates through any DeviceWrapper-substituted subtype to the underlying
+        // platform device's own identifier) rather than casting to AppleBluetoothRemoteDevice directly -
+        // a wrapped device never satisfies that cast, and would otherwise always fail this check even
+        // when it represents the exact same physical peripheral. Identifier string equality alone is
+        // sufficient: CoreBluetooth assigns a stable, unique UUID per remembered peripheral. Do NOT
+        // additionally require the native object handle to match: a peripheral retrieved via a fresh
+        // connect/reconnect/state-restoration path can be a different CBPeripheral instance with the
+        // same identifier, which previously made this method return false for the exact same physical
+        // peripheral and caused GetDevice() to throw DeviceNotFoundException on ordinary
+        // connect/disconnect callbacks.
+        return device.Id == peripheral.Identifier.ToString();
     }
 
     #endregion
