@@ -396,6 +396,8 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// </remarks>
     protected async override ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // For API 31+ (Android 12+), spec BLUETOOTH_SCAN only (not CONNECT)
         if (OperatingSystem.IsAndroidVersionAtLeast(31))
         {

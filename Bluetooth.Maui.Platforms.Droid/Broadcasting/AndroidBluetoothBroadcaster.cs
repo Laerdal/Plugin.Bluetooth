@@ -297,6 +297,8 @@ public class AndroidBluetoothBroadcaster : BaseBluetoothBroadcaster, AdvertiseCa
     /// </remarks>
     protected async override ValueTask NativeRequestBroadcasterPermissionsAsync(CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // For API 31+ (Android 12+), spec BLUETOOTH_ADVERTISE only (not CONNECT)
         if (OperatingSystem.IsAndroidVersionAtLeast(31))
         {
