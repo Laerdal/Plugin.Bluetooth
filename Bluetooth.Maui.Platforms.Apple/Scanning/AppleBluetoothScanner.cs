@@ -221,9 +221,14 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
 
     private static bool AreRepresentingTheSameObject(CBPeripheral peripheral, IBluetoothRemoteDevice device)
     {
+        // Identifier alone is the correct, sufficient identity check - CoreBluetooth assigns a stable
+        // UUID per remembered peripheral. Do NOT also require the native object handle to match: a
+        // peripheral retrieved via a fresh connect/reconnect/state-restoration path can be a different
+        // CBPeripheral instance with the same identifier, which previously made this method return
+        // false for the exact same physical peripheral and caused GetDevice() to throw
+        // DeviceNotFoundException on ordinary connect/disconnect callbacks.
         return device is AppleBluetoothRemoteDevice sharedDevice
-            && sharedDevice.CbPeripheralWrapper.CbPeripheral.Identifier.Equals(peripheral.Identifier)
-            && sharedDevice.CbPeripheralWrapper.CbPeripheral.Handle.Handle == peripheral.Handle.Handle;
+            && sharedDevice.CbPeripheralWrapper.CbPeripheral.Identifier.Equals(peripheral.Identifier);
     }
 
     #endregion
