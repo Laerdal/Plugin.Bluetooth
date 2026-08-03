@@ -64,7 +64,7 @@ jobs:
           path: '${{ github.workspace }}/Output/Version'
 
       - name: '🔧 Setup .NET'
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           config-file: '${{ github.workspace }}/global.json'
 
