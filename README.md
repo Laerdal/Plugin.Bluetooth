@@ -34,9 +34,9 @@ A cross-platform .NET MAUI Bluetooth Low Energy (BLE) library providing a clean,
 | **Android**     | ✅       | ✅         | ✅              | ✅           |
 | **iOS**         | ✅       | ✅         | ✅              | ✅           |
 | **MacCatalyst** | ✅       | ✅         | ✅              | ✅           |
-| **Windows**     | ✅       | ✅         | ✅              | ❌           |
+| **Windows**     | ✅       | ✅         | ✅              | ✅           |
 
-> **Note**: Broadcasting is implemented on Android and Apple platforms. Windows broadcaster operations currently throw `NotSupportedException`.
+> **Note**: Broadcasting (advertising and hosting local GATT services/characteristics/descriptors) is implemented on Android, Apple, and Windows. One known Windows limitation: `IBluetoothConnectedDevice.DisconnectAsync()` throws `NotSupportedException` on Windows, because the WinRT GATT server API has no direct way to force-disconnect a subscribed central — it drops on its own once the central stops interacting or the app stops advertising.
 
 ## Installation
 
@@ -391,32 +391,86 @@ Add Bluetooth capability to `Package.appxmanifest`:
 
 ## Architecture
 
-```text
-Plugin.Bluetooth/
-├── Bluetooth.Abstractions/              # Core interfaces (platform-agnostic)
-│   ├── Exceptions/
-│   ├── Extensions/
-│   └── Options/
-├── Bluetooth.Abstractions.Scanning/     # Scanning-specific interfaces
-│   ├── Events/
-│   ├── Exceptions/
-│   └── Options/
-├── Bluetooth.Abstractions.Broadcasting/ # Broadcasting interfaces
-│   ├── Events/
-│   ├── Exceptions/
-│   └── Options/
-├── Bluetooth.Core/                      # Base implementations
-│   ├── Base classes
-│   └── Infrastructure
-├── Bluetooth.Core.Scanning/             # Scanning base implementations
-├── Bluetooth.Core.Broadcasting/         # Broadcasting base implementations
-├── Bluetooth.Maui/                      # MAUI integration & DI
-└── Platform Implementations/
-    ├── Bluetooth.Maui.Platforms.Apple/     # iOS & MacCatalyst
-    ├── Bluetooth.Maui.Platforms.Droid/     # Android
-    ├── Bluetooth.Maui.Platforms.Win/       # Windows
-    └── Bluetooth.Maui.Platforms.DotNetCore # Fallback (throws PlatformNotSupportedException)
+The solution is layered so that scanning (central role) and broadcasting (peripheral role)
+stay parallel, independent concerns all the way from the interfaces down to the platform
+implementations. `Bluetooth.Maui` is the only package published to NuGet — everything else
+is an internal building block pulled in transitively.
+
+```mermaid
+flowchart TB
+    subgraph SAMPLES["Sample apps"]
+        direction LR
+        SAMPLE_SCAN["Sample.Scanner"]
+        SAMPLE_BCAST["Sample.Broadcaster"]
+    end
+
+    MAUI["📦 Bluetooth.Maui<br/>facade + DI composition root<br/>AddBluetoothServices()<br/>— the only NuGet-published package —"]
+
+    subgraph PLATFORMS["Platform implementations — exactly one wired in per TargetFramework"]
+        direction LR
+        DROID["Platforms.Droid<br/>AndroidBluetooth*"]
+        APPLE["Platforms.Apple<br/>AppleBluetooth*"]
+        WIN["Platforms.Win<br/>WindowsBluetooth*"]
+        NETCORE["Platforms.DotNetCore<br/>(stub — throws PlatformNotSupportedException)"]
+    end
+
+    subgraph CORE_LAYER["Core layer — shared base implementations"]
+        direction LR
+        CORE_SCAN["Bluetooth.Core.Scanning<br/>BaseBluetoothScanner..."]
+        CORE_BCAST["Bluetooth.Core.Broadcasting<br/>BaseBluetoothBroadcaster..."]
+        CORE["Bluetooth.Core<br/>BaseBluetoothAdapter"]
+    end
+
+    subgraph ABSTRACTIONS["Abstractions layer — platform-agnostic contracts"]
+        direction LR
+        ABS_SCAN["Bluetooth.Abstractions.Scanning<br/>IBluetoothScanner, IBluetoothRemoteDevice/Service/Characteristic/Descriptor"]
+        ABS_BCAST["Bluetooth.Abstractions.Broadcasting<br/>IBluetoothBroadcaster, IBluetoothLocalService/Characteristic/Descriptor"]
+        ABS["Bluetooth.Abstractions<br/>IBluetoothAdapter"]
+    end
+
+    SAMPLE_SCAN --> MAUI
+    SAMPLE_BCAST --> MAUI
+
+    MAUI --> CORE_SCAN
+    MAUI --> CORE_BCAST
+    MAUI -. "TFM-conditional, pick exactly 1" .-> DROID
+    MAUI -. "TFM-conditional, pick exactly 1" .-> APPLE
+    MAUI -. "TFM-conditional, pick exactly 1" .-> WIN
+    MAUI -. "TFM-conditional, pick exactly 1" .-> NETCORE
+
+    DROID --> CORE_SCAN
+    DROID --> CORE_BCAST
+    APPLE --> CORE_SCAN
+    APPLE --> CORE_BCAST
+    WIN --> CORE_SCAN
+    WIN --> CORE_BCAST
+    NETCORE --> CORE_SCAN
+    NETCORE --> CORE_BCAST
+
+    CORE_SCAN --> CORE
+    CORE_SCAN --> ABS_SCAN
+    CORE_BCAST --> CORE
+    CORE_BCAST --> ABS_BCAST
+    CORE --> ABS
+
+    ABS_SCAN --> ABS
+    ABS_BCAST --> ABS
 ```
+
+Notes:
+- Arrows point from a project to the project(s) it depends on; transitive references
+  (e.g. every project's implicit dependency on `Bluetooth.Abstractions`) are omitted for
+  readability.
+- `Bluetooth.Maui` doesn't compile against all four platform projects at once — MSBuild
+  conditions (`IsForAndroid` / `IsForAppleStuff` / `IsForWindows` / `IsForPlainNetX`) select
+  exactly one per `TargetFramework`. At runtime, `AddBluetoothServices()` then registers the
+  `Bluetooth.Maui` facade classes (`BluetoothScanner`/`BluetoothBroadcaster`) as the actual
+  `IBluetoothScanner`/`IBluetoothBroadcaster` implementations, wrapping the platform
+  implementation in front of consumers (see `Docs/Architecture/ADR/0001-facade-overrides-platform-registrations.md`).
+- `Bluetooth.Linux` exists as an empty placeholder folder for a future native Linux target;
+  it has no project file yet and isn't part of the current build graph, so it's omitted above.
+- For deeper diagrams (class hierarchies, the DI registration tree, the async
+  `TaskCompletionSource` coordination flow, etc.), see `Docs/ARCHITECTURE_DIAGRAMS.md`.
 
 ## Core Interfaces
 
