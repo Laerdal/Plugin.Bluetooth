@@ -246,8 +246,10 @@ public class DeviceViewModel : BaseViewModel
     /// </summary>
     private void OnConnectionStateChanged(object? sender, EventArgs e)
     {
-        OnPropertyChanged(nameof(IsConnected));
-        UpdateCommands();
+        MainThread.InvokeOnMainThreadAsync(() => {
+            OnPropertyChanged(nameof(IsConnected));
+            UpdateCommands();
+        });
     }
 
     /// <summary>
