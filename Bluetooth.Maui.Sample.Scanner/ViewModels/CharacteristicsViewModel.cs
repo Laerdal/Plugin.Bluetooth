@@ -75,6 +75,15 @@ public class CharacteristicsViewModel : BaseViewModel
     ///     Gets the command to select and interact with a characteristic.
     /// </summary>
     public IAsyncRelayCommand<IBluetoothRemoteCharacteristic> SelectCharacteristicCommand { get; }
+    
+    /// <summary>
+    ///     Gets or sets the currently selected Characteristic.
+    /// </summary>
+    public IBluetoothRemoteCharacteristic? SelectedCharacteristic
+    {
+        get => GetValue<IBluetoothRemoteCharacteristic?>(null);
+        set => SetValue(value);
+    }
 
     /// <summary>
     ///     Sets the service to display and manage.
@@ -135,14 +144,15 @@ public class CharacteristicsViewModel : BaseViewModel
             return;
         }
 
+        SelectedCharacteristic = null;
         _logger.LogInformation("Characteristic selected: {CharacteristicId} from service: {Id}", characteristic.Id, ServiceId);
 
-          // Navigate to the write/listen lab page with the selected characteristic
+        // Navigate to the write/listen lab page with the selected characteristic
         var parameters = new Dictionary<string, object>
         {
             ["Characteristic"] = characteristic
         };
-          await _navigation.NavigateToAsync<WriteListenLabPage>(parameters);
+        await _navigation.NavigateToAsync<WriteListenLabPage>(parameters);
     }
 
     /// <summary>
