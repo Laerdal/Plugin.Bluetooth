@@ -44,6 +44,7 @@
         <CollectionView Grid.Row="1"
                         ItemsSource="{Binding Characteristics}"
                         SelectionMode="Single"
+                        SelectedItem="{Binding SelectedCharacteristic, Mode=TwoWay}"
                         SelectionChangedCommand="{Binding SelectCharacteristicCommand}"
                         SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">
 
