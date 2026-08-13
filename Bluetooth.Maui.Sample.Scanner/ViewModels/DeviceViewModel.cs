@@ -101,6 +101,15 @@ public class DeviceViewModel : BaseViewModel
     ///     Gets the command to select and navigate to a service.
     /// </summary>
     public IAsyncRelayCommand<IBluetoothRemoteService> SelectServiceCommand { get; }
+    
+    /// <summary>
+    ///     Gets or sets the currently selected service.
+    /// </summary>
+    public IBluetoothRemoteService? SelectedService
+    {
+        get => GetValue<IBluetoothRemoteService?>(null);
+        set => SetValue(value);
+    }
 
     /// <summary>
     ///     Sets the device to display and manage.
@@ -231,6 +240,8 @@ public class DeviceViewModel : BaseViewModel
             return;
         }
 
+        SelectedService = null;
+
         _logger.LogInformation("Service selected: {Id} on device: {DeviceName}", service.Id, DeviceName);
 
         // Navigate to CharacteristicsPage with the selected service
@@ -246,8 +257,10 @@ public class DeviceViewModel : BaseViewModel
     /// </summary>
     private void OnConnectionStateChanged(object? sender, EventArgs e)
     {
-        OnPropertyChanged(nameof(IsConnected));
-        UpdateCommands();
+        MainThread.InvokeOnMainThreadAsync(() => {
+            OnPropertyChanged(nameof(IsConnected));
+            UpdateCommands();
+        });
     }
 
     /// <summary>

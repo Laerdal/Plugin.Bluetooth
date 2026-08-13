@@ -3,6 +3,7 @@ using Bluetooth.Core.Infrastructure.Retries;
 using Bluetooth.Maui.Platforms.Droid.Enums;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
 using Bluetooth.Maui.Platforms.Droid.Logging;
+using Bluetooth.Maui.Platforms.Droid.Permissions;
 using Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 using Bluetooth.Maui.Platforms.Droid.Tools;
@@ -305,6 +306,8 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(connectionOptions);
+        
+        await RequestBluetoothConnectinPermissionsAsync().ConfigureAwait(false);;
 
         // Store connection options for GATT operations
         _connectionOptions = connectionOptions;
@@ -378,6 +381,22 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             Logger?.LogConnectionFailed(Id, Math.Max(attempt, 1), e);
             OnConnectFailed(e);
             throw;
+        }
+    }
+
+    private async static ValueTask RequestBluetoothConnectinPermissionsAsync()
+    {
+        // Request necessary permissions before connecting
+        if (OperatingSystem.IsAndroidVersionAtLeast(31))
+        {
+            // Android 12+ (API 31+) requires BLUETOOTH_CONNECT permission at runtime
+            await AndroidBluetoothPermissions.BluetoothConnectPermission.RequestIfNeededAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            // Older versions use legacy BLUETOOTH and BLUETOOTH_ADMIN permissions
+            await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
+            await AndroidBluetoothPermissions.BluetoothAdminPermission.RequestIfNeededAsync().ConfigureAwait(false);
         }
     }
 

@@ -396,7 +396,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// </remarks>
     protected async override ValueTask NativeRequestScannerPermissionsAsync(bool requireBackgroundLocation, CancellationToken cancellationToken)
     {
-        await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
 
         // For API 31+ (Android 12+), spec BLUETOOTH_SCAN only (not CONNECT)
         if (OperatingSystem.IsAndroidVersionAtLeast(31))
@@ -404,6 +404,13 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             await AndroidBluetoothPermissions.BluetoothScanPermission.RequestIfNeededAsync().ConfigureAwait(false);
             return;
         }
+
+        // Legacy BLUETOOTH permission only applies below API 31 - on API 31+ it's superseded by
+        // BLUETOOTH_SCAN/CONNECT, and the OS elides it from the installed package's reported permission
+        // list for apps targeting SDK 31+. Requesting it unconditionally makes
+        // Permissions.BasePlatformPermission.CheckStatusAsync() falsely report it as "not declared in
+        // AndroidManifest.xml" even when it is, crashing every scan attempt on modern Android.
+        await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
 
         // For API 29-30 (Android 10-11), spec FINE_LOCATION and optionally BACKGROUND_LOCATION
         if (OperatingSystem.IsAndroidVersionAtLeast(29))
