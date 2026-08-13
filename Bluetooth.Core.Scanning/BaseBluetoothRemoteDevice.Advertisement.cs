@@ -46,6 +46,12 @@ public abstract partial class BaseBluetoothRemoteDevice
             AdvertisedName = advertisement.DeviceName;
         }
 
+        // Manufacturer
+        if (advertisement.Manufacturer != Manufacturer.Unknown)
+        {
+            Manufacturer = advertisement.Manufacturer;
+        }
+
         // SignalStrength
         OnSignalStrengthRead(advertisement.RawSignalStrengthInDBm);
 
