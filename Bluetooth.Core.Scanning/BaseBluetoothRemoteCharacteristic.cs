@@ -78,21 +78,34 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
     /// </summary>
     /// <returns>A task that represents the asynchronous disposal operation.</returns>
     /// <remarks>
-    ///     This method will attempt to stop listening if the characteristic is currently listening for notifications.
-    ///     Any exceptions during the stop listening process will be handled by the unhandled exception listener.
+    ///     This method will attempt to stop listening if the characteristic is currently listening for notifications
+    ///     and its device is still connected. Any exceptions during the stop listening process will be handled by the
+    ///     unhandled exception listener. If the device is already disconnected, there is no live link to write a
+    ///     "stop listening" request to, so local state is cleared directly instead of attempting (and failing) a
+    ///     native round-trip.
     /// </remarks>
     protected async virtual ValueTask DisposeAsyncCore()
     {
         // Stop listening if active
         if (CanListen && IsListening)
         {
-            try
+            if (Service.Device.IsConnected)
             {
-                await StopListeningAsync().ConfigureAwait(false);
+                try
+                {
+                    await StopListeningAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex);
+                // Already disconnected - nothing to write a "stop listening" request to. Clear local state
+                // directly so this object (and anything reading IsListening off it) reflects reality instead
+                // of a stale "still listening" belief that a live StopListeningAsync would have cleared.
+                IsListening = false;
             }
         }
 
