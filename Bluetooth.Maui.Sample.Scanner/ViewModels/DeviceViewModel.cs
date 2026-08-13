@@ -69,7 +69,7 @@ public class DeviceViewModel : BaseViewModel
     public string DeviceId => Device?.Id ?? "N/A";
 
     /// <summary>
-    ///     Gets the device ID for display.
+    ///     Gets the Manufacturer for display.
     /// </summary>
     public string Manufacturer => $"Manufacturer: {Device?.Manufacturer}";
 
