@@ -37,9 +37,9 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     {
         get
         {
-            if (_watcher == null)
+            lock (_lock)
             {
-                lock (_lock)
+                if (_watcher == null)
                 {
                     _watcher = new BluetoothLEAdvertisementWatcher
                     {
