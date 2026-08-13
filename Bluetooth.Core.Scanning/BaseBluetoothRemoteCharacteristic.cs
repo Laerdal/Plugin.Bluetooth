@@ -78,33 +78,36 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
     /// </summary>
     /// <returns>A task that represents the asynchronous disposal operation.</returns>
     /// <remarks>
-    ///     This method will attempt to stop listening if the characteristic is currently listening for notifications
-    ///     and its device is still connected. Any exceptions during the stop listening process will be handled by the
-    ///     unhandled exception listener. If the device is already disconnected, there is no live link to write a
-    ///     "stop listening" request to, so local state is cleared directly instead of attempting (and failing) a
-    ///     native round-trip.
+    ///     This method will attempt to stop listening if the characteristic is currently listening for notifications.
+    ///     A <see cref="DeviceNotConnectedException" /> is treated as an expected disposal race (device disconnected
+    ///     between the connectivity check and the stop request) and is silently discarded. Any other exception during
+    ///     the stop listening process is forwarded to the unhandled exception listener. <see cref="IBluetoothRemoteCharacteristic.IsListening" />
+    ///     is always cleared in a <c>finally</c> block so the object reflects reality regardless of outcome.
     /// </remarks>
     protected async virtual ValueTask DisposeAsyncCore()
     {
         // Stop listening if active
         if (CanListen && IsListening)
         {
-            if (Service.Device.IsConnected)
+            try
             {
-                try
+                if (Service.Device.IsConnected)
                 {
                     await StopListeningAsync().ConfigureAwait(false);
                 }
-                catch (Exception ex)
-                {
-                    BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex);
-                }
             }
-            else
+            catch (DeviceNotConnectedException)
             {
-                // Already disconnected - nothing to write a "stop listening" request to. Clear local state
-                // directly so this object (and anything reading IsListening off it) reflects reality instead
-                // of a stale "still listening" belief that a live StopListeningAsync would have cleared.
+                // Device disconnected between the IsConnected check and StopListeningAsync - treat as expected
+                // disposal race; no need to propagate.
+            }
+            catch (Exception ex)
+            {
+                BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex);
+            }
+            finally
+            {
+                // Always clear local state so this object reflects reality regardless of outcome.
                 IsListening = false;
             }
         }
