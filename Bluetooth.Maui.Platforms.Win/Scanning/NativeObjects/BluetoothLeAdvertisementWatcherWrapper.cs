@@ -43,7 +43,7 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
                 {
                     _watcher = new BluetoothLEAdvertisementWatcher
                     {
-                        AllowExtendedAdvertisements = true
+                        ScanningMode = BluetoothLEScanningMode.Active
                     };
                     _watcher.Received += BluetoothLEAdvertisementWatcher_Received;
                     _watcher.Stopped += BluetoothLEAdvertisementWatcher_Stopped;
