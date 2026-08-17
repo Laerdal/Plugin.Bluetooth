@@ -169,7 +169,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: publish-nuget
+    needs: [build, publish-nuget]
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

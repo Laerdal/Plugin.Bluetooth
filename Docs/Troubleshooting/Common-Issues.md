@@ -89,7 +89,7 @@ await device.ConnectAsync(options);
 There is no built-in concurrent-connection cap (no `BluetoothInfrastructureOptions` exists in this codebase). Self-manage it with a `SemaphoreSlim` sized to the platform's real GATT limits:
 
 ```csharp
-private readonly SemaphoreSlim _connectionLimiter = new(maxConcurrentConnections: 3);
+private readonly SemaphoreSlim _connectionLimiter = new(initialCount: 3, maxCount: 3);
 
 async Task ConnectWithLimitAsync(IBluetoothRemoteDevice device)
 {
@@ -874,9 +874,12 @@ catch (DeviceFailedToConnectException ex)
 
 ### 7. Monitor Bluetooth State
 
-There's no cross-platform adapter-state-changed event on `IBluetoothScanner` today. On iOS/macOS, `AppleBluetoothScanner.State` (`CBManagerState`) raises standard `INotifyPropertyChanged.PropertyChanged` notifications when it changes, so you can subscribe to that directly if you're not going through the cross-platform facade:
+There's no cross-platform adapter-state-changed event on `IBluetoothScanner` today. On iOS/macOS, `AppleBluetoothScanner.State` (`CBManagerState`) raises standard `INotifyPropertyChanged.PropertyChanged` notifications when it changes. The DI-injected `IBluetoothScanner` resolves to the `Bluetooth.Maui.BluetoothScanner` facade, which exposes the underlying platform scanner via `PlatformScanner`:
 
 ```csharp
+#if IOS || MACCATALYST
+var appleBluetoothScanner = (AppleBluetoothScanner)((BluetoothScanner)scanner).PlatformScanner;
+
 ((INotifyPropertyChanged)appleBluetoothScanner).PropertyChanged += (sender, args) =>
 {
     if (args.PropertyName == nameof(AppleBluetoothScanner.State))
@@ -884,6 +887,7 @@ There's no cross-platform adapter-state-changed event on `IBluetoothScanner` tod
         Console.WriteLine($"Bluetooth state: {appleBluetoothScanner.State}");
     }
 };
+#endif
 ```
 
 Android and Windows don't expose an equivalent today — their adapter state is tracked internally but isn't surfaced as a public property or event.
