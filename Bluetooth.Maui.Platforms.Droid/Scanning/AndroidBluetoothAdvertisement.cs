@@ -76,6 +76,9 @@ public readonly record struct AndroidBluetoothAdvertisement : IBluetoothAdvertis
         : (Manufacturer) (-1);
 
     /// <inheritdoc />
+    public Manufacturer? CachedManufacturer => null;
+
+    /// <inheritdoc />
     public int ManufacturerId
     {
         get

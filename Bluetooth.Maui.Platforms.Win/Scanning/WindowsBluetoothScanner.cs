@@ -14,12 +14,13 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning;
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementwatcher">BluetoothLEAdvertisementWatcher</seealso>
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs">BluetoothLEAdvertisementReceivedEventArgs</seealso>
 /// </remarks>
-public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.BluetoothLeAdvertisementWatcherWrapper.IBluetoothLeAdvertisementWatcherProxyDelegate
+public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.BluetoothLeAdvertisementWatcherWrapper.IBluetoothLeAdvertisementWatcherProxyDelegate, IDisposable
 {
     private NativeObjects.BluetoothLeAdvertisementWatcherWrapper? _watcher;
 
     private readonly ITicker _ticker;
     private readonly IBluetoothRemoteDeviceFactory _deviceFactory;
+    private readonly ManufacturerCache _manufacturerCache;
 
     /// <summary>
     ///     Gets the advertisement watcher wrapper, creating it lazily with this scanner as the delegate.
@@ -33,7 +34,9 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         ITicker ticker,
         IBluetoothRemoteDeviceFactory deviceFactory,
         IBluetoothNameProvider? nameProvider = null,
-        ILoggerFactory? loggerFactory = null) : base(adapter,
+        ILoggerFactory? loggerFactory = null,
+        int manufacturerCacheLimit = 1000,
+        int manufacturerCacheExpirationTimeMinutes = 30) : base(adapter,
                                                        rssiToSignalStrengthConverter,
                                                        ticker,
                                                        nameProvider,
@@ -41,6 +44,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     {
         _ticker = ticker;
         _deviceFactory = deviceFactory;
+        _manufacturerCache = new ManufacturerCache(manufacturerCacheLimit, TimeSpan.FromMinutes(manufacturerCacheExpirationTimeMinutes));
     }
 
     #region Delegate Callbacks
@@ -51,8 +55,14 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     /// <param name="argsAdvertisement">The advertisement event arguments.</param>
     public void OnAdvertisementReceived(BluetoothLEAdvertisementReceivedEventArgs argsAdvertisement)
     {
-        var advertisement = new WindowsBluetoothAdvertisement(argsAdvertisement);
-        Logger?.LogDeviceDiscovered(advertisement.BluetoothAddress, advertisement.RawSignalStrengthInDBm);
+        var cachedManufacturer = _manufacturerCache.GetManufacturerData(argsAdvertisement.BluetoothAddress);
+        var advertisement = new WindowsBluetoothAdvertisement(argsAdvertisement, cachedManufacturer);
+        if (advertisement.Manufacturer != Manufacturer.Unknown)
+        {
+            // update cache if we have a valid value, otherwise keep the cached value (if any)
+            _manufacturerCache.SetManufacturerData(argsAdvertisement.BluetoothAddress, advertisement.Manufacturer);
+        }
+
         OnAdvertisementReceived(advertisement); // Base class method
     }
 
@@ -129,6 +139,27 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         Logger?.LogScanStopping();
         _watcher?.BluetoothLeAdvertisementWatcher.Stop();
         return ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// Disposes of the scanner and its resources, specifically the manufacturer cache.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Disposes of the scanner and its resources, specifically the manufacturer cache.
+    /// </summary>
+    /// <param name="disposing"></param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _manufacturerCache.Dispose();
+        }
     }
 
     #endregion

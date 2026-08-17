@@ -15,7 +15,9 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
     ///     For more information, see <see href="https://docs.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs" />.
     /// </summary>
     /// <param name="args">The Windows Bluetooth LE advertisement received event arguments.</param>
-    public WindowsBluetoothAdvertisement(BluetoothLEAdvertisementReceivedEventArgs args)
+    /// <param name="cachedManufacturer">Optional cached manufacturer from previous advertisements.</param>
+    public WindowsBluetoothAdvertisement(BluetoothLEAdvertisementReceivedEventArgs args,
+        Manufacturer? cachedManufacturer = null)
     {
         ArgumentNullException.ThrowIfNull(args);
 
@@ -28,6 +30,7 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         BluetoothAddress = ConvertNumericBleAddressToHexBleAddress(args.BluetoothAddress);
         ManufacturerData = ExtractManufacturerData(args);
         DateReceived = DateTimeOffset.UtcNow;
+        CachedManufacturer = cachedManufacturer;
     }
 
     #region IBluetoothAdvertisement Members
@@ -55,6 +58,9 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
 
     /// <inheritdoc />
     public ReadOnlyMemory<byte> ManufacturerData { get; }
+
+    /// <inheritdoc />
+    public Manufacturer? CachedManufacturer { get; }
 
     /// <inheritdoc />
     public Manufacturer Manufacturer => ManufacturerData.Length >= 2

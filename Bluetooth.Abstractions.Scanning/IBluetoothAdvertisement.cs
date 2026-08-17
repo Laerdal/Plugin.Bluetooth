@@ -86,6 +86,13 @@ public interface IBluetoothAdvertisement
     Manufacturer Manufacturer { get; }
 
     /// <summary>
+    /// Used to enrich the advertisement with past manufacturer data, if available. This is optional and can be null.
+    /// This accounts for the fact that some devices may not advertise manufacturer data in every advertisement packet,
+    /// but it may be available from previous advertisements.
+    /// </summary>
+    Manufacturer? CachedManufacturer { get; }
+
+    /// <summary>
     ///     Gets the ID of the manufacturer.
     /// </summary>
     int ManufacturerId { get; }
