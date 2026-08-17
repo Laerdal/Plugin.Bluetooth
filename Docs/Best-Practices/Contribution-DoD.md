@@ -15,6 +15,7 @@ Select at least one category:
 
 - [ ] Behavior is implemented in the intended layer (Abstractions, Core, Platform, Facade).
 - [ ] Public API surface changes are intentional and documented.
+- [ ] New or changed public types/members have accurate `///` XML doc comments — this is the single source of truth for the generated API reference (`Docs/api/`, built via `Docs/docfx.json`). CS1591 is enabled on all API projects, so a missing comment on a new public member fails the build; an *inaccurate* one won't, so review it like code, not an afterthought.
 - [ ] Unsupported operations use the intended exception type (`NotSupportedException` or `PlatformNotSupportedException`).
 - [ ] New async operations expose `CancellationToken cancellationToken = default`.
 - [ ] State transitions and callbacks are consistent with existing lifecycle patterns.
@@ -44,10 +45,10 @@ Select at least one category:
 
 ## 6. Documentation
 
-- [ ] Relevant docs are updated in the same PR.
+- [ ] Relevant *conceptual* docs are updated in the same PR (`Docs/Core-Concepts/`, `Docs/Configuration/`, `Docs/Platforms/`, `Docs/Getting-Started/`, `Docs/Best-Practices/`). Member-level API reference does not need manual updates — it's generated from XML doc comments (see item 2 above).
 - [ ] Capability tables match implemented behavior.
-- [ ] API examples reflect current interfaces and signatures.
-- [ ] New docs links resolve to existing files.
+- [ ] Code samples in conceptual docs reflect current interfaces and signatures (compile them mentally — a fabricated/renamed API in a doc sample is exactly the class of bug a 2026-08-17 audit found dozens of).
+- [ ] New docs links resolve to existing files, or use `xref:` for links into the generated API reference rather than a hand-written path under `Docs/api/`.
 - [ ] Docs tone remains factual (no promotional language).
 
 ## 7. Dependency Injection And Composition
