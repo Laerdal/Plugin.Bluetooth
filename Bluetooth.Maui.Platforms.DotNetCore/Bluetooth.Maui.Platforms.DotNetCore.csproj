@@ -8,6 +8,11 @@
         <Project_Description>DotNetCore platform implementation for Bluetooth.Maui</Project_Description>
     </PropertyGroup>
 
+    <!-- ==================== DOCUMENTATION ==================== -->
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
     <!-- ==================== NOWARNINGS ==================== -->
     <PropertyGroup>
         <!-- CA1034 : Nested types should not be externally visible-->

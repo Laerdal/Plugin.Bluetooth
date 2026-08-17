@@ -7,6 +7,11 @@
         <Project_Description>Bluetooth.Abstractions.Scanning for .NET</Project_Description>
     </PropertyGroup>
 
+    <!-- ==================== DOCUMENTATION ==================== -->
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
     <!-- ==================== NOWARNINGS ==================== -->
     <PropertyGroup>
         <!-- CA1034 : Nested types should not be externally visible-->

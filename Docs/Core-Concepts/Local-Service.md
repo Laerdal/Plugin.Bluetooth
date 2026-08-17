@@ -24,34 +24,28 @@ Broadcaster
 
 ## Getting Started
 
-### 1. Create a Service Specification
+### 1. Create the Service
 
 ```csharp
-var serviceSpec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec
-{
-    ServiceId = Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB"), // Battery Service
-    IsPrimary = true,
-    Characteristics = new[]
-    {
-        new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-        {
-            CharacteristicId = Guid.Parse("00002A19-0000-1000-8000-00805F9B34FB"),
-            Properties = BluetoothCharacteristicProperties.Read |
-                         BluetoothCharacteristicProperties.Notify,
-            Permissions = BluetoothCharacteristicPermissions.Read,
-            InitialValue = new byte[] { 100 }
-        }
-    }
-};
-```
-
-### 2. Create the Service
-
-```csharp
-var broadcaster = BluetoothFactory.Current.Broadcaster;
-var service = await broadcaster.CreateServiceAsync(serviceSpec);
+// broadcaster is an IBluetoothBroadcaster obtained via constructor injection
+// (see Docs/Configuration/Dependency-Injection.md).
+var service = await broadcaster.CreateServiceAsync(
+    id: Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB"), // Battery Service
+    isPrimary: true);
 
 Console.WriteLine($"Created service: {service.Name}");
+```
+
+### 2. Add Characteristics
+
+```csharp
+var batteryLevelChar = await service.CreateCharacteristicAsync(
+    id: Guid.Parse("00002A19-0000-1000-8000-00805F9B34FB"),
+    properties: BluetoothCharacteristicProperties.Read | BluetoothCharacteristicProperties.Notify,
+    permissions: BluetoothCharacteristicPermissions.Read);
+
+// There's no "initial value" at creation time — set it explicitly afterwards.
+await batteryLevelChar.UpdateValueAsync(new byte[] { 100 }, notifyClients: false);
 ```
 
 ### 3. Access Characteristics
@@ -141,61 +135,30 @@ if (characteristic != null)
 bool hasChar = service.HasCharacteristic(characteristicUuid);
 ```
 
-### Monitor Characteristic List Changes
+### Characteristic List Changes
 
-```csharp
-// Any change to characteristic list
-service.CharacteristicListChanged += (s, args) =>
-{
-    Console.WriteLine($"Total characteristics: {args.TotalCount}");
-};
-
-// Characteristics added
-service.CharacteristicsAdded += (s, args) =>
-{
-    foreach (var characteristic in args.Characteristics)
-    {
-        Console.WriteLine($"Added: {characteristic.Name}");
-    }
-};
-
-// Characteristics removed
-service.CharacteristicsRemoved += (s, args) =>
-{
-    foreach (var characteristic in args.Characteristics)
-    {
-        Console.WriteLine($"Removed: {characteristic.Name}");
-    }
-};
-```
+`IBluetoothLocalService` does not currently expose list-changed events for its hosted characteristics (unlike the broadcaster's `ServiceListChanged`/`ServicesAdded`/`ServicesRemoved` for services, or the remote-side `IBluetoothRemoteService.CharacteristicListChanged`). To track additions/removals yourself, call `CreateCharacteristicAsync`/`RemoveCharacteristicAsync` and react at the call site, or poll `GetCharacteristics()`.
 
 ## Common Patterns
 
 ### Battery Service
 
 ```csharp
-async Task<IBluetoothLocalService> CreateBatteryServiceAsync()
+// broadcaster is an IBluetoothBroadcaster obtained via constructor injection
+// (see Docs/Configuration/Dependency-Injection.md).
+async Task<IBluetoothLocalService> CreateBatteryServiceAsync(IBluetoothBroadcaster broadcaster)
 {
-    var broadcaster = BluetoothFactory.Current.Broadcaster;
+    var service = await broadcaster.CreateServiceAsync(
+        id: Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB"),
+        isPrimary: true);
 
-    var serviceSpec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec
-    {
-        ServiceId = Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB"),
-        IsPrimary = true,
-        Characteristics = new[]
-        {
-            new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-            {
-                CharacteristicId = Guid.Parse("00002A19-0000-1000-8000-00805F9B34FB"),
-                Properties = BluetoothCharacteristicProperties.Read |
-                             BluetoothCharacteristicProperties.Notify,
-                Permissions = BluetoothCharacteristicPermissions.Read,
-                InitialValue = new byte[] { 100 }
-            }
-        }
-    };
+    var batteryLevelChar = await service.CreateCharacteristicAsync(
+        id: Guid.Parse("00002A19-0000-1000-8000-00805F9B34FB"),
+        properties: BluetoothCharacteristicProperties.Read | BluetoothCharacteristicProperties.Notify,
+        permissions: BluetoothCharacteristicPermissions.Read);
+    await batteryLevelChar.UpdateValueAsync(new byte[] { 100 }, notifyClients: false);
 
-    return await broadcaster.CreateServiceAsync(serviceSpec);
+    return service;
 }
 
 // Update battery level
@@ -215,89 +178,69 @@ async Task UpdateBatteryAsync(IBluetoothLocalService service, int level)
 ### Device Information Service
 
 ```csharp
-async Task<IBluetoothLocalService> CreateDeviceInfoServiceAsync()
+async Task<IBluetoothLocalService> CreateDeviceInfoServiceAsync(IBluetoothBroadcaster broadcaster)
 {
-    var serviceSpec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec
-    {
-        ServiceId = Guid.Parse("0000180A-0000-1000-8000-00805F9B34FB"),
-        IsPrimary = true,
-        Characteristics = new[]
-        {
-            // Manufacturer Name
-            new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-            {
-                CharacteristicId = Guid.Parse("00002A29-0000-1000-8000-00805F9B34FB"),
-                Properties = BluetoothCharacteristicProperties.Read,
-                Permissions = BluetoothCharacteristicPermissions.Read,
-                InitialValue = Encoding.UTF8.GetBytes("Acme Corp")
-            },
-            // Model Number
-            new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-            {
-                CharacteristicId = Guid.Parse("00002A24-0000-1000-8000-00805F9B34FB"),
-                Properties = BluetoothCharacteristicProperties.Read,
-                Permissions = BluetoothCharacteristicPermissions.Read,
-                InitialValue = Encoding.UTF8.GetBytes("Model X1")
-            },
-            // Firmware Revision
-            new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-            {
-                CharacteristicId = Guid.Parse("00002A26-0000-1000-8000-00805F9B34FB"),
-                Properties = BluetoothCharacteristicProperties.Read,
-                Permissions = BluetoothCharacteristicPermissions.Read,
-                InitialValue = Encoding.UTF8.GetBytes("1.0.0")
-            }
-        }
-    };
+    var service = await broadcaster.CreateServiceAsync(
+        id: Guid.Parse("0000180A-0000-1000-8000-00805F9B34FB"),
+        isPrimary: true);
 
-    return await BluetoothFactory.Current.Broadcaster.CreateServiceAsync(serviceSpec);
+    // Manufacturer Name
+    var manufacturerChar = await service.CreateCharacteristicAsync(
+        id: Guid.Parse("00002A29-0000-1000-8000-00805F9B34FB"),
+        properties: BluetoothCharacteristicProperties.Read,
+        permissions: BluetoothCharacteristicPermissions.Read);
+    await manufacturerChar.UpdateValueAsync(Encoding.UTF8.GetBytes("Acme Corp"), notifyClients: false);
+
+    // Model Number
+    var modelChar = await service.CreateCharacteristicAsync(
+        id: Guid.Parse("00002A24-0000-1000-8000-00805F9B34FB"),
+        properties: BluetoothCharacteristicProperties.Read,
+        permissions: BluetoothCharacteristicPermissions.Read);
+    await modelChar.UpdateValueAsync(Encoding.UTF8.GetBytes("Model X1"), notifyClients: false);
+
+    // Firmware Revision
+    var firmwareChar = await service.CreateCharacteristicAsync(
+        id: Guid.Parse("00002A26-0000-1000-8000-00805F9B34FB"),
+        properties: BluetoothCharacteristicProperties.Read,
+        permissions: BluetoothCharacteristicPermissions.Read);
+    await firmwareChar.UpdateValueAsync(Encoding.UTF8.GetBytes("1.0.0"), notifyClients: false);
+
+    return service;
 }
 ```
 
 ### Custom Sensor Service
 
 ```csharp
-async Task<IBluetoothLocalService> CreateCustomSensorServiceAsync()
+async Task<IBluetoothLocalService> CreateCustomSensorServiceAsync(IBluetoothBroadcaster broadcaster)
 {
     // Use a custom UUID for your proprietary service
-    var serviceSpec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec
-    {
-        ServiceId = Guid.Parse("12345678-1234-1234-1234-123456789abc"),
-        IsPrimary = true,
-        Characteristics = new[]
-        {
-            // Temperature characteristic
-            new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-            {
-                CharacteristicId = Guid.Parse("12345678-1234-1234-1234-123456789abd"),
-                Properties = BluetoothCharacteristicProperties.Read |
-                             BluetoothCharacteristicProperties.Notify,
-                Permissions = BluetoothCharacteristicPermissions.Read,
-                InitialValue = BitConverter.GetBytes(25.0f) // 25°C
-            },
-            // Humidity characteristic
-            new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-            {
-                CharacteristicId = Guid.Parse("12345678-1234-1234-1234-123456789abe"),
-                Properties = BluetoothCharacteristicProperties.Read |
-                             BluetoothCharacteristicProperties.Notify,
-                Permissions = BluetoothCharacteristicPermissions.Read,
-                InitialValue = BitConverter.GetBytes(60.0f) // 60% humidity
-            },
-            // Configuration characteristic (writeable)
-            new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-            {
-                CharacteristicId = Guid.Parse("12345678-1234-1234-1234-123456789abf"),
-                Properties = BluetoothCharacteristicProperties.Read |
-                             BluetoothCharacteristicProperties.Write,
-                Permissions = BluetoothCharacteristicPermissions.Read |
-                              BluetoothCharacteristicPermissions.Write,
-                InitialValue = new byte[] { 0x01 } // Configuration byte
-            }
-        }
-    };
+    var service = await broadcaster.CreateServiceAsync(
+        id: Guid.Parse("12345678-1234-1234-1234-123456789abc"),
+        isPrimary: true);
 
-    return await BluetoothFactory.Current.Broadcaster.CreateServiceAsync(serviceSpec);
+    // Temperature characteristic
+    var tempChar = await service.CreateCharacteristicAsync(
+        id: Guid.Parse("12345678-1234-1234-1234-123456789abd"),
+        properties: BluetoothCharacteristicProperties.Read | BluetoothCharacteristicProperties.Notify,
+        permissions: BluetoothCharacteristicPermissions.Read);
+    await tempChar.UpdateValueAsync(BitConverter.GetBytes(25.0f), notifyClients: false); // 25°C
+
+    // Humidity characteristic
+    var humidityChar = await service.CreateCharacteristicAsync(
+        id: Guid.Parse("12345678-1234-1234-1234-123456789abe"),
+        properties: BluetoothCharacteristicProperties.Read | BluetoothCharacteristicProperties.Notify,
+        permissions: BluetoothCharacteristicPermissions.Read);
+    await humidityChar.UpdateValueAsync(BitConverter.GetBytes(60.0f), notifyClients: false); // 60% humidity
+
+    // Configuration characteristic (writeable)
+    var configChar = await service.CreateCharacteristicAsync(
+        id: Guid.Parse("12345678-1234-1234-1234-123456789abf"),
+        properties: BluetoothCharacteristicProperties.Read | BluetoothCharacteristicProperties.Write,
+        permissions: BluetoothCharacteristicPermissions.Read | BluetoothCharacteristicPermissions.Write);
+    await configChar.UpdateValueAsync(new byte[] { 0x01 }, notifyClients: false); // Configuration byte
+
+    return service;
 }
 
 // Update sensor readings
@@ -335,54 +278,34 @@ async Task UpdateSensorReadingsAsync(IBluetoothLocalService service)
 ### Service with Multiple Read/Write Characteristics
 
 ```csharp
-async Task<IBluetoothLocalService> CreateControlServiceAsync()
+async Task<IBluetoothLocalService> CreateControlServiceAsync(IBluetoothBroadcaster broadcaster)
 {
-    var serviceSpec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec
-    {
-        ServiceId = Guid.Parse("AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"),
-        IsPrimary = true,
-        Characteristics = new[]
-        {
-            // Status (read-only)
-            new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-            {
-                CharacteristicId = Guid.Parse("AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEE01"),
-                Properties = BluetoothCharacteristicProperties.Read,
-                Permissions = BluetoothCharacteristicPermissions.Read,
-                InitialValue = new byte[] { 0x00 } // OFF
-            },
-            // Control (read/write)
-            new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-            {
-                CharacteristicId = Guid.Parse("AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEE02"),
-                Properties = BluetoothCharacteristicProperties.Read |
-                             BluetoothCharacteristicProperties.Write,
-                Permissions = BluetoothCharacteristicPermissions.Read |
-                              BluetoothCharacteristicPermissions.Write,
-                InitialValue = new byte[] { 0x00 }
-            }
-        }
-    };
+    var service = await broadcaster.CreateServiceAsync(
+        id: Guid.Parse("AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"),
+        isPrimary: true);
 
-    var service = await BluetoothFactory.Current.Broadcaster.CreateServiceAsync(serviceSpec);
+    // Status (read-only)
+    var statusChar = await service.CreateCharacteristicAsync(
+        id: Guid.Parse("AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEE01"),
+        properties: BluetoothCharacteristicProperties.Read,
+        permissions: BluetoothCharacteristicPermissions.Read);
+    await statusChar.UpdateValueAsync(new byte[] { 0x00 }, notifyClients: false); // OFF
+
+    // Control (read/write)
+    var controlChar = await service.CreateCharacteristicAsync(
+        id: Guid.Parse("AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEE02"),
+        properties: BluetoothCharacteristicProperties.Read | BluetoothCharacteristicProperties.Write,
+        permissions: BluetoothCharacteristicPermissions.Read | BluetoothCharacteristicPermissions.Write);
+    await controlChar.UpdateValueAsync(new byte[] { 0x00 }, notifyClients: false);
 
     // Handle control characteristic writes
-    var controlChar = service.GetCharacteristic(
-        Guid.Parse("AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEE02")
-    );
-
-    controlChar.WriteRequestReceived += async (s, args) =>
+    controlChar.WriteRequested += async (s, args) =>
     {
         var command = args.Value.Span[0];
 
         if (command == 0x01) // Turn ON
         {
             Console.WriteLine("Received ON command");
-
-            // Update status characteristic
-            var statusChar = service.GetCharacteristic(
-                Guid.Parse("AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEE01")
-            );
             await statusChar.UpdateValueAsync(new byte[] { 0x01 }, notifyClients: true);
         }
         else if (command == 0x00) // Turn OFF
@@ -400,15 +323,15 @@ async Task<IBluetoothLocalService> CreateControlServiceAsync()
 1. **Use Standard Services When Possible**: Prefer Bluetooth SIG standard service UUIDs
    ```csharp
    // Good: Standard Battery Service
-   ServiceId = Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB")
+   id: Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB")
 
    // Use custom UUIDs only when necessary
-   ServiceId = Guid.Parse("12345678-1234-1234-1234-123456789abc")
+   id: Guid.Parse("12345678-1234-1234-1234-123456789abc")
    ```
 
 2. **Mark Primary Services as Primary**: Most services should be primary
    ```csharp
-   IsPrimary = true
+   isPrimary: true
    ```
 
 3. **Group Related Characteristics**: A service should contain logically related characteristics
@@ -416,9 +339,9 @@ async Task<IBluetoothLocalService> CreateControlServiceAsync()
    - Heart Rate Service → Heart Rate Measurement, Body Sensor Location
    - Custom Sensor Service → Temperature, Humidity, Pressure
 
-4. **Provide Initial Values**: Set meaningful initial values for characteristics
+4. **Set a Value Right After Creating a Characteristic**: `CreateCharacteristicAsync` doesn't take an initial value — call `UpdateValueAsync` immediately after
    ```csharp
-   InitialValue = new byte[] { 100 } // 100% battery
+   await characteristic.UpdateValueAsync(new byte[] { 100 }, notifyClients: false); // 100% battery
    ```
 
 5. **Handle Lifecycle Properly**: Clean up when removing services
@@ -431,7 +354,7 @@ async Task<IBluetoothLocalService> CreateControlServiceAsync()
 ### Service Not Visible to Clients
 
 - Ensure broadcaster is running: `broadcaster.IsRunning`
-- Advertise the service UUID in `BroadcastingOptions`
+- Advertise the service UUID via `BroadcastingOptions.AdvertisedServiceUuids`
 - Check that service is marked as primary
 - Verify client is looking for the correct UUID
 

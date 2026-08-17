@@ -13,7 +13,6 @@ Learn how to manage BLE connections effectively, handle unexpected disconnection
 
 **Key Topics:**
 - Connection lifecycle management
-- MaxConcurrentConnections configuration
 - Handling unexpected disconnections
 - Connection state monitoring
 - Auto-reconnection patterns
@@ -23,7 +22,7 @@ Learn how to manage BLE connections effectively, handle unexpected disconnection
 Optimize your application for battery life while maintaining functionality and responsiveness.
 
 **Key Topics:**
-- Scan mode selection (LowPower/Balanced/LowLatency)
+- Scan mode selection (LowPower/Balanced/LowLatency/Opportunistic)
 - Scan duration management
 - Background scanning strategies
 - Connection priority optimization
@@ -172,7 +171,7 @@ public async Task<byte[]> ReadDataWithRetryAsync(
         }
     }
 
-    throw new BluetoothException("Failed to read characteristic after retries");
+    throw new CharacteristicReadException(characteristic, "Failed to read characteristic after retries");
 }
 ```
 
@@ -192,13 +191,10 @@ public static MauiApp CreateMauiApp()
     // Register Bluetooth services
     builder.Services.AddBluetoothServices();
 
-    // Configure infrastructure options
-    builder.Services.Configure<BluetoothInfrastructureOptions>(options =>
+    // Configure L2CAP channel behavior if you use L2CAP channels
+    builder.Services.Configure<L2CapChannelOptions>(options =>
     {
-        options.MaxConcurrentConnections = 3;
-        options.DefaultOperationTimeout = TimeSpan.FromSeconds(30);
-        options.EnableVerboseLogging = false; // Enable for debugging only
-        options.AutoCleanupOnStop = true;
+        options.EnableBackgroundReading = true;
     });
 
     return builder.Build();

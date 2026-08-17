@@ -39,21 +39,24 @@ When you're a **Broadcaster/Peripheral** (server):
 
 ### 1. Monitor Connection Events
 
+Client connections/disconnections are reported as batches (a client-list change can add or remove
+more than one device at once), not as a single-device event:
+
 ```csharp
-var broadcaster = BluetoothFactory.Current.Broadcaster;
+// broadcaster is an IBluetoothBroadcaster injected via DI into the containing class's constructor
 
 // Listen for new connections
-broadcaster.ClientDeviceConnected += (sender, args) =>
+broadcaster.ClientDevicesAdded += (sender, args) =>
 {
-    IBluetoothConnectedDevice client = args.Device;
-    Console.WriteLine($"Client connected: {client.Name ?? client.Id}");
+    foreach (var client in args.Items)
+        Console.WriteLine($"Client connected: {client.Name ?? client.Id}");
 };
 
 // Listen for disconnections
-broadcaster.ClientDeviceDisconnected += (sender, args) =>
+broadcaster.ClientDevicesRemoved += (sender, args) =>
 {
-    IBluetoothConnectedDevice client = args.Device;
-    Console.WriteLine($"Client disconnected: {client.Name ?? client.Id}");
+    foreach (var client in args.Items)
+        Console.WriteLine($"Client disconnected: {client.Name ?? client.Id}");
 };
 ```
 
@@ -61,21 +64,21 @@ broadcaster.ClientDeviceDisconnected += (sender, args) =>
 
 ```csharp
 // Get all currently connected clients
-var connectedClients = broadcaster.GetConnectedDevices();
+var connectedClients = broadcaster.GetClientDevices();
 Console.WriteLine($"Connected clients: {connectedClients.Count}");
 
 // Get specific client by ID
-var client = broadcaster.GetConnectedDevice(clientId);
+var client = broadcaster.GetClientDevice(clientId);
 
 // Safe retrieval
-var client = broadcaster.GetConnectedDeviceOrDefault(clientId);
+var client = broadcaster.GetClientDeviceOrDefault(clientId);
 if (client != null)
 {
     Console.WriteLine($"Found client: {client.Name}");
 }
 
 // Check if specific client is connected
-bool isConnected = broadcaster.HasConnectedDevice(clientId);
+bool isConnected = broadcaster.HasClientDevice(clientId);
 ```
 
 ### 3. Track Client Subscriptions
@@ -122,7 +125,7 @@ Console.WriteLine($"Broadcaster: {connectedDevice.Broadcaster}");
 ### Get All Connected Clients
 
 ```csharp
-var clients = broadcaster.GetConnectedDevices();
+var clients = broadcaster.GetClientDevices();
 
 Console.WriteLine($"Total connected clients: {clients.Count}");
 
@@ -137,66 +140,58 @@ foreach (var client in clients)
 
 ```csharp
 // Get clients with a specific name pattern
-var matchingClients = broadcaster.GetConnectedDevices(
+var matchingClients = broadcaster.GetClientDevices(
     client => client.Name?.Contains("Phone") == true
 );
 
 // Get first connected client
-var firstClient = broadcaster.GetConnectedDevices().FirstOrDefault();
+var firstClient = broadcaster.GetClientDevices().FirstOrDefault();
 ```
 
 ### Track Connection Count
 
 ```csharp
-broadcaster.ConnectedDeviceListChanged += (sender, args) =>
+broadcaster.ClientDeviceListChanged += (sender, args) =>
 {
-    Console.WriteLine($"Connected clients changed. Total: {args.TotalCount}");
+    Console.WriteLine($"Connected clients changed. Total: {broadcaster.GetClientDevices().Count}");
 };
 ```
 
 ## Events
 
-Monitor client connection lifecycle:
+Monitor client connection lifecycle. There is no per-device `Connected`/`Disconnected` event —
+`ClientDevicesAdded`/`ClientDevicesRemoved` fire with a batch of devices, and
+`ClientDeviceListChanged` fires on any change with both the added and removed batches:
 
 ```csharp
-// New client connected
-broadcaster.ClientDeviceConnected += (sender, args) =>
+// New client(s) connected
+broadcaster.ClientDevicesAdded += (sender, args) =>
 {
-    var client = args.Device;
-    Console.WriteLine($"✓ Client connected: {client.Id}");
+    foreach (var client in args.Items)
+    {
+        Console.WriteLine($"✓ Client connected: {client.Id}");
 
-    // Initialize per-client state
-    clientDataStore[client.Id] = new ClientData();
+        // Initialize per-client state
+        clientDataStore[client.Id] = new ClientData();
+    }
 };
 
-// Client disconnected
-broadcaster.ClientDeviceDisconnected += (sender, args) =>
+// Client(s) disconnected
+broadcaster.ClientDevicesRemoved += (sender, args) =>
 {
-    var client = args.Device;
-    Console.WriteLine($"✗ Client disconnected: {client.Id}");
+    foreach (var client in args.Items)
+    {
+        Console.WriteLine($"✗ Client disconnected: {client.Id}");
 
-    // Clean up per-client state
-    clientDataStore.Remove(client.Id);
+        // Clean up per-client state
+        clientDataStore.Remove(client.Id);
+    }
 };
 
-// Any change to connected device list
-broadcaster.ConnectedDeviceListChanged += (sender, args) =>
+// Any change to connected device list — carries both sides of the diff
+broadcaster.ClientDeviceListChanged += (sender, args) =>
 {
-    Console.WriteLine($"Connected clients: {args.TotalCount}");
-};
-
-// Clients added (may include multiple clients)
-broadcaster.ConnectedDevicesAdded += (sender, args) =>
-{
-    foreach (var client in args.Devices)
-        Console.WriteLine($"Added: {client.Id}");
-};
-
-// Clients removed (may include multiple clients)
-broadcaster.ConnectedDevicesRemoved += (sender, args) =>
-{
-    foreach (var client in args.Devices)
-        Console.WriteLine($"Removed: {client.Id}");
+    Console.WriteLine($"Connected clients: {broadcaster.GetClientDevices().Count}");
 };
 ```
 
@@ -214,35 +209,38 @@ class ClientData
 
 var clientDataStore = new Dictionary<string, ClientData>();
 
-broadcaster.ClientDeviceConnected += (sender, args) =>
+broadcaster.ClientDevicesAdded += (sender, args) =>
 {
-    var client = args.Device;
-    clientDataStore[client.Id] = new ClientData
+    foreach (var client in args.Items)
     {
-        ConnectedAt = DateTime.UtcNow,
-        RequestCount = 0,
-        LastActivityAt = DateTime.UtcNow
-    };
+        clientDataStore[client.Id] = new ClientData
+        {
+            ConnectedAt = DateTime.UtcNow,
+            RequestCount = 0,
+            LastActivityAt = DateTime.UtcNow
+        };
+    }
 };
 
-broadcaster.ClientDeviceDisconnected += (sender, args) =>
+broadcaster.ClientDevicesRemoved += (sender, args) =>
 {
-    var client = args.Device;
-
-    if (clientDataStore.TryGetValue(client.Id, out var data))
+    foreach (var client in args.Items)
     {
-        var duration = DateTime.UtcNow - data.ConnectedAt;
-        Console.WriteLine($"Client {client.Id} was connected for {duration.TotalSeconds:F1}s");
-        Console.WriteLine($"Total requests: {data.RequestCount}");
+        if (clientDataStore.TryGetValue(client.Id, out var data))
+        {
+            var duration = DateTime.UtcNow - data.ConnectedAt;
+            Console.WriteLine($"Client {client.Id} was connected for {duration.TotalSeconds:F1}s");
+            Console.WriteLine($"Total requests: {data.RequestCount}");
 
-        clientDataStore.Remove(client.Id);
+            clientDataStore.Remove(client.Id);
+        }
     }
 };
 
 // Track requests
-characteristic.ReadRequestReceived += (sender, args) =>
+characteristic.ReadRequested += (sender, args) =>
 {
-    var clientId = args.Device.Id;
+    var clientId = args.ClientId;
     if (clientDataStore.ContainsKey(clientId))
     {
         clientDataStore[clientId].RequestCount++;
@@ -256,9 +254,9 @@ characteristic.ReadRequestReceived += (sender, args) =>
 ```csharp
 const int MaxClients = 5;
 
-broadcaster.ClientDeviceConnected += async (sender, args) =>
+broadcaster.ClientDevicesAdded += (sender, args) =>
 {
-    var clients = broadcaster.GetConnectedDevices();
+    var clients = broadcaster.GetClientDevices();
 
     if (clients.Count > MaxClients)
     {
@@ -305,14 +303,16 @@ class ConnectionMonitor
 
     public ConnectionMonitor(IBluetoothBroadcaster broadcaster)
     {
-        broadcaster.ClientDeviceConnected += (s, args) =>
+        broadcaster.ClientDevicesAdded += (s, args) =>
         {
-            _lastActivity[args.Device.Id] = DateTime.UtcNow;
+            foreach (var client in args.Items)
+                _lastActivity[client.Id] = DateTime.UtcNow;
         };
 
-        broadcaster.ClientDeviceDisconnected += (s, args) =>
+        broadcaster.ClientDevicesRemoved += (s, args) =>
         {
-            _lastActivity.Remove(args.Device.Id);
+            foreach (var client in args.Items)
+                _lastActivity.Remove(client.Id);
         };
 
         // Monitor activity
@@ -345,14 +345,14 @@ class ConnectionMonitor
 // Usage
 var monitor = new ConnectionMonitor(broadcaster);
 
-characteristic.ReadRequestReceived += (s, args) =>
+characteristic.ReadRequested += (s, args) =>
 {
-    monitor.RecordActivity(args.Device.Id);
+    monitor.RecordActivity(args.ClientId);
 };
 
-characteristic.WriteRequestReceived += (s, args) =>
+characteristic.WriteRequested += (s, args) =>
 {
-    monitor.RecordActivity(args.Device.Id);
+    monitor.RecordActivity(args.ClientId);
 };
 ```
 
@@ -368,16 +368,22 @@ class ClientRegistry
     {
         _broadcaster = broadcaster;
 
-        broadcaster.ClientDeviceConnected += (s, args) =>
+        broadcaster.ClientDevicesAdded += (s, args) =>
         {
-            _clients[args.Device.Id] = args.Device;
-            Console.WriteLine($"Registered client: {args.Device.Id}");
+            foreach (var client in args.Items)
+            {
+                _clients[client.Id] = client;
+                Console.WriteLine($"Registered client: {client.Id}");
+            }
         };
 
-        broadcaster.ClientDeviceDisconnected += (s, args) =>
+        broadcaster.ClientDevicesRemoved += (s, args) =>
         {
-            _clients.Remove(args.Device.Id);
-            Console.WriteLine($"Unregistered client: {args.Device.Id}");
+            foreach (var client in args.Items)
+            {
+                _clients.Remove(client.Id);
+                Console.WriteLine($"Unregistered client: {client.Id}");
+            }
         };
     }
 
@@ -415,7 +421,7 @@ class SubscriptionTracker
     {
         characteristic.ClientSubscribed += (s, args) =>
         {
-            var clientId = args.Device.Id;
+            var clientId = args.ClientId;
 
             if (!_subscriptions.ContainsKey(clientId))
                 _subscriptions[clientId] = new HashSet<Guid>();
@@ -428,7 +434,7 @@ class SubscriptionTracker
 
         characteristic.ClientUnsubscribed += (s, args) =>
         {
-            var clientId = args.Device.Id;
+            var clientId = args.ClientId;
 
             if (_subscriptions.ContainsKey(clientId))
             {
@@ -460,22 +466,25 @@ class SubscriptionTracker
    ```csharp
    var connectedClients = new Dictionary<string, ClientState>();
 
-   broadcaster.ClientDeviceConnected += (s, args) =>
+   broadcaster.ClientDevicesAdded += (s, args) =>
    {
-       connectedClients[args.Device.Id] = new ClientState();
+       foreach (var client in args.Items)
+           connectedClients[client.Id] = new ClientState();
    };
 
-   broadcaster.ClientDeviceDisconnected += (s, args) =>
+   broadcaster.ClientDevicesRemoved += (s, args) =>
    {
-       connectedClients.Remove(args.Device.Id);
+       foreach (var client in args.Items)
+           connectedClients.Remove(client.Id);
    };
    ```
 
 2. **Clean Up on Disconnect**: Always clean up client-specific state
    ```csharp
-   broadcaster.ClientDeviceDisconnected += (s, args) =>
+   broadcaster.ClientDevicesRemoved += (s, args) =>
    {
-       CleanupClientData(args.Device.Id);
+       foreach (var client in args.Items)
+           CleanupClientData(client.Id);
    };
    ```
 
@@ -486,17 +495,18 @@ class SubscriptionTracker
 
 4. **Monitor Connection Count**: Track how many clients are connected
    ```csharp
-   broadcaster.ConnectedDeviceListChanged += (s, args) =>
+   broadcaster.ClientDeviceListChanged += (s, args) =>
    {
-       Console.WriteLine($"Active clients: {args.TotalCount}");
+       Console.WriteLine($"Active clients: {broadcaster.GetClientDevices().Count}");
    };
    ```
 
 5. **Log Client Activity**: Track when clients connect/disconnect for debugging
    ```csharp
-   broadcasters.ClientDeviceConnected += (s, args) =>
+   broadcaster.ClientDevicesAdded += (s, args) =>
    {
-       logger.LogInformation($"Client {args.Device.Id} connected at {DateTime.UtcNow}");
+       foreach (var client in args.Items)
+           logger.LogInformation($"Client {client.Id} connected at {DateTime.UtcNow}");
    };
    ```
 
@@ -506,9 +516,9 @@ class SubscriptionTracker
 
 Connected Device support varies by platform:
 
-- **Android**: Good support, can track multiple clients
-- **iOS**: Full support in peripheral mode
-- **Windows**: Limited support depending on adapter
+- **Android**: Full support, can track multiple clients
+- **iOS/macOS**: Full support in peripheral mode
+- **Windows**: Full support; a narrow set of operations (e.g. force-disconnecting a subscribed client) throw `NotSupportedException` due to Windows API limits
 
 ### What You Can't Do
 

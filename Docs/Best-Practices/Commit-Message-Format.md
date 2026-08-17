@@ -28,7 +28,8 @@ Allowed types (only these):
 
 Scope rules:
 
-- Scope is required
+- Include a scope whenever the change is specific to one area
+- Scope may be omitted for changes that don't map to a single area (real examples: `fix: add TwoWay binding for selected characteristic...`, `docs: add Mermaid architecture diagram to README`, `ci: update GitHub Actions artifact and dotnet tool versions`)
 - Use the most specific scope possible
 - Scope should be a folder, file, platform, or topic
 - Examples: `maui`, `android`, `ble`, `docs`, `ui`, `ci`, `pkg`, `targets`
@@ -73,6 +74,8 @@ This guide standardizes on:
 
 - type (scope): ...
 - `refa` (not `refactor`)
+
+The history also includes real commits with no scope at all (`fix: ...`, `docs: ...`, `ci: ...`) — that's acceptable when a change doesn't map to one specific area, not a violation to avoid.
 
 ## 4. Copilot Prompt Template
 

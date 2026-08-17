@@ -1,0 +1,120 @@
+- name: Home
+  href: index.md
+
+- name: Getting Started
+  items:
+    - name: Getting Started
+      href: Getting-Started/README.md
+    - name: Platform Setup
+      href: Getting-Started/Platform-Setup.md
+    - name: Permissions
+      href: Getting-Started/Permissions.md
+
+- name: Architecture and Rules
+  items:
+    - name: Architecture Guidelines
+      href: ARCHITECTURE_GUIDELINES.md
+    - name: Architecture Diagrams
+      href: ARCHITECTURE_DIAGRAMS.md
+    - name: Facade Pattern Summary
+      href: FACADE_PATTERN_SUMMARY.md
+    - name: Architecture Decision Records
+      href: Architecture/ADR/README.md
+
+- name: Core Concepts
+  items:
+    - name: Scanner
+      href: Core-Concepts/Scanner.md
+    - name: Device
+      href: Core-Concepts/Device.md
+    - name: Service
+      href: Core-Concepts/Service.md
+    - name: Characteristic
+      href: Core-Concepts/Characteristic.md
+    - name: Service Definitions and Profiles
+      href: Core-Concepts/Service-Definitions-And-Profiles.md
+    - name: Descriptor
+      href: Core-Concepts/Descriptor.md
+    - name: Advertisement
+      href: Core-Concepts/Advertisement.md
+    - name: Broadcaster
+      href: Core-Concepts/Broadcaster.md
+    - name: Local Service
+      href: Core-Concepts/Local-Service.md
+    - name: Local Characteristic
+      href: Core-Concepts/Local-Characteristic.md
+    - name: Connected Device
+      href: Core-Concepts/Connected-Device.md
+
+- name: Configuration
+  items:
+    - name: Dependency Injection
+      href: Configuration/Dependency-Injection.md
+    - name: Profile Migration
+      href: Configuration/Profile-Migration.md
+    - name: Infrastructure Options
+      href: Configuration/Infrastructure-Options.md
+    - name: Scanning Options
+      href: Configuration/Scanning-Options.md
+    - name: Connection Options
+      href: Configuration/Connection-Options.md
+    - name: Exploration Options
+      href: Configuration/Exploration-Options.md
+    - name: L2CAP Options
+      href: Configuration/L2CAP-Options.md
+    - name: Broadcasting Options
+      href: Configuration/Broadcasting-Options.md
+
+- name: API Reference (hand-written)
+  items:
+    - name: API Overview
+      href: API-Reference/README.md
+    - name: Abstractions
+      href: API-Reference/Abstractions.md
+    - name: Enums
+      href: API-Reference/Enums.md
+    - name: Events
+      href: API-Reference/Events.md
+    - name: Exceptions
+      href: API-Reference/Exceptions.md
+
+- name: API Reference (generated)
+  href: api/
+
+- name: Platform Documentation
+  items:
+    - name: Platforms Overview
+      href: Platforms/README.md
+    - name: Platform Comparison
+      href: Platforms/Comparison.md
+    - name: Android
+      href: Platforms/Android.md
+    - name: iOS and macOS
+      href: Platforms/iOS-macOS.md
+    - name: Windows
+      href: Platforms/Windows.md
+
+- name: Operational Guidance
+  items:
+    - name: Best Practices
+      href: Best-Practices/README.md
+    - name: Commit Message Format
+      href: Best-Practices/Commit-Message-Format.md
+    - name: Contribution Definition of Done
+      href: Best-Practices/Contribution-DoD.md
+    - name: Connection Management
+      href: Best-Practices/Connection-Management.md
+    - name: Battery Optimization
+      href: Best-Practices/Battery-Optimization.md
+    - name: Testing
+      href: Best-Practices/Testing.md
+    - name: Performance
+      href: Best-Practices/Performance.md
+    - name: Error Handling
+      href: Best-Practices/Error-Handling.md
+    - name: MVVM Integration
+      href: Best-Practices/MVVM-Integration.md
+    - name: Troubleshooting
+      href: Troubleshooting/Common-Issues.md
+    - name: Debugging
+      href: Troubleshooting/Debugging.md

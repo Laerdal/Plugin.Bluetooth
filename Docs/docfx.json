@@ -1,0 +1,56 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "..",
+          "files": [
+            "Bluetooth.Abstractions/Bluetooth.Abstractions.csproj",
+            "Bluetooth.Abstractions.Scanning/Bluetooth.Abstractions.Scanning.csproj",
+            "Bluetooth.Abstractions.Broadcasting/Bluetooth.Abstractions.Broadcasting.csproj",
+            "Bluetooth.Core/Bluetooth.Core.csproj",
+            "Bluetooth.Core.Scanning/Bluetooth.Core.Scanning.csproj",
+            "Bluetooth.Core.Broadcasting/Bluetooth.Core.Broadcasting.csproj",
+            "Bluetooth.Maui/Bluetooth.Maui.csproj",
+            "Bluetooth.Maui.Platforms.DotNetCore/Bluetooth.Maui.Platforms.DotNetCore.csproj"
+          ]
+        }
+      ],
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [ "api/**.yml", "api/index.md" ]
+      },
+      {
+        "files": [ "**/*.md", "toc.yml" ],
+        "exclude": [ "api/**", "_site/**", "obj/**", "bin/**" ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [ "images/**" ],
+        "exclude": [ "obj/**", "bin/**" ]
+      }
+    ],
+    "output": "_site",
+    "template": [ "default", "modern" ],
+    "globalMetadata": {
+      "_appTitle": "Plugin.Bluetooth",
+      "_appName": "Plugin.Bluetooth",
+      "_appFooter": "Plugin.Bluetooth — cross-platform Bluetooth LE for .NET MAUI.",
+      "_enableSearch": true,
+      "_enableNewTab": true,
+      "_disableContribution": false,
+      "_gitContribute": {
+        "repo": "https://github.com/Laerdal/Plugin.Bluetooth",
+        "branch": "main"
+      },
+      "_gitUrlPattern": "github"
+    },
+    "xrefService": [ "https://xref.docs.microsoft.com/query?uid={uid}" ]
+  }
+}
