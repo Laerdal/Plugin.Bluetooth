@@ -614,7 +614,7 @@ if (characteristic.CanListen)
 }
 ```
 
-**See also:** [Characteristic Interaction](../CHARACTERISTICS.md)
+**See also:** [Characteristic](../Core-Concepts/Characteristic.md)
 
 ---
 

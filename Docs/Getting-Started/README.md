@@ -321,7 +321,7 @@ public async Task ReadHeartRateAsync(IBluetoothRemoteDevice device)
 }
 ```
 
-> For detailed information on reading, writing, and subscribing to characteristics, see the [Characteristics Guide](../CHARACTERISTIC_INTERACTION.md).
+> For detailed information on reading, writing, and subscribing to characteristics, see [Characteristic](../Core-Concepts/Characteristic.md).
 
 ## Permission Handling
 
@@ -556,7 +556,7 @@ Now that you've got the basics, explore more advanced topics:
 
 - [Platform Setup Guide](./Platform-Setup.md) - Detailed platform configuration
 - [Permissions Guide](./Permissions.md) - Platform-specific permission handling
-- [Characteristic Interaction](../CHARACTERISTIC_INTERACTION.md) - Read, write, and subscribe to characteristics
+- [Characteristic](../Core-Concepts/Characteristic.md) - Read, write, and subscribe to characteristics
 - [Architecture Guidelines](../ARCHITECTURE_GUIDELINES.md) - Understand the library architecture
 
 ## Common Issues
@@ -580,5 +580,5 @@ Connection errors (especially GATT error 133) are common on Android. The library
 ## Support
 
 - Report issues on [GitHub](https://github.com/laerdal/Plugin.Bluetooth/issues)
-- Check [existing documentation](../)
+- Check [existing documentation](../README.md)
 - Review the [sample application](/Bluetooth.Maui.Sample.Scanner)

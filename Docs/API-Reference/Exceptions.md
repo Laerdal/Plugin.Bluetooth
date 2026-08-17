@@ -1156,4 +1156,4 @@ await device.ConnectIfNeededAsync();
 - [Overview and Conventions](./README.md)
 - [Interfaces and Abstractions](./Abstractions.md)
 - [Events](./Events.md)
-- [Troubleshooting Guide](../TROUBLESHOOTING.md)
+- [Troubleshooting Guide](../Troubleshooting/Common-Issues.md)

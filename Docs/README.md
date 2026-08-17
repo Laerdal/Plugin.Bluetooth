@@ -90,10 +90,10 @@ Legend:
 |----------|----------|------------|-------------------------|-------|--------------|
 | Android | ✅ | ✅ | ✅ | ✅ API 29+ | ✅ |
 | iOS/macOS | ✅ | ✅ | ✅ | ✅ iOS 11+/macOS 10.13+ | ✅ |
-| Windows | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Windows | ✅ | ✅ | ✅ | ❌ | ✅ |
 | DotNetCore fallback | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 Notes:
-- Windows currently throws NotSupportedException for broadcasting, L2CAP, connected RSSI reads, PHY changes, MTU requests, and connection-priority requests.
+- Windows currently throws NotSupportedException for L2CAP, connected RSSI reads, PHY changes, MTU requests, connection-priority requests, and force-disconnecting a subscribed GATT client while broadcasting. Broadcasting itself (GATT server/peripheral role) is fully implemented.
 - iOS/macOS broadcaster is implemented, but some operations remain restricted by CoreBluetooth behavior.
 - DotNetCore fallback implementations throw PlatformNotSupportedException by design.

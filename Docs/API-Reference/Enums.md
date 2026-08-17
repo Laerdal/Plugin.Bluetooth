@@ -715,7 +715,7 @@ await broadcaster.StartBroadcastingAsync(options with { IncludeDeviceName = fals
 
 ## Option Classes
 
-`ScanningOptions`, `ConnectionOptions`, and `BroadcastingOptions` are documented in [Configuration](../Configuration/) alongside the rest of the options classes, not here — see [Scanning-Options.md](../Configuration/Scanning-Options.md), [Connection-Options.md](../Configuration/Connection-Options.md), and [Broadcasting-Options.md](../Configuration/Broadcasting-Options.md). (A previous version of this file duplicated a fabricated copy of these classes here — removed rather than fixed twice.)
+`ScanningOptions`, `ConnectionOptions`, and `BroadcastingOptions` are documented alongside the rest of the options classes, not here — see [Scanning-Options.md](../Configuration/Scanning-Options.md), [Connection-Options.md](../Configuration/Connection-Options.md), and [Broadcasting-Options.md](../Configuration/Broadcasting-Options.md). (A previous version of this file duplicated a fabricated copy of these classes here — removed rather than fixed twice.)
 
 ---
 

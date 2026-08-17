@@ -282,7 +282,7 @@ var broadcastOptions = new BroadcastingOptions
 await broadcaster.StartBroadcastingAsync(broadcastOptions);
 ```
 
-See [Configuration](../Configuration/) for the full property reference per options class.
+See [Dependency Injection](../Configuration/Dependency-Injection.md) and the other pages under `Docs/Configuration/` for the full property reference per options class.
 
 **Options pattern:**
 - Immutable (`init`-only) configuration records
