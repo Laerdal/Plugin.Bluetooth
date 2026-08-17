@@ -557,12 +557,24 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <inheritdoc />
     /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#discoverServices()">Android BluetoothGatt.discoverServices()</seealso>
     protected async override ValueTask NativeServicesExplorationAsync(
+        bool useCache,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
         if (_bluetoothGattProxy == null)
         {
             throw new AndroidNativeBluetoothException("Device not connected - GATT proxy is null");
+        }
+
+        // Android's own Bluetooth stack caches a peripheral's GATT service list independently of
+        // this library's cache - confirmed against real hardware: a device that rebooted into a
+        // Nordic DFU bootloader (a completely different GATT database than its application
+        // firmware) still had its pre-reboot services returned by DiscoverServices() below, even
+        // with this library's own UseCache=false already in effect. TryGattRefresh() invokes
+        // Android's hidden BluetoothGatt.refresh() to actually invalidate that stack-level cache.
+        if (!useCache)
+        {
+            _bluetoothGattProxy.TryGattRefresh();
         }
 
         Logger?.LogServiceDiscoveryStarting(Id);
