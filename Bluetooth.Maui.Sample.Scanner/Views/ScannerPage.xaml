@@ -118,7 +118,7 @@
         <!-- Device List -->
         <CollectionView Grid.Row="1"
                         ItemsSource="{Binding Devices}"
-                        SelectedItem="{Binding SelectedDevice, Mode=OneWay}"
+                        SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
                         SelectionMode="Single"
                         SelectionChangedCommand="{Binding SelectDeviceCommand}"
                         SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">

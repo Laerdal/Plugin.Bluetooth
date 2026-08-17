@@ -58,7 +58,7 @@ public class ScannerViewModel : BaseViewModel
     public IBluetoothRemoteDevice? SelectedDevice
     {
         get => GetValue<IBluetoothRemoteDevice?>(null);
-        private set => SetValue(value);
+        set => SetValue(value);
     }
 
     /// <summary>
@@ -237,8 +237,7 @@ public class ScannerViewModel : BaseViewModel
 
         _logger.LogInformation("Device selected: {DeviceName} ({DeviceId})", device.Name ?? "Unknown", device.Id);
 
-        SelectedDevice = device;
-
+        SelectedDevice = null; // Clear selection after navigation to enable going back and forth
         // Navigate to DevicePage with the selected device
         await _navigation.NavigateToAsync<DevicePage>(new Dictionary<string, object>
         {

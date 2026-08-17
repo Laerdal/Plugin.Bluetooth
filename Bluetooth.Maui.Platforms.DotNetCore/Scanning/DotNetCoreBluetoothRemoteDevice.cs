@@ -93,7 +93,7 @@ public class DotNetCoreBluetoothRemoteDevice : BaseBluetoothRemoteDevice
 
     /// <inheritdoc />
     /// <exception cref="PlatformNotSupportedException"></exception>
-    protected override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeServicesExplorationAsync(bool useCache, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         throw new PlatformNotSupportedException("This functionality is only supported on Native platforms. You called the shared version.");
     }

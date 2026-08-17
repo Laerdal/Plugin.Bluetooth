@@ -78,6 +78,7 @@
                         ItemsSource="{Binding Services}"
                         SelectionMode="Single"
                         SelectionChangedCommand="{Binding SelectServiceCommand}"
+                        SelectedItem="{Binding SelectedService, Mode=TwoWay}"
                         SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">
 
             <CollectionView.EmptyView>

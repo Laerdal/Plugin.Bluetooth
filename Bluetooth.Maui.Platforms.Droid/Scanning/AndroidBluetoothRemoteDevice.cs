@@ -3,6 +3,7 @@ using Bluetooth.Core.Infrastructure.Retries;
 using Bluetooth.Maui.Platforms.Droid.Enums;
 using Bluetooth.Maui.Platforms.Droid.Exceptions;
 using Bluetooth.Maui.Platforms.Droid.Logging;
+using Bluetooth.Maui.Platforms.Droid.Permissions;
 using Bluetooth.Maui.Platforms.Droid.Scanning.Factories;
 using Bluetooth.Maui.Platforms.Droid.Scanning.NativeObjects;
 using Bluetooth.Maui.Platforms.Droid.Tools;
@@ -305,6 +306,8 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(connectionOptions);
+        
+        await RequestBluetoothConnectinPermissionsAsync().ConfigureAwait(false);;
 
         // Store connection options for GATT operations
         _connectionOptions = connectionOptions;
@@ -378,6 +381,22 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
             Logger?.LogConnectionFailed(Id, Math.Max(attempt, 1), e);
             OnConnectFailed(e);
             throw;
+        }
+    }
+
+    private async static ValueTask RequestBluetoothConnectinPermissionsAsync()
+    {
+        // Request necessary permissions before connecting
+        if (OperatingSystem.IsAndroidVersionAtLeast(31))
+        {
+            // Android 12+ (API 31+) requires BLUETOOTH_CONNECT permission at runtime
+            await AndroidBluetoothPermissions.BluetoothConnectPermission.RequestIfNeededAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            // Older versions use legacy BLUETOOTH and BLUETOOTH_ADMIN permissions
+            await AndroidBluetoothPermissions.BluetoothPermission.RequestIfNeededAsync().ConfigureAwait(false);
+            await AndroidBluetoothPermissions.BluetoothAdminPermission.RequestIfNeededAsync().ConfigureAwait(false);
         }
     }
 
@@ -487,23 +506,34 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     public void OnConnectionStateChange(GattStatus status, ProfileState newState)
     {
         CurrentConnectionState = newState;
-        if (status != GattStatus.Success)
-        {
-            // Connection failed
-            OnConnectFailed(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
-            return;
-        }
 
         switch (newState)
         {
             case ProfileState.Connected:
+                if (status != GattStatus.Success)
+                {
+                    // Connection failed
+                    OnConnectFailed(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
+                    break;
+                }
+
                 IsConnected = true;
                 OnConnectSucceeded();
                 break;
 
             case ProfileState.Disconnected:
+                // Android reports the disconnect *reason* in status here, not an operation-failure
+                // code - a non-Success value (e.g. GATT_CONN_TERMINATE_PEER_USER=19 for a
+                // device-initiated disconnect, such as a DFU reboot) is the normal case, not an
+                // error. Confirmed via a real-hardware hang: treating every non-Success status as
+                // a connection failure and returning before this switch (as this method used to)
+                // left IsConnected permanently stale at true after a genuine disconnect, which then
+                // made every later "is this device already disconnected" check downstream
+                // (ClearDeviceAsync, DisconnectIfNeededAsync) wrongly attempt a redundant
+                // DisconnectAsync() call that hangs forever waiting for a connection-state callback
+                // Android will never fire again for an already-disconnected GATT object.
                 IsConnected = false;
-                OnDisconnect();
+                OnDisconnect(status != GattStatus.Success ? new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status) : null);
                 break;
 
             case ProfileState.Connecting:
@@ -527,12 +557,24 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <inheritdoc />
     /// <seealso href="https://developer.android.com/reference/android/bluetooth/BluetoothGatt#discoverServices()">Android BluetoothGatt.discoverServices()</seealso>
     protected async override ValueTask NativeServicesExplorationAsync(
+        bool useCache,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
         if (_bluetoothGattProxy == null)
         {
             throw new AndroidNativeBluetoothException("Device not connected - GATT proxy is null");
+        }
+
+        // Android's own Bluetooth stack caches a peripheral's GATT service list independently of
+        // this library's cache - confirmed against real hardware: a device that rebooted into a
+        // Nordic DFU bootloader (a completely different GATT database than its application
+        // firmware) still had its pre-reboot services returned by DiscoverServices() below, even
+        // with this library's own UseCache=false already in effect. TryGattRefresh() invokes
+        // Android's hidden BluetoothGatt.refresh() to actually invalidate that stack-level cache.
+        if (!useCache)
+        {
+            _bluetoothGattProxy.TryGattRefresh();
         }
 
         Logger?.LogServiceDiscoveryStarting(Id);
