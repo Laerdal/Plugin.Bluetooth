@@ -458,15 +458,24 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
         // Check if this is the CCCD descriptor for notifications
         if (nativeDescriptor.Uuid?.ToGuid().Equals(_cccdUuid) == true)
         {
-            // This is a CCCD write for enabling/disabling notifications - complete the
-            // characteristic-level listening state machine (StartListeningAsync/StopListeningAsync).
-            if (status != GattStatus.Success)
+            // Only complete the characteristic-level listening state machine
+            // (StartListeningAsync/StopListeningAsync) if it's the one that actually issued this
+            // write - a CCCD can also be written directly via the descriptor's own WriteValueAsync()
+            // (bypassing the listen/notify API entirely, e.g. when a peripheral's CCCD doesn't
+            // answer a descriptor read, so the read-before-write pattern StartListeningAsync uses
+            // can't be used). OnWriteIsListeningSucceeded/Failed throw CharacteristicUnexpectedWriteNotifyException
+            // when nothing is pending - confirmed against real hardware, calling them unconditionally
+            // here threw on every direct CCCD write.
+            if (IsWritingIsListening)
             {
-                OnWriteIsListeningFailed(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
-            }
-            else
-            {
-                OnWriteIsListeningSucceeded();
+                if (status != GattStatus.Success)
+                {
+                    OnWriteIsListeningFailed(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
+                }
+                else
+                {
+                    OnWriteIsListeningSucceeded();
+                }
             }
 
             // Deliberately NOT returning here: NativeWriteIsListeningAsync (the implementation of
