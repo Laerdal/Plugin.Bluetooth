@@ -14,7 +14,7 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning;
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementwatcher">BluetoothLEAdvertisementWatcher</seealso>
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs">BluetoothLEAdvertisementReceivedEventArgs</seealso>
 /// </remarks>
-public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.BluetoothLeAdvertisementWatcherWrapper.IBluetoothLeAdvertisementWatcherProxyDelegate, IDisposable
+public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.BluetoothLeAdvertisementWatcherWrapper.IBluetoothLeAdvertisementWatcherProxyDelegate, IAsyncDisposable
 {
     private NativeObjects.BluetoothLeAdvertisementWatcherWrapper? _watcher;
 
@@ -57,6 +57,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     {
         var cachedManufacturer = _manufacturerCache.GetManufacturerData(argsAdvertisement.BluetoothAddress);
         var advertisement = new WindowsBluetoothAdvertisement(argsAdvertisement, cachedManufacturer);
+        Logger?.LogDeviceDiscovered(advertisement.BluetoothAddress, advertisement.RawSignalStrengthInDBm);
         if (advertisement.Manufacturer != Manufacturer.Unknown)
         {
             // update cache if we have a valid value, otherwise keep the cached value (if any)
@@ -144,23 +145,12 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     /// <summary>
     /// Disposes of the scanner and its resources, specifically the manufacturer cache.
     /// </summary>
-    public void Dispose()
+    public new async ValueTask DisposeAsync()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        _manufacturerCache.Dispose();
+        await base.DisposeAsync();
     }
 
-    /// <summary>
-    /// Disposes of the scanner and its resources, specifically the manufacturer cache.
-    /// </summary>
-    /// <param name="disposing"></param>
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _manufacturerCache.Dispose();
-        }
-    }
 
     #endregion
 
