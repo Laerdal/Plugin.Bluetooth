@@ -355,7 +355,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
     /// <inheritdoc />
     /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbperipheral/1518706-discoverservices">iOS CBPeripheral.discoverServices</seealso>
-    protected override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeServicesExplorationAsync(bool useCache, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogServiceDiscoveryStarting(Id);
         CbPeripheralWrapper.CbPeripheral.DiscoverServices();

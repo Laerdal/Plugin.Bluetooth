@@ -166,7 +166,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <summary>
     ///     Performs the native service exploration and waits for completion.
     /// </summary>
-    private async Task PerformServiceExplorationAsync(TimeSpan? timeout, CancellationToken cancellationToken)
+    private async Task PerformServiceExplorationAsync(bool useCache, TimeSpan? timeout, CancellationToken cancellationToken)
     {
         if (!IsConnected)
         {
@@ -175,7 +175,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
 
         LogExploringServices(Id);
-        await NativeServicesExplorationAsync(timeout, cancellationToken).ConfigureAwait(false);
+        await NativeServicesExplorationAsync(useCache, timeout, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -230,7 +230,17 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <summary>
     ///     Platform-specific implementation to explore services.
     /// </summary>
-    protected abstract ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+    /// <param name="useCache">
+    ///     When false, platforms that maintain their own OS-level GATT cache independent of this
+    ///     library's cache (Android) should force a genuinely fresh read from the peripheral -
+    ///     confirmed against real hardware: Android can keep serving a peripheral's pre-reboot
+    ///     service list from its own Bluetooth stack cache even after ExploreServicesAsync's
+    ///     UseCache=false already bypassed this library's own cache, because that flag never
+    ///     reached the platform layer that actually owns the stale cache.
+    /// </param>
+    /// <param name="timeout">The timeout for this operation.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
+    protected abstract ValueTask NativeServicesExplorationAsync(bool useCache, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <inheritdoc />
     public async Task ExploreServicesAsync(ServiceExplorationOptions? options = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
@@ -255,7 +265,7 @@ public abstract partial class BaseBluetoothRemoteDevice
 
         try
         {
-            await PerformServiceExplorationAsync(timeout, cancellationToken).ConfigureAwait(false);
+            await PerformServiceExplorationAsync(options.UseCache, timeout, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception e)
         {

@@ -204,7 +204,20 @@ public abstract partial class BaseBluetoothScanner
 
         try
         {
+            // Subscribe before checking the current registry (not after) - otherwise a device that
+            // gets added between the check and the subscribe is missed entirely. Confirmed against
+            // real hardware: a Legacy DFU bootloader that re-advertises fast enough to already be
+            // registered by the time a caller starts waiting (e.g. right after CleanRestartScanningAsync)
+            // was never observed as "added" again, so this wait wrongly ran to its full timeout even
+            // though the device was there the whole time.
             DevicesAdded += OnDevicesAdded;
+
+            var matches = GetDevices(filter);
+            if (matches.Count > 0)
+            {
+                tcs.TrySetResult(matches[0]);
+            }
+
             return await tcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
         }
         finally
