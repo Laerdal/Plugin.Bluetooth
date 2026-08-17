@@ -187,27 +187,24 @@ Raised when a Bluetooth advertisement packet is received from any device.
 ```csharp
 public class AdvertisementReceivedEventArgs : EventArgs
 {
-    public IBluetoothRemoteDevice Device { get; }
     public IBluetoothAdvertisement Advertisement { get; }
-    public int Rssi { get; }
 }
 ```
+
+There is no `Device` or `Rssi` property on this class — RSSI lives on `Advertisement.RawSignalStrengthInDBm`, and there is no device shortcut.
 
 **Usage:**
 ```csharp
 scanner.AdvertisementReceived += (s, e) =>
 {
     var ad = e.Advertisement;
-    Console.WriteLine($"Device: {ad.LocalName}, RSSI: {e.Rssi}");
+    Console.WriteLine($"Device: {ad.DeviceName}, RSSI: {ad.RawSignalStrengthInDBm}");
 
-    // Parse manufacturer data
-    foreach (var (company, data) in ad.ManufacturerData)
-    {
-        ProcessManufacturerData(company, data);
-    }
+    // Read manufacturer data
+    ProcessManufacturerData(ad.ManufacturerId, ad.ManufacturerData);
 
     // Filter by service UUIDs
-    if (ad.ServiceUuids.Contains(myServiceUuid))
+    if (ad.ServicesGuids.Contains(myServiceUuid))
     {
         Console.WriteLine("Found device with required service");
     }
@@ -515,35 +512,18 @@ device.ServicesChanged += async (s, e) =>
 
 ### Signal and Performance Events
 
-#### RssiChanged
+#### Signal strength: no change event, poll instead
+
+`RssiChangedEventArgs` exists in `Bluetooth.Abstractions.Scanning/EventArgs/` but is not wired to any actual event on `IBluetoothRemoteDevice` — there is currently no `RssiChanged` event to subscribe to. Signal strength is polled instead:
 
 ```csharp
-event EventHandler<RssiChangedEventArgs> RssiChanged;
+int rssi = await device.ReadSignalStrengthAsync();
+
+if (rssi < -80)
+    Console.WriteLine("Warning: Weak signal");
 ```
 
-Raised when the device's RSSI (signal strength) changes.
-
-**Event Args:**
-```csharp
-public class RssiChangedEventArgs : EventArgs
-{
-    public int Rssi { get; }
-}
-```
-
-**Usage:**
-```csharp
-device.RssiChanged += (s, e) =>
-{
-    UpdateSignalStrengthIndicator(e.Rssi);
-
-    if (e.Rssi < -80)
-        Console.WriteLine("Warning: Weak signal");
-};
-
-// Request RSSI update
-await device.ReadRssiAsync();
-```
+`device.SignalStrengthDbm` holds the last-read value without triggering a new native read; `device.SignalStrengthPercent` gives a normalized 0-100 view of the same reading.
 
 **RSSI interpretation:**
 - -30 to -50 dBm: Excellent
@@ -1051,7 +1031,7 @@ public class DescriptorWriteRequestEventArgs : EventArgs
 
 | Event Args Type | Properties | Used By |
 |----------------|------------|---------|
-| `AdvertisementReceivedEventArgs` | Device, Advertisement, Rssi | Scanner, Device |
+| `AdvertisementReceivedEventArgs` | Advertisement | Scanner, Device |
 | `DeviceListChangedEventArgs` | AddedItems, RemovedItems | Scanner |
 | `DevicesAddedEventArgs` | Items | Scanner |
 | `DevicesRemovedEventArgs` | Items | Scanner |

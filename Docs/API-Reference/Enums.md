@@ -18,7 +18,7 @@ Complete reference for all enumerations used in Plugin.Bluetooth.
   - [BluetoothCharacteristicProperties](#bluetoothcharacteristicproperties)
   - [BluetoothCharacteristicPermissions](#bluetoothcharacteristicpermissions)
   - [BluetoothDescriptorPermissions](#bluetoothdescriptorpermissions)
-  - [BluetoothAdvertiseMode](#bluetoothadvertisemode)
+  - [BroadcastingOptions](#broadcastingoptions)
 
 ---
 
@@ -242,16 +242,16 @@ PhyMode currentRxPhy = device.RxPhy;
 Enumerates Bluetooth SIG assigned company identifiers.
 
 ```csharp
-public enum Manufacturer : ushort
+public enum Manufacturer : short
 {
-    Unknown = 0xFFFF,
-    Apple = 0x004C,
-    Samsung = 0x0075,
-    Google = 0x00E0,
-    Microsoft = 0x0006,
-    Nordic = 0x0059,
-    Texas_Instruments = 0x000D,
-    // ... hundreds more
+    Unknown = -1,
+    Ericsson_Technology_Licensing = 0,
+    Microsoft = 6,
+    Apple_Inc = 76,
+    Nordic_Semiconductor_ASA = 89,
+    Samsung_Electronics_Co_Ltd = 117,
+    Google = 224,
+    // ... 2000+ more, assigned in Bluetooth SIG order (see Bluetooth.Abstractions/Enums/Manufacturer.cs)
 }
 ```
 
@@ -259,12 +259,11 @@ public enum Manufacturer : ushort
 
 | Value | Company | Typical Products |
 |-------|---------|------------------|
-| `Apple` (0x004C) | Apple Inc. | iPhone, iPad, AirPods, Apple Watch |
-| `Samsung` (0x0075) | Samsung Electronics | Galaxy devices, wearables |
-| `Google` (0x00E0) | Google LLC | Pixel devices, Nest products |
-| `Microsoft` (0x0006) | Microsoft Corp. | Surface, Xbox controllers |
-| `Nordic` (0x0059) | Nordic Semiconductor | nRF52 series chips |
-| `Texas_Instruments` (0x000D) | TI | CC2640, CC2650 chips |
+| `Apple_Inc` (76) | Apple Inc. | iPhone, iPad, AirPods, Apple Watch |
+| `Samsung_Electronics_Co_Ltd` (117) | Samsung Electronics | Galaxy devices, wearables |
+| `Google` (224) | Google LLC | Pixel devices, Nest products |
+| `Microsoft` (6) | Microsoft Corp. | Surface, Xbox controllers |
+| `Nordic_Semiconductor_ASA` (89) | Nordic Semiconductor | nRF52 series chips |
 
 #### Usage
 
@@ -272,28 +271,27 @@ public enum Manufacturer : ushort
 // Parse manufacturer data from advertisement
 device.AdvertisementReceived += (s, e) =>
 {
-    foreach (var (companyId, data) in e.Advertisement.ManufacturerData)
-    {
-        Manufacturer manufacturer = (Manufacturer)companyId;
-        Console.WriteLine($"Data from {manufacturer}: {BitConverter.ToString(data.ToArray())}");
+    var ad = e.Advertisement;
+    Manufacturer manufacturer = ad.Manufacturer;
+    Console.WriteLine($"Data from {manufacturer}: {BitConverter.ToString(ad.ManufacturerData.ToArray())}");
 
-        if (manufacturer == Manufacturer.Apple)
-        {
-            // Parse Apple-specific advertisement format
-        }
+    if (manufacturer == Manufacturer.Apple_Inc)
+    {
+        // Parse Apple-specific advertisement format
     }
 };
 
 // Check device manufacturer (if available)
-if (device.Manufacturer == Manufacturer.Nordic)
+if (device.Manufacturer == Manufacturer.Nordic_Semiconductor_ASA)
 {
     Console.WriteLine("Nordic-based device detected");
 }
 ```
 
 **Notes:**
-- Full list contains 3000+ companies
-- Unknown companies default to `Unknown`
+- Backed by `short`, not `ushort` — `Unknown` is `-1`, not a large positive sentinel
+- Full list contains 2400+ companies, assigned in Bluetooth SIG registration order (member names are the full company name, not short vendor nicknames — e.g. `Apple_Inc`, not `Apple`)
+- Unknown/unparseable companies default to `Unknown`
 - Company ID is separate from device manufacturer
 - Used in manufacturer-specific advertisement data
 
@@ -396,9 +394,10 @@ var options = new ScanningOptions
 
 await scanner.StartScanningAsync(options);
 
-// Change mode while scanning
-options.ScanMode = BluetoothScanMode.LowPower;
-await scanner.UpdateScannerOptionsAsync(options);
+// ScanningOptions properties are init-only and there is no runtime "update options"
+// method — to change scan mode, stop and start again with new options:
+await scanner.StopScanningAsync();
+await scanner.StartScanningAsync(options with { ScanMode = BluetoothScanMode.LowPower });
 ```
 
 **Mode details:**
@@ -674,117 +673,49 @@ var descriptor = await characteristic.AddDescriptorAsync(
 
 ---
 
-### BluetoothAdvertiseMode
+### BroadcastingOptions
 
-**Namespace:** `Bluetooth.Abstractions.Broadcasting`
+**Namespace:** `Bluetooth.Abstractions.Broadcasting.Options`
 
-Defines the advertising mode affecting power consumption and visibility.
+There is no `BluetoothAdvertiseMode` enum, and broadcasting has no advertise-mode/interval concept exposed to callers (that's platform-managed) — configuration is a plain options record, not an enum:
 
 ```csharp
-public enum BluetoothAdvertiseMode
+public record BroadcastingOptions
 {
-    LowPower,      // Minimal power, slower discovery
-    Balanced,      // Moderate power and discoverability
-    LowLatency     // Maximum discoverability, higher power
+    string? LocalDeviceName { get; init; }
+    bool IncludeDeviceName { get; init; }
+    IReadOnlyList<Guid>? AdvertisedServiceUuids { get; init; }
 }
 ```
-
-#### Comparison
-
-| Mode | Advertising Interval | Power | Discovery Time |
-|------|---------------------|-------|----------------|
-| `LowPower` | ~1000ms | Low | 5-10 seconds |
-| `Balanced` | ~250ms | Moderate | 2-5 seconds |
-| `LowLatency` | ~100ms | High | <1 second |
 
 #### Usage
 
 ```csharp
 var options = new BroadcastingOptions
 {
-    LocalName = "MyDevice",
-    AdvertiseMode = BluetoothAdvertiseMode.LowLatency,
-    Connectable = true
+    LocalDeviceName = "MyDevice",
+    IncludeDeviceName = true,
+    AdvertisedServiceUuids = [myServiceUuid]
 };
 
 await broadcaster.StartBroadcastingAsync(options);
 
-// Update mode while broadcasting
-options.AdvertiseMode = BluetoothAdvertiseMode.LowPower;
-await broadcaster.UpdateBroadcastingOptionsAsync(options);
+// To change options while broadcasting, stop and start again — there is no
+// UpdateBroadcastingOptionsAsync method:
+await broadcaster.StopBroadcastingAsync();
+await broadcaster.StartBroadcastingAsync(options with { IncludeDeviceName = false });
 ```
-
-**Mode details:**
-
-- **LowPower:**
-  - 1000ms advertising interval
-  - Best for beacons, sensors
-  - Significantly extends battery life
-
-- **Balanced:**
-  - 250ms advertising interval
-  - Good for most peripheral devices
-  - Balance of power and discoverability
-
-- **LowLatency:**
-  - 100ms advertising interval
-  - Best for pairable devices
-  - Fastest discovery but drains battery
 
 **Platform support:**
 - Android: Full support
-- iOS/macOS: System-managed
-- Windows: Limited support
-
-**Battery impact:** LowLatency advertising can consume 10x more power than LowPower
+- iOS/macOS: `LocalDeviceName`/`IncludeDeviceName` are advisory — the OS may substitute the device's Bluetooth name
+- Windows: Full support
 
 ---
 
 ## Option Classes
 
-### ScanningOptions
-
-Configuration for scanner behavior.
-
-```csharp
-public class ScanningOptions
-{
-    public BluetoothScanMode ScanMode { get; set; } = BluetoothScanMode.Balanced;
-    public IEnumerable<Guid>? FilterByServices { get; set; }
-    public int ReportDelayMillis { get; set; } = 0;
-    public bool AllowDuplicates { get; set; } = false;
-}
-```
-
-### ConnectionOptions
-
-Configuration for device connections.
-
-```csharp
-public class ConnectionOptions
-{
-    public bool AutoConnect { get; set; } = false;
-    public BluetoothConnectionPriority ConnectionPriority { get; set; } = BluetoothConnectionPriority.Balanced;
-    public BluetoothTransport EnableTransport { get; set; } = BluetoothTransport.Auto;
-}
-```
-
-### BroadcastingOptions
-
-Configuration for broadcaster/peripheral behavior.
-
-```csharp
-public class BroadcastingOptions
-{
-    public string? LocalName { get; set; }
-    public bool Connectable { get; set; } = true;
-    public BluetoothAdvertiseMode AdvertiseMode { get; set; } = BluetoothAdvertiseMode.Balanced;
-    public int? TxPowerLevel { get; set; }
-    public IEnumerable<Guid>? ServiceUuids { get; set; }
-    public Dictionary<Guid, byte[]>? ServiceData { get; set; }
-    public Dictionary<ushort, byte[]>? ManufacturerData { get; set; }
-}
-```
+`ScanningOptions`, `ConnectionOptions`, and `BroadcastingOptions` are documented in [Configuration](../Configuration/) alongside the rest of the options classes, not here — see [Scanning-Options.md](../Configuration/Scanning-Options.md), [Connection-Options.md](../Configuration/Connection-Options.md), and [Broadcasting-Options.md](../Configuration/Broadcasting-Options.md). (A previous version of this file duplicated a fabricated copy of these classes here — removed rather than fixed twice.)
 
 ---
 

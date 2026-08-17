@@ -5,7 +5,7 @@ This guide covers connection lifecycle management, handling disconnections, and 
 ## Table of Contents
 
 - [Connection Lifecycle](#connection-lifecycle)
-- [MaxConcurrentConnections](#maxconcurrentconnections)
+- [Limiting Concurrent Connections](#limiting-concurrent-connections)
 - [Handling Unexpected Disconnections](#handling-unexpected-disconnections)
 - [Connection State Monitoring](#connection-state-monitoring)
 - [Auto-Reconnection Patterns](#auto-reconnection-patterns)
@@ -131,25 +131,15 @@ public async Task DisconnectDeviceAsync()
 }
 ```
 
-## MaxConcurrentConnections
+## Limiting Concurrent Connections
 
-The `MaxConcurrentConnections` setting limits simultaneous connection attempts to prevent resource exhaustion.
+There is no built-in option to cap simultaneous connection attempts — the library doesn't limit concurrency for you. If you're connecting to multiple devices at once, cap it yourself with a `SemaphoreSlim`, sized to what your target platforms can actually sustain:
 
-### Configuration
+- **Android**: typically 4-7 simultaneous GATT connections
+- **iOS**: typically 10-15 simultaneous connections
+- **Windows**: varies by adapter and Windows version
 
-```csharp
-// MauiProgram.cs
-builder.Services.Configure<BluetoothInfrastructureOptions>(options =>
-{
-    // Default is 5 - reasonable for most applications
-    options.MaxConcurrentConnections = 3;
-
-    // Set to 0 for unlimited (NOT recommended)
-    // options.MaxConcurrentConnections = 0;
-});
-```
-
-### When to Adjust
+### When to Adjust Your Own Cap
 
 **Reduce (1-3 connections):**
 - Mobile devices with limited resources
@@ -178,13 +168,10 @@ public class MultiDeviceManager
     private readonly SemaphoreSlim _connectionSemaphore;
     private readonly List<IBluetoothRemoteDevice> _connectedDevices = new();
 
-    public MultiDeviceManager(
-        IBluetoothScanner scanner,
-        IOptions<BluetoothInfrastructureOptions> options)
+    public MultiDeviceManager(IBluetoothScanner scanner, int maxConcurrentConnections = 5)
     {
         _scanner = scanner;
-        var maxConnections = options.Value.MaxConcurrentConnections;
-        _connectionSemaphore = new SemaphoreSlim(maxConnections, maxConnections);
+        _connectionSemaphore = new SemaphoreSlim(maxConcurrentConnections, maxConcurrentConnections);
     }
 
     public async Task ConnectToMultipleDevicesAsync(
@@ -815,7 +802,7 @@ public class DeviceConnectionPool
 ### Key Takeaways
 
 1. **Always handle unexpected disconnections** - Subscribe to `UnexpectedDisconnection` event
-2. **Configure MaxConcurrentConnections appropriately** - Default of 5 works for most apps
+2. **Cap concurrent connection attempts yourself** - Use a `SemaphoreSlim` sized to your target platform's real GATT limits
 3. **Use RetryOptions for transient failures** - Especially important on Android
 4. **Stop scanning after device found** - Saves battery
 5. **Clean up resources properly** - Use `DisposeAsync()` and clear services

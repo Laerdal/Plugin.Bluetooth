@@ -247,6 +247,25 @@ foreach (var service in device.Services)
 }
 ```
 
+#### 7. Broadcasting (Peripheral Mode)
+```csharp
+var broadcaster = serviceProvider.GetRequiredService<IBluetoothBroadcaster>();
+
+var service = await broadcaster.CreateServiceAsync(serviceId);
+await service.CreateCharacteristicAsync(
+    characteristicId,
+    BluetoothCharacteristicProperties.Read | BluetoothCharacteristicProperties.Notify,
+    BluetoothCharacteristicPermissions.Read);
+
+await broadcaster.StartBroadcastingAsync(new BroadcastingOptions
+{
+    LocalDeviceName = "My Windows Peripheral",
+    IncludeDeviceName = true
+});
+```
+
+**Backed by**: `Windows.Devices.Bluetooth.GenericAttributeProfile.GattServiceProvider` and `BluetoothLEAdvertisementPublisher` — a full GATT server implementation, not a stub. One narrow gap: Windows exposes no API for a peripheral to force-disconnect a specific subscribed client (see Platform Limitations below); the client must disconnect itself. Sending notifications/indications from the peripheral side is not yet implemented in this library (tracked as a TODO on `IBluetoothLocalCharacteristic`), independent of the Windows platform.
+
 ### ⚠️ Limited/Automatic Features
 
 #### 1. MTU Negotiation
@@ -267,6 +286,14 @@ var mtu = device.Mtu;
 ```
 
 **Explanation**: Windows manages connection parameters automatically based on system state and power profile.
+
+#### 3. Force-Disconnecting a Broadcaster's Subscribed Client
+```csharp
+// Cannot force-disconnect a subscribed GATT client from the peripheral side on Windows
+// await connectedDevice.DisconnectAsync(); // Throws NotSupportedException
+```
+
+**Explanation**: Windows exposes no WinRT API for a GATT server to disconnect a specific subscribed central; the central must initiate the disconnect itself.
 
 ### ❌ Not Supported Features
 
@@ -293,15 +320,6 @@ var mtu = device.Mtu;
 ```
 
 **Reason**: WinRT only provides RSSI during advertisement scanning, not from connected devices.
-
-#### 4. Broadcasting (Peripheral Mode)
-```csharp
-// Broadcasting not supported on Windows
-var broadcaster = serviceProvider.GetRequiredService<IBluetoothBroadcaster>();
-// await broadcaster.StartAsync(options); // Throws NotSupportedException or NotImplementedException
-```
-
-**Reason**: Windows WinRT APIs for GATT server (`GattServiceProvider`) exist but are not implemented in Plugin.Bluetooth due to instability and limited real-world use cases.
 
 ## Platform Limitations
 
@@ -539,7 +557,7 @@ if (DeviceInfo.Platform == DevicePlatform.WinUI)
 1. Using L2CAP (not supported on Windows)
 2. Relying on post-connection RSSI (not supported)
 3. Requesting MTU or PHY changes (not supported)
-4. Broadcasting/peripheral mode (not implemented)
+4. Force-disconnecting a broadcaster's subscribed client (not supported — client must disconnect itself)
 
 **Solution**: Implement platform-specific fallbacks:
 ```csharp

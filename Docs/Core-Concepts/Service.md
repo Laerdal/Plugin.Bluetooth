@@ -215,13 +215,13 @@ Monitor changes to the characteristic list:
 // Any change to the list
 service.CharacteristicListChanged += (s, args) =>
 {
-    Console.WriteLine($"Total characteristics: {args.TotalCount}");
+    Console.WriteLine($"Added: {args.AddedItems?.Count() ?? 0}, Removed: {args.RemovedItems?.Count() ?? 0}");
 };
 
 // Characteristics added
 service.CharacteristicsAdded += (s, args) =>
 {
-    foreach (var characteristic in args.Characteristics)
+    foreach (var characteristic in args.Items)
     {
         Console.WriteLine($"Added: {characteristic.Name}");
     }
@@ -230,7 +230,7 @@ service.CharacteristicsAdded += (s, args) =>
 // Characteristics removed
 service.CharacteristicsRemoved += (s, args) =>
 {
-    foreach (var characteristic in args.Characteristics)
+    foreach (var characteristic in args.Items)
     {
         Console.WriteLine($"Removed: {characteristic.Name}");
     }

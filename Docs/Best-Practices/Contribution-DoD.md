@@ -35,6 +35,8 @@ Select at least one category:
 
 ## 5. Tests
 
+> Note: the repository has no unit/integration test projects yet (see [Testing.md](../Best-Practices/Testing.md)) — the first three items below are currently unenforceable and exist for when that infrastructure lands. Manual validation is the only real coverage today.
+
 - [ ] Unit tests updated or added for changed logic.
 - [ ] Unsupported-path behavior tested where applicable.
 - [ ] Existing tests pass for affected projects.

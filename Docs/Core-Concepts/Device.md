@@ -53,18 +53,12 @@ Each level serves a purpose:
 First, use the Scanner to find your device:
 
 ```csharp
-IBluetoothRemoteDevice device = null;
-
-scanner.AdvertisementReceived += (s, args) =>
-{
-    if (args.Advertisement.DeviceName == "MyDevice")
-    {
-        device = args.Device;
-    }
-};
-
 await scanner.StartScanningAsync();
-await Task.Delay(TimeSpan.FromSeconds(5));
+
+IBluetoothRemoteDevice device = await scanner.WaitForDeviceToAppearAsync(
+    d => d.Name == "MyDevice",
+    timeout: TimeSpan.FromSeconds(10));
+
 await scanner.StopScanningAsync();
 ```
 
@@ -271,18 +265,18 @@ await device.ClearServicesAsync();
 // Listen for service changes
 device.ServiceListChanged += (s, args) =>
 {
-    Console.WriteLine($"Total services: {args.TotalCount}");
+    Console.WriteLine($"Total services: {device.GetServices().Count}");
 };
 
 device.ServicesAdded += (s, args) =>
 {
-    foreach (var service in args.Services)
+    foreach (var service in args.Items)
         Console.WriteLine($"Added: {service.Name}");
 };
 
 device.ServicesRemoved += (s, args) =>
 {
-    foreach (var service in args.Services)
+    foreach (var service in args.Items)
         Console.WriteLine($"Removed: {service.Name}");
 };
 ```
@@ -356,33 +350,17 @@ async Task ConnectAndExploreAsync(IBluetoothRemoteDevice device)
 ### Find and Connect to Specific Device
 
 ```csharp
-async Task<IBluetoothRemoteDevice> FindAndConnectAsync(string deviceName)
+// scanner is an IBluetoothScanner injected via DI into the containing class's constructor
+async Task<IBluetoothRemoteDevice> FindAndConnectAsync(IBluetoothScanner scanner, string deviceName)
 {
-    var scanner = BluetoothFactory.Current.Scanner;
-    IBluetoothRemoteDevice device = null;
-
-    // Find device
-    var handler = new EventHandler<AdvertisementReceivedEventArgs>((s, args) =>
-    {
-        if (args.Advertisement.DeviceName == deviceName)
-            device = args.Device;
-    });
-
-    scanner.AdvertisementReceived += handler;
     await scanner.StartScanningAsync();
 
-    // Wait for device (with timeout)
-    var startTime = DateTime.UtcNow;
-    while (device == null && DateTime.UtcNow - startTime < TimeSpan.FromSeconds(10))
-    {
-        await Task.Delay(100);
-    }
+    // Waits for a matching device, or throws TimeoutException after 10s
+    var device = await scanner.WaitForDeviceToAppearAsync(
+        d => d.Name == deviceName,
+        timeout: TimeSpan.FromSeconds(10));
 
-    scanner.AdvertisementReceived -= handler;
     await scanner.StopScanningAsync();
-
-    if (device == null)
-        throw new TimeoutException($"Device '{deviceName}' not found");
 
     // Connect to device
     await device.ConnectAsync();
@@ -459,7 +437,7 @@ async Task RobustConnectAsync(IBluetoothRemoteDevice device, int maxRetries = 3)
 
 6. **Dispose Properly**: Device implements `IAsyncDisposable`
    ```csharp
-   await using var device = args.Device;
+   await using var device = await scanner.WaitForDeviceToAppearAsync(d => d.Name == "MyDevice");
    await device.ConnectAsync();
    // Use device...
    // Automatically disconnected and disposed

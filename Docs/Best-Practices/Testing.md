@@ -1,5 +1,7 @@
 # Testing Best Practices
 
+> **Status: proposed, not implemented.** This document describes a testing strategy for Plugin.Bluetooth that has not been built in this repository — there are currently no test projects in `Bluetooth.sln`, no Moq (or other mocking library) references anywhere in the codebase, and no test-execution step in CI (`.github/workflows/ci.yml`). Treat the content below as a blueprint for future test infrastructure, not as current practice or as something you can run today.
+
 This guide covers unit testing, integration testing, mocking strategies, and test patterns for Plugin.Bluetooth.
 
 ## Table of Contents

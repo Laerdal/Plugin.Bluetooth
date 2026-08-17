@@ -133,7 +133,7 @@ await scanner.StartScanningAsync();
 // Automatically stopped and disposed
 
 // Or manually
-IBluetoothRemoteDevice device = await scanner.GetKnownDeviceAsync(id);
+IBluetoothRemoteDevice device = scanner.GetDevice(id);
 await device.ConnectAsync();
 // ... use device ...
 await device.DisposeAsync(); // Disconnect and cleanup
@@ -261,35 +261,34 @@ Operations accept configuration through options objects:
 var scanOptions = new ScanningOptions
 {
     ScanMode = BluetoothScanMode.LowLatency,
-    FilterByServices = new[] { serviceUuid },
-    ReportDelayMillis = 0
+    ServiceUuids = [serviceUuid]
 };
 await scanner.StartScanningAsync(scanOptions);
 
 // Connection configuration
 var connectionOptions = new ConnectionOptions
 {
-    AutoConnect = true,
-    ConnectionPriority = BluetoothConnectionPriority.Balanced,
-    EnableTransport = BluetoothTransport.Le
+    WaitForAdvertisementBeforeConnecting = true,
+    ConnectionRetry = RetryOptions.Default
 };
 await device.ConnectAsync(connectionOptions);
 
 // Broadcasting configuration
 var broadcastOptions = new BroadcastingOptions
 {
-    LocalName = "MyDevice",
-    Connectable = true,
-    AdvertiseMode = BluetoothAdvertiseMode.LowLatency
+    LocalDeviceName = "MyDevice",
+    IncludeDeviceName = true
 };
 await broadcaster.StartBroadcastingAsync(broadcastOptions);
 ```
 
+See [Configuration](../Configuration/) for the full property reference per options class.
+
 **Options pattern:**
-- Immutable configuration objects
+- Immutable (`init`-only) configuration records
 - Default values for all properties
 - Platform-specific options documented
-- Can be updated while running via `Update*OptionsAsync` methods
+- To change options while running, stop then start again with new options (or `options with { ... }`) — there is no `Update*OptionsAsync` method on any interface
 
 ## Namespaces
 
@@ -380,7 +379,7 @@ await using var scanner = adapter.CreateScanner();
 await scanner.StartScanningAsync();
 
 // GOOD: Manual cleanup
-var device = await scanner.GetKnownDeviceAsync(id);
+var device = scanner.GetDevice(id);
 try
 {
     await device.ConnectAsync();
@@ -472,4 +471,5 @@ var char3 = await service.GetCharacteristicAsync(uuid3);
 - [Events](./Events.md)
 - [Exceptions](./Exceptions.md)
 - [Getting Started Guide](../README.md)
-- [Troubleshooting](../TROUBLESHOOTING.md)
+- [Troubleshooting: Common Issues](../Troubleshooting/Common-Issues.md)
+- [Troubleshooting: Debugging](../Troubleshooting/Debugging.md)

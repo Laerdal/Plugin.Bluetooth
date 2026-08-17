@@ -257,8 +257,7 @@ Monitor value changes:
 ```csharp
 descriptor.ValueUpdated += (s, args) =>
 {
-    Console.WriteLine($"Descriptor value changed: {BitConverter.ToString(args.Value.ToArray())}");
-    Console.WriteLine($"Timestamp: {args.Timestamp}");
+    Console.WriteLine($"Descriptor value changed: {BitConverter.ToString(args.OldValue.ToArray())} -> {BitConverter.ToString(args.NewValue.ToArray())}");
 };
 ```
 

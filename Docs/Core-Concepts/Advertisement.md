@@ -30,12 +30,11 @@ Advertisements are used to:
 ### 1. Listen for Advertisements
 
 ```csharp
-var scanner = BluetoothFactory.Current.Scanner;
-
+// scanner is an IBluetoothScanner obtained via constructor injection
+// (see Docs/Configuration/Dependency-Injection.md).
 scanner.AdvertisementReceived += (sender, args) =>
 {
     IBluetoothAdvertisement ad = args.Advertisement;
-    IBluetoothRemoteDevice device = args.Device;
 
     Console.WriteLine($"Device: {ad.DeviceName}");
     Console.WriteLine($"Address: {ad.BluetoothAddress}");
@@ -164,7 +163,7 @@ Manufacturer manufacturer = advertisement.Manufacturer;
 int manufacturerId = advertisement.ManufacturerId;
 
 // Example: Check for Apple devices
-if (manufacturer == Manufacturer.Apple)
+if (manufacturer == Manufacturer.Apple_Inc)
 {
     Console.WriteLine("This is an Apple device");
 }
@@ -187,61 +186,38 @@ if (mfgData.Length > 0)
 ### Find Device by Name
 
 ```csharp
-async Task<IBluetoothRemoteDevice> FindDeviceByNameAsync(string targetName)
+// scanner is an IBluetoothScanner obtained via constructor injection
+// (see Docs/Configuration/Dependency-Injection.md).
+async Task<IBluetoothRemoteDevice> FindDeviceByNameAsync(IBluetoothScanner scanner, string targetName)
 {
-    var scanner = BluetoothFactory.Current.Scanner;
-    IBluetoothRemoteDevice foundDevice = null;
-
-    var handler = new EventHandler<AdvertisementReceivedEventArgs>((s, args) =>
-    {
-        if (args.Advertisement.DeviceName == targetName)
-        {
-            foundDevice = args.Device;
-        }
-    });
-
-    scanner.AdvertisementReceived += handler;
     await scanner.StartScanningAsync();
 
-    // Wait up to 10 seconds
-    var timeout = DateTime.UtcNow.AddSeconds(10);
-    while (foundDevice == null && DateTime.UtcNow < timeout)
+    try
     {
-        await Task.Delay(100);
+        return await scanner.WaitForDeviceToAppearAsync(
+            device => device.Name == targetName,
+            timeout: TimeSpan.FromSeconds(10));
     }
-
-    scanner.AdvertisementReceived -= handler;
-    await scanner.StopScanningAsync();
-
-    return foundDevice;
+    finally
+    {
+        await scanner.StopScanningAsync();
+    }
 }
 ```
 
 ### Find Closest Device
 
 ```csharp
-async Task<IBluetoothRemoteDevice> FindClosestDeviceAsync(TimeSpan scanDuration)
+// The scanner already tracks the closest known device for you via
+// GetClosestDeviceOrDefault — no need to track RSSI manually.
+async Task<IBluetoothRemoteDevice> FindClosestDeviceAsync(IBluetoothScanner scanner, TimeSpan scanDuration)
 {
-    var scanner = BluetoothFactory.Current.Scanner;
-    IBluetoothRemoteDevice closestDevice = null;
-    int strongestRssi = int.MinValue;
-
-    scanner.AdvertisementReceived += (s, args) =>
-    {
-        int rssi = args.Advertisement.RawSignalStrengthInDBm;
-
-        if (rssi > strongestRssi)
-        {
-            strongestRssi = rssi;
-            closestDevice = args.Device;
-        }
-    };
-
     await scanner.StartScanningAsync();
     await Task.Delay(scanDuration);
     await scanner.StopScanningAsync();
 
-    Console.WriteLine($"Closest device: {closestDevice} (RSSI: {strongestRssi})");
+    var closestDevice = scanner.GetClosestDeviceOrDefault();
+    Console.WriteLine($"Closest device: {closestDevice}");
     return closestDevice;
 }
 ```
@@ -249,9 +225,8 @@ async Task<IBluetoothRemoteDevice> FindClosestDeviceAsync(TimeSpan scanDuration)
 ### Filter by Service
 
 ```csharp
-async Task FindHeartRateMonitorsAsync()
+async Task FindHeartRateMonitorsAsync(IBluetoothScanner scanner)
 {
-    var scanner = BluetoothFactory.Current.Scanner;
     var heartRateServiceUuid = Guid.Parse("0000180D-0000-1000-8000-00805F9B34FB");
 
     scanner.AdvertisementReceived += (s, args) =>
@@ -275,10 +250,8 @@ async Task FindHeartRateMonitorsAsync()
 ### Monitor Signal Strength
 
 ```csharp
-async Task MonitorProximityAsync(string deviceName)
+async Task MonitorProximityAsync(IBluetoothScanner scanner, string deviceName)
 {
-    var scanner = BluetoothFactory.Current.Scanner;
-
     scanner.AdvertisementReceived += (s, args) =>
     {
         var ad = args.Advertisement;
@@ -338,7 +311,7 @@ scanner.AdvertisementReceived += (s, args) =>
 {
     var ad = args.Advertisement;
 
-    if (ad.Manufacturer == Manufacturer.Apple && ad.ManufacturerData.Length >= 23)
+    if (ad.Manufacturer == Manufacturer.Apple_Inc && ad.ManufacturerData.Length >= 23)
     {
         var data = ad.ManufacturerData.Span;
 

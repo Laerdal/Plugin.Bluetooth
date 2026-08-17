@@ -6,9 +6,10 @@ This guide covers how to register and configure Plugin.Bluetooth services using 
 
 - [Basic Registration](#basic-registration)
 - [Registration Chain](#registration-chain)
+- [Service Definitions](#service-definitions)
 - [Configuring Options](#configuring-options)
-- [Advanced Configuration](#advanced-configuration)
 - [Platform-Specific Services](#platform-specific-services)
+- [Operation-Specific Options](#operation-specific-options)
 
 ---
 
@@ -41,7 +42,6 @@ This single method call registers all necessary Bluetooth services including:
 - `IBluetoothAdapter` - Core adapter for checking Bluetooth state
 - `IBluetoothScanner` - Scanner for discovering BLE devices
 - `IBluetoothBroadcaster` - Broadcaster for advertising as a BLE peripheral
-- `IBluetoothFactory` - Factory for creating Bluetooth objects
 - Platform-specific implementations for your target platform
 
 All services are registered as **singletons** for optimal performance and resource management.
@@ -55,6 +55,8 @@ The `AddBluetoothServices()` method internally calls several registration method
 ```csharp
 public static void AddBluetoothServices(this IServiceCollection services)
 {
+    ArgumentNullException.ThrowIfNull(services);
+
     services.AddSingleton<ITicker, Ticker>();
     services.AddBluetoothCoreServices();
     services.AddBluetoothSigProfiles();  // Registers Bluetooth SIG service definitions
@@ -70,6 +72,11 @@ public static void AddBluetoothServices(this IServiceCollection services)
 #else
     services.AddBluetoothMauiDotNetServices();
 #endif
+
+    // Register unified facade wrappers as the default implementations —
+    // these let client projects inherit a single class across all platforms
+    services.AddSingleton<IBluetoothScanner, BluetoothScanner>();
+    services.AddSingleton<IBluetoothBroadcaster, BluetoothBroadcaster>();
 }
 ```
 
@@ -77,11 +84,12 @@ public static void AddBluetoothServices(this IServiceCollection services)
 
 | Method | Purpose | Services Registered |
 |--------|---------|-------------------|
-| `AddBluetoothCoreServices()` | Core infrastructure services | Ticker, Infrastructure options |
+| `AddBluetoothCoreServices()` | Core infrastructure services | Ticker (`TickerOptions`) |
 | `AddBluetoothSigProfiles()` | Bluetooth SIG service definitions | Battery, Device Information, Generic Access/Attribute, Heart Rate, Health Thermometer, Environmental Sensing |
 | `AddBluetoothCoreScanningServices()` | Scanning-related services | RSSI converters, signal strength smoothing, service definition registry, name provider |
 | `AddBluetoothCoreBroadcastingServices()` | Broadcasting-related services | Broadcaster services |
 | Platform-specific methods | Platform implementations | Native Bluetooth managers, adapters, scanners |
+| Facade registration (last two lines above) | Unified cross-platform wrappers | `IBluetoothScanner` → `BluetoothScanner`, `IBluetoothBroadcaster` → `BluetoothBroadcaster` |
 
 ---
 
@@ -123,132 +131,25 @@ builder.Services.AddSingleton<BluetoothServiceDefinitionRegistration>(_ => regis
 
 ## Configuring Options
 
-Plugin.Bluetooth uses the standard .NET Options pattern (`IOptions<T>`) for configuration. You can configure options using the `Configure<T>()` method.
+Plugin.Bluetooth uses the standard .NET Options pattern (`IOptions<T>`) for per-operation configuration classes (`ScanningOptions`, `ConnectionOptions`, `L2CapChannelOptions`, etc. — see [Related Documentation](#related-documentation)). Most of these are passed directly to the relevant method call rather than registered via `Configure<T>()`; see each option class's own doc page for its actual configuration surface.
 
-### Infrastructure Options
-
-Configure application-wide Bluetooth infrastructure settings:
-
-```csharp
-builder.Services.AddBluetoothServices();
-
-builder.Services.Configure<BluetoothInfrastructureOptions>(options =>
-{
-    options.AutoCleanupOnStop = true;
-    options.DefaultOperationTimeout = TimeSpan.FromSeconds(30);
-    options.MaxConcurrentConnections = 5;
-    options.EnableVerboseLogging = false;
-});
-```
-
-See [Infrastructure-Options.md](./Infrastructure-Options.md) for detailed documentation.
+There is no `BluetoothInfrastructureOptions` type — see [Infrastructure-Options.md](./Infrastructure-Options.md) for what app-wide configuration actually exists (`TickerOptions`, and it's narrow).
 
 ### L2CAP Channel Options
 
-Configure L2CAP channel behavior:
+`L2CapChannelOptions` is configured via the standard `IOptions<T>` pattern and injected into the platform L2CAP channel factory — it isn't passed to `OpenL2CapChannelAsync()` directly:
 
 ```csharp
 builder.Services.Configure<L2CapChannelOptions>(options =>
 {
-    options.OpenTimeout = TimeSpan.FromSeconds(60);
-    options.ReadTimeout = TimeSpan.FromSeconds(10);
-    options.WriteTimeout = TimeSpan.FromSeconds(10);
-    options.DefaultMtu = 672;
+    options.Mtu = 512;
     options.EnableBackgroundReading = true;
+    options.AutoFlushWrites = true;
+    options.ReadBufferSize = 512;
 });
 ```
 
-See [L2CAP-Options.md](./L2CAP-Options.md) for detailed documentation.
-
----
-
-## Advanced Configuration
-
-### Configuring Core Services with Options
-
-You can configure infrastructure options directly when adding core services:
-
-```csharp
-builder.Services.AddBluetoothCoreServices(options =>
-{
-    options.EnableVerboseLogging = true;
-    options.DefaultOperationTimeout = TimeSpan.FromMinutes(1);
-});
-```
-
-### Configuration from appsettings.json
-
-You can bind options from configuration files:
-
-```json
-{
-  "Bluetooth": {
-    "Infrastructure": {
-      "AutoCleanupOnStop": true,
-      "DefaultOperationTimeout": "00:00:30",
-      "MaxConcurrentConnections": 5,
-      "EnableVerboseLogging": false
-    },
-    "L2CAP": {
-      "OpenTimeout": "00:01:00",
-      "ReadTimeout": "00:00:10",
-      "WriteTimeout": "00:00:10",
-      "DefaultMtu": 672,
-      "EnableBackgroundReading": true
-    }
-  }
-}
-```
-
-Then bind in `MauiProgram.cs`:
-
-```csharp
-var config = builder.Configuration;
-
-builder.Services.Configure<BluetoothInfrastructureOptions>(
-    config.GetSection("Bluetooth:Infrastructure"));
-
-builder.Services.Configure<L2CapChannelOptions>(
-    config.GetSection("Bluetooth:L2CAP"));
-```
-
-### Validating Options
-
-Use the Options validation pattern to ensure configuration is valid:
-
-```csharp
-builder.Services.AddOptions<BluetoothInfrastructureOptions>()
-    .Configure(options =>
-    {
-        options.MaxConcurrentConnections = 5;
-    })
-    .Validate(options =>
-    {
-        return options.MaxConcurrentConnections > 0;
-    }, "MaxConcurrentConnections must be greater than 0");
-```
-
-### Accessing Options in Your Code
-
-Inject `IOptions<T>` into your services to access configured options:
-
-```csharp
-public class MyBluetoothService
-{
-    private readonly BluetoothInfrastructureOptions _options;
-
-    public MyBluetoothService(IOptions<BluetoothInfrastructureOptions> options)
-    {
-        _options = options.Value;
-    }
-
-    public void DoSomething()
-    {
-        var timeout = _options.DefaultOperationTimeout;
-        // Use the configured timeout...
-    }
-}
-```
+See [L2CAP-Options.md](./L2CAP-Options.md) for the full property reference.
 
 ---
 
@@ -296,11 +197,11 @@ Registers stub implementations that throw `PlatformNotSupportedException`.
 
 ## Operation-Specific Options
 
-While infrastructure options are set at startup via DI, operation-specific options are passed to methods when starting operations:
+A small number of options (`TickerOptions`, `L2CapChannelOptions`) are configured once at startup via DI, as shown above. Most option classes, however, are passed directly to the method call that uses them:
 
 ```csharp
-// Infrastructure options - set once at startup
-builder.Services.Configure<BluetoothInfrastructureOptions>(options => { ... });
+// DI-configured options - set once at startup
+builder.Services.Configure<L2CapChannelOptions>(options => { ... });
 
 // Operation options - passed per operation
 await scanner.StartScanningAsync(new ScanningOptions
@@ -329,7 +230,7 @@ See the individual options documentation for details:
 1. **Register once**: Call `AddBluetoothServices()` only once in your `MauiProgram.cs`
 2. **Configure early**: Set all options during application startup before any Bluetooth operations
 3. **Use IOptions pattern**: Leverage the standard .NET options pattern for testability and flexibility
-4. **Separate concerns**: Use infrastructure options for app-wide defaults, operation options for per-operation behavior
+4. **Separate concerns**: Use DI-configured options (`TickerOptions`, `L2CapChannelOptions`) for app-wide defaults, operation options (`ScanningOptions`, `ConnectionOptions`, etc.) for per-operation behavior
 5. **Validate configuration**: Use options validation to catch configuration errors at startup
 6. **Environment-specific config**: Use `appsettings.json` or environment variables for different configurations per environment
 

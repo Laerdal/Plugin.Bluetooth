@@ -25,31 +25,25 @@ Broadcaster
 
 ## Getting Started
 
-### 1. Define a Characteristic Spec
+### 1. Create the Service
 
 ```csharp
-var characteristicSpec = new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-{
-    CharacteristicId = Guid.Parse("00002A19-0000-1000-8000-00805F9B34FB"),
-    Properties = BluetoothCharacteristicProperties.Read |
-                 BluetoothCharacteristicProperties.Notify,
-    Permissions = BluetoothCharacteristicPermissions.Read,
-    InitialValue = new byte[] { 100 } // 100% battery
-};
+var service = await broadcaster.CreateServiceAsync(
+    Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB"),
+    isPrimary: true);
 ```
 
-### 2. Create Service with Characteristic
+### 2. Create the Characteristic on the Service
 
 ```csharp
-var serviceSpec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec
-{
-    ServiceId = Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB"),
-    IsPrimary = true,
-    Characteristics = new[] { characteristicSpec }
-};
+var characteristic = await service.CreateCharacteristicAsync(
+    Guid.Parse("00002A19-0000-1000-8000-00805F9B34FB"),
+    BluetoothCharacteristicProperties.Read | BluetoothCharacteristicProperties.Notify,
+    BluetoothCharacteristicPermissions.Read);
 
-var service = await broadcaster.CreateServiceAsync(serviceSpec);
-var characteristic = service.GetCharacteristic(characteristicSpec.CharacteristicId);
+// Set an initial value (there's no "InitialValue" at creation time —
+// set it explicitly right after creating the characteristic)
+await characteristic.UpdateValueAsync(new byte[] { 100 }, notifyClients: false); // 100% battery
 ```
 
 ### 3. Update the Value
@@ -65,7 +59,7 @@ await characteristic.UpdateValueAsync(
 ### 4. Handle Write Requests (if writable)
 
 ```csharp
-characteristic.WriteRequestReceived += (sender, args) =>
+characteristic.WriteRequested += (sender, args) =>
 {
     byte[] receivedData = args.Value.ToArray();
     Console.WriteLine($"Client wrote: {BitConverter.ToString(receivedData)}");
@@ -219,13 +213,13 @@ await characteristic.UpdateValueAsync(
 If your characteristic has `Write` or `WriteWithoutResponse` properties, handle write requests:
 
 ```csharp
-characteristic.WriteRequestReceived += (sender, args) =>
+characteristic.WriteRequested += (sender, args) =>
 {
     // Access the written value
     ReadOnlyMemory<byte> value = args.Value;
-    IBluetoothConnectedDevice client = args.Device;
+    string clientId = args.ClientId;
 
-    Console.WriteLine($"Client {client.Id} wrote: {BitConverter.ToString(value.ToArray())}");
+    Console.WriteLine($"Client {clientId} wrote: {BitConverter.ToString(value.ToArray())}");
 
     // Process the write
     ProcessCommand(value.Span[0]);
@@ -259,14 +253,12 @@ IReadOnlyList<IBluetoothConnectedDevice> subscribedDevices = characteristic.Subs
 // Monitor subscription changes
 characteristic.ClientSubscribed += (sender, args) =>
 {
-    var client = args.Device;
-    Console.WriteLine($"Client {client.Id} subscribed to notifications");
+    Console.WriteLine($"Client {args.ClientId} subscribed to notifications");
 };
 
 characteristic.ClientUnsubscribed += (sender, args) =>
 {
-    var client = args.Device;
-    Console.WriteLine($"Client {client.Id} unsubscribed");
+    Console.WriteLine($"Client {args.ClientId} unsubscribed");
 };
 
 // Only notify if clients are subscribed
@@ -360,7 +352,7 @@ async Task<IBluetoothLocalCharacteristic> CreateControlCharacteristicAsync(
     var characteristic = service.GetCharacteristic(controlCharUuid);
 
     // Handle write requests
-    characteristic.WriteRequestReceived += async (sender, args) =>
+    characteristic.WriteRequested += async (sender, args) =>
     {
         byte command = args.Value.Span[0];
 
@@ -421,7 +413,7 @@ async Task<IBluetoothLocalCharacteristic> CreateDataLoggerCharacteristicAsync(
     });
 
     // Handle read requests - send latest data
-    characteristic.ReadRequestReceived += (sender, args) =>
+    characteristic.ReadRequested += (sender, args) =>
     {
         if (dataQueue.Count > 0)
         {
@@ -481,25 +473,25 @@ Monitor characteristic interactions:
 // Client subscribed to notifications
 characteristic.ClientSubscribed += (s, args) =>
 {
-    Console.WriteLine($"Client {args.Device.Id} subscribed");
+    Console.WriteLine($"Client {args.ClientId} subscribed");
 };
 
 // Client unsubscribed
 characteristic.ClientUnsubscribed += (s, args) =>
 {
-    Console.WriteLine($"Client {args.Device.Id} unsubscribed");
+    Console.WriteLine($"Client {args.ClientId} unsubscribed");
 };
 
 // Client wrote to characteristic
-characteristic.WriteRequestReceived += (s, args) =>
+characteristic.WriteRequested += (s, args) =>
 {
-    Console.WriteLine($"Client {args.Device.Id} wrote {args.Value.Length} bytes");
+    Console.WriteLine($"Client {args.ClientId} wrote {args.Value.Length} bytes");
 };
 
 // Client read from characteristic (if supported)
-characteristic.ReadRequestReceived += (s, args) =>
+characteristic.ReadRequested += (s, args) =>
 {
-    Console.WriteLine($"Client {args.Device.Id} read characteristic");
+    Console.WriteLine($"Client {args.ClientId} read characteristic");
 };
 ```
 
@@ -519,9 +511,9 @@ characteristic.ReadRequestReceived += (s, args) =>
    Properties = BluetoothCharacteristicProperties.Write
    ```
 
-2. **Set Meaningful Initial Values**: Provide valid initial data
+2. **Set Meaningful Initial Values**: Provide valid initial data right after creating the characteristic
    ```csharp
-   InitialValue = new byte[] { 0 } // Valid initial state
+   await characteristic.UpdateValueAsync(new byte[] { 0 }, notifyClients: false); // Valid initial state
    ```
 
 3. **Check for Subscribers Before Notifying**: Save battery by not notifying when no one is listening
@@ -532,7 +524,7 @@ characteristic.ReadRequestReceived += (s, args) =>
 
 4. **Handle Writes Promptly**: Process write requests quickly
    ```csharp
-   characteristic.WriteRequestReceived += async (s, args) =>
+   characteristic.WriteRequested += async (s, args) =>
    {
        // Process quickly
        ProcessCommand(args.Value);
@@ -563,7 +555,7 @@ characteristic.ReadRequestReceived += (s, args) =>
 
 ### Write Requests Not Received
 
-- Verify `WriteRequestReceived` event handler is attached
+- Verify `WriteRequested` event handler is attached
 - Check `Properties` includes `Write` or `WriteWithoutResponse`
 - Ensure `Permissions` allow writes
 

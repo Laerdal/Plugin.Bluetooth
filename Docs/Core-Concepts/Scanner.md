@@ -35,7 +35,9 @@ The Scanner allows you to:
 Before scanning, you need the user's permission to use Bluetooth:
 
 ```csharp
-var scanner = BluetoothFactory.Current.Scanner;
+// scanner is an IBluetoothScanner obtained via constructor injection
+// (see Docs/Configuration/Dependency-Injection.md) — it's registered as a
+// singleton, so the same instance is shared across your app.
 
 // Check if we already have permissions
 bool hasPermission = await scanner.HasScannerPermissionsAsync();
@@ -77,7 +79,6 @@ await scanner.StartScanningAsync(options);
 scanner.AdvertisementReceived += (sender, args) =>
 {
     IBluetoothAdvertisement ad = args.Advertisement;
-    IBluetoothRemoteDevice device = args.Device;
 
     Console.WriteLine($"Found: {ad.DeviceName}");
     Console.WriteLine($"Signal: {ad.RawSignalStrengthInDBm} dBm");
@@ -274,15 +275,11 @@ catch (OperationCanceledException)
 ### Simple Device Discovery
 
 ```csharp
-var foundDevices = new List<IBluetoothRemoteDevice>();
-
+// The scanner already tracks discovered devices for you — no need to
+// collect them manually from the event args.
 scanner.AdvertisementReceived += (s, args) =>
 {
-    if (!foundDevices.Contains(args.Device))
-    {
-        foundDevices.Add(args.Device);
-        Console.WriteLine($"Discovered: {args.Advertisement.DeviceName}");
-    }
+    Console.WriteLine($"Discovered: {args.Advertisement.DeviceName}");
 };
 
 await scanner.StartScanningAsync(new ScanningOptions
@@ -294,6 +291,7 @@ await scanner.StartScanningAsync(new ScanningOptions
 await Task.Delay(TimeSpan.FromSeconds(10));
 await scanner.StopScanningAsync();
 
+var foundDevices = scanner.GetDevices();
 Console.WriteLine($"Found {foundDevices.Count} devices");
 ```
 
@@ -304,31 +302,19 @@ var targetDevice = await FindDeviceByNameAsync("MySensor");
 
 async Task<IBluetoothRemoteDevice> FindDeviceByNameAsync(string name)
 {
-    var tcs = new TaskCompletionSource<IBluetoothRemoteDevice>();
-
-    EventHandler<AdvertisementReceivedEventArgs> handler = null;
-    handler = (s, args) =>
-    {
-        if (args.Advertisement.DeviceName == name)
-        {
-            scanner.AdvertisementReceived -= handler;
-            tcs.TrySetResult(args.Device);
-        }
-    };
-
-    scanner.AdvertisementReceived += handler;
+    // WaitForDeviceToAppearAsync does the wait-with-timeout/filter dance for you.
     await scanner.StartScanningAsync();
 
-    // Timeout after 30 seconds
-    var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30));
-    var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
-
-    await scanner.StopScanningAsync();
-
-    if (completedTask == timeoutTask)
-        throw new TimeoutException($"Device '{name}' not found");
-
-    return await tcs.Task;
+    try
+    {
+        return await scanner.WaitForDeviceToAppearAsync(
+            device => device.Name == name,
+            timeout: TimeSpan.FromSeconds(30));
+    }
+    finally
+    {
+        await scanner.StopScanningAsync();
+    }
 }
 ```
 
@@ -374,12 +360,10 @@ scanner.AdvertisementReceived += (s, args) =>
 
 4. **Handle Permissions Properly**: Always check and request permissions before scanning
 
-5. **Dispose When Done**: Scanner implements `IAsyncDisposable`
-   ```csharp
-   await using var scanner = BluetoothFactory.Current.Scanner;
-   // Use scanner...
-   // Automatically disposed and stopped
-   ```
+5. **Don't Dispose It Yourself**: `IBluetoothScanner` is registered as a DI singleton
+   (`services.AddSingleton<IBluetoothScanner, BluetoothScanner>()`), so the container
+   owns its lifetime and disposal — just take it via constructor injection and call
+   `StopScanningAsync()`/`StopScanningIfNeededAsync()` when you're done scanning.
 
 ## Troubleshooting
 

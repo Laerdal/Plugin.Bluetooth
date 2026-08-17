@@ -255,24 +255,24 @@ Custom filter predicate for fine-grained advertisement filtering. When `null` (d
 
 **Example**:
 ```csharp
-// Filter by signal strength
-options.AdvertisementFilter = ad => ad.Rssi >= -70;
+// Filter by signal strength (prefer RssiThreshold below for this specific case —
+// this shows the general shape of a custom filter)
+options.AdvertisementFilter = ad => ad.RawSignalStrengthInDBm >= -70;
 
-// Filter by manufacturer ID
-options.AdvertisementFilter = ad =>
-    ad.ManufacturerData?.Any(m => m.CompanyId == 0x004C) ?? false; // Apple
+// Filter by manufacturer
+options.AdvertisementFilter = ad => ad.Manufacturer == Manufacturer.Apple_Inc;
 
 // Complex filtering
 options.AdvertisementFilter = ad =>
 {
     // Must have strong signal
-    if (ad.Rssi < -70) return false;
+    if (ad.RawSignalStrengthInDBm < -70) return false;
 
     // Must advertise heart rate service
-    if (!ad.ServiceUuids.Contains(HeartRateServiceUuid)) return false;
+    if (!ad.ServicesGuids.Contains(HeartRateServiceUuid)) return false;
 
     // Must have name starting with "MyDevice"
-    if (!ad.LocalName?.StartsWith("MyDevice") ?? true) return false;
+    if (!(ad.DeviceName?.StartsWith("MyDevice") ?? false)) return false;
 
     return true;
 };

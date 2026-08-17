@@ -108,11 +108,13 @@ Manages Bluetooth device scanning and discovery.
 bool IsRunning { get; }
 bool IsStarting { get; }
 bool IsStopping { get; }
-ScanningOptions CurrentScanningOptions { get; }
 
-// Device collections
-IReadOnlyList<IBluetoothRemoteDevice> Devices { get; }
+// Advertisement filtering / device wrapping
+Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; set; }
+Func<IBluetoothRemoteDevice, IBluetoothAdvertisement, IBluetoothRemoteDevice?>? DeviceWrapper { get; set; }
 ```
+
+There is no `Devices` property or `CurrentScanningOptions` property — use `GetDevices()` (see Methods below) to snapshot the current device list.
 
 #### Events
 
@@ -144,12 +146,14 @@ ValueTask RequestScannerPermissionsAsync(
 
 // Scanning control
 Task StartScanningAsync(
-    ScanningOptions? options = null,
+    ScanningOptions? scanningOptions = null,
+    PermissionOptions? permissionOptions = null,
     TimeSpan? timeout = null,
     CancellationToken cancellationToken = default);
 
 ValueTask StartScanningIfNeededAsync(
-    ScanningOptions? options = null,
+    ScanningOptions? scanningOptions = null,
+    PermissionOptions? permissionOptions = null,
     TimeSpan? timeout = null,
     CancellationToken cancellationToken = default);
 
@@ -169,32 +173,29 @@ Task CleanRestartScanningAsync(
     TimeSpan? timeout = null,
     CancellationToken cancellationToken = default);
 
-// Runtime configuration
-ValueTask UpdateScannerOptionsAsync(
-    ScanningOptions options,
-    TimeSpan? timeout = null,
-    CancellationToken cancellationToken = default);
-
 // Device retrieval
-ValueTask<IBluetoothRemoteDevice> GetKnownDeviceAsync(
+IBluetoothRemoteDevice GetDevice(string id);
+IBluetoothRemoteDevice? GetDeviceOrDefault(string id);
+IBluetoothRemoteDevice GetDevice(Func<IBluetoothRemoteDevice, bool> filter);
+IBluetoothRemoteDevice? GetDeviceOrDefault(Func<IBluetoothRemoteDevice, bool> filter);
+IReadOnlyList<IBluetoothRemoteDevice> GetDevices(Func<IBluetoothRemoteDevice, bool>? filter = null);
+bool HasDevice(string id);
+bool HasDevice(Func<IBluetoothRemoteDevice, bool> filter);
+IBluetoothRemoteDevice? GetClosestDeviceOrDefault(Func<IBluetoothRemoteDevice, bool>? filter = null);
+
+// Device querying
+ValueTask<IBluetoothRemoteDevice> WaitForDeviceToAppearAsync(
     string id,
     TimeSpan? timeout = null,
     CancellationToken cancellationToken = default);
 
-ValueTask<IBluetoothRemoteDevice> GetKnownDeviceAsync(
-    Guid id,
+ValueTask<IBluetoothRemoteDevice> WaitForDeviceToAppearAsync(
+    Func<IBluetoothRemoteDevice, bool>? filter = null,
     TimeSpan? timeout = null,
     CancellationToken cancellationToken = default);
-
-// Device querying
-ValueTask<IBluetoothRemoteDevice> WaitForDeviceAsync(
-    Func<IBluetoothRemoteDevice, bool> predicate,
-    TimeSpan? timeout = null,
-    CancellationToken cancellationToken = default);
-
-IBluetoothRemoteDevice? TryGetDevice(
-    Func<IBluetoothRemoteDevice, bool> predicate);
 ```
+
+There is no `UpdateScannerOptionsAsync`, `GetKnownDeviceAsync`, `WaitForDeviceAsync`, or `TryGetDevice` — the names above are the real ones.
 
 #### Usage
 
@@ -210,8 +211,7 @@ if (!await scanner.HasScannerPermissionsAsync())
 // Configure and start scanning
 var options = new ScanningOptions
 {
-    ScanMode = BluetoothScanMode.LowLatency,
-    FilterByServices = new[] { serviceUuid }
+    ScanMode = BluetoothScanMode.LowLatency
 };
 
 scanner.DevicesAdded += (s, e) =>
@@ -225,7 +225,7 @@ scanner.DevicesAdded += (s, e) =>
 await scanner.StartScanningAsync(options);
 
 // Wait for specific device
-var device = await scanner.WaitForDeviceAsync(
+var device = await scanner.WaitForDeviceToAppearAsync(
     d => d.Name?.Contains("MyDevice") == true,
     timeout: TimeSpan.FromSeconds(30)
 );
@@ -417,8 +417,8 @@ var service = await device.GetServiceAsync(serviceUuid);
 await device.RequestMtuAsync(512);
 
 // Read RSSI
-await device.ReadRssiAsync();
-Console.WriteLine($"Signal strength: {device.Rssi} dBm");
+int rssi = await device.ReadSignalStrengthAsync();
+Console.WriteLine($"Signal strength: {rssi} dBm");
 
 // Disconnect when done
 await device.DisconnectAsync();
@@ -776,13 +776,19 @@ Represents Bluetooth advertisement data received from a peripheral.
 #### Properties
 
 ```csharp
-string? LocalName { get; }
-int? TxPowerLevel { get; }
-IReadOnlyList<Guid> ServiceUuids { get; }
-IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> ServiceData { get; }
-IReadOnlyDictionary<ushort, ReadOnlyMemory<byte>> ManufacturerData { get; }
+DateTimeOffset DateReceived { get; }
+string DeviceName { get; }
+string BluetoothAddress { get; }
+IEnumerable<Guid> ServicesGuids { get; }
 bool IsConnectable { get; }
+int RawSignalStrengthInDBm { get; }
+int TransmitPowerLevelInDBm { get; }
+ReadOnlyMemory<byte> ManufacturerData { get; }
+Manufacturer Manufacturer { get; }
+int ManufacturerId { get; }
 ```
+
+There is no `LocalName`, `TxPowerLevel`, `ServiceUuids`, or `ServiceData` — the real names are `DeviceName`, `TransmitPowerLevelInDBm`, and `ServicesGuids` respectively, and there is no service-data map. `ManufacturerData` is a flat `ReadOnlyMemory<byte>` (the raw manufacturer-specific AD section, company ID included), not a dictionary — use `Manufacturer`/`ManufacturerId` to read the parsed company ID.
 
 #### Usage
 
@@ -790,13 +796,9 @@ bool IsConnectable { get; }
 device.AdvertisementReceived += (s, e) =>
 {
     var ad = e.Advertisement;
-    Console.WriteLine($"Device: {ad.LocalName}");
-    Console.WriteLine($"Services: {string.Join(", ", ad.ServiceUuids)}");
-
-    foreach (var (company, data) in ad.ManufacturerData)
-    {
-        Console.WriteLine($"Manufacturer {company}: {BitConverter.ToString(data.ToArray())}");
-    }
+    Console.WriteLine($"Device: {ad.DeviceName}");
+    Console.WriteLine($"Services: {string.Join(", ", ad.ServicesGuids)}");
+    Console.WriteLine($"Manufacturer {ad.Manufacturer} ({ad.ManufacturerId}): {BitConverter.ToString(ad.ManufacturerData.ToArray())}");
 };
 ```
 
@@ -1025,12 +1027,6 @@ ValueTask StopBroadcastingIfNeededAsync(
     TimeSpan? timeout = null,
     CancellationToken cancellationToken = default);
 
-// Runtime configuration
-ValueTask UpdateBroadcastingOptionsAsync(
-    BroadcastingOptions options,
-    TimeSpan? timeout = null,
-    CancellationToken cancellationToken = default);
-
 // Service management
 ValueTask<IBluetoothLocalService> AddServiceAsync(
     Guid serviceUuid,
@@ -1073,9 +1069,8 @@ if (!await broadcaster.HasBroadcasterPermissionsAsync())
 // Configure broadcasting
 var options = new BroadcastingOptions
 {
-    LocalName = "MyPeripheral",
-    Connectable = true,
-    AdvertiseMode = BluetoothAdvertiseMode.LowLatency
+    LocalDeviceName = "MyPeripheral",
+    IncludeDeviceName = true
 };
 
 // Add service
