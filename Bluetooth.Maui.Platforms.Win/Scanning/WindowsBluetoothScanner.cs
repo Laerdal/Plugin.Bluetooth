@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 
+using Bluetooth.Maui.Platforms.Win.Converters;
 using Bluetooth.Maui.Platforms.Win.Exceptions;
 using Bluetooth.Maui.Platforms.Win.Logging;
 using Bluetooth.Maui.Platforms.Win.Scanning.Factories;
@@ -14,13 +15,12 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning;
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementwatcher">BluetoothLEAdvertisementWatcher</seealso>
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs">BluetoothLEAdvertisementReceivedEventArgs</seealso>
 /// </remarks>
-public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.BluetoothLeAdvertisementWatcherWrapper.IBluetoothLeAdvertisementWatcherProxyDelegate, IAsyncDisposable
+public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.BluetoothLeAdvertisementWatcherWrapper.IBluetoothLeAdvertisementWatcherProxyDelegate
 {
     private NativeObjects.BluetoothLeAdvertisementWatcherWrapper? _watcher;
 
     private readonly ITicker _ticker;
     private readonly IBluetoothRemoteDeviceFactory _deviceFactory;
-    private readonly ManufacturerCache _manufacturerCache;
 
     /// <summary>
     ///     Gets the advertisement watcher wrapper, creating it lazily with this scanner as the delegate.
@@ -34,17 +34,14 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         ITicker ticker,
         IBluetoothRemoteDeviceFactory deviceFactory,
         IBluetoothNameProvider? nameProvider = null,
-        ILoggerFactory? loggerFactory = null,
-        int manufacturerCacheLimit = 1000,
-        int manufacturerCacheExpirationTimeMinutes = 30) : base(adapter,
-                                                       rssiToSignalStrengthConverter,
-                                                       ticker,
-                                                       nameProvider,
-                                                       loggerFactory)
+        ILoggerFactory? loggerFactory = null) : base(adapter,
+        rssiToSignalStrengthConverter,
+        ticker,
+        nameProvider,
+        loggerFactory)
     {
         _ticker = ticker;
         _deviceFactory = deviceFactory;
-        _manufacturerCache = new ManufacturerCache(manufacturerCacheLimit, TimeSpan.FromMinutes(manufacturerCacheExpirationTimeMinutes));
     }
 
     #region Delegate Callbacks
@@ -55,14 +52,19 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     /// <param name="argsAdvertisement">The advertisement event arguments.</param>
     public void OnAdvertisementReceived(BluetoothLEAdvertisementReceivedEventArgs argsAdvertisement)
     {
-        var cachedManufacturer = _manufacturerCache.GetManufacturerData(argsAdvertisement.BluetoothAddress);
-        var advertisement = new WindowsBluetoothAdvertisement(argsAdvertisement, cachedManufacturer);
+        ArgumentNullException.ThrowIfNull(argsAdvertisement);
+        var hexAddress = NumericBleAddressToHexBleAddressConverter.Convert(argsAdvertisement.BluetoothAddress);
+        var associatedDevice = GetDevices()
+            .FirstOrDefault(d =>
+                    d?.LastAdvertisement != null
+                    && hexAddress.Equals(d.LastAdvertisement.BluetoothAddress, StringComparison.OrdinalIgnoreCase),
+                null
+            );
+
+        // If the device is already known, pass in the cached manufacturer (if any) so it can substitute missing manufacturer data in the advertisement.
+        var advertisement = new WindowsBluetoothAdvertisement(argsAdvertisement, associatedDevice);
+
         Logger?.LogDeviceDiscovered(advertisement.BluetoothAddress, advertisement.RawSignalStrengthInDBm);
-        if (advertisement.Manufacturer != Manufacturer.Unknown)
-        {
-            // update cache if we have a valid value, otherwise keep the cached value (if any)
-            _manufacturerCache.SetManufacturerData(argsAdvertisement.BluetoothAddress, advertisement.Manufacturer);
-        }
 
         OnAdvertisementReceived(advertisement); // Base class method
     }
@@ -120,9 +122,10 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
             const int eAccessdenied = unchecked((int) 0x80070005);
             if (e.HResult == eAccessdenied)
             {
-                throw new BluetoothPermissionException("Access denied when starting Bluetooth scanner. Ensure 'bluetooth' capability is declared in Package.appxmanifest and Bluetooth radio is enabled. "
-                                                     + "You may need to call IBluetoothPermissionManager.RequestBluetoothPermissionsAsync() to check and enable the radio.",
-                                                       e);
+                throw new BluetoothPermissionException(
+                    "Access denied when starting Bluetooth scanner. Ensure 'bluetooth' capability is declared in Package.appxmanifest and Bluetooth radio is enabled. "
+                    + "You may need to call IBluetoothPermissionManager.RequestBluetoothPermissionsAsync() to check and enable the radio.",
+                    e);
             }
 
             throw new WindowsNativeBluetoothException("Failed to start Bluetooth LE advertisement watcher.", e);
@@ -141,16 +144,6 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         _watcher?.BluetoothLeAdvertisementWatcher.Stop();
         return ValueTask.CompletedTask;
     }
-
-    /// <summary>
-    /// Disposes of the scanner and its resources, specifically the manufacturer cache.
-    /// </summary>
-    public new async ValueTask DisposeAsync()
-    {
-        _manufacturerCache.Dispose();
-        await base.DisposeAsync();
-    }
-
 
     #endregion
 
@@ -195,5 +188,4 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     }
 
     #endregion
-
 }

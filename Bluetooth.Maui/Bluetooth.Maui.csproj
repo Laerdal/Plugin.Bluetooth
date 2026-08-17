@@ -55,11 +55,6 @@
         <PackageReference Include="Plugin.BaseTypeExtensions"/>
         <PackageReference Include="Plugin.ExceptionListeners"/>
         <PackageReference Include="Plugin.ExceptionListeners.Maui"/>
-
-        <!-- Windows-only: surfaced as a package dependency so consumers of the Bluetooth.Maui NuGet -->
-        <!-- (which bundles the Platforms.Win DLL) restore it. Without this, apps consuming the -->
-        <!-- package fail at runtime with FileNotFoundException for Microsoft.Extensions.Caching.Memory. -->
-        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Condition=" '$(IsForWindows)' == 'true' "/>
     </ItemGroup>
 
     <ItemGroup>

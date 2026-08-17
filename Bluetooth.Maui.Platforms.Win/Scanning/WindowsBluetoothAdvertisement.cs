@@ -1,3 +1,5 @@
+using Bluetooth.Maui.Platforms.Win.Converters;
+
 namespace Bluetooth.Maui.Platforms.Win.Scanning;
 
 /// <summary>
@@ -15,9 +17,8 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
     ///     For more information, see <see href="https://docs.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs" />.
     /// </summary>
     /// <param name="args">The Windows Bluetooth LE advertisement received event arguments.</param>
-    /// <param name="cachedManufacturer">Optional cached manufacturer from previous advertisements.</param>
-    public WindowsBluetoothAdvertisement(BluetoothLEAdvertisementReceivedEventArgs args,
-        Manufacturer? cachedManufacturer = null)
+    /// <param name="associatedDevice">The associated (already known) Bluetooth remote device, if any. Used to substitute missing Manufacturer data.</param>
+    public WindowsBluetoothAdvertisement(BluetoothLEAdvertisementReceivedEventArgs args, IBluetoothRemoteDevice? associatedDevice)
     {
         ArgumentNullException.ThrowIfNull(args);
 
@@ -27,10 +28,10 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
             or BluetoothLEAdvertisementType.ConnectableUndirected;
         RawSignalStrengthInDBm = args.RawSignalStrengthInDBm;
         TransmitPowerLevelInDBm = ExtractTransmitPowerLevel(args);
-        BluetoothAddress = ConvertNumericBleAddressToHexBleAddress(args.BluetoothAddress);
+        BluetoothAddress = associatedDevice?.Id ?? NumericBleAddressToHexBleAddressConverter.Convert(args.BluetoothAddress);
         ManufacturerData = ExtractManufacturerData(args);
         DateReceived = DateTimeOffset.UtcNow;
-        CachedManufacturer = cachedManufacturer;
+        CachedManufacturer = associatedDevice?.Manufacturer ?? Manufacturer.Unknown;
     }
 
     #region IBluetoothAdvertisement Members
@@ -60,12 +61,22 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
     public ReadOnlyMemory<byte> ManufacturerData { get; }
 
     /// <inheritdoc />
-    public Manufacturer? CachedManufacturer { get; }
+    public Manufacturer Manufacturer
+    {
+        get
+        {
+            return ManufacturerData.Length >= 2
+                ? (Manufacturer) ManufacturerId
+                : CachedManufacturer;
+        }
+    }
 
-    /// <inheritdoc />
-    public Manufacturer Manufacturer => ManufacturerData.Length >= 2
-        ? (Manufacturer) ManufacturerId
-        : (Manufacturer) (-1);
+
+    /// <summary>
+    /// Some advertisements may not carry ManufacturerData, so we cache the manufacturer information when available
+    /// so we can associate it with the device even if future advertisements don't include it.
+    /// </summary>
+    public Manufacturer CachedManufacturer { get; }
 
     /// <inheritdoc />
     public int ManufacturerId
@@ -131,19 +142,6 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         var section = args.Advertisement.DataSections?.FirstOrDefault(x => x.DataType == recType);
         var data = section?.Data.ToArray();
         return data;
-    }
-
-    private static string ConvertNumericBleAddressToHexBleAddress(ulong bluetoothAddress)
-    {
-        // Convert ulong address to hex string format (e.g., "00:11:22:33:44:55")
-        var bytes = BitConverter.GetBytes(bluetoothAddress);
-        if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(bytes);
-        }
-
-        // Take only the last 6 bytes (MAC address is 48 bits)
-        return string.Join(":", bytes.Skip(2).Select(b => b.ToString("X2", CultureInfo.InvariantCulture)));
     }
 
     #endregion

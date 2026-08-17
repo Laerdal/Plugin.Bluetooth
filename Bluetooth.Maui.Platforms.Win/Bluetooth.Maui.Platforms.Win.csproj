@@ -49,6 +49,5 @@
         <PackageReference Include="Plugin.BaseTypeExtensions"/>
         <PackageReference Include="Plugin.ExceptionListeners"/>
         <PackageReference Include="Plugin.ExceptionListeners.Maui"/>
-        <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     </ItemGroup>
 </Project>

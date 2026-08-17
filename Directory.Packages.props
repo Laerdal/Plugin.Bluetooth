@@ -20,7 +20,6 @@
         <PackageVersion Include="Microsoft.Extensions.Diagnostics.Abstractions" Version="10.0.3" />
         <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.3" />
         <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.3" />
-        <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.3" />
     </ItemGroup>
     <!-- ==================== MAUI DEPENDENCIES ==================== -->
     <PropertyGroup>

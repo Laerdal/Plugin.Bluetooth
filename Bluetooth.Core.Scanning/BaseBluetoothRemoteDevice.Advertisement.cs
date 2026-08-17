@@ -50,9 +50,6 @@ public abstract partial class BaseBluetoothRemoteDevice
         if (advertisement.Manufacturer != Manufacturer.Unknown)
         {
             Manufacturer = advertisement.Manufacturer;
-        } else if (advertisement.CachedManufacturer is { } cachedManufacturer && cachedManufacturer != Manufacturer.Unknown)
-        {
-            Manufacturer = cachedManufacturer;
         }
 
         // SignalStrength

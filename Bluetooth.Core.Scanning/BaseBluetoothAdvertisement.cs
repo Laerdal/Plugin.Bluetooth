@@ -64,9 +64,6 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
     public ReadOnlyMemory<byte> ManufacturerData { get; }
 
     /// <inheritdoc />
-    public Manufacturer? CachedManufacturer => null;
-
-    /// <inheritdoc />
     public Manufacturer Manufacturer => ManufacturerData.Length >= 2
         ? (Manufacturer) ManufacturerId
         : (Manufacturer) (-1);
