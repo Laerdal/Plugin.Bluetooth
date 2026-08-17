@@ -450,26 +450,35 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <inheritdoc />
     public void OnDescriptorWrite(GattStatus status, BluetoothGattDescriptor? nativeDescriptor)
     {
-        // Check if this is the CCCD descriptor for notifications
-        if (nativeDescriptor?.Uuid?.ToGuid().Equals(_cccdUuid) == true)
-        {
-            // This is a CCCD write for enabling/disabling notifications
-            if (status != GattStatus.Success)
-            {
-                OnWriteIsListeningFailed(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
-                return;
-            }
-
-            OnWriteIsListeningSucceeded();
-            return;
-        }
-
-        // Forward to the appropriate descriptor
         if (nativeDescriptor == null)
         {
             return;
         }
 
+        // Check if this is the CCCD descriptor for notifications
+        if (nativeDescriptor.Uuid?.ToGuid().Equals(_cccdUuid) == true)
+        {
+            // This is a CCCD write for enabling/disabling notifications - complete the
+            // characteristic-level listening state machine (StartListeningAsync/StopListeningAsync).
+            if (status != GattStatus.Success)
+            {
+                OnWriteIsListeningFailed(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
+            }
+            else
+            {
+                OnWriteIsListeningSucceeded();
+            }
+
+            // Deliberately NOT returning here: NativeWriteIsListeningAsync (the implementation of
+            // the state machine above) issues the actual native write via the descriptor object's
+            // own WriteValueAsync(), which awaits NotifyDescriptorWrite below on that same object -
+            // returning early here left that await pending forever (confirmed hang against real
+            // hardware: a Legacy DFU Control Point CCCD write completed successfully at the native
+            // layer but the awaiting call never resumed). Every descriptor write must resolve the
+            // descriptor's own pending operation, regardless of which API path initiated it.
+        }
+
+        // Forward to the appropriate descriptor
         try
         {
             var descriptor = GetDescriptorOrDefault(d => d is AndroidBluetoothRemoteDescriptor androidDesc && androidDesc.NativeDescriptor.Uuid?.Equals(nativeDescriptor.Uuid) == true);

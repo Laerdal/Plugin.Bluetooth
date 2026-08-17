@@ -506,23 +506,34 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     public void OnConnectionStateChange(GattStatus status, ProfileState newState)
     {
         CurrentConnectionState = newState;
-        if (status != GattStatus.Success)
-        {
-            // Connection failed
-            OnConnectFailed(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
-            return;
-        }
 
         switch (newState)
         {
             case ProfileState.Connected:
+                if (status != GattStatus.Success)
+                {
+                    // Connection failed
+                    OnConnectFailed(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
+                    break;
+                }
+
                 IsConnected = true;
                 OnConnectSucceeded();
                 break;
 
             case ProfileState.Disconnected:
+                // Android reports the disconnect *reason* in status here, not an operation-failure
+                // code - a non-Success value (e.g. GATT_CONN_TERMINATE_PEER_USER=19 for a
+                // device-initiated disconnect, such as a DFU reboot) is the normal case, not an
+                // error. Confirmed via a real-hardware hang: treating every non-Success status as
+                // a connection failure and returning before this switch (as this method used to)
+                // left IsConnected permanently stale at true after a genuine disconnect, which then
+                // made every later "is this device already disconnected" check downstream
+                // (ClearDeviceAsync, DisconnectIfNeededAsync) wrongly attempt a redundant
+                // DisconnectAsync() call that hangs forever waiting for a connection-state callback
+                // Android will never fire again for an already-disconnected GATT object.
                 IsConnected = false;
-                OnDisconnect();
+                OnDisconnect(status != GattStatus.Success ? new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status) : null);
                 break;
 
             case ProfileState.Connecting:
