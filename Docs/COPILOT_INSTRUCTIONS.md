@@ -7,8 +7,7 @@
 ### Key Information
 
 - **License**: MIT (Copyright 2025 Laerdal Medical)
-- **Target Framework**: .NET 10.0
-- **Supported Platforms**: Android 36.1, iOS, macOS Catalyst, Windows 10.0.22621.0
+- **Target Framework**: .NET 10.0 — Android floats to whatever Android SDK is installed (`net10.0-android`, no pinned API suffix); iOS/macOS Catalyst min OS 15.0; Windows pinned to `net10.0-windows10.0.22621.0` (min 10.0.17763.0) — check the relevant platform project's `.csproj` directly rather than trusting a specific number here, since these move independently of this doc
 - **Primary Author**: Francois Raminosona
 - **Organization**: Laerdal Medical
 
@@ -16,64 +15,70 @@
 
 ### Project Structure
 
+The repo is split into one project per concern rather than two monoliths. Each project is a separate `.csproj` under the repo root:
+
 ```
 Plugin.Bluetooth/
-├── Bluetooth.Core/              # Platform-agnostic core library
-│   ├── Abstractions/            # Interfaces (IBluetoothScanner, IBluetoothDevice, etc.)
-│   ├── BaseClasses/             # Base implementations with partial classes
-│   ├── BluetoothSigSpecific/    # Bluetooth SIG standard definitions
-│   ├── CharacteristicAccess/    # Service access layer for characteristics
-│   ├── Enums/                   # Enumerations (Manufacturer, etc.)
-│   ├── EventArgs/               # Event argument types
-│   └── Exceptions/              # Custom exception hierarchy
-└── Bluetooth.Maui/              # Platform-specific MAUI implementations
-    ├── Core/                    # Fallback implementations
-    └── Platforms/               # Platform-specific code
-        ├── Android/             # Android BLE using BluetoothLeScanner
-        ├── iOS/                 # iOS BLE using CoreBluetooth (CBCentralManager)
-        └── Windows/             # Windows BLE using Windows.Devices.Bluetooth
+├── Bluetooth.Abstractions/              # Enums, exceptions, options shared by both roles
+├── Bluetooth.Abstractions.Scanning/     # Central-role interfaces (IBluetoothScanner, IBluetoothRemoteDevice, ...)
+├── Bluetooth.Abstractions.Broadcasting/ # Peripheral-role interfaces (IBluetoothBroadcaster, IBluetoothLocalService, ...)
+├── Bluetooth.Core/                      # Platform-agnostic shared infrastructure (ticker, bindable base, retries)
+├── Bluetooth.Core.Scanning/             # Base* implementations of the scanning abstractions (partial classes)
+├── Bluetooth.Core.Broadcasting/         # Base* implementations of the broadcasting abstractions (partial classes)
+├── Bluetooth.Maui/                      # Cross-platform facade (BluetoothScanner, BluetoothBroadcaster, DI registration)
+├── Bluetooth.Maui.Platforms.Droid/      # Android implementation (BluetoothLeScanner, BluetoothGatt/GattServer)
+├── Bluetooth.Maui.Platforms.Apple/      # iOS/macOS implementation (CBCentralManager, CBPeripheralManager)
+├── Bluetooth.Maui.Platforms.Win/        # Windows implementation (BluetoothLEAdvertisementWatcher/Publisher)
+├── Bluetooth.Maui.Platforms.DotNetCore/ # Non-MAUI fallback (throws NotSupportedException on every operation)
+├── Bluetooth.Maui.Sample.Scanner/       # Sample app exercising the central/scanner role
+└── Bluetooth.Maui.Sample.Broadcaster/   # Sample app exercising the peripheral/broadcaster role
 ```
 
+Run `find . -maxdepth 1 -type d -iname "Bluetooth.*"` to confirm this list is still current before relying on it — new platform projects get added here.
+
 ### Core Components
+
+Central (client) role — `Bluetooth.Abstractions.Scanning`:
 
 1. **IBluetoothScanner** - Device discovery and scanning
    - Advertisement filtering and processing
    - Device list management with events
    - Scan lifecycle control (start/stop)
 
-2. **IBluetoothDevice** - Device representation and connection
+2. **IBluetoothRemoteDevice** - A discovered/connected remote device
    - Connection management (connect/disconnect/status monitoring)
    - Service exploration and retrieval
    - Advertisement data and signal strength
    - Battery level and device information
 
-3. **IBluetoothService** - GATT service wrapper
+3. **IBluetoothRemoteService** - GATT service on a remote device
    - Characteristic exploration and discovery
    - Characteristic list management
    - Service identification (UUID, name)
 
-4. **IBluetoothCharacteristic** - GATT characteristic operations
+4. **IBluetoothRemoteCharacteristic** / **IBluetoothRemoteDescriptor** - GATT characteristic/descriptor operations on a remote device
    - Read/write operations (async)
    - Notification/indication subscriptions
    - Value caching and conversion
-   - Descriptor access
 
-5. **IBluetoothBroadcaster** - Peripheral/advertising mode
-   - GATT server implementation (Android)
-   - Advertising management
-   - iOS/Windows: placeholder implementations
-
-6. **IBluetoothAdvertisement** - Advertisement data
-   - Device name, address, manufacturer
-   - Service UUIDs
+5. **IBluetoothAdvertisement** - Advertisement data
+   - Device name, address, manufacturer, manufacturer ID
+   - Service UUIDs, connectable flag
    - Signal strength (RSSI), transmit power
    - Manufacturer-specific data
 
+Peripheral (server) role — `Bluetooth.Abstractions.Broadcasting`:
+
+6. **IBluetoothBroadcaster** - Peripheral/advertising mode. Real, substantial implementations exist on **all three platforms** — Android, Apple (`AppleBluetoothBroadcaster.cs`), and Windows (`WindowsBluetoothBroadcaster.cs`); none of them are placeholders.
+   - GATT server implementation
+   - Advertising management
+   - Local service/characteristic/descriptor hosting (`IBluetoothLocalService`, `IBluetoothLocalCharacteristic`, `IBluetoothLocalDescriptor`)
+
 ### Design Patterns
 
-- **Partial Classes**: Complex classes split across multiple files (e.g., `BaseBluetoothDevice.*.cs`)
+- **Partial Classes**: Complex classes split across multiple files (e.g., `BaseBluetoothRemoteDevice.*.cs`, `BaseBluetoothBroadcaster.*.cs`)
 - **Base/Derived Pattern**: Core base classes with platform-specific overrides
-- **Repository Pattern**: `IBluetoothCharacteristicAccessServicesRepository` for service definitions
+- **Service-Definition Registry**: `IBluetoothProfileRegistry` / `BluetoothServiceDefinitionRegistry` register known GATT service/characteristic definitions (`Bluetooth.Core.Scanning/Profiles/`); `CharacteristicAccessor` + `ICharacteristicCodec` handle typed read/write against them
 - **Event-Driven**: PropertyChanged, list change events throughout
 - **Async/Await**: All I/O operations are asynchronous with cancellation support
 - **Native Object Wrapping**: Platform classes wrap native objects (e.g., `CBPeripheral`, `BluetoothGatt`)
@@ -85,14 +90,14 @@ Plugin.Bluetooth/
 1. **Partial Classes**: Related functionality split across files with naming convention:
 
    ```
-   BaseBluetoothDevice.cs              # Main class definition
-   BaseBluetoothDevice.Connection.cs   # Connection-related methods
-   BaseBluetoothDevice.ServiceList.cs  # Service list management
+   BaseBluetoothRemoteDevice.cs              # Main class definition
+   BaseBluetoothRemoteDevice.Connection.cs   # Connection-related methods
+   BaseBluetoothRemoteDevice.ServiceList.cs  # Service list management
    ```
 
-2. **Platform-Specific Code**: Organized in `Platforms/{Platform}/` folders
+2. **Platform-Specific Code**: Organized as separate MSBuild projects (`Bluetooth.Maui.Platforms.Droid/`, `.Apple/`, `.Win/`, `.DotNetCore/`), not folders inside a shared project and not `#if`-gated code.
    - Always check for platform-specific implementations before suggesting cross-platform code
-   - Platform detection: `#if ANDROID`, `#if IOS`, `#if WINDOWS`
+   - Compiler platform directives (`#if WINDOWS`, `#if IOS || MACCATALYST`) are used sparingly, only inside the shared `Bluetooth.Maui` facade project itself (e.g. `ServiceCollectionExtensions.cs`, `GlobalUsings.cs`) to conditionally wire DI per target — don't reach for them in platform-specific projects, which don't need them since they only ever build for their own platform
 
 3. **Nested File Dependencies**: Configured in `.csproj` files using `<DependentUpon>`
 
@@ -100,7 +105,7 @@ Plugin.Bluetooth/
 
 #### Type Prefixes and Suffixes
 
-- **Interfaces**: Prefix with `I` (e.g., `IBluetoothDevice`, `IBluetoothScanner`)
+- **Interfaces**: Prefix with `I` (e.g., `IBluetoothRemoteDevice`, `IBluetoothScanner`)
 - **Base Classes**: Prefix with `Base` (e.g., `BaseBluetoothScanner`, `BaseBluetoothRemoteDevice`)
 - **Platform Natives**: `Native*` prefix for platform-specific overridable methods (e.g., `NativeConnectAsync`, `NativeStartAsync`)
 - **Platform Implementations**: Platform prefix for concrete implementations:
@@ -255,27 +260,23 @@ Each platform has logging files in `Bluetooth.Maui.Platforms.{Platform}/Logging/
 
 **Custom Exception Hierarchy:**
 
+All exceptions derive from the abstract `BluetoothException` (`Bluetooth.Abstractions/Exceptions/`). There are ~90 concrete types (not reproduced in full here — browse the `Exceptions/` folder in `Bluetooth.Abstractions`, `Bluetooth.Abstractions.Scanning`, `Bluetooth.Abstractions.Broadcasting`, and the platform projects' own `Exceptions/` folders for native-error wrappers), grouped by top-level category:
+
 ```
-BluetoothException
-├── ActivityException
-│   ├── ScannerException
-│   │   ├── DeviceNotFoundException
-│   │   └── MultipleDevicesFoundException
-│   └── ActivityFailedToStartException
-├── DeviceException
-│   ├── DeviceNotConnectedException
-│   └── DeviceConnectionFailedException
-├── ServiceException
-│   ├── ServiceNotFoundException
-│   └── MultipleServicesFoundException
-├── CharacteristicException
-│   ├── CharacteristicNotFoundException
-│   ├── MultipleCharacteristicsFoundException
-│   └── CharacteristicAccessException
-└── CharacteristicAccessServiceException
-    ├── CharacteristicFoundInWrongServiceException
-    └── CharacteristicValueConversionException
+BluetoothException (abstract)
+├── ScannerException            (ScannerFailedToStartException, ScannerIsAlreadyStartedException, ...)
+├── BroadcasterException        (BroadcasterFailedToStartException, BroadcasterIsAlreadyStartedException, ...)
+├── DeviceException             (DeviceNotFoundException, DeviceNotConnectedException, DeviceFailedToConnectException, ...)
+├── ClientDeviceException       (peripheral-role: a connected central; ClientDeviceNotFoundException, ...)
+├── ServiceException            (ServiceNotFoundException, ServiceExplorationException, ...)
+├── CharacteristicException     (CharacteristicNotFoundException, CharacteristicReadException, CharacteristicWriteException, ...)
+├── CharacteristicAccessorException  (CharacteristicAccessorResolutionException, CharacteristicCodecException, ...)
+├── DescriptorException         (DescriptorNotFoundException, DescriptorReadException, ...)
+├── AdapterException, BatteryTooLowException, BondingFailedException, PairingFailedException, BluetoothPermissionException
+└── Platform-specific native wrappers: AndroidNative*Exception, AppleNative*Exception, WindowsNative*Exception
 ```
+
+Real, verified leaf examples: `AndroidNativeGattStatusException`, `AndroidNativeGattCallbackStatusException`, `AndroidNativeCurrentBluetoothStatusCodesException` (`Bluetooth.Maui.Platforms.Droid/Exceptions/`), `AppleNativeBluetoothException` (`Bluetooth.Maui.Platforms.Apple/Exceptions/`).
 
 **Exception Handling Rules:**
 
@@ -585,13 +586,19 @@ public record AndroidConnectionOptions
 public record L2CapChannelOptions
 {
     /// <summary>
-    /// Gets or sets the default MTU (Maximum Transmission Unit) size.
-    /// Default: 672 bytes (minimum required by L2CAP spec).
+    /// Gets the maximum transmission unit (MTU) for the L2CAP channel.
+    /// If null, a platform-determined default is used.
     /// </summary>
-    public int DefaultMtu { get; init; } = 672;
+    public int? Mtu { get; init; }
 
     /// <summary>
-    /// Gets or sets whether to enable background reading.
+    /// Gets the default MTU to use when the platform cannot determine it automatically.
+    /// Default: 512.
+    /// </summary>
+    public int DefaultMtu { get; init; } = 512;
+
+    /// <summary>
+    /// Gets a value indicating whether background reading is enabled.
     /// Default: true.
     /// </summary>
     public bool EnableBackgroundReading { get; init; } = true;
@@ -623,12 +630,18 @@ public record RetryOptions
 ```csharp
 public record RetryOptions
 {
-    public static readonly RetryOptions None = new() { MaxRetries = 0 };
-    public static readonly RetryOptions Default = new() { MaxRetries = 3, DelayBetweenRetries = TimeSpan.FromMilliseconds(500) };
-    public static readonly RetryOptions Aggressive = new() { MaxRetries = 5, DelayBetweenRetries = TimeSpan.FromMilliseconds(100) };
-    public static readonly RetryOptions Conservative = new() { MaxRetries = 2, DelayBetweenRetries = TimeSpan.FromSeconds(1) };
+    public static RetryOptions None => new() { MaxRetries = 0 };
+    public static RetryOptions Default => new(); // MaxRetries = 3, DelayBetweenRetries = 200ms, no exponential backoff
+    public static RetryOptions Aggressive => new()
+    {
+        MaxRetries = 5,
+        DelayBetweenRetries = TimeSpan.FromMilliseconds(100),
+        ExponentialBackoff = true
+    };
 }
 ```
+
+Only `None`/`Default`/`Aggressive` exist — don't invent additional presets (e.g. a "Conservative" tier) without adding them to the real type first.
 
 1. **Dependency Injection**: Accept options through constructor injection
 
@@ -778,7 +791,7 @@ public async Task ConnectAsync()
 
 ## Platform-Specific Guidelines
 
-### Android (Bluetooth.Maui/Platforms/Android/)
+### Android (Bluetooth.Maui.Platforms.Droid/)
 
 **Key APIs:**
 
@@ -807,7 +820,7 @@ gatt.ReadCharacteristic(characteristic);
 - Handle permissions: `BLUETOOTH_SCAN`, `BLUETOOTH_CONNECT`, `ACCESS_FINE_LOCATION`
 - API level differences (e.g., `ScanRecord.IsConnectable` requires API 26+)
 
-### iOS (Bluetooth.Maui/Platforms/iOS/)
+### iOS / macOS Catalyst (Bluetooth.Maui.Platforms.Apple/)
 
 **Key APIs:**
 
@@ -840,7 +853,7 @@ peripheral.ReadValue(characteristic);
 - Handle `CBPeripheralState` for connection status
 - iOS simulator has limited BLE functionality
 
-### Windows (Bluetooth.Maui/Platforms/Windows/)
+### Windows (Bluetooth.Maui.Platforms.Win/)
 
 **Key APIs:**
 
@@ -878,22 +891,21 @@ var result = await characteristic.ReadValueAsync();
 
 ### Adding New Characteristics
 
-1. Define in `IBluetoothCharacteristicAccessService` interface
-2. Implement in `CharacteristicAccessService<T>` or custom service
-3. Add to `CharacteristicAccessServicesRepository`
-4. Register in scanner initialization
+1. Define a `BluetoothCharacteristicDefinition` under the relevant `BluetoothServiceDefinition` (`Bluetooth.Core.Scanning/Profiles/BluetoothSig/` for BT SIG-standard services, or your own definition elsewhere)
+2. Implement an `ICharacteristicCodec` for the value type if one doesn't already exist for it
+3. Register the service definition via `BluetoothServiceDefinitionRegistrar`/`[BluetoothServiceDefinitionAttribute]` so `IBluetoothProfileRegistry` picks it up
+4. Access typed values through `CharacteristicAccessor`/`CharacteristicAccessorExtensions`, not raw `ReadOnlyMemory<byte>`, wherever a definition exists
 5. Document with Bluetooth SIG specification reference if applicable
 
 ### Adding New Platform Support
 
-1. Create platform folder: `Bluetooth.Maui/Platforms/{Platform}/`
-2. Implement abstract methods from base classes:
-   - `NativeInitializeAsync()` - Initialize platform adapter
-   - `NativeStartAsync()` - Start operation (scan, broadcast, etc.)
-   - `NativeStopAsync()` - Stop operation
-   - `NativeCreateDevice()` - Create platform device wrapper
+1. Create a new project: `Bluetooth.Maui.Platforms.{Platform}/`, referencing `Bluetooth.Core.Scanning`/`Bluetooth.Core.Broadcasting`
+2. Implement the `Native*` abstract methods from the `Base*` classes for the roles you support, e.g.:
+   - `NativeCreateDeviceFromAdvertisement()`, `NativeStartAsync(ScanningOptions, ...)`, `NativeStopAsync()` on the scanner side
+   - `NativeConnectAsync(ConnectionOptions, ...)`, `NativeDisconnectAsync()` on the device side
+   - (grep `protected abstract.*Native` in `Bluetooth.Core.Scanning/`/`Bluetooth.Core.Broadcasting/` for the full, current list — don't assume a fixed set without checking, it changes as capabilities are added)
 3. Add platform-specific event handlers and callbacks
-4. Update `Bluetooth.Maui.csproj` with target framework
+4. Wire the new project's DI registration into `Bluetooth.Maui/ServiceCollectionExtensions.cs` behind the appropriate `#if` (see the Windows/Apple pattern already there)
 5. Add comprehensive XML documentation with platform remarks
 
 ### Implementing Read/Write Characteristics
@@ -955,6 +967,8 @@ private void OnCharacteristicChanged(/* platform-specific args */)
 
 ## Testing Guidelines
 
+**No test projects exist in this repo yet.** `xunit`, `FluentAssertions`, and `coverlet` versions are centrally declared in `Directory.Packages.props` for when test infrastructure is added, but no `.csproj` currently references them and CI runs no test step. Don't claim `dotnet test` exercises anything today. The guidance below is the intended approach for when test projects are added — treat it as aspirational, not current practice, until that changes.
+
 When suggesting tests or test modifications:
 
 1. Use **xUnit** framework (`[Fact]`, `[Theory]`)
@@ -968,48 +982,48 @@ When suggesting tests or test modifications:
 
 ## Dependencies
 
-### Core Dependencies
+All versions are centrally managed in `Directory.Packages.props` — read that file directly rather than trusting a cached copy of the numbers below, since it changes independently of this doc.
 
-- `Plugin.ByteArrays` (1.0.25) - Byte array utilities
-- `Plugin.BaseTypeExtensions` (1.0.17) - Extension methods
-- `Plugin.ExceptionListeners` (1.0.2 / 1.0.2 Maui) - Exception handling
-- `Microsoft.Extensions.Logging.Abstractions` (10.0.0)
+### Core Dependencies (as of this writing)
+
+- `Plugin.ByteArrays` (1.0.30) - Byte array utilities
+- `Plugin.BaseTypeExtensions` (1.0.26) - Extension methods
+- `Plugin.ExceptionListeners` (1.0.5) / `Plugin.ExceptionListeners.Maui` (1.0.5) - Exception handling
+- `Microsoft.Extensions.Logging.Abstractions`, `.Logging`, `.DependencyInjection.Abstractions`, `.Options`, `.Diagnostics.Abstractions` (10.0.3)
 
 ### MAUI Dependencies
 
-- `Microsoft.Maui.Core` - MAUI core functionality
-- `Microsoft.Maui.Controls` - MAUI controls
+- `Microsoft.Maui.Core`, `.Controls`, `.Essentials` — version driven by the single `$(MauiVersion)` property in `Directory.Packages.props`
 
-### Build Tools
+### Build & Analysis Tools
 
-- `Microsoft.SourceLink.GitHub` (8.0.0) - Source link
-- `Microsoft.CodeAnalysis.NetAnalyzers` (10.0.0) - Code analysis
+- `Microsoft.SourceLink.GitHub` (10.0.301) - Source link
+- `Microsoft.CodeAnalysis.NetAnalyzers` (10.0.302) - Code analysis
+- `docfx` (2.78.5) - registered as a local dotnet tool (`.config/dotnet-tools.json`); not yet wired into a build/CI step — see the docs-tooling revival effort if you're picking this up
+
+### Test Dependencies (declared, not yet used)
+
+- `xunit`, `FluentAssertions`, `coverlet.collector`/`.msbuild`, `Microsoft.NET.Test.Sdk` — versions are pre-declared centrally but no test project currently references them (see Testing Guidelines above)
 
 ## Build and Tasks
-
-**Available Tasks** (via `.vscode/tasks.json` or VS):
-
-- `Clean Documentation` - Remove generated docs
-- `Generate API Metadata` - Generate DocFX metadata
-- `Build Documentation Site` - Build DocFX site
-- `Regenerate Documentation` - Full documentation rebuild
 
 **Build Commands:**
 
 ```bash
+# Restore local dotnet tools (docfx, etc.) — first time / after tool version bumps
+dotnet tool restore
+
 # Build entire solution
 dotnet build
 
-# Build specific project
-dotnet build Bluetooth.Core/Bluetooth.Core.csproj
+# Build a specific project
 dotnet build Bluetooth.Maui/Bluetooth.Maui.csproj
-
-# Run tests
-dotnet test
 
 # Pack for NuGet
 dotnet pack
 ```
+
+There is currently no `dotnet test` target with anything to run (see Testing Guidelines above) and no `.vscode/tasks.json` — don't reference VS Code tasks that don't exist in `.vscode/` (currently just `extensions.json` and `settings.json`).
 
 ## Common Pitfalls to Avoid
 
@@ -1098,7 +1112,7 @@ When reviewing or generating code, ensure:
 ### Platform-Specific
 
 - [ ] Platform-specific implementations override base `Native*` methods
-- [ ] Platform detection used correctly (`#if ANDROID`, `#if IOS`, `#if WINDOWS`)
+- [ ] Platform code lives in its own `Bluetooth.Maui.Platforms.*` project, not behind `#if` in shared code — the only legitimate `#if` usage is the narrow DI-wiring case in `Bluetooth.Maui/ServiceCollectionExtensions.cs` and `GlobalUsings.cs`
 - [ ] API level checks for Android version-specific features
 - [ ] iOS state checks (`CBCentralManager.State`, `CBPeripheralState`)
 - [ ] Windows capability checks (`DeviceAccessStatus`, `BluetoothConnectionStatus`)
@@ -1149,5 +1163,5 @@ When uncertain about implementation details:
 
 ---
 
-*Last Updated: February 2025*
+*This document reflects the current multi-project structure (`Bluetooth.Abstractions*`/`Bluetooth.Core*`/`Bluetooth.Maui.Platforms.*`, 13 projects). If the project list under "Project Structure" above stops matching `find . -maxdepth 1 -type d -iname "Bluetooth.*"`, this file is stale — re-verify before trusting it, rather than relying on the date below.*
 *Maintainer: Francois Raminosona / Laerdal Medical*

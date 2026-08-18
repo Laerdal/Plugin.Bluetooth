@@ -184,6 +184,15 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         Logger?.LogScanStopping();
         BluetoothLeScanner.StopScan(ScanCallbackProxy);
         Logger?.LogScanStopped();
+
+        // Android's BluetoothLeScanner.stopScan() has no completion callback - confirmed via a
+        // real-hardware hang: StopScanningAsync()'s internal wait for OnStopSucceeded() (which only
+        // fires from the IsRunning setter, via OnIsRunningChanged) never completed, because nothing
+        // in this class ever set IsRunning = false. Mirrors AppleBluetoothScanner.ScanningStopped(),
+        // which does the same for the identical reason (CoreBluetooth's stopScan() is equally
+        // synchronous/immediate with no confirmation delegate).
+        IsRunning = false;
+
         return ValueTask.CompletedTask;
     }
 

@@ -38,7 +38,7 @@ Broadcasting is useful for:
 ### 1. Request Permissions
 
 ```csharp
-var broadcaster = BluetoothFactory.Current.Broadcaster;
+// broadcaster is an IBluetoothBroadcaster injected via DI into the containing class's constructor
 
 // Check permissions
 bool hasPermission = await broadcaster.HasBroadcasterPermissionsAsync();
@@ -58,25 +58,20 @@ if (!hasPermission)
 ### 2. Create a Service
 
 ```csharp
-// Create a simple service with one characteristic
-var serviceSpec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec
-{
-    ServiceId = Guid.Parse("12345678-1234-1234-1234-123456789abc"),
-    IsPrimary = true,
-    Characteristics = new[]
-    {
-        new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-        {
-            CharacteristicId = Guid.Parse("12345678-1234-1234-1234-123456789abd"),
-            Properties = BluetoothCharacteristicProperties.Read |
-                         BluetoothCharacteristicProperties.Notify,
-            Permissions = BluetoothCharacteristicPermissions.Read,
-            InitialValue = new byte[] { 0x00 }
-        }
-    }
-};
+// Create a simple service, then add a characteristic to it
+var service = await broadcaster.CreateServiceAsync(
+    Guid.Parse("12345678-1234-1234-1234-123456789abc"),
+    name: "My Service",
+    isPrimary: true);
 
-var service = await broadcaster.CreateServiceAsync(serviceSpec);
+var characteristic = await service.CreateCharacteristicAsync(
+    Guid.Parse("12345678-1234-1234-1234-123456789abd"),
+    BluetoothCharacteristicProperties.Read | BluetoothCharacteristicProperties.Notify,
+    BluetoothCharacteristicPermissions.Read,
+    name: "My Characteristic");
+
+// Set the initial value
+await characteristic.UpdateValueAsync(new byte[] { 0x00 }, notifyClients: false);
 ```
 
 ### 3. Start Broadcasting
@@ -84,8 +79,8 @@ var service = await broadcaster.CreateServiceAsync(serviceSpec);
 ```csharp
 await broadcaster.StartBroadcastingAsync(new BroadcastingOptions
 {
-    DeviceName = "MyDevice",
-    IsConnectable = true
+    LocalDeviceName = "MyDevice",
+    IncludeDeviceName = true
 });
 
 Console.WriteLine("Broadcasting started!");
@@ -94,17 +89,17 @@ Console.WriteLine("Broadcasting started!");
 ### 4. Handle Client Connections
 
 ```csharp
-// Monitor connected clients
-broadcaster.ClientDeviceConnected += (s, args) =>
+// Client connections/disconnections are reported as batches, not one event per device
+broadcaster.ClientDevicesAdded += (s, args) =>
 {
-    var client = args.Device;
-    Console.WriteLine($"Client connected: {client.Name}");
+    foreach (var client in args.Items)
+        Console.WriteLine($"Client connected: {client.Name}");
 };
 
-broadcaster.ClientDeviceDisconnected += (s, args) =>
+broadcaster.ClientDevicesRemoved += (s, args) =>
 {
-    var client = args.Device;
-    Console.WriteLine($"Client disconnected: {client.Name}");
+    foreach (var client in args.Items)
+        Console.WriteLine($"Client disconnected: {client.Name}");
 };
 ```
 
@@ -119,26 +114,17 @@ await broadcaster.StopBroadcastingAsync();
 ### Create Services
 
 ```csharp
-// Define service specification
-var serviceSpec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec
-{
-    ServiceId = Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB"), // Battery Service
-    IsPrimary = true,
-    Characteristics = new[]
-    {
-        new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-        {
-            CharacteristicId = Guid.Parse("00002A19-0000-1000-8000-00805F9B34FB"), // Battery Level
-            Properties = BluetoothCharacteristicProperties.Read |
-                         BluetoothCharacteristicProperties.Notify,
-            Permissions = BluetoothCharacteristicPermissions.Read,
-            InitialValue = new byte[] { 100 }  // 100% battery
-        }
-    }
-};
+// Create the service, then its characteristic
+var service = await broadcaster.CreateServiceAsync(
+    Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB"), // Battery Service
+    isPrimary: true);
 
-// Create the service
-var service = await broadcaster.CreateServiceAsync(serviceSpec);
+var characteristic = await service.CreateCharacteristicAsync(
+    Guid.Parse("00002A19-0000-1000-8000-00805F9B34FB"), // Battery Level
+    BluetoothCharacteristicProperties.Read | BluetoothCharacteristicProperties.Notify,
+    BluetoothCharacteristicPermissions.Read);
+
+await characteristic.UpdateValueAsync(new byte[] { 100 }, notifyClients: false); // 100% battery
 ```
 
 ### Get Services
@@ -182,19 +168,14 @@ Customize your broadcast behavior:
 var options = new BroadcastingOptions
 {
     // Device name shown to scanners
-    DeviceName = "MyDevice",
-
-    // Allow connections (vs broadcast-only)
-    IsConnectable = true,
+    LocalDeviceName = "MyDevice",
+    IncludeDeviceName = true,
 
     // Service UUIDs to advertise
-    ServiceUuids = new[]
+    AdvertisedServiceUuids = new[]
     {
         Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB")
-    },
-
-    // Permission strategy
-    PermissionStrategy = PermissionRequestStrategy.RequestAutomatically
+    }
 };
 
 await broadcaster.StartBroadcastingAsync(options);
@@ -233,28 +214,30 @@ Track connected clients:
 
 ```csharp
 // Get all connected clients
-var clients = broadcaster.GetConnectedDevices();
+var clients = broadcaster.GetClientDevices();
 
 // Get specific client
-var client = broadcaster.GetConnectedDevice(clientId);
+var client = broadcaster.GetClientDevice(clientId);
 
 // Check if client is connected
-bool hasClient = broadcaster.HasConnectedDevice(clientId);
+bool hasClient = broadcaster.HasClientDevice(clientId);
 
-// Listen for connection events
-broadcaster.ClientDeviceConnected += (s, args) =>
+// Listen for connection events (fired as batches)
+broadcaster.ClientDevicesAdded += (s, args) =>
 {
-    Console.WriteLine($"Client {args.Device.Id} connected");
+    foreach (var client in args.Items)
+        Console.WriteLine($"Client {client.Id} connected");
 };
 
-broadcaster.ClientDeviceDisconnected += (s, args) =>
+broadcaster.ClientDevicesRemoved += (s, args) =>
 {
-    Console.WriteLine($"Client {args.Device.Id} disconnected");
+    foreach (var client in args.Items)
+        Console.WriteLine($"Client {client.Id} disconnected");
 };
 
-broadcaster.ConnectedDeviceListChanged += (s, args) =>
+broadcaster.ClientDeviceListChanged += (s, args) =>
 {
-    Console.WriteLine($"Total clients: {args.TotalCount}");
+    Console.WriteLine($"Total clients: {broadcaster.GetClientDevices().Count}");
 };
 ```
 
@@ -263,36 +246,25 @@ broadcaster.ConnectedDeviceListChanged += (s, args) =>
 ### Simple Battery Service
 
 ```csharp
-async Task CreateBatteryServiceAsync()
+async Task CreateBatteryServiceAsync(IBluetoothBroadcaster broadcaster)
 {
-    var broadcaster = BluetoothFactory.Current.Broadcaster;
+    // Create battery service and characteristic
+    var batteryServiceId = Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB");
+    var service = await broadcaster.CreateServiceAsync(batteryServiceId, isPrimary: true);
 
-    // Create battery service
-    var serviceSpec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec
-    {
-        ServiceId = Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB"),
-        IsPrimary = true,
-        Characteristics = new[]
-        {
-            new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-            {
-                CharacteristicId = Guid.Parse("00002A19-0000-1000-8000-00805F9B34FB"),
-                Properties = BluetoothCharacteristicProperties.Read |
-                             BluetoothCharacteristicProperties.Notify,
-                Permissions = BluetoothCharacteristicPermissions.Read,
-                InitialValue = new byte[] { 100 }
-            }
-        }
-    };
+    var characteristic = await service.CreateCharacteristicAsync(
+        Guid.Parse("00002A19-0000-1000-8000-00805F9B34FB"),
+        BluetoothCharacteristicProperties.Read | BluetoothCharacteristicProperties.Notify,
+        BluetoothCharacteristicPermissions.Read);
 
-    var service = await broadcaster.CreateServiceAsync(serviceSpec);
+    await characteristic.UpdateValueAsync(new byte[] { 100 }, notifyClients: false);
 
     // Start broadcasting
     await broadcaster.StartBroadcastingAsync(new BroadcastingOptions
     {
-        DeviceName = "Battery Monitor",
-        IsConnectable = true,
-        ServiceUuids = new[] { serviceSpec.ServiceId }
+        LocalDeviceName = "Battery Monitor",
+        IncludeDeviceName = true,
+        AdvertisedServiceUuids = new[] { batteryServiceId }
     });
 
     Console.WriteLine("Battery service is broadcasting");
@@ -320,36 +292,26 @@ async Task UpdateBatteryLevelAsync(int level)
 ### Temperature Sensor
 
 ```csharp
-async Task CreateTemperatureSensorAsync()
+async Task CreateTemperatureSensorAsync(IBluetoothBroadcaster broadcaster)
 {
-    var broadcaster = BluetoothFactory.Current.Broadcaster;
+    var service = await broadcaster.CreateServiceAsync(
+        Guid.Parse("00001809-0000-1000-8000-00805F9B34FB"), // Health Thermometer
+        isPrimary: true);
 
-    var serviceSpec = new IBluetoothLocalServiceFactory.BluetoothLocalServiceSpec
-    {
-        ServiceId = Guid.Parse("00001809-0000-1000-8000-00805F9B34FB"), // Health Thermometer
-        IsPrimary = true,
-        Characteristics = new[]
-        {
-            new IBluetoothLocalCharacteristicFactory.BluetoothLocalCharacteristicSpec
-            {
-                CharacteristicId = Guid.Parse("00002A1C-0000-1000-8000-00805F9B34FB"),
-                Properties = BluetoothCharacteristicProperties.Indicate,
-                Permissions = BluetoothCharacteristicPermissions.Read,
-                InitialValue = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 }
-            }
-        }
-    };
+    var characteristic = await service.CreateCharacteristicAsync(
+        Guid.Parse("00002A1C-0000-1000-8000-00805F9B34FB"),
+        BluetoothCharacteristicProperties.Indicate,
+        BluetoothCharacteristicPermissions.Read);
 
-    var service = await broadcaster.CreateServiceAsync(serviceSpec);
+    await characteristic.UpdateValueAsync(new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 }, notifyClients: false);
+
     await broadcaster.StartBroadcastingAsync(new BroadcastingOptions
     {
-        DeviceName = "Temperature Sensor",
-        IsConnectable = true
+        LocalDeviceName = "Temperature Sensor",
+        IncludeDeviceName = true
     });
 
     // Simulate temperature readings
-    var characteristic = service.GetCharacteristic(Guid.Parse("00002A1C-0000-1000-8000-00805F9B34FB"));
-
     while (broadcaster.IsRunning)
     {
         // Read temperature (simulated)
@@ -384,16 +346,14 @@ var subscribedClients = new HashSet<string>();
 
 characteristic.ClientSubscribed += (s, args) =>
 {
-    var clientId = args.Device.Id;
-    subscribedClients.Add(clientId);
-    Console.WriteLine($"Client {clientId} subscribed to notifications");
+    subscribedClients.Add(args.ClientId);
+    Console.WriteLine($"Client {args.ClientId} subscribed to notifications");
 };
 
 characteristic.ClientUnsubscribed += (s, args) =>
 {
-    var clientId = args.Device.Id;
-    subscribedClients.Remove(clientId);
-    Console.WriteLine($"Client {clientId} unsubscribed");
+    subscribedClients.Remove(args.ClientId);
+    Console.WriteLine($"Client {args.ClientId} unsubscribed");
 };
 
 // Only notify subscribed clients
@@ -408,35 +368,43 @@ if (subscribedClients.Count > 0)
 ### Dynamic Service Updates
 
 ```csharp
+var newServiceId = Guid.Parse("0000180D-0000-1000-8000-00805F9B34FB");
+
 // Remove old service
 await broadcaster.RemoveServiceAsync(oldServiceUuid);
 
 // Add new service
-var service = await broadcaster.CreateServiceAsync(newServiceSpec);
+var service = await broadcaster.CreateServiceAsync(newServiceId);
 
-// Update advertising options
-await broadcaster.UpdateBroadcastingOptionsAsync(new BroadcastingOptions
+// There's no in-place "update options while running" API — restart broadcasting
+// with the new set of advertised service UUIDs instead.
+await broadcaster.StopBroadcastingIfNeededAsync();
+await broadcaster.StartBroadcastingAsync(new BroadcastingOptions
 {
-    ServiceUuids = new[] { newServiceSpec.ServiceId }
+    AdvertisedServiceUuids = new[] { newServiceId }
 });
 ```
 
 ### Multiple Services
 
 ```csharp
+var batteryServiceId = Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB");
+var heartRateServiceId = Guid.Parse("0000180D-0000-1000-8000-00805F9B34FB");
+var customServiceId = Guid.Parse("12345678-1234-1234-1234-123456789abc");
+
 // Create multiple services
-var batteryService = await broadcaster.CreateServiceAsync(batterySpec);
-var heartRateService = await broadcaster.CreateServiceAsync(heartRateSpec);
-var customService = await broadcaster.CreateServiceAsync(customSpec);
+var batteryService = await broadcaster.CreateServiceAsync(batteryServiceId);
+var heartRateService = await broadcaster.CreateServiceAsync(heartRateServiceId);
+var customService = await broadcaster.CreateServiceAsync(customServiceId);
 
 // Advertise all services
 await broadcaster.StartBroadcastingAsync(new BroadcastingOptions
 {
-    ServiceUuids = new[]
+    AdvertisedServiceUuids = new[]
     {
-        batterySpec.ServiceId,
-        heartRateSpec.ServiceId,
-        customSpec.ServiceId
+        batteryServiceId,
+        heartRateServiceId,
+        customServiceId
     }
 });
 ```
@@ -453,7 +421,7 @@ await broadcaster.StartBroadcastingAsync(new BroadcastingOptions
    ```csharp
    new BroadcastingOptions
    {
-       ServiceUuids = new[] { primaryServiceUuid }
+       AdvertisedServiceUuids = new[] { primaryServiceUuid }
    }
    ```
 
@@ -473,9 +441,12 @@ await broadcaster.StartBroadcastingAsync(new BroadcastingOptions
 
 4. **Handle Client Disconnections**: Track connected clients and clean up state
    ```csharp
-   broadcaster.ClientDeviceDisconnected += (s, args) =>
+   broadcaster.ClientDevicesRemoved += (s, args) =>
    {
-       // Clean up client-specific state
+       foreach (var client in args.Items)
+       {
+           // Clean up client-specific state
+       }
    };
    ```
 
@@ -496,7 +467,7 @@ Broadcasting support varies by platform:
 | **Android** | Full | Requires Android 5.0+ (API 21+) |
 | **iOS** | Full | Background mode requires capabilities |
 | **macOS** | Full | Peripheral mode supported |
-| **Windows** | Partial | Limited peripheral support, check device capabilities |
+| **Windows** | Full | GATT server/peripheral role is fully implemented; a narrow set of operations (e.g. force-disconnecting a subscribed client) throw `NotSupportedException` due to Windows API limits |
 
 Check support before implementing:
 ```csharp
@@ -521,9 +492,8 @@ catch (PlatformNotSupportedException ex)
 
 ### Clients Can't Connect
 
-- Check `IsConnectable = true` in `BroadcastingOptions`
 - Verify services are created before broadcasting
-- Ensure device name is set
+- Ensure device name is set (`LocalDeviceName` + `IncludeDeviceName`)
 - Check platform-specific connection limits
 
 ### Notifications Not Sent
@@ -534,7 +504,7 @@ catch (PlatformNotSupportedException ex)
 
 ### Services Not Visible
 
-- Advertise service UUIDs in `BroadcastingOptions`
+- Advertise service UUIDs via `BroadcastingOptions.AdvertisedServiceUuids`
 - Use standard UUIDs when possible
 - Some platforms limit advertising data size
 

@@ -47,7 +47,9 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
 
         // Manufacturer
-        if (advertisement.Manufacturer != Manufacturer.Unknown)
+        // ManufacturerId is parsed as a signed Int16, so real company IDs above 32767 wrap into
+        // negative values that aren't Manufacturer.Unknown (-1) either — reject those too.
+        if (advertisement.ManufacturerId >= 0)
         {
             Manufacturer = advertisement.Manufacturer;
         }

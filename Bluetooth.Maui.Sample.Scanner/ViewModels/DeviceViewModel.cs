@@ -71,7 +71,7 @@ public class DeviceViewModel : BaseViewModel
     /// <summary>
     ///     Gets the Manufacturer for display.
     /// </summary>
-    public string Manufacturer => $"Manufacturer: {Device?.Manufacturer}";
+    public string Manufacturer => $"Manufacturer: {(Device != null ? Device.Manufacturer.ToString() : "N/A")}";
 
     /// <summary>
     ///     Gets whether the device is currently connected.

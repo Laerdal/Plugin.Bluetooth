@@ -354,7 +354,9 @@ Thrown when a requested device is not found.
 ```csharp
 try
 {
-    var device = await scanner.GetKnownDeviceAsync(deviceId);
+    // GetDevice throws DeviceNotFoundException when no match exists;
+    // GetDeviceOrDefault returns null instead if you'd rather not catch.
+    var device = scanner.GetDevice(deviceId);
 }
 catch (DeviceNotFoundException ex)
 {
@@ -1154,4 +1156,4 @@ await device.ConnectIfNeededAsync();
 - [Overview and Conventions](./README.md)
 - [Interfaces and Abstractions](./Abstractions.md)
 - [Events](./Events.md)
-- [Troubleshooting Guide](../TROUBLESHOOTING.md)
+- [Troubleshooting Guide](../Troubleshooting/Common-Issues.md)

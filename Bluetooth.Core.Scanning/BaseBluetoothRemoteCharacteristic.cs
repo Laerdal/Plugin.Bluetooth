@@ -79,7 +79,10 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
     /// <returns>A task that represents the asynchronous disposal operation.</returns>
     /// <remarks>
     ///     This method will attempt to stop listening if the characteristic is currently listening for notifications.
-    ///     Any exceptions during the stop listening process will be handled by the unhandled exception listener.
+    ///     A <see cref="DeviceNotConnectedException" /> is treated as an expected disposal race (device disconnected
+    ///     between the connectivity check and the stop request) and is silently discarded. Any other exception during
+    ///     the stop listening process is forwarded to the unhandled exception listener. <see cref="IBluetoothRemoteCharacteristic.IsListening" />
+    ///     is always cleared in a <c>finally</c> block so the object reflects reality regardless of outcome.
     /// </remarks>
     protected async virtual ValueTask DisposeAsyncCore()
     {
@@ -88,11 +91,24 @@ public abstract partial class BaseBluetoothRemoteCharacteristic : BaseBindableOb
         {
             try
             {
-                await StopListeningAsync().ConfigureAwait(false);
+                if (Service.Device.IsConnected)
+                {
+                    await StopListeningAsync().ConfigureAwait(false);
+                }
+            }
+            catch (DeviceNotConnectedException)
+            {
+                // Device disconnected between the IsConnected check and StopListeningAsync - treat as expected
+                // disposal race; no need to propagate.
             }
             catch (Exception ex)
             {
                 BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex);
+            }
+            finally
+            {
+                // Always clear local state so this object reflects reality regardless of outcome.
+                IsListening = false;
             }
         }
 

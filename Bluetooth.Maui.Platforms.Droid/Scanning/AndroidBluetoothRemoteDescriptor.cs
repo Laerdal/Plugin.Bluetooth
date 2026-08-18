@@ -74,12 +74,18 @@ public class AndroidBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
     }
 
     /// <inheritdoc />
-    protected override bool NativeCanRead()
-    {
-        return NativeDescriptor.Permissions.HasFlag(GattDescriptorPermission.Read) ||
-               NativeDescriptor.Permissions.HasFlag(GattDescriptorPermission.ReadEncrypted) ||
-               NativeDescriptor.Permissions.HasFlag(GattDescriptorPermission.ReadEncryptedMitm);
-    }
+    /// <remarks>
+    /// Unlike a characteristic's Properties (transmitted over ATT as part of its declaration and
+    /// populated correctly by Android during discovery), a descriptor's Permissions are a
+    /// local/server-role access-control concept - Android does not populate them from the remote
+    /// peripheral for a descriptor discovered via <c>discoverServices()</c> as a GATT client, so
+    /// they're unreliable here (confirmed against real hardware: a Little Anne Mk1's Legacy DFU
+    /// Control Point CCCD reports empty Permissions despite genuinely supporting reads). Optimistic
+    /// by design, matching <c>AppleBluetoothRemoteDescriptor.NativeCanRead()</c> on iOS, which has
+    /// the identical problem with CoreBluetooth. A real GATT-level rejection still surfaces as an
+    /// <see cref="AndroidNativeGattCallbackStatusException"/> from the native read attempt itself.
+    /// </remarks>
+    protected override bool NativeCanRead() => true;
 
     #endregion
 
@@ -127,15 +133,14 @@ public class AndroidBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
         }
     }
 
+    // Optimistic by default for the same reason as NativeCanRead() above - Android doesn't populate
+    // a remote-discovered descriptor's Permissions reliably. Corrected to false the first time a
+    // real write attempt comes back WriteNotPermitted (see NotifyDescriptorWrite), matching
+    // AppleBluetoothRemoteDescriptor's _canWrite pattern on iOS.
+    private bool _canWrite = true;
+
     /// <inheritdoc />
-    protected override bool NativeCanWrite()
-    {
-        return NativeDescriptor.Permissions.HasFlag(GattDescriptorPermission.Write) ||
-               NativeDescriptor.Permissions.HasFlag(GattDescriptorPermission.WriteEncrypted) ||
-               NativeDescriptor.Permissions.HasFlag(GattDescriptorPermission.WriteEncryptedMitm) ||
-               NativeDescriptor.Permissions.HasFlag(GattDescriptorPermission.WriteSigned) ||
-               NativeDescriptor.Permissions.HasFlag(GattDescriptorPermission.WriteSignedMitm);
-    }
+    protected override bool NativeCanWrite() => _canWrite;
 
     #endregion
 
@@ -167,6 +172,11 @@ public class AndroidBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
     {
         if (status != GattStatus.Success)
         {
+            if (status == GattStatus.WriteNotPermitted)
+            {
+                _canWrite = false;
+            }
+
             OnWriteValueFailed(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
             return;
         }
