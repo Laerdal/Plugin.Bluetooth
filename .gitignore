@@ -473,4 +473,8 @@ bin/
 obj/
 /packages/
 riderModule.iml
-/_ReSharper.Caches/```
+/_ReSharper.Caches/
+
+# DocFX generated output (Docs/docfx.json) - regenerated in CI
+Docs/api/
+Docs/_site/

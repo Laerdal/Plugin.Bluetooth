@@ -73,6 +73,5 @@ but default consumer resolution uses facade wrappers.
   - `Bluetooth.Maui/ServiceCollectionExtensions.cs`
 - Related docs:
   - `Docs/ARCHITECTURE_GUIDELINES.md`
-  - `DOCUMENTATION_ALIGNMENT_REVIEW.md`
 - Related PRs/issues:
   - N/A

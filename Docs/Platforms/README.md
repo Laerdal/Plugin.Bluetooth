@@ -28,7 +28,8 @@ Legend:
 | PHY set | ✅ API 26+ | ❌ (platform-managed) | ❌ |
 | L2CAP channel | ✅ API 29+ | ✅ iOS 11+/macOS 10.13+ | ❌ |
 | Connected RSSI read | ✅ | ✅ | ❌ |
-| Broadcasting (GATT server/peripheral role) | ✅ | ✅ | ❌ |
+| Broadcasting (GATT server/peripheral role) | ✅ | ✅ | ✅ |
+| Force-disconnect a subscribed GATT client | ✅ | ✅ | ❌ (platform-managed) |
 
 ## Exception Behavior For Unsupported Operations
 
@@ -38,7 +39,7 @@ Legend:
   - Connection priority request
   - PHY preference request
   - Connected RSSI read
-  - Broadcaster start/stop/service creation
+  - Force-disconnecting a subscribed GATT client from a broadcaster (Windows exposes no API to do this; the client must disconnect itself)
 - DotNetCore fallback implementations throw PlatformNotSupportedException for runtime BLE operations.
 
 ## Cross-Platform Usage Pattern

@@ -240,7 +240,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     #region Service Discovery
 
     /// <inheritdoc />
-    protected async override ValueTask NativeServicesExplorationAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected async override ValueTask NativeServicesExplorationAsync(bool useCache, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogServiceDiscoveryStarting(Id);
 

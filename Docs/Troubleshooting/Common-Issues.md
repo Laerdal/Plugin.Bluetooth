@@ -86,14 +86,23 @@ await device.ConnectAsync(options);
 
 #### 3. Limit Concurrent Connections
 
-Configure maximum concurrent connections in infrastructure options:
+There is no built-in concurrent-connection cap (no `BluetoothInfrastructureOptions` exists in this codebase). Self-manage it with a `SemaphoreSlim` sized to the platform's real GATT limits:
 
 ```csharp
-// In MauiProgram.cs
-builder.Services.Configure<BluetoothInfrastructureOptions>(options =>
+private readonly SemaphoreSlim _connectionLimiter = new(initialCount: 3, maxCount: 3);
+
+async Task ConnectWithLimitAsync(IBluetoothRemoteDevice device)
 {
-    options.MaxConcurrentConnections = 3; // Default is 5
-});
+    await _connectionLimiter.WaitAsync();
+    try
+    {
+        await device.ConnectAsync();
+    }
+    finally
+    {
+        _connectionLimiter.Release();
+    }
+}
 ```
 
 #### 4. Clean Up Previous Connections
@@ -157,6 +166,8 @@ await device.ConnectAsync(options);
 
 #### 1. Bluetooth Not Enabled
 
+There is currently no cross-platform property for checking the Bluetooth adapter's power state — `IBluetoothScanner`/`IBluetoothAdapter` don't expose one. The practical approach is to attempt the operation and handle the failure:
+
 ```csharp
 try
 {
@@ -164,26 +175,25 @@ try
 }
 catch (AppleNativeBluetoothException ex)
 {
-    // Check if Bluetooth is off
-    if (_scanner.BluetoothState == BluetoothState.Off)
-    {
-        // Prompt user to enable Bluetooth
-        await ShowBluetoothPromptAsync();
-    }
+    // Bluetooth being off is one of several causes of this exception on Apple platforms —
+    // inspect ex.Message/ex.InnerException, then prompt the user to enable Bluetooth.
+    await ShowBluetoothPromptAsync();
 }
 ```
+
+On iOS/macOS specifically, `AppleBluetoothScanner` (the concrete platform scanner, not the cross-platform facade) exposes a public `State` property of type `CBManagerState` (`PoweredOn`, `PoweredOff`, `Unauthorized`, `Unsupported`, `Unknown`) if you need to check proactively rather than reacting to an exception. Android and Windows have no equivalent exposed today — their adapter state is tracked internally but isn't surfaced on the public scanner classes.
 
 #### 2. Device Out of Range
 
 iOS is more sensitive to signal strength than Android. Solutions:
 - Ensure device is within range (typically 10 meters)
-- Check RSSI value: `device.Rssi` (values below -90 dBm may be unreliable)
+- Check signal strength: `device.SignalStrengthDbm` (values below -90 dBm may be unreliable)
 - Wait for stronger signal before connecting
 
 ```csharp
 // Wait for device to be in range
 await _scanner.WaitForDeviceToAppearAsync(
-    d => d.Id == knownDeviceId && d.Rssi > -80,
+    d => d.Id == knownDeviceId && d.SignalStrengthDbm > -80,
     timeout: TimeSpan.FromSeconds(30)
 );
 
@@ -257,14 +267,10 @@ Ensure capability is declared in `Package.appxmanifest`:
 
 #### 3. Connection Timeout
 
-Windows connections can take longer. Increase timeout:
+Windows connections can take longer. `ConnectAsync` takes an explicit per-call timeout — pass a longer one instead of relying on a default:
 
 ```csharp
-// In MauiProgram.cs
-builder.Services.Configure<BluetoothInfrastructureOptions>(options =>
-{
-    options.DefaultOperationTimeout = TimeSpan.FromSeconds(60);
-});
+await device.ConnectAsync(timeout: TimeSpan.FromSeconds(60));
 ```
 
 ---
@@ -403,13 +409,7 @@ await _scanner.StartScanningAsync(options);
 
 #### 1. Check Bluetooth State
 
-```csharp
-if (_scanner.BluetoothState != BluetoothState.On)
-{
-    Console.WriteLine($"Bluetooth state: {_scanner.BluetoothState}");
-    // Prompt user to enable Bluetooth
-}
-```
+There's no cross-platform adapter-state check today (see the note in [Bluetooth Not Enabled](#1-bluetooth-not-enabled) above). If devices simply never appear, first rule out the adapter being off by checking it manually on the test device, then move on to the permission and filter checks below.
 
 #### 2. Verify Permissions
 
@@ -819,12 +819,11 @@ Windows does not expose connection priority settings. The OS manages connection 
 
 ### 1. Enable Verbose Logging
 
+There is no library-specific verbose-logging toggle — the library logs through standard `ILogger<T>`, so use the standard `Microsoft.Extensions.Logging` filter mechanism, scoped to the `Bluetooth` namespace prefix:
+
 ```csharp
 // In MauiProgram.cs
-builder.Services.Configure<BluetoothInfrastructureOptions>(options =>
-{
-    options.EnableVerboseLogging = true;
-});
+builder.Logging.AddFilter("Bluetooth", LogLevel.Debug);
 ```
 
 See [Debugging Guide](./Debugging.md) for log analysis details.
@@ -834,7 +833,7 @@ See [Debugging Guide](./Debugging.md) for log analysis details.
 ```csharp
 Console.WriteLine($"Device: {device.Name}");
 Console.WriteLine($"Connected: {device.IsConnected}");
-Console.WriteLine($"RSSI: {device.Rssi}");
+Console.WriteLine($"Signal strength: {device.SignalStrengthDbm} dBm");
 Console.WriteLine($"Services: {device.GetServices().Count}");
 ```
 
@@ -875,17 +874,23 @@ catch (DeviceFailedToConnectException ex)
 
 ### 7. Monitor Bluetooth State
 
-```csharp
-_scanner.BluetoothStateChanged += (sender, args) =>
-{
-    Console.WriteLine($"Bluetooth state: {args.State}");
+There's no cross-platform adapter-state-changed event on `IBluetoothScanner` today. On iOS/macOS, `AppleBluetoothScanner.State` (`CBManagerState`) raises standard `INotifyPropertyChanged.PropertyChanged` notifications when it changes. The DI-injected `IBluetoothScanner` resolves to the `Bluetooth.Maui.BluetoothScanner` facade, which exposes the underlying platform scanner via `PlatformScanner`:
 
-    if (args.State == BluetoothState.Off)
+```csharp
+#if IOS || MACCATALYST
+var appleBluetoothScanner = (AppleBluetoothScanner)((BluetoothScanner)scanner).PlatformScanner;
+
+((INotifyPropertyChanged)appleBluetoothScanner).PropertyChanged += (sender, args) =>
+{
+    if (args.PropertyName == nameof(AppleBluetoothScanner.State))
     {
-        // Handle Bluetooth disabled
+        Console.WriteLine($"Bluetooth state: {appleBluetoothScanner.State}");
     }
 };
+#endif
 ```
+
+Android and Windows don't expose an equivalent today — their adapter state is tracked internally but isn't surfaced as a public property or event.
 
 ---
 

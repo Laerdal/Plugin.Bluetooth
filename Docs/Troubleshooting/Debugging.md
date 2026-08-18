@@ -43,19 +43,6 @@ public static class MauiProgram
 }
 ```
 
-### Enable Verbose Logging
-
-For detailed diagnostic information:
-
-```csharp
-builder.Services.Configure<BluetoothInfrastructureOptions>(options =>
-{
-    options.EnableVerboseLogging = true;
-});
-```
-
-**Warning:** Verbose logging significantly increases log volume and may impact performance. Use only during development/debugging.
-
 ### Configure Log Levels
 
 Control log verbosity by category:
@@ -67,6 +54,8 @@ builder.Logging.AddFilter("Bluetooth", LogLevel.Debug);
 builder.Logging.AddFilter("Bluetooth.Core.Scanning", LogLevel.Trace);
 builder.Logging.AddFilter("Bluetooth.Maui.Platforms.Droid", LogLevel.Information);
 ```
+
+**Warning:** `Trace`/`Debug` verbosity significantly increases log volume and may impact performance. Use only during development/debugging.
 
 ### Custom Logger Configuration
 
@@ -835,7 +824,6 @@ public class BluetoothDiagnostics
 
         sb.AppendLine("Scanner State:");
         sb.AppendLine($"  IsScanning: {_scanner.IsScanning}");
-        sb.AppendLine($"  Bluetooth State: {_scanner.BluetoothState}");
         sb.AppendLine($"  Device Count: {_scanner.GetDevices().Count}");
         sb.AppendLine();
 
@@ -844,7 +832,7 @@ public class BluetoothDiagnostics
         {
             sb.AppendLine($"  - {device.Name ?? "Unknown"} ({device.Id})");
             sb.AppendLine($"    Connected: {device.IsConnected}");
-            sb.AppendLine($"    RSSI: {device.Rssi}");
+            sb.AppendLine($"    Signal strength: {device.SignalStrengthDbm} dBm");
             sb.AppendLine($"    Services: {device.GetServices().Count}");
         }
 
@@ -913,10 +901,10 @@ public class BluetoothExceptionAnalyzer
 When troubleshooting issues, work through this checklist:
 
 ### Before Connecting
-- [ ] Bluetooth is enabled: `_scanner.BluetoothState == BluetoothState.On`
+- [ ] Bluetooth is enabled (no cross-platform check exists in this library today — on Apple platforms only, `AppleBluetoothScanner.State == CBManagerState.PoweredOn`)
 - [ ] Permissions granted: `await _scanner.HasScannerPermissionsAsync()`
 - [ ] Device found in scan: `_scanner.GetDeviceOrDefault(id) != null`
-- [ ] Device RSSI is reasonable: `device.Rssi > -90`
+- [ ] Device signal strength is reasonable: `device.SignalStrengthDbm > -90`
 
 ### During Connection
 - [ ] Connection options configured correctly

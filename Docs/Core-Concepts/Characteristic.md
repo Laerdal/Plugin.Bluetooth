@@ -110,7 +110,7 @@ if (characteristic.CanListen)
     // Subscribe to value changes
     characteristic.ValueUpdated += (s, args) =>
     {
-        var newValue = args.Value;
+        var newValue = args.NewValue;
         Console.WriteLine($"New value: {BitConverter.ToString(newValue.ToArray())}");
     };
 
@@ -273,8 +273,8 @@ await characteristic.StartListeningAsync();
 
 void OnValueUpdated(object sender, ValueUpdatedEventArgs args)
 {
-    Console.WriteLine($"New value: {BitConverter.ToString(args.Value.ToArray())}");
-    Console.WriteLine($"Timestamp: {args.Timestamp}");
+    Console.WriteLine($"New value: {BitConverter.ToString(args.NewValue.ToArray())}");
+    Console.WriteLine($"Old value: {BitConverter.ToString(args.OldValue.ToArray())}");
 }
 ```
 
@@ -369,7 +369,7 @@ async Task MonitorBatteryLevelAsync(IBluetoothRemoteDevice device)
     {
         characteristic.ValueUpdated += (s, args) =>
         {
-            int batteryLevel = args.Value.Span[0];
+            int batteryLevel = args.NewValue.Span[0];
             Console.WriteLine($"Battery level changed: {batteryLevel}%");
 
             if (batteryLevel < 20)
@@ -426,7 +426,7 @@ async Task MonitorHeartRateAsync(IBluetoothRemoteDevice device)
 
     characteristic.ValueUpdated += (s, args) =>
     {
-        var data = args.Value.Span;
+        var data = args.NewValue.Span;
 
         // Parse heart rate measurement (complex format)
         byte flags = data[0];

@@ -24,14 +24,15 @@ Legend:
 | Set PHY | ✅ API 26+ | ❌ | ❌ |
 | Open L2CAP channel | ✅ API 29+ | ✅ iOS 11+/macOS 10.13+ | ❌ |
 | Read RSSI while connected | ✅ | ✅ | ❌ |
-| Broadcaster start/stop | ✅ | ✅ | ❌ |
-| Local GATT service creation | ✅ | ✅ | ❌ |
+| Broadcaster start/stop | ✅ | ✅ | ✅ |
+| Local GATT service creation | ✅ | ✅ | ✅ |
+| Force-disconnect a subscribed GATT client | ✅ | ✅ | ❌ |
 
 ## 2. Unsupported Operation Semantics
 
 Windows behavior:
 - Unsupported operations throw NotSupportedException.
-- This includes L2CAP and broadcaster APIs, plus some advanced connected-device APIs.
+- This includes L2CAP APIs, some advanced connected-device APIs, and force-disconnecting a subscribed GATT client from a broadcaster (Windows exposes no API for a peripheral to disconnect a specific central).
 
 DotNetCore fallback behavior:
 - BLE runtime APIs throw PlatformNotSupportedException.
