@@ -17,8 +17,9 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
     ///     For more information, see <see href="https://docs.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs" />.
     /// </summary>
     /// <param name="args">The Windows Bluetooth LE advertisement received event arguments.</param>
-    /// <param name="associatedDevice">The associated (already known) Bluetooth remote device, if any. Used to substitute missing Manufacturer data.</param>
-    public WindowsBluetoothAdvertisement(BluetoothLEAdvertisementReceivedEventArgs args, IBluetoothRemoteDevice? associatedDevice)
+    /// <param name="hexAddress">The hexadecimal representation of the Bluetooth address.</param>
+    /// <param name="cachedManufacturer">Cached manufacturer information from earlier advertisements, if available.</param>
+    public WindowsBluetoothAdvertisement(BluetoothLEAdvertisementReceivedEventArgs args, string hexAddress, Manufacturer? cachedManufacturer)
     {
         ArgumentNullException.ThrowIfNull(args);
 
@@ -28,10 +29,10 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
             or BluetoothLEAdvertisementType.ConnectableUndirected;
         RawSignalStrengthInDBm = args.RawSignalStrengthInDBm;
         TransmitPowerLevelInDBm = ExtractTransmitPowerLevel(args);
-        BluetoothAddress = associatedDevice?.Id ?? NumericBleAddressToHexBleAddressConverter.Convert(args.BluetoothAddress);
+        BluetoothAddress = hexAddress;
         ManufacturerData = ExtractManufacturerData(args);
         DateReceived = DateTimeOffset.UtcNow;
-        CachedManufacturer = associatedDevice?.Manufacturer ?? Manufacturer.Unknown;
+        CachedManufacturer = cachedManufacturer ?? Manufacturer.Unknown;
     }
 
     #region IBluetoothAdvertisement Members

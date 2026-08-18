@@ -62,7 +62,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
             );
 
         // If the device is already known, pass in the cached manufacturer (if any) so it can substitute missing manufacturer data in the advertisement.
-        var advertisement = new WindowsBluetoothAdvertisement(argsAdvertisement, associatedDevice);
+        var advertisement = new WindowsBluetoothAdvertisement(argsAdvertisement, hexAddress, associatedDevice?.Manufacturer);
 
         Logger?.LogDeviceDiscovered(advertisement.BluetoothAddress, advertisement.RawSignalStrengthInDBm);
 
