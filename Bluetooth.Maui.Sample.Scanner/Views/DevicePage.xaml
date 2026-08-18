@@ -27,6 +27,12 @@
                    FontSize="14"
                    TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"
                    HorizontalOptions="Center" />
+            
+            <!-- Manufacturer -->
+            <Label Text="{Binding Manufacturer}"
+                   FontSize="14"
+                   TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"
+                   HorizontalOptions="Center" />
 
             <!-- Connection Status -->
             <Label x:Name="ConnectionStatus"

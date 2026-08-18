@@ -111,7 +111,7 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
     public string Id { get; }
 
     /// <inheritdoc />
-    public Manufacturer Manufacturer { get; }
+    public Manufacturer Manufacturer { get; private set; }
 
     /// <inheritdoc />
     public DateTimeOffset LastSeen { get; private set; }

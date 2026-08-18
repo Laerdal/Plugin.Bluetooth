@@ -53,6 +53,7 @@ public class DeviceViewModel : BaseViewModel
             OnPropertyChanged(nameof(DeviceName));
             OnPropertyChanged(nameof(DeviceId));
             OnPropertyChanged(nameof(IsConnected));
+            OnPropertyChanged(nameof(Manufacturer));
             UpdateCommands();
         }
     }
@@ -66,6 +67,11 @@ public class DeviceViewModel : BaseViewModel
     ///     Gets the device ID for display.
     /// </summary>
     public string DeviceId => Device?.Id ?? "N/A";
+
+    /// <summary>
+    ///     Gets the Manufacturer for display.
+    /// </summary>
+    public string Manufacturer => $"Manufacturer: {(Device != null ? Device.Manufacturer.ToString() : "N/A")}";
 
     /// <summary>
     ///     Gets whether the device is currently connected.

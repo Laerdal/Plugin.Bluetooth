@@ -37,20 +37,26 @@ public sealed partial class BluetoothLeAdvertisementWatcherWrapper : BaseBindabl
     {
         get
         {
-            if (_watcher == null)
+            lock (_lock)
             {
-                lock (_lock)
+                var watcher = _watcher;
+                if (watcher == null)
                 {
-                    _watcher = new BluetoothLEAdvertisementWatcher();
-                    _watcher.Received += BluetoothLEAdvertisementWatcher_Received;
-                    _watcher.Stopped += BluetoothLEAdvertisementWatcher_Stopped;
+                    watcher = new BluetoothLEAdvertisementWatcher
+                    {
+                        ScanningMode = BluetoothLEScanningMode.Active
+                    };
+                    watcher.Received += BluetoothLEAdvertisementWatcher_Received;
+                    watcher.Stopped += BluetoothLEAdvertisementWatcher_Stopped;
 
                     // Start ticker for property refresh
                     _refreshSubscription = _ticker.Register("BluetoothLeAdvertisementWatcherWrapper", TimeSpan.FromSeconds(1), RefreshValues, runImmediately: true);
-                }
-            }
 
-            return _watcher;
+                    _watcher = watcher;
+                }
+
+                return watcher;
+            }
         }
     }
 
