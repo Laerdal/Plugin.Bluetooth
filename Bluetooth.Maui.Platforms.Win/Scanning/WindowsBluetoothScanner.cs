@@ -281,24 +281,23 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     ///     Stops the Windows Bluetooth LE advertisement watcher and discards any advertisements still
     ///     buffered awaiting a scan response.
     /// </remarks>
-    protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected async override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogScanStopping();
         _watcher?.BluetoothLeAdvertisementWatcher.Stop();
 
-        // In-memory cleanup only (no I/O) on an infrequently-called stop path - the async
-        // alternatives these analyzers suggest buy nothing here.
-#pragma warning disable CA1849
         foreach (var hexAddress in _pendingAdvertisements.Keys.ToArray())
         {
+            // ConcurrentDictionary<TKey,TValue> has no async TryRemove overload - verified against
+            // the installed .NET 10 runtime via reflection, CA1849's suggestion here doesn't
+            // correspond to a real API. Timer does have DisposeAsync(), so that part is awaited for real.
+#pragma warning disable CA1849
             if (_pendingAdvertisements.TryRemove(hexAddress, out var pending))
+#pragma warning restore CA1849
             {
-                pending.Timer.Dispose();
+                await pending.Timer.DisposeAsync().ConfigureAwait(false);
             }
         }
-#pragma warning restore CA1849
-
-        return ValueTask.CompletedTask;
     }
 
     #endregion
