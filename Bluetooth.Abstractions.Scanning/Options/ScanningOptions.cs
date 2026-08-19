@@ -210,5 +210,25 @@ public record ScanningOptions
     /// </remarks>
     public object? Android { get; init; }
 
+    /// <summary>
+    ///     Gets the Windows platform-specific scanning options.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Should be an instance of <c>Bluetooth.Abstractions.Scanning.Options.Windows.WindowsScanningOptions</c>.
+    ///         These options are only used on Windows platforms and are ignored on other platforms.
+    ///     </para>
+    ///     <para>
+    ///         Provides access to Windows-specific scan settings such as:
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item><b>MergeScanResponses</b>: merge ADV/SCAN_RSP PDUs into one advertisement, matching Android/iOS</item>
+    ///         <item><b>ScanningMode</b>: active vs. passive scanning</item>
+    ///         <item><b>AllowExtendedAdvertisements</b>: Bluetooth 5.0+ extended advertising support</item>
+    ///         <item>Native signal strength filter knobs with no cross-platform equivalent</item>
+    ///     </list>
+    /// </remarks>
+    public object? Windows { get; init; }
+
     #endregion
 }
