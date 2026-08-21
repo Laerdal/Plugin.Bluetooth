@@ -14,7 +14,7 @@ namespace Bluetooth.Maui.Platforms.Win.Scanning;
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.bluetoothledevice">BluetoothLEDevice</seealso>
 ///     <seealso href="https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession">GattSession</seealso>
 /// </remarks>
-public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, BluetoothLeDeviceProxy.IBluetoothLeDeviceProxyDelegate, NativeObjects.GattSessionWrapper.IGattSessionDelegate
+public partial class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, BluetoothLeDeviceProxy.IBluetoothLeDeviceProxyDelegate, NativeObjects.GattSessionWrapper.IGattSessionDelegate
 {
     /// <summary>
     ///     Initializes a new instance of the Windows <see cref="WindowsBluetoothRemoteDevice" /> class.

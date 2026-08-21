@@ -27,6 +27,22 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     private NativeObjects.BluetoothLeAdvertisementWatcherWrapper Watcher =>
         _watcher ??= new NativeObjects.BluetoothLeAdvertisementWatcherWrapper(this, _ticker);
 
+    #region Scan-Response Merging (ADR 0003)
+
+    private bool _mergeScanResponses;
+    private TimeSpan _scanResponseMergeWindow = TimeSpan.FromMilliseconds(500);
+
+    /// <summary>
+    ///     Primary (ADV) advertisements awaiting either a correlated scan response or their merge
+    ///     timeout, keyed by hex Bluetooth address. Only populated when
+    ///     <c>WindowsScanningOptions.MergeScanResponses</c> is enabled.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, PendingAdvertisement> _pendingAdvertisements = new();
+
+    private sealed record PendingAdvertisement(BluetoothLEAdvertisementReceivedEventArgs Args, Timer Timer);
+
+    #endregion
+
     /// <inheritdoc />
     public WindowsBluetoothScanner(IBluetoothAdapter adapter,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
@@ -49,11 +65,93 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     ///     Called when a Bluetooth LE advertisement is received.
     /// </summary>
     /// <param name="argsAdvertisement">The advertisement event arguments.</param>
+    /// <remarks>
+    ///     See ADR 0003 (<c>Docs/Architecture/ADR/0003-windows-scan-response-handling.md</c>) for the
+    ///     full behavior this implements.
+    /// </remarks>
     public void OnAdvertisementReceived(BluetoothLEAdvertisementReceivedEventArgs argsAdvertisement)
     {
-        var advertisement = new WindowsBluetoothAdvertisement(argsAdvertisement);
+        ArgumentNullException.ThrowIfNull(argsAdvertisement);
+
+        var isScanResponse = argsAdvertisement.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse;
+
+        if (!_mergeScanResponses)
+        {
+            if (isScanResponse)
+            {
+                DispatchScanResponseToExistingDevice(argsAdvertisement);
+                return;
+            }
+
+            DispatchAdvertisement(new WindowsBluetoothAdvertisement(argsAdvertisement));
+            return;
+        }
+
+        var hexAddress = WindowsBluetoothAdvertisement.ConvertNumericBleAddressToHexBleAddress(argsAdvertisement.BluetoothAddress);
+
+        if (isScanResponse)
+        {
+            if (_pendingAdvertisements.TryRemove(hexAddress, out var pending))
+            {
+                pending.Timer.Dispose();
+                DispatchAdvertisement(new WindowsBluetoothAdvertisement(pending.Args, argsAdvertisement));
+            }
+
+            // Whether or not a pending merge was resolved above, also surface the raw scan response
+            // on the device if it's already known - a late scan response (buffer already timed out)
+            // falls back to the same path used when merging is off.
+            DispatchScanResponseToExistingDevice(argsAdvertisement);
+            return;
+        }
+
+        // Primary ADV PDU: buffer it, replacing (and disposing) any stale pending entry for this
+        // address that never resolved.
+#pragma warning disable CA2000 // Stored in _pendingAdvertisements and disposed by ResolvePendingAdvertisement, the scan-response branch above, or NativeStopAsync - not leaked.
+        var timer = new Timer(_ => ResolvePendingAdvertisement(hexAddress), null, _scanResponseMergeWindow, Timeout.InfiniteTimeSpan);
+#pragma warning restore CA2000
+        var entry = new PendingAdvertisement(argsAdvertisement, timer);
+        if (_pendingAdvertisements.TryGetValue(hexAddress, out var stale))
+        {
+            stale.Timer.Dispose();
+        }
+
+        _pendingAdvertisements[hexAddress] = entry;
+    }
+
+    /// <summary>
+    ///     Fires once <see cref="Abstractions.Scanning.Options.Windows.WindowsScanningOptions.ScanResponseMergeWindow" />
+    ///     elapses for a buffered advertisement with no scan response received - dispatches it ADV-only.
+    /// </summary>
+    private void ResolvePendingAdvertisement(string hexAddress)
+    {
+        if (!_pendingAdvertisements.TryRemove(hexAddress, out var pending))
+        {
+            return; // Already resolved by a scan response arriving concurrently.
+        }
+
+        pending.Timer.Dispose();
+        DispatchAdvertisement(new WindowsBluetoothAdvertisement(pending.Args, null));
+    }
+
+    private void DispatchAdvertisement(WindowsBluetoothAdvertisement advertisement)
+    {
         Logger?.LogDeviceDiscovered(advertisement.BluetoothAddress, advertisement.RawSignalStrengthInDBm);
         OnAdvertisementReceived(advertisement); // Base class method
+    }
+
+    /// <summary>
+    ///     Correlates a scan-response PDU to an already-known device and raises
+    ///     <c>WindowsBluetoothRemoteDevice.ScanResponseReceived</c> on it. A device is never created
+    ///     from a scan response alone - if none is found for this address yet, the PDU is dropped.
+    /// </summary>
+    private void DispatchScanResponseToExistingDevice(BluetoothLEAdvertisementReceivedEventArgs scanResponseArgs)
+    {
+        var hexAddress = WindowsBluetoothAdvertisement.ConvertNumericBleAddressToHexBleAddress(scanResponseArgs.BluetoothAddress);
+
+        if (GetDeviceOrDefault(hexAddress)?.UnderlyingPlatformDevice is WindowsBluetoothRemoteDevice windowsDevice)
+        {
+            windowsDevice.OnScanResponseReceived(new WindowsBluetoothAdvertisement(scanResponseArgs));
+        }
     }
 
     /// <summary>
@@ -95,12 +193,20 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     /// </remarks>
     protected override ValueTask NativeStartAsync(ScanningOptions scanningOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        Logger?.LogScanStarting(scanningOptions?.ScanMode, scanningOptions?.CallbackType);
+        ArgumentNullException.ThrowIfNull(scanningOptions);
+        Logger?.LogScanStarting(scanningOptions.ScanMode, scanningOptions.CallbackType);
+
+        var windowsOptions = scanningOptions.Windows as Abstractions.Scanning.Options.Windows.WindowsScanningOptions;
+        _mergeScanResponses = windowsOptions?.MergeScanResponses ?? false;
+        _scanResponseMergeWindow = windowsOptions?.ScanResponseMergeWindow ?? TimeSpan.FromMilliseconds(500);
+
+        var nativeWatcher = Watcher.BluetoothLeAdvertisementWatcher;
+        ConfigureNativeWatcher(nativeWatcher, scanningOptions, windowsOptions);
 
         // Start watcher (status change callback will call OnStartSucceeded)
         try
         {
-            Watcher.BluetoothLeAdvertisementWatcher.Start();
+            nativeWatcher.Start();
             Logger?.LogScanStarted();
         }
         catch (COMException e)
@@ -120,15 +226,78 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         return ValueTask.CompletedTask;
     }
 
+    /// <summary>
+    ///     Applies <see cref="ScanningOptions" /> and Windows-specific options to the native watcher
+    ///     before it starts. Covers cross-platform properties Windows already documents support for
+    ///     (<see cref="ScanningOptions.ScanMode" />, <see cref="ScanningOptions.RssiThreshold" />,
+    ///     <see cref="ScanningOptions.EnableExtendedAdvertising" />) but never previously wired up,
+    ///     plus Windows-only escape hatches with no cross-platform equivalent.
+    /// </summary>
+    private static void ConfigureNativeWatcher(BluetoothLEAdvertisementWatcher nativeWatcher, ScanningOptions scanningOptions, Abstractions.Scanning.Options.Windows.WindowsScanningOptions? windowsOptions)
+    {
+        nativeWatcher.ScanningMode = ToNativeScanningMode(windowsOptions?.ScanningMode, scanningOptions.ScanMode);
+
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
+        {
+            nativeWatcher.AllowExtendedAdvertisements = windowsOptions?.AllowExtendedAdvertisements ?? scanningOptions.EnableExtendedAdvertising;
+        }
+
+        // Always reassign (rather than only when a value is set) so a filter configured on a
+        // previous StartScanningAsync call doesn't linger once options no longer request it - the
+        // native watcher instance is created once and reused across start/stop cycles.
+        nativeWatcher.SignalStrengthFilter = new BluetoothSignalStrengthFilter
+        {
+            InRangeThresholdInDBm = scanningOptions.RssiThreshold.HasValue ? (short) scanningOptions.RssiThreshold.Value : null,
+            OutOfRangeThresholdInDBm = windowsOptions?.SignalStrengthOutOfRangeThresholdInDBm,
+            SamplingInterval = windowsOptions?.SignalStrengthSamplingInterval,
+            OutOfRangeTimeout = windowsOptions?.SignalStrengthOutOfRangeTimeout
+        };
+    }
+
+    /// <summary>
+    ///     Maps the Windows-specific <see cref="Abstractions.Scanning.Options.Windows.WindowsScanningMode" />
+    ///     escape hatch (when set) or the cross-platform <see cref="BluetoothScanMode" /> to a native
+    ///     scanning mode. Active scanning
+    ///     is preserved as the default for <see cref="BluetoothScanMode.Balanced" /> to match this
+    ///     plugin's existing (pre-ADR-0003) behavior. <see cref="BluetoothScanMode.LowPower" /> trades
+    ///     away scan-response reception entirely for reduced radio activity.
+    /// </summary>
+    private static BluetoothLEScanningMode ToNativeScanningMode(Abstractions.Scanning.Options.Windows.WindowsScanningMode? windowsScanningMode, BluetoothScanMode crossPlatformScanMode)
+    {
+        if (windowsScanningMode.HasValue)
+        {
+            return windowsScanningMode.Value == Abstractions.Scanning.Options.Windows.WindowsScanningMode.Passive
+                ? BluetoothLEScanningMode.Passive
+                : BluetoothLEScanningMode.Active;
+        }
+
+        return crossPlatformScanMode == BluetoothScanMode.LowPower
+            ? BluetoothLEScanningMode.Passive
+            : BluetoothLEScanningMode.Active;
+    }
+
     /// <inheritdoc />
     /// <remarks>
-    ///     Stops the Windows Bluetooth LE advertisement watcher.
+    ///     Stops the Windows Bluetooth LE advertisement watcher and discards any advertisements still
+    ///     buffered awaiting a scan response.
     /// </remarks>
-    protected override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected async override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogScanStopping();
         _watcher?.BluetoothLeAdvertisementWatcher.Stop();
-        return ValueTask.CompletedTask;
+
+        foreach (var hexAddress in _pendingAdvertisements.Keys.ToArray())
+        {
+            // ConcurrentDictionary<TKey,TValue> has no async TryRemove overload - verified against
+            // the installed .NET 10 runtime via reflection, CA1849's suggestion here doesn't
+            // correspond to a real API. Timer does have DisposeAsync(), so that part is awaited for real.
+#pragma warning disable CA1849
+            if (_pendingAdvertisements.TryRemove(hexAddress, out var pending))
+#pragma warning restore CA1849
+            {
+                await pending.Timer.DisposeAsync().ConfigureAwait(false);
+            }
+        }
     }
 
     #endregion
