@@ -47,7 +47,7 @@ dotnet add package Bluetooth.Maui
 Or via NuGet Package Manager:
 
 ```xml
-<PackageReference Include="Bluetooth.Maui" Version="1.0.0" />
+<PackageReference Include="Bluetooth.Maui" Version="4.0.16" />
 ```
 
 ## Quick Start
@@ -564,15 +564,12 @@ For issues, feature requests, or questions:
 
 ## Changelog
 
-### Recent Changes
+**v4.0.16** (Current)
 
-**v1.0.0** (Current)
+- 🐛 Fixed a stop-listening bug on already-disconnected characteristics
+- 🐛 Fixed reading `ManufacturerData` from scan responses
 
-- ✅ Windows platform implementation complete
-- ✅ Simplified exploration APIs (single method with options)
-- ✅ Modern DI registration with `AddBluetoothServices()`
-- ✅ Comprehensive XML documentation
-- ✅ Options pattern for all configuration
+See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 ---
 
