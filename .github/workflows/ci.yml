@@ -20,7 +20,7 @@ permissions:
   packages: write       # Needed if publishing packages
   actions: read         # Needed to read workflow artifacts
   checks: write         # Needed to create check runs for code coverage (EnricoMi/publish-unit-test-result-action requires this)
-  id-token: write       # Needed to authenticate with GitHub CLI
+  id-token: write       # Needed to authenticate with GitHub CLI, and for NuGet.org Trusted Publishing OIDC token exchange
   pages: write          # Needed to deploy to GitHub Pages
   pull-requests: write  # Needed to post comments on PRs (EnricoMi/publish-unit-test-result-action requires this)
   issues: read          # Needed to read issues (EnricoMi/publish-unit-test-result-action requires this)
@@ -154,11 +154,17 @@ jobs:
           name: packages
           path: '${{ github.workspace }}/packages'
 
+      - name: '🔑 NuGet login (OIDC → temp API key)'
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_ORG_USER }}
+
       - name: '📦 Push to NuGet.org'
         uses: laerdal/github_actions/dotnet-nuget-upload@main
         with:
           package-path: '${{ github.workspace }}/packages/*.nupkg'
-          api-key: ${{ secrets.NUGET_ORG_API_KEY }}
+          api-key: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
           source: 'https://api.nuget.org/v3/index.json'
           show-summary: true
 
