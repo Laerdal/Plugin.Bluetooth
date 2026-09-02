@@ -63,6 +63,7 @@ Goal of these docs:
 - [Contribution Definition of Done](Best-Practices/Contribution-DoD.md)
 - [Troubleshooting](Troubleshooting/Common-Issues.md)
 - [Debugging](Troubleshooting/Debugging.md)
+- [Changelog](../CHANGELOG.md)
 
 ## Layer Model
 

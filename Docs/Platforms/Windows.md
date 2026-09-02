@@ -8,6 +8,7 @@ Comprehensive guide for Plugin.Bluetooth on Windows platform using Windows Runti
 - [WinRT Bluetooth Architecture](#winrt-bluetooth-architecture)
 - [Configuration](#configuration)
 - [Feature Support](#feature-support)
+- [Scan-Response Handling](#scan-response-handling)
 - [Platform Limitations](#platform-limitations)
 - [Best Practices](#best-practices)
 - [Troubleshooting](#troubleshooting)
@@ -120,8 +121,17 @@ No programmatic permission request needed (unlike Android/iOS).
 ```csharp
 var options = new ScanningOptions
 {
-    // Windows scans continuously when started
-    // No platform-specific options for Windows scanning
+    ScanMode = BluetoothScanMode.Balanced,   // maps to active scanning (see below)
+    RssiThreshold = -70,                     // maps to the native in-range RSSI threshold
+    EnableExtendedAdvertising = false,       // maps to AllowExtendedAdvertisements (Windows 10 2004+)
+    Windows = new WindowsScanningOptions
+    {
+        // See "Scan-Response Handling" below for MergeScanResponses/ScanResponseMergeWindow.
+        // Knobs with no cross-platform equivalent, forwarded straight to the native filter:
+        SignalStrengthOutOfRangeThresholdInDBm = -85,
+        SignalStrengthSamplingInterval = TimeSpan.FromSeconds(1),
+        SignalStrengthOutOfRangeTimeout = TimeSpan.FromSeconds(5)
+    }
 };
 
 await scanner.StartScanningAsync(options);
@@ -141,6 +151,12 @@ scanner.DeviceListChanged += (sender, args) =>
 - RSSI available during scan
 - Advertisement data parsing (LocalName, ServiceUUIDs, ManufacturerData)
 - Lower power consumption than Android in most cases
+- `ScanMode.LowPower` switches the native watcher to **passive** scanning — lowest power, but scan
+  responses are never solicited at all (see below). Every other `ScanMode` value scans **active**,
+  matching this plugin's existing default.
+- `ServiceUuids` scan filtering is currently performed **in software** after each advertisement is
+  received, not via the native `BluetoothLEAdvertisementWatcher.AdvertisementFilter` — tracked as a
+  follow-up (SC-3208).
 
 #### 2. Connection
 ```csharp
@@ -320,6 +336,56 @@ var mtu = device.Mtu;
 ```
 
 **Reason**: WinRT only provides RSSI during advertisement scanning, not from connected devices.
+
+## Scan-Response Handling
+
+Android and iOS deliver one `IBluetoothAdvertisement` per advertising interval, with the OS/library
+already merging the primary advertisement (ADV) and scan-response (SCAN_RSP) payloads into a single
+`ManufacturerData` byte array before this plugin ever sees it. Windows is the exception:
+`BluetoothLEAdvertisementWatcher.Received` fires once **per PDU**, so a device sending both a
+scannable ADV and a SCAN_RSP produces two separate native events instead of one merged snapshot —
+each carrying only what that specific PDU contains. See ADR 0003
+(`Docs/Architecture/ADR/0003-windows-scan-response-handling.md`) for the full background.
+
+`WindowsScanningOptions.MergeScanResponses` controls how this plugin bridges that gap:
+
+```csharp
+await scanner.StartScanningAsync(new ScanningOptions
+{
+    Windows = new WindowsScanningOptions
+    {
+        MergeScanResponses = true,                                // default: false
+        ScanResponseMergeWindow = TimeSpan.FromMilliseconds(500)   // default; tune per hardware
+    }
+});
+```
+
+| Mode | Behavior |
+| --- | --- |
+| `MergeScanResponses = false` (default) | Advertisements dispatch immediately, exactly as before this option existed — no buffering, no added latency. A scan response is delivered separately via `WindowsBluetoothRemoteDevice.ScanResponseReceived` / `.LastScanResponse`, once the device already exists in the scanner's device list. |
+| `MergeScanResponses = true` | Each ADV PDU is buffered for up to `ScanResponseMergeWindow` waiting for its matching SCAN_RSP. Once resolved (scan response arrived, or the window elapsed), it dispatches through the normal `AdvertisementReceived` path — merged if a scan response arrived, ADV-only otherwise. `ScanResponseReceived`/`LastScanResponse` still fire afterward whenever a scan response was actually received, in both modes. |
+
+**In both modes, a device is never created from a scan response alone** — a SCAN_RSP PDU for an
+address with no previously-seen ADV is silently dropped.
+
+**Requires active scanning.** Passive scanning (`WindowsScanningOptions.ScanningMode = Passive`, or
+the cross-platform `ScanningOptions.ScanMode = BluetoothScanMode.LowPower`) never solicits a scan
+response from the peripheral at all — with either set, neither merging nor
+`ScanResponseReceived` will ever have anything to report, regardless of `MergeScanResponses`.
+
+```csharp
+scanner.DeviceListChanged += (sender, args) =>
+{
+    foreach (var device in scanner.Devices.OfType<WindowsBluetoothRemoteDevice>())
+    {
+        device.ScanResponseReceived += (s, scanResponseArgs) =>
+        {
+            Console.WriteLine($"Scan response from {device.Id}: "
+                + $"{BitConverter.ToString(scanResponseArgs.Advertisement.ManufacturerData.ToArray())}");
+        };
+    }
+};
+```
 
 ## Platform Limitations
 

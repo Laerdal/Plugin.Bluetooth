@@ -1,5 +1,5 @@
 {
-    "dotnet.defaultSolution": "Bluetooth.sln",
+    "dotnet.defaultSolution": "Bluetooth.slnx",
     "omnisharp.useModernNet": true,
     "dotnet.server.useOmnisharp": false,
     "files.exclude": {
