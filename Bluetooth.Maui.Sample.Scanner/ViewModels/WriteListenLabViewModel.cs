@@ -15,6 +15,7 @@ public class WriteListenLabViewModel : BaseViewModel
     ///     Initializes a new instance of the <see cref="WriteListenLabViewModel" /> class.
     /// </summary>
     public WriteListenLabViewModel(ILogger<WriteListenLabViewModel> logger)
+        : base(logger)
     {
         _logger = logger;
 

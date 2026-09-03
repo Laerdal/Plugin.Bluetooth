@@ -16,6 +16,7 @@ public class CharacteristicDetailViewModel : BaseViewModel
     ///     Initializes a new instance of the <see cref="CharacteristicDetailViewModel" /> class.
     /// </summary>
     public CharacteristicDetailViewModel(ILogger<CharacteristicDetailViewModel> logger)
+        : base(logger)
     {
         _logger = logger;
 

@@ -19,6 +19,7 @@ public class ClosestDeviceScanViewModel : BaseViewModel
     public ClosestDeviceScanViewModel(IBluetoothScanner scanner,
         INavigationService navigation,
         ILogger<ClosestDeviceScanViewModel> logger)
+        : base(logger)
     {
         _scanner = scanner;
         _navigation = navigation;

@@ -17,6 +17,7 @@ public class DeviceViewModel : BaseViewModel
     /// <param name="navigation">The navigation service.</param>
     /// <param name="logger">The logger instance.</param>
     public DeviceViewModel(INavigationService navigation, ILogger<DeviceViewModel> logger)
+        : base(logger)
     {
         _navigation = navigation;
         _logger = logger;

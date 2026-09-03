@@ -17,6 +17,7 @@ public class CharacteristicsViewModel : BaseViewModel
     /// <param name="navigation">The navigation service.</param>
     /// <param name="logger">The logger instance.</param>
     public CharacteristicsViewModel(INavigationService navigation, ILogger<CharacteristicsViewModel> logger)
+        : base(logger)
     {
         _navigation = navigation;
         _logger = logger;

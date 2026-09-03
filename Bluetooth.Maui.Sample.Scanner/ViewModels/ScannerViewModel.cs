@@ -25,6 +25,7 @@ public class ScannerViewModel : BaseViewModel
     /// <param name="navigation">The navigation service.</param>
     /// <param name="logger">The logger instance.</param>
     public ScannerViewModel(IBluetoothScanner scanner, INavigationService navigation, ILogger<ScannerViewModel> logger)
+        : base(logger)
     {
         _scanner = scanner;
         _navigation = navigation;
