@@ -10,8 +10,9 @@ public class ClosestDeviceScanViewModel : BaseViewModel
     private readonly ILogger<ClosestDeviceScanViewModel> _logger;
     private readonly INavigationService _navigation;
     private readonly IBluetoothScanner _scanner;
+    private IDispatcherTimer _uiRefreshTicker;
 
-    private bool _startedScanningOnThisPage;
+
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ClosestDeviceScanViewModel" /> class.
@@ -27,12 +28,33 @@ public class ClosestDeviceScanViewModel : BaseViewModel
 
         ScanStatus = "Ready to scan";
 
-        StartScanCommand = new AsyncRelayCommand(StartScanAsync, () => !_scanner.IsRunning && !_scanner.IsStarting);
-        StopScanCommand = new AsyncRelayCommand(StopScanAsync, () => _scanner.IsRunning || _scanner.IsStarting);
-        OpenDeviceCommand = new AsyncRelayCommand(OpenDeviceAsync, () => ClosestDevice != null);
+        StartScanCommand = new AsyncRelayCommand(StartScanAsync, () => !_scanner.IsRunning);
+        StopScanCommand = new AsyncRelayCommand(StopScanAsync, () => _scanner.IsRunning);
+        OpenDeviceCommand = new AsyncRelayCommand(OpenDeviceAsync, () => HasClosestDevice);
 
         _scanner.RunningStateChanged += OnRunningStateChanged;
-        _scanner.DeviceListChanged += OnDeviceListChanged;
+
+        _uiRefreshTicker = Application.Current!.Dispatcher.CreateTimer();
+
+        _uiRefreshTicker.Tick += RefreshUI;
+        _uiRefreshTicker.Interval = TimeSpan.FromMilliseconds(33);
+        _uiRefreshTicker.Start();
+    }
+
+    private void RefreshUI(object? sender, EventArgs e)
+    {
+        if(_scanner.IsRunning)
+        {
+            var closest = _scanner.GetClosestDeviceOrDefault(device => !string.IsNullOrWhiteSpace(device.Name))
+                          ?? _scanner.GetClosestDeviceOrDefault();
+
+            ClosestDevice = closest;
+            HasClosestDevice = closest != null;
+            ClosestDeviceName = closest?.Name;
+            ClosestDeviceId = closest?.Id;
+            ClosestSignalStrengthDbm = closest?.SignalStrengthDbm ?? -127;
+            ClosestSignalStrengthPercent = closest?.SignalStrengthPercent ?? 0.0;
+        }
     }
 
     /// <summary>
@@ -41,48 +63,59 @@ public class ClosestDeviceScanViewModel : BaseViewModel
     public IBluetoothRemoteDevice? ClosestDevice
     {
         get => GetValue<IBluetoothRemoteDevice?>(null);
-        private set
-        {
-            if (!SetValue(value))
-            {
-                return;
-            }
-
-            OnPropertyChanged(nameof(HasClosestDevice));
-            OnPropertyChanged(nameof(ClosestDeviceName));
-            OnPropertyChanged(nameof(ClosestDeviceId));
-            OnPropertyChanged(nameof(ClosestSignalStrengthDbm));
-            OnPropertyChanged(nameof(ClosestSignalStrengthPercent));
-            OpenDeviceCommand.NotifyCanExecuteChanged();
-        }
+        private set => SetValue(value); 
     }
 
     /// <summary>
     ///     Gets whether a closest device is available.
     /// </summary>
-    public bool HasClosestDevice => ClosestDevice != null;
+    public bool HasClosestDevice
+    {
+        get => GetValueOrDefault(false);
+        set
+        {
+            if (SetValue(value))
+            {
+                OpenDeviceCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
 
     /// <summary>
     ///     Gets the closest device display name.
     /// </summary>
-    public string ClosestDeviceName => string.IsNullOrWhiteSpace(ClosestDevice?.Name)
-        ? "Unknown Device"
-        : ClosestDevice.Name;
+    public string? ClosestDeviceName
+    {
+        get => GetValueOrDefault<string?>(null);
+        set => SetValue(value);
+    }
 
     /// <summary>
     ///     Gets the closest device id.
     /// </summary>
-    public string ClosestDeviceId => ClosestDevice?.Id ?? "N/A";
+    public string? ClosestDeviceId
+    {
+        get => GetValueOrDefault<string?>(null);
+        set => SetValue(value);
+    }
 
     /// <summary>
     ///     Gets the closest device RSSI.
     /// </summary>
-    public int ClosestSignalStrengthDbm => ClosestDevice?.SignalStrengthDbm ?? -127;
+    public int ClosestSignalStrengthDbm
+    {
+        get => GetValueOrDefault(-127);
+        set => SetValue(value);
+    }
 
     /// <summary>
     ///     Gets the closest device RSSI progress in the 0..1 range.
     /// </summary>
-    public double ClosestSignalStrengthPercent => ClosestDevice?.SignalStrengthPercent ?? 0.0;
+    public double ClosestSignalStrengthPercent
+    {
+        get => GetValueOrDefault(0.0d);
+        set => SetValue(value);
+    }
 
     /// <summary>
     ///     Gets or sets scan status text.
@@ -115,12 +148,10 @@ public class ClosestDeviceScanViewModel : BaseViewModel
 
         if (!_scanner.IsRunning)
         {
-            _startedScanningOnThisPage = true;
             await StartScanAsync();
         }
         else
         {
-            RefreshClosestDevice();
             UpdateStatus();
         }
     }
@@ -130,10 +161,9 @@ public class ClosestDeviceScanViewModel : BaseViewModel
     {
         await base.OnDisappearingAsync();
 
-        if (_startedScanningOnThisPage)
+        if (_scanner.IsRunning)
         {
             await StopScanAsync();
-            _startedScanningOnThisPage = false;
         }
     }
 
@@ -147,7 +177,6 @@ public class ClosestDeviceScanViewModel : BaseViewModel
             };
 
             await _scanner.StartScanningIfNeededAsync(options);
-            RefreshClosestDevice();
             UpdateStatus();
         }
         catch (Exception ex)
@@ -191,22 +220,6 @@ public class ClosestDeviceScanViewModel : BaseViewModel
             StopScanCommand.NotifyCanExecuteChanged();
             UpdateStatus();
         });
-    }
-
-    private void OnDeviceListChanged(object? sender, DeviceListChangedEventArgs e)
-    {
-        MainThread.BeginInvokeOnMainThread(() => {
-            RefreshClosestDevice();
-            UpdateStatus();
-        });
-    }
-
-    private void RefreshClosestDevice()
-    {
-        var closest = _scanner.GetClosestDeviceOrDefault(device => !string.IsNullOrWhiteSpace(device.Name))
-                      ?? _scanner.GetClosestDeviceOrDefault();
-
-        ClosestDevice = closest;
     }
 
     private void UpdateStatus()
