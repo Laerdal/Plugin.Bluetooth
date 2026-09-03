@@ -19,8 +19,6 @@
         <NoWarn>$(NoWarn);CA1034</NoWarn>
         <!-- CA1032 : Implement standard exception constructors -->
         <NoWarn>$(NoWarn);CA1032</NoWarn>
-        <!-- CS1591 : Missing documentation for publicly visible type or member -->
-        <!-- <NoWarn>$(NoWarn);CS1591</NoWarn> -->
         <!-- CA1816 : Call GC.SuppressFinalize correctly -->
         <NoWarn>$(NoWarn);CA1816</NoWarn>
     </PropertyGroup>
