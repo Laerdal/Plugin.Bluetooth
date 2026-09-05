@@ -37,7 +37,7 @@
     <!-- ==================== PACK : ICON ==================== -->
     <PropertyGroup Condition=" '$(PackageIconPath)' == '' ">
         <PackageIconPath>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `icon.png`))</PackageIconPath>
-        <PackageIconPath Condition="Exists('$(PackageIconPath)')">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `../icon.png`))</PackageIconPath>
+        <PackageIconPath Condition="!Exists('$(PackageIconPath)')">$([System.IO.Path]::Combine($(MSBuildThisFileDirectory), `../icon.png`))</PackageIconPath>
     </PropertyGroup>
     <PropertyGroup Condition="Exists('$(PackageIconPath)')">
         <PackageIcon Condition="Exists('$(PackageIconPath)')">icon.png</PackageIcon>
