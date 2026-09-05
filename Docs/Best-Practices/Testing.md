@@ -108,7 +108,7 @@ public class BluetoothMocks
         mock.Setup(d => d.Id).Returns(id ?? Guid.NewGuid());
         mock.Setup(d => d.Name).Returns(name);
         mock.Setup(d => d.IsConnected).Returns(false);
-        mock.Setup(d => d.SignalStrengthDbm).Returns(-50);
+        mock.Setup(d => d.SignalStrengthInDbm).Returns(-50);
         mock.Setup(d => d.Mtu).Returns(23);
 
         mock.Setup(d => d.ConnectAsync(
@@ -372,10 +372,10 @@ public class DeviceViewModelTests
         };
 
         // Act
-        _mockDevice.Setup(d => d.SignalStrengthDbm).Returns(-30);
+        _mockDevice.Setup(d => d.SignalStrengthInDbm).Returns(-30);
         _mockDevice.Raise(d => d.PropertyChanged += null,
             _mockDevice.Object,
-            new PropertyChangedEventArgs(nameof(IBluetoothRemoteDevice.SignalStrengthDbm)));
+            new PropertyChangedEventArgs(nameof(IBluetoothRemoteDevice.SignalStrengthInDbm)));
 
         // Assert
         propertyChangedRaised.Should().BeTrue();
@@ -920,7 +920,7 @@ public static class BluetoothAssertions
 
     public static void ShouldHaveGoodSignalStrength(this IBluetoothRemoteDevice device)
     {
-        device.SignalStrengthDbm.Should().BeGreaterThan(-70,
+        device.SignalStrengthInDbm.Should().BeGreaterThan(-70,
             "device should have good signal strength");
     }
 

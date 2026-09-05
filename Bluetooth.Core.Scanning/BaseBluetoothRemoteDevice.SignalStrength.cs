@@ -10,7 +10,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         if (!IsSignalStrengthProbingEnabled)
         {
             LogSignalStrengthProbingSkipped(Id);
-            return SignalStrengthDbm;
+            return SignalStrengthInDbm;
         }
 
         // Prevents multiple calls to ReadValueAsync, if already reading signal strength, we merge the calls
@@ -65,19 +65,19 @@ public abstract partial class BaseBluetoothRemoteDevice
     public bool IsSignalStrengthProbingEnabled { get; set; } = true;
 
     /// <inheritdoc />
-    public int SignalStrengthDbm
+    public int SignalStrengthInDbm
     {
         get => GetValue(0);
         private set
         {
             SetValue(value);
             _rssiHistory.Enqueue(value, IsConnected ? SignalStrengthSmoothingOptions.SmoothingWhenConnected : SignalStrengthSmoothingOptions.SmoothingOnAdvertisement);
-            SignalStrengthPercent = RssiToSignalStrengthConverter.Convert(_rssiHistory.Average());
+            SignalStrengthInPercent = RssiToSignalStrengthConverter.Convert(_rssiHistory.Average());
         }
     }
 
     /// <inheritdoc />
-    public double SignalStrengthPercent
+    public double SignalStrengthInPercent
     {
         get => GetValue(0d);
         private set => SetValue(value);
@@ -94,12 +94,12 @@ public abstract partial class BaseBluetoothRemoteDevice
     #region Callbacks
 
     /// <summary>
-    ///     Called when signal strength reading succeeds. Updates the SignalStrengthDbm property and completes the task.
+    ///     Called when signal strength reading succeeds. Updates the SignalStrengthInDbm property and completes the task.
     /// </summary>
     /// <param name="rssi">The signal strength value in dBm.</param>
     protected void OnSignalStrengthRead(int rssi)
     {
-        SignalStrengthDbm = rssi;
+        SignalStrengthInDbm = rssi;
         SignalStrengthReadingTcs?.TrySetResult(rssi);
     }
 

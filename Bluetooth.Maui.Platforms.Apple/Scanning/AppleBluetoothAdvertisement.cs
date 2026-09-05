@@ -32,7 +32,7 @@ public readonly record struct AppleBluetoothAdvertisement : IBluetoothAdvertisem
         TransmitPowerLevelInDBm = adData.TxPowerLevel?.Int32Value ?? 0;
         ManufacturerData = adData.ManufacturerData?.ToArray() ?? [];
 
-        RawSignalStrengthInDBm = rssi.Int32Value;
+        SignalStrengthInDBm = rssi.Int32Value;
 
         BluetoothAddress = cbPeripheral.Identifier.AsString();
 
@@ -59,7 +59,7 @@ public readonly record struct AppleBluetoothAdvertisement : IBluetoothAdvertisem
     public bool IsConnectable { get; }
 
     /// <inheritdoc />
-    public int RawSignalStrengthInDBm { get; }
+    public int SignalStrengthInDBm { get; }
 
     /// <inheritdoc />
     public int TransmitPowerLevelInDBm { get; }

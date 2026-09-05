@@ -103,7 +103,7 @@ public class ScannerViewModel
         foreach (var device in _scanner.Devices)
         {
             Console.WriteLine($"Found: {device.Name} ({device.Id})");
-            Console.WriteLine($"  RSSI: {device.SignalStrengthDbm} dBm");
+            Console.WriteLine($"  RSSI: {device.SignalStrengthInDbm} dBm");
         }
     }
 }

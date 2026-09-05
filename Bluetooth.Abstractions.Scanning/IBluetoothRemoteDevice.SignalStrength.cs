@@ -8,17 +8,17 @@ public partial interface IBluetoothRemoteDevice
     /// <summary>
     ///     Gets the signal strength in dBm.
     /// </summary>
-    int SignalStrengthDbm { get; }
+    int SignalStrengthInDbm { get; }
 
     /// <summary>
     ///     Gets the signal strength as a percentage (between 0.00 and 1.00).
     /// </summary>
-    double SignalStrengthPercent { get; }
+    double SignalStrengthInPercent { get; }
 
     /// <summary>
     ///     Gets or sets a value indicating whether this device may be probed for its signal strength. Defaults to <c>true</c>.
     ///     When set to <c>false</c>, <see cref="ReadSignalStrengthAsync" /> stops issuing native RSSI reads and returns the
-    ///     last known <see cref="SignalStrengthDbm" /> instead.
+    ///     last known <see cref="SignalStrengthInDbm" /> instead.
     /// </summary>
     /// <remarks>
     ///     Set this to <c>false</c> before starting a firmware update. Nordic's DFU bootloader tends to drop the connection
@@ -56,7 +56,7 @@ public partial interface IBluetoothRemoteDevice
     ///     </para>
     ///     <para>Call frequency should be limited to avoid impacting performance - recommended interval: 1-5 seconds.</para>
     ///     <para>
-    ///         Returns the last known <see cref="SignalStrengthDbm" /> without touching the radio when
+    ///         Returns the last known <see cref="SignalStrengthInDbm" /> without touching the radio when
     ///         <see cref="IsSignalStrengthProbingEnabled" /> is <c>false</c>.
     ///     </para>
     /// </remarks>

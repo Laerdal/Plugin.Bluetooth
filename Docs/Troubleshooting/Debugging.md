@@ -832,7 +832,7 @@ public class BluetoothDiagnostics
         {
             sb.AppendLine($"  - {device.Name ?? "Unknown"} ({device.Id})");
             sb.AppendLine($"    Connected: {device.IsConnected}");
-            sb.AppendLine($"    Signal strength: {device.SignalStrengthDbm} dBm");
+            sb.AppendLine($"    Signal strength: {device.SignalStrengthInDbm} dBm");
             sb.AppendLine($"    Services: {device.GetServices().Count}");
         }
 
@@ -904,7 +904,7 @@ When troubleshooting issues, work through this checklist:
 - [ ] Bluetooth is enabled (no cross-platform check exists in this library today — on Apple platforms only, `AppleBluetoothScanner.State == CBManagerState.PoweredOn`)
 - [ ] Permissions granted: `await _scanner.HasScannerPermissionsAsync()`
 - [ ] Device found in scan: `_scanner.GetDeviceOrDefault(id) != null`
-- [ ] Device signal strength is reasonable: `device.SignalStrengthDbm > -90`
+- [ ] Device signal strength is reasonable: `device.SignalStrengthInDbm > -90`
 
 ### During Connection
 - [ ] Connection options configured correctly

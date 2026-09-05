@@ -38,7 +38,7 @@ scanner.AdvertisementReceived += (sender, args) =>
 
     Console.WriteLine($"Device: {ad.DeviceName}");
     Console.WriteLine($"Address: {ad.BluetoothAddress}");
-    Console.WriteLine($"Signal: {ad.RawSignalStrengthInDBm} dBm");
+    Console.WriteLine($"Signal: {ad.SignalStrengthInDBm} dBm");
 };
 
 await scanner.StartScanningAsync();
@@ -57,7 +57,7 @@ scanner.AdvertisementReceived += (sender, args) =>
     DateTimeOffset timestamp = ad.DateReceived;
 
     // Signal strength
-    int rssi = ad.RawSignalStrengthInDBm;
+    int rssi = ad.SignalStrengthInDBm;
     int txPower = ad.TransmitPowerLevelInDBm;
 
     // Services
@@ -93,7 +93,7 @@ DateTimeOffset timestamp = advertisement.DateReceived;
 RSSI (Received Signal Strength Indicator) indicates how strong the signal is:
 
 ```csharp
-int rssi = advertisement.RawSignalStrengthInDBm;  // e.g., -65
+int rssi = advertisement.SignalStrengthInDBm;  // e.g., -65
 int txPower = advertisement.TransmitPowerLevelInDBm;  // Advertised TX power
 
 // Estimate distance using RSSI
@@ -258,7 +258,7 @@ async Task MonitorProximityAsync(IBluetoothScanner scanner, string deviceName)
 
         if (ad.DeviceName == deviceName)
         {
-            int rssi = ad.RawSignalStrengthInDBm;
+            int rssi = ad.SignalStrengthInDBm;
             string proximity = rssi switch
             {
                 >= -50 => "Very Close",
@@ -286,7 +286,7 @@ void LogAdvertisement(IBluetoothAdvertisement ad)
     Console.WriteLine("=== Advertisement ===");
     Console.WriteLine($"Device Name: {ad.DeviceName}");
     Console.WriteLine($"Address: {ad.BluetoothAddress}");
-    Console.WriteLine($"RSSI: {ad.RawSignalStrengthInDBm} dBm");
+    Console.WriteLine($"RSSI: {ad.SignalStrengthInDBm} dBm");
     Console.WriteLine($"TX Power: {ad.TransmitPowerLevelInDBm} dBm");
     Console.WriteLine($"Is Connectable: {ad.IsConnectable}");
     Console.WriteLine($"Timestamp: {ad.DateReceived}");
@@ -360,7 +360,7 @@ await scanner.StartScanningAsync(new ScanningOptions
     // Custom filter
     AdvertisementFilter = ad =>
         ad.DeviceName.Contains("Sensor") &&
-        ad.RawSignalStrengthInDBm > -80
+        ad.SignalStrengthInDBm > -80
 });
 ```
 

@@ -14,7 +14,7 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
     /// <param name="deviceName">The device name from the advertisement.</param>
     /// <param name="servicesGuids">The collection of service GUIDs advertised.</param>
     /// <param name="isConnectable">Whether the device is connectable.</param>
-    /// <param name="rawSignalStrengthInDBm">The raw signal strength (RSSI) in dBm.</param>
+    /// <param name="signalStrengthInDBm">The raw signal strength (RSSI) in dBm.</param>
     /// <param name="transmitPowerLevelInDBm">The transmit power level in dBm.</param>
     /// <param name="bluetoothAddress">The Bluetooth address of the device.</param>
     /// <param name="manufacturerData">The manufacturer-specific data.</param>
@@ -22,7 +22,7 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
         string? deviceName,
         IEnumerable<Guid>? servicesGuids,
         bool isConnectable,
-        int rawSignalStrengthInDBm,
+        int signalStrengthInDBm,
         int transmitPowerLevelInDBm,
         string? bluetoothAddress,
         ReadOnlyMemory<byte> manufacturerData)
@@ -30,7 +30,7 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
         DeviceName = deviceName ?? string.Empty;
         ServicesGuids = servicesGuids ?? [];
         IsConnectable = isConnectable;
-        RawSignalStrengthInDBm = rawSignalStrengthInDBm;
+        SignalStrengthInDBm = signalStrengthInDBm;
         TransmitPowerLevelInDBm = transmitPowerLevelInDBm;
         BluetoothAddress = bluetoothAddress ?? string.Empty;
         ManufacturerData = manufacturerData;
@@ -52,7 +52,7 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
     public bool IsConnectable { get; }
 
     /// <inheritdoc />
-    public int RawSignalStrengthInDBm { get; }
+    public int SignalStrengthInDBm { get; }
 
     /// <inheritdoc />
     public int TransmitPowerLevelInDBm { get; }

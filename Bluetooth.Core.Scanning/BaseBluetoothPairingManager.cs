@@ -99,7 +99,7 @@ public abstract class BaseBluetoothPairingManager : BaseBindableObject, IBluetoo
     public IBluetoothRemoteDevice? GetClosestPairedDeviceOrDefault(Func<IBluetoothRemoteDevice, bool>? filter = null)
     {
         filter ??= _defaultAcceptAllFilter;
-        return GetPairedDevices(filter).MaxBy(d => d.SignalStrengthPercent);
+        return GetPairedDevices(filter).MaxBy(d => d.SignalStrengthInPercent);
     }
 
     /// <inheritdoc />

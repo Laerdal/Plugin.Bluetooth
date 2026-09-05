@@ -23,7 +23,7 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         ServicesGuids = args.Advertisement.ServiceUuids?.ToArray() ?? [];
         IsConnectable = args.AdvertisementType is BluetoothLEAdvertisementType.ConnectableDirected
             or BluetoothLEAdvertisementType.ConnectableUndirected;
-        RawSignalStrengthInDBm = args.RawSignalStrengthInDBm;
+        SignalStrengthInDBm = args.SignalStrengthInDBm;
         TransmitPowerLevelInDBm = ExtractTransmitPowerLevel(args);
         BluetoothAddress = ConvertNumericBleAddressToHexBleAddress(args.BluetoothAddress);
         ManufacturerData = ExtractManufacturerData(args);
@@ -45,7 +45,7 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
     public bool IsConnectable { get; }
 
     /// <inheritdoc />
-    public int RawSignalStrengthInDBm { get; }
+    public int SignalStrengthInDBm { get; }
 
     /// <inheritdoc />
     public int TransmitPowerLevelInDBm { get; }

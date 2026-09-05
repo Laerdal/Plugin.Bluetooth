@@ -239,7 +239,7 @@ scanner.DeviceListChanged += (sender, args) =>
 {
     foreach (var device in scanner.Devices)
     {
-        Console.WriteLine($"RSSI: {device.SignalStrengthDbm} dBm");
+        Console.WriteLine($"RSSI: {device.SignalStrengthInDbm} dBm");
     }
 };
 
@@ -247,7 +247,7 @@ scanner.DeviceListChanged += (sender, args) =>
 await device.ReadSignalStrengthAsync();
 device.SignalStrengthRead += (sender, args) =>
 {
-    Console.WriteLine($"Connected RSSI: {args.SignalStrengthDbm} dBm");
+    Console.WriteLine($"Connected RSSI: {args.SignalStrengthInDbm} dBm");
 };
 ```
 

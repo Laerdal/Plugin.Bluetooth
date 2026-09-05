@@ -233,7 +233,7 @@ public abstract partial class BaseBluetoothScanner
 
         lock (Devices)
         {
-            return Devices.Where(filter).OrderByDescending(d => d.SignalStrengthPercent).FirstOrDefault();
+            return Devices.Where(filter).OrderByDescending(d => d.SignalStrengthInPercent).FirstOrDefault();
         }
     }
 

@@ -81,7 +81,7 @@ scanner.AdvertisementReceived += (sender, args) =>
     IBluetoothAdvertisement ad = args.Advertisement;
 
     Console.WriteLine($"Found: {ad.DeviceName}");
-    Console.WriteLine($"Signal: {ad.RawSignalStrengthInDBm} dBm");
+    Console.WriteLine($"Signal: {ad.SignalStrengthInDBm} dBm");
     Console.WriteLine($"Address: {ad.BluetoothAddress}");
 };
 ```
@@ -110,7 +110,7 @@ var options = new ScanningOptions
     // Custom filter function
     AdvertisementFilter = ad =>
         ad.DeviceName.Contains("Sensor") &&
-        ad.RawSignalStrengthInDBm > -70
+        ad.SignalStrengthInDBm > -70
 };
 ```
 
@@ -323,7 +323,7 @@ async Task<IBluetoothRemoteDevice> FindDeviceByNameAsync(string name)
 ```csharp
 scanner.AdvertisementReceived += (s, args) =>
 {
-    var rssi = args.Advertisement.RawSignalStrengthInDBm;
+    var rssi = args.Advertisement.SignalStrengthInDBm;
     var quality = rssi switch
     {
         >= -50 => "Excellent",

@@ -39,9 +39,9 @@ public interface IBluetoothAdvertisement
     ///     Raw Signal Strength In DBm.
     ///     Android : ScanResult.Rssi
     ///     iOS : Rssi.Int32Value
-    ///     Windows : BluetoothLeAdvertisementReceivedEventArgs.RawSignalStrengthInDBm
+    ///     Windows : BluetoothLeAdvertisementReceivedEventArgs.SignalStrengthInDBm
     /// </summary>
-    int RawSignalStrengthInDBm { get; }
+    int SignalStrengthInDBm { get; }
 
     /// <summary>
     ///     Represents the received transmit power of the advertisement.

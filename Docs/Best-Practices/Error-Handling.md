@@ -844,7 +844,7 @@ public class ErrorContextCapture
             {
                 DeviceId = device.Id,
                 DeviceName = device.Name,
-                SignalStrength = device.SignalStrengthDbm,
+                SignalStrength = device.SignalStrengthInDbm,
                 IsConnected = device.IsConnected
             };
         }

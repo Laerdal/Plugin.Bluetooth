@@ -131,7 +131,7 @@ scanner.DeviceListChanged += (sender, args) =>
 {
     foreach (var device in scanner.Devices)
     {
-        Console.WriteLine($"Found: {device.Name} RSSI: {device.SignalStrengthDbm} dBm");
+        Console.WriteLine($"Found: {device.Name} RSSI: {device.SignalStrengthInDbm} dBm");
     }
 };
 ```
@@ -219,7 +219,7 @@ scanner.DeviceListChanged += (sender, args) =>
     foreach (var device in scanner.Devices)
     {
         // Valid RSSI from advertisement
-        Console.WriteLine($"RSSI: {device.SignalStrengthDbm} dBm");
+        Console.WriteLine($"RSSI: {device.SignalStrengthInDbm} dBm");
     }
 };
 ```

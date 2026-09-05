@@ -25,7 +25,7 @@ public interface IBluetoothRemoteDevice : INotifyPropertyChanged, IAsyncDisposab
 {
     string? Name { get; }
     bool IsConnected { get; }
-    int SignalStrengthDbm { get; }
+    int SignalStrengthInDbm { get; }
     // ... other properties
 }
 
@@ -73,7 +73,7 @@ public class DeviceMonitorViewModel : ObservableObject
     // Bindable properties that expose device state
     public bool IsConnected => Device?.IsConnected ?? false;
 
-    public int SignalStrength => Device?.SignalStrengthDbm ?? 0;
+    public int SignalStrength => Device?.SignalStrengthInDbm ?? 0;
 
     public string ConnectionStatus => IsConnected ? "Connected" : "Disconnected";
 
@@ -87,7 +87,7 @@ public class DeviceMonitorViewModel : ObservableObject
                 OnPropertyChanged(nameof(ConnectionStatus));
                 break;
 
-            case nameof(IBluetoothRemoteDevice.SignalStrengthDbm):
+            case nameof(IBluetoothRemoteDevice.SignalStrengthInDbm):
                 OnPropertyChanged(nameof(SignalStrength));
                 break;
 
@@ -320,8 +320,8 @@ public partial class DeviceViewModel : ObservableObject
                     IsConnected = _device.IsConnected;
                     break;
 
-                case nameof(IBluetoothRemoteDevice.SignalStrengthDbm):
-                    SignalStrength = _device.SignalStrengthDbm;
+                case nameof(IBluetoothRemoteDevice.SignalStrengthInDbm):
+                    SignalStrength = _device.SignalStrengthInDbm;
                     break;
             }
         });
@@ -354,7 +354,7 @@ public partial class DeviceViewModel : ObservableObject
     private void UpdateFromDevice()
     {
         IsConnected = _device.IsConnected;
-        SignalStrength = _device.SignalStrengthDbm;
+        SignalStrength = _device.SignalStrengthInDbm;
         ConnectionStatus = IsConnected ? "Connected" : "Disconnected";
     }
 }
@@ -674,8 +674,8 @@ public partial class ModernDeviceViewModel : ObservableObject
                     DisconnectCommand.NotifyCanExecuteChanged();
                     break;
 
-                case nameof(IBluetoothRemoteDevice.SignalStrengthDbm):
-                    SignalStrength = _device.SignalStrengthDbm;
+                case nameof(IBluetoothRemoteDevice.SignalStrengthInDbm):
+                    SignalStrength = _device.SignalStrengthInDbm;
                     break;
             }
         });

@@ -480,10 +480,10 @@ public class BluetoothRemoteDevice : IBluetoothRemoteDevice
     #region IBluetoothRemoteDevice Implementation - Signal Strength
 
     /// <inheritdoc />
-    public int SignalStrengthDbm => _platformDevice.SignalStrengthDbm;
+    public int SignalStrengthInDbm => _platformDevice.SignalStrengthInDbm;
 
     /// <inheritdoc />
-    public double SignalStrengthPercent => _platformDevice.SignalStrengthPercent;
+    public double SignalStrengthInPercent => _platformDevice.SignalStrengthInPercent;
 
     /// <inheritdoc />
     public bool IsSignalStrengthProbingEnabled

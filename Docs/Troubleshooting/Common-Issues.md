@@ -187,13 +187,13 @@ On iOS/macOS specifically, `AppleBluetoothScanner` (the concrete platform scanne
 
 iOS is more sensitive to signal strength than Android. Solutions:
 - Ensure device is within range (typically 10 meters)
-- Check signal strength: `device.SignalStrengthDbm` (values below -90 dBm may be unreliable)
+- Check signal strength: `device.SignalStrengthInDbm` (values below -90 dBm may be unreliable)
 - Wait for stronger signal before connecting
 
 ```csharp
 // Wait for device to be in range
 await _scanner.WaitForDeviceToAppearAsync(
-    d => d.Id == knownDeviceId && d.SignalStrengthDbm > -80,
+    d => d.Id == knownDeviceId && d.SignalStrengthInDbm > -80,
     timeout: TimeSpan.FromSeconds(30)
 );
 
@@ -833,7 +833,7 @@ See [Debugging Guide](./Debugging.md) for log analysis details.
 ```csharp
 Console.WriteLine($"Device: {device.Name}");
 Console.WriteLine($"Connected: {device.IsConnected}");
-Console.WriteLine($"Signal strength: {device.SignalStrengthDbm} dBm");
+Console.WriteLine($"Signal strength: {device.SignalStrengthInDbm} dBm");
 Console.WriteLine($"Services: {device.GetServices().Count}");
 ```
 

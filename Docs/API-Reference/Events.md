@@ -84,7 +84,7 @@ There is no `RssiChanged`-style event exposed on `IBluetoothRemoteDevice` — `R
 int rssi = await device.ReadSignalStrengthAsync();
 ```
 
-`device.SignalStrengthDbm` holds the last-read value without triggering a new native read; `device.SignalStrengthPercent` gives a normalized 0-100 view of the same reading.
+`device.SignalStrengthInDbm` holds the last-read value without triggering a new native read; `device.SignalStrengthInPercent` gives a normalized 0-100 view of the same reading.
 
 ## Where each event lives
 

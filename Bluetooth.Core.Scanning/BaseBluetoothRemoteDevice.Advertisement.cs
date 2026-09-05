@@ -55,7 +55,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
 
         // SignalStrength
-        OnSignalStrengthRead(advertisement.RawSignalStrengthInDBm);
+        OnSignalStrengthRead(advertisement.SignalStrengthInDBm);
 
         // Throw event
         AdvertisementReceived?.Invoke(this, new AdvertisementReceivedEventArgs(advertisement));

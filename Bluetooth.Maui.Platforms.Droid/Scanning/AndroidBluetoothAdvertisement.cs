@@ -28,7 +28,7 @@ public readonly record struct AndroidBluetoothAdvertisement : IBluetoothAdvertis
     public AndroidBluetoothAdvertisement(ScanResult scanResult)
     {
         ArgumentNullException.ThrowIfNull(scanResult);
-        RawSignalStrengthInDBm = scanResult.Rssi;
+        SignalStrengthInDBm = scanResult.Rssi;
         IsConnectable = !OperatingSystem.IsAndroidVersionAtLeast(26) || scanResult.IsConnectable;
 
         ArgumentNullException.ThrowIfNull(scanResult.ScanRecord, nameof(scanResult.ScanRecord));
@@ -59,7 +59,7 @@ public readonly record struct AndroidBluetoothAdvertisement : IBluetoothAdvertis
     public bool IsConnectable { get; }
 
     /// <inheritdoc />
-    public int RawSignalStrengthInDBm { get; }
+    public int SignalStrengthInDBm { get; }
 
     /// <inheritdoc />
     public int TransmitPowerLevelInDBm { get; }
