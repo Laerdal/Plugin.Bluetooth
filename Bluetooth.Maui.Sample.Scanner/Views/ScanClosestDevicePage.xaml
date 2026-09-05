@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<base:BaseContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                      xmlns:base="clr-namespace:Bluetooth.Maui.Sample.Scanner.Infrastructure"
+                      xmlns:vm="clr-namespace:Bluetooth.Maui.Sample.Scanner.ViewModels"
+                      xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+                      x:Class="Bluetooth.Maui.Sample.Scanner.Views.ScanClosestDevicePage"
+                      x:TypeArguments="vm:ScanClosestDeviceViewModel"
+                      x:DataType="vm:ScanClosestDeviceViewModel"
+                      Title="Closest Device Scan">
+
+    <Grid Padding="20"
+          RowDefinitions="Auto,*,Auto"
+          RowSpacing="18">
+
+        <VerticalStackLayout Grid.Row="0"
+                Spacing="8"
+                HorizontalOptions="Fill">
+
+            <!-- Status Label -->
+            <Label x:Name="StatusLabel"
+                   FontAttributes="Bold"
+                   FontSize="18"
+                   HorizontalOptions="Center"
+                   Text="{Binding ScanStatus}"
+                   TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
+
+            <!-- Scan Controls -->
+            <HorizontalStackLayout Spacing="12"
+                    HorizontalOptions="Center">
+                <Button Text="Start Scan"
+                        Command="{Binding StartScanCommand}"
+                        WidthRequest="120"/>
+                <Button Text="Stop Scan"
+                        Command="{Binding StopScanCommand}"
+                        WidthRequest="120"/>
+            </HorizontalStackLayout>
+
+
+            <toolkit:Expander IsExpanded="False">
+                <toolkit:Expander.Header>
+                    <Grid ColumnDefinitions="Auto,*,Auto"
+                            ColumnSpacing="8"
+                            VerticalOptions="Center">
+                        <Label Grid.Column="0"
+                               Text="⚙️"
+                               FontSize="14"
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1"
+                               Text="Filters"
+                               FontAttributes="Bold"
+                               FontSize="15"
+                               VerticalOptions="Center"/>
+                        <Button Grid.Column="2"
+                                Text="Reset Filters"
+                                Command="{Binding ClearFiltersCommand}"
+                                FontSize="12"
+                                Padding="10,6"/>
+                    </Grid>
+                </toolkit:Expander.Header>
+
+                <toolkit:Expander.Content>
+                    <!-- Filters -->
+                    <Border Padding="12"
+                            Margin="0,8,0,0"
+                            Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}"
+                            StrokeShape="RoundRectangle 8">
+                        <VerticalStackLayout Spacing="8">
+                            <HorizontalStackLayout Spacing="10"
+                                    VerticalOptions="Center">
+                                <Switch IsToggled="{Binding HideUnnamedDevices}"/>
+                                <Label Text="Hide unnamed devices"
+                                       VerticalOptions="Center"
+                                       FontSize="13"/>
+                            </HorizontalStackLayout>
+
+                            <Entry Placeholder="Name contains (e.g. Sensor)"
+                                   Text="{Binding DeviceNameFilter}"/>
+
+                            <Grid ColumnDefinitions="*,Auto"
+                                    RowDefinitions="Auto,Auto"
+                                    RowSpacing="4">
+                                <Label Grid.Row="0"
+                                        Grid.Column="0"
+                                       Text="Minimum signal strength"
+                                       FontSize="13"/>
+                                <Label Grid.Row="0"
+                                        Grid.Column="1"
+                                       Text="{Binding MinimumSignalStrengthText}"
+                                       FontSize="13"
+                                       FontAttributes="Bold"/>
+                                <Slider Grid.Row="1"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="2"
+                                        Minimum="-100"
+                                        Maximum="-30"
+                                        Value="{Binding MinimumSignalStrengthInDbm}"/>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </toolkit:Expander.Content>
+            </toolkit:Expander>
+
+            <BoxView HeightRequest="1"
+                    Color="{AppThemeBinding Light={StaticResource LightDivider}, Dark={StaticResource DarkDividerColor}}"
+                    Margin="0,8"/>
+
+        </VerticalStackLayout>
+
+        <Border Grid.Row="1"
+                Padding="20"
+                StrokeShape="RoundRectangle 24"
+                StrokeThickness="2"
+                Stroke="{AppThemeBinding Light={StaticResource LightBorder}, Dark={StaticResource DarkBorderColor}}"
+                BackgroundColor="{AppThemeBinding Light={StaticResource LightCardBackground}, Dark={StaticResource DarkCardBackgroundColor}}"
+                VerticalOptions="Fill"
+                HorizontalOptions="Fill">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,*"
+                    RowSpacing="10">
+                <Label Grid.Row="0"
+                       Text="{Binding ClosestDeviceName}"
+                       FontSize="34"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       LineBreakMode="TailTruncation"/>
+
+                <Label Grid.Row="1"
+                       Text="{Binding ClosestDeviceId}"
+                       FontFamily="Courier"
+                       FontSize="12"
+                       HorizontalTextAlignment="Center"
+                       HorizontalOptions="Center"
+                       LineBreakMode="CharacterWrap"
+                       TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
+
+                <Label Grid.Row="2"
+                       Text="{Binding ClosestSignalStrengthInDbm, StringFormat='RSSI {0} dBm'}"
+                       FontSize="24"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"/>
+
+                <ProgressBar Grid.Row="3"
+                             Margin="20,2,20,0"
+                             Progress="{Binding ClosestSignalStrengthInPercent}"
+                             HeightRequest="10"
+                             ProgressColor="{StaticResource Primary}"/>
+
+                <VerticalStackLayout Grid.Row="4"
+                                     VerticalOptions="Center"
+                                     HorizontalOptions="Center"
+                                     Spacing="6"
+                                     IsVisible="{Binding HasClosestDevice, Converter={StaticResource InvertedBoolConverter}}">
+                    <ActivityIndicator IsRunning="True"
+                                       Color="{StaticResource Primary}"
+                                       WidthRequest="42"
+                                       HeightRequest="42"/>
+                    <Label Text="Searching for nearest device..."
+                           FontSize="13"
+                           HorizontalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <Button Grid.Row="2"
+                Text="Open"
+                Command="{Binding OpenDeviceCommand}"/>
+    </Grid>
+
+</base:BaseContentPage>

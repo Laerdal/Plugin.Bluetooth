@@ -35,8 +35,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<INavigationService, NavigationService>();
 
         // Register pages and view models
-        builder.Services.AddTransient<ScannerPage>();
-        builder.Services.AddTransient<ScannerViewModel>();
+        builder.Services.AddTransient<ScanListPage>();
+        builder.Services.AddTransient<ScanListViewModel>();
         builder.Services.AddTransient<DevicePage>();
         builder.Services.AddTransient<DeviceViewModel>();
         builder.Services.AddTransient<CharacteristicsPage>();
@@ -45,8 +45,8 @@ public static class MauiProgram
         builder.Services.AddTransient<CharacteristicDetailViewModel>();
         builder.Services.AddTransient<WriteListenLabPage>();
         builder.Services.AddTransient<WriteListenLabViewModel>();
-        builder.Services.AddTransient<ClosestDeviceScanPage>();
-        builder.Services.AddTransient<ClosestDeviceScanViewModel>();
+        builder.Services.AddTransient<ScanClosestDevicePage>();
+        builder.Services.AddTransient<ScanClosestDeviceViewModel>();
 
         return builder.Build();
     }

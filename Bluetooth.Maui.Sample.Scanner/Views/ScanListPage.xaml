@@ -6,9 +6,9 @@
                       xmlns:vm="clr-namespace:Bluetooth.Maui.Sample.Scanner.ViewModels"
                       xmlns:scan="clr-namespace:Bluetooth.Abstractions.Scanning;assembly=Bluetooth.Abstractions.Scanning"
                       xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-                      x:Class="Bluetooth.Maui.Sample.Scanner.Views.ScannerPage"
-                      x:TypeArguments="vm:ScannerViewModel"
-                      x:DataType="vm:ScannerViewModel"
+                      x:Class="Bluetooth.Maui.Sample.Scanner.Views.ScanListPage"
+                      x:TypeArguments="vm:ScanListViewModel"
+                      x:DataType="vm:ScanListViewModel"
                       Title="BLE Scanner">
 
     <Grid RowDefinitions="Auto,*" Padding="16">
@@ -20,18 +20,10 @@
             <Label x:Name="StatusLabel"
                    FontAttributes="Bold"
                    FontSize="18"
-                   HorizontalOptions="Center">
-                <Label.Triggers>
-                    <DataTrigger TargetType="Label" Binding="{Binding IsScanning}" Value="True">
-                        <Setter Property="Text" Value="🔵 Scanning for devices..." />
-                        <Setter Property="TextColor" Value="{StaticResource Primary}" />
-                    </DataTrigger>
-                    <DataTrigger TargetType="Label" Binding="{Binding IsScanning}" Value="False">
-                        <Setter Property="Text" Value="⚫ Stopped" />
-                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
-                    </DataTrigger>
-                </Label.Triggers>
-            </Label>
+                   HorizontalOptions="Center"
+                   Text="{Binding ScanStatus}"         
+                   TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}"/>
+
 
             <!-- Device Count -->
             <Label Text="{Binding DeviceCount, StringFormat='{0} devices found'}"
@@ -43,11 +35,9 @@
             <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
                 <Button Text="Start Scan"
                         Command="{Binding StartScanCommand}"
-                        IsVisible="{Binding IsScanning, Converter={StaticResource InvertedBoolConverter}}"
                         WidthRequest="120" />
                 <Button Text="Stop Scan"
                         Command="{Binding StopScanCommand}"
-                        IsVisible="{Binding IsScanning}"
                         WidthRequest="120" />
             </HorizontalStackLayout>
 
@@ -92,7 +82,7 @@
                             </HorizontalStackLayout>
 
                             <Entry Placeholder="Name contains (e.g. Sensor)"
-                                   Text="{Binding NamePattern}" />
+                                   Text="{Binding DeviceNameFilter}" />
 
                             <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
                                 <Label Grid.Row="0" Grid.Column="0"
@@ -105,7 +95,7 @@
                                 <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                         Minimum="-100"
                                         Maximum="-30"
-                                        Value="{Binding MinimumSignalStrengthDbm}" />
+                                        Value="{Binding MinimumSignalStrengthInDbm}" />
                             </Grid>
                         </VerticalStackLayout>
                     </Border>
@@ -180,11 +170,11 @@
                                        FontSize="12"
                                        TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
                                 <ProgressBar Grid.Column="1"
-                                             Progress="{Binding SignalStrengthPercent}"
+                                             Progress="{Binding SignalStrengthInPercent}"
                                              ProgressColor="{StaticResource Primary}"
                                              VerticalOptions="Center" />
                                 <Label Grid.Column="2"
-                                       Text="{Binding SignalStrengthDbm, StringFormat='{0} dBm'}"
+                                       Text="{Binding SignalStrengthInDbm, StringFormat='{0} dBm'}"
                                        FontSize="12"
                                        TextColor="{AppThemeBinding Light={StaticResource LightTextSecondary}, Dark={StaticResource DarkTextSecondary}}" />
                             </Grid>

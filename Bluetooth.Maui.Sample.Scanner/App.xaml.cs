@@ -28,7 +28,7 @@ public partial class App : Application
     /// <returns>A configured window with the main navigation page.</returns>
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        var scannerPage = _serviceProvider.GetRequiredService<ScannerPage>();
+        var scannerPage = _serviceProvider.GetRequiredService<ScanListPage>();
         var navigationPage = new NavigationPage(scannerPage);
         return new Window(navigationPage);
     }
