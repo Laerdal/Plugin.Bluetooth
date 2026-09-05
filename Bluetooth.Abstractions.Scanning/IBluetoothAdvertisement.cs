@@ -39,7 +39,7 @@ public interface IBluetoothAdvertisement
     ///     Raw Signal Strength In DBm.
     ///     Android : ScanResult.Rssi
     ///     iOS : Rssi.Int32Value
-    ///     Windows : BluetoothLeAdvertisementReceivedEventArgs.SignalStrengthInDBm
+    ///     Windows : BluetoothLeAdvertisementReceivedEventArgs.RawSignalStrengthInDBm
     /// </summary>
     int SignalStrengthInDBm { get; }
 
