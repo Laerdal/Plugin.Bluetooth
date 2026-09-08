@@ -23,6 +23,6 @@ updates:
         patterns:
           - "*"
     ignore:
-    - dependency-name: "FluentAssertions" # Ignore major-version updates FluentAssertions from version 8 and above
-      versions: [ ">= 8.0.0" ] # because FluentAssertions requires a paid license for corporate use
-      update-types: [ "version-update:semver-major" ]
+      - dependency-name: "FluentAssertions" # Ignore major-version updates FluentAssertions from version 8 and above
+        versions: [ ">= 8.0.0" ] # because FluentAssertions requires a paid license for corporate use
+        update-types: [ "version-update:semver-major" ]
