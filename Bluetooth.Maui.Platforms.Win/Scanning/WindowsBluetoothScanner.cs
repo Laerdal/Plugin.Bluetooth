@@ -52,7 +52,8 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     public void OnAdvertisementReceived(BluetoothLEAdvertisementReceivedEventArgs argsAdvertisement)
     {
         var advertisement = new WindowsBluetoothAdvertisement(argsAdvertisement);
-        Logger?.LogDeviceDiscovered(advertisement.BluetoothAddress, advertisement.SignalStrengthInDBm);
+        var deviceName = string.IsNullOrEmpty(advertisement.DeviceName) ? "(no name)" : advertisement.DeviceName;
+        Logger?.LogDeviceDiscovered(advertisement.BluetoothAddress, deviceName, advertisement.Manufacturer, advertisement.SignalStrengthInDBm);
         OnAdvertisementReceived(advertisement); // Base class method
     }
 

@@ -177,10 +177,12 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         var advertisement = new AppleBluetoothAdvertisement(peripheral, advertisementData, rssi);
         var isScanning = CbCentralManagerWrapper.CbCentralManagerIsScanning;
         var deviceIdStr = peripheral.Identifier.ToString();
+        var deviceName = string.IsNullOrEmpty(advertisement.DeviceName) ? "(no name)" : advertisement.DeviceName;
+        var manufacturer = advertisement.Manufacturer;
         var rssiValue = rssi.Int32Value;
 
         MainThreadDispatcher.BeginInvokeOnMainThread(() => {
-            Logger?.LogDeviceDiscovered(deviceIdStr, rssiValue);
+            Logger?.LogDeviceDiscovered(deviceIdStr, deviceName, manufacturer, rssiValue);
             IsRunning = isScanning;
             OnAdvertisementReceived(advertisement);
         });

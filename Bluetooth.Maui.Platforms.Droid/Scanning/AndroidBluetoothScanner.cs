@@ -344,9 +344,9 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             return;
         }
 
-        Logger?.LogDeviceDiscovered(nativeDevice.Address ?? "Unknown", result.Rssi);
-
         var advertisement = new AndroidBluetoothAdvertisement(result);
+        var deviceName = string.IsNullOrEmpty(advertisement.DeviceName) ? "(no name)" : advertisement.DeviceName;
+        Logger?.LogDeviceDiscovered(nativeDevice.Address ?? "Unknown", deviceName, advertisement.Manufacturer, result.Rssi);
 
         // Use base class method to handle advertisement (filtering, device creation, etc.)
         OnAdvertisementReceived(advertisement);

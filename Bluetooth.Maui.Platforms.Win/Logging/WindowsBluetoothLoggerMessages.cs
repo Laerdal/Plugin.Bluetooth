@@ -72,10 +72,12 @@ internal static partial class WindowsBluetoothLoggerMessages
     [LoggerMessage(
         EventId = 1007,
         Level = LogLevel.Debug,
-        Message = "Device discovered: {DeviceAddress}, RSSI: {Rssi}")]
+        Message = "Device discovered: {DeviceAddress}, Name: {DeviceName}, Manufacturer: {Manufacturer}, RSSI: {Rssi}")]
     public static partial void LogDeviceDiscovered(
         this ILogger logger,
         string deviceAddress,
+        string deviceName,
+        Manufacturer manufacturer,
         int rssi);
 
     [LoggerMessage(
