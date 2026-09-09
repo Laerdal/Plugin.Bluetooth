@@ -68,7 +68,7 @@ internal static partial class AndroidBluetoothLoggerMessages
 
     [LoggerMessage(
         EventId = 1007,
-        Level = LogLevel.Debug,
+        Level = LogLevel.Trace,
         Message = "Device discovered: {DeviceAddress}, Name: {DeviceName}, Manufacturer: {Manufacturer}, RSSI: {Rssi}")]
     public static partial void LogDeviceDiscovered(
         this ILogger logger,
