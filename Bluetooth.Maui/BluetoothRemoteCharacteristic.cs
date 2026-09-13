@@ -114,6 +114,18 @@ public class BluetoothRemoteCharacteristic : IBluetoothRemoteCharacteristic
     }
 
     /// <inheritdoc />
+    public ValueTask<bool> ReadIsListeningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        return _platformCharacteristic.ReadIsListeningAsync(timeout, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public ValueTask WriteIsListeningAsync(bool shouldBeListening, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        return _platformCharacteristic.WriteIsListeningAsync(shouldBeListening, timeout, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public virtual async ValueTask WriteValueAsync(ReadOnlyMemory<byte> value,
         bool skipIfOldValueMatchesNewValue = false,
         TimeSpan? timeout = null,
