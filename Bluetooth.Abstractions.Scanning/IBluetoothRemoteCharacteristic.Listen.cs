@@ -55,6 +55,14 @@ public partial interface IBluetoothRemoteCharacteristic
     /// <exception cref="CharacteristicCantListenException">Thrown when the characteristic doesn't support notifications.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
+    /// <remarks>
+    ///     Prefer <see cref="StartListeningAsync"/>/<see cref="StopListeningAsync"/> unless you have a
+    ///     specific reason to bypass them (see <see cref="WriteIsListeningAsync"/>). This method and
+    ///     <see cref="WriteIsListeningAsync"/> both update <see cref="IsListening"/> but are not
+    ///     synchronized against each other - calling them concurrently on the same characteristic from
+    ///     independent call sites can race, with whichever native callback lands last deciding the
+    ///     final value regardless of which call started first.
+    /// </remarks>
     ValueTask<bool> ReadIsListeningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -71,5 +79,26 @@ public partial interface IBluetoothRemoteCharacteristic
     /// <exception cref="CharacteristicCantListenException">Thrown when the characteristic doesn't support notifications.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
+    /// <remarks>
+    ///     <para>
+    ///         Prefer <see cref="StartListeningAsync"/>/<see cref="StopListeningAsync"/> - they call this
+    ///         method and then confirm the result with <see cref="ReadIsListeningAsync"/>. Use this
+    ///         method directly only for peripherals whose CCCD read never answers, where that
+    ///         confirmation step would hang.
+    ///     </para>
+    ///     <para>
+    ///         On success, <see cref="IsListening"/> is set to <paramref name="shouldBeListening"/>
+    ///         optimistically, based on the native write acknowledgment alone - it is not verified by
+    ///         reading the value back from the peripheral. If the peripheral acknowledges the write
+    ///         without actually applying it, <see cref="IsListening"/> will be wrong with no way to
+    ///         self-correct, since that is exactly the failure mode a working confirmation read would
+    ///         normally catch.
+    ///     </para>
+    ///     <para>
+    ///         This method and <see cref="ReadIsListeningAsync"/> both update <see cref="IsListening"/>
+    ///         but are not synchronized against each other - calling them concurrently on the same
+    ///         characteristic from independent call sites can race.
+    ///     </para>
+    /// </remarks>
     ValueTask WriteIsListeningAsync(bool shouldBeListening, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 }

@@ -357,6 +357,18 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
         {
             // Wait for OnWriteIsListeningSuccess to be called
             await WriteIsListeningTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+
+            // Unlike StartListeningAsync/StopListeningAsync (which confirm the resulting state via
+            // ReadIsListeningAsync -> OnReadIsListeningSucceeded, the only other place IsListening is
+            // set), a caller using WriteIsListeningAsync directly - deliberately skipping the read,
+            // e.g. because a peripheral's CCCD never answers a descriptor read at all - would
+            // otherwise leave IsListening permanently false despite the native subscription actually
+            // succeeding. OnReadValueSucceeded only forwards a real notification to ValueUpdated
+            // (and WaitForValueChangeAsync) when IsListening is true; otherwise it throws
+            // CharacteristicUnexpectedReadException for every single notification the peripheral
+            // sends - confirmed against real hardware, this silently dropped every DFU protocol
+            // response even though the write that enabled notifications had already succeeded.
+            IsListening = shouldBeListening;
         }
         finally
         {
