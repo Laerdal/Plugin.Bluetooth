@@ -168,7 +168,10 @@ public abstract partial class BaseBluetoothRemoteDevice
         // try-finally to ensure disposal and release of resources
         try
         {
-            // Wait for OnConnectSucceeded to be called
+            // Wait for OnConnectSucceeded to be called. NOTE: WaitBetterAsync throws
+            // TimeoutException/OperationCanceledException directly on timeout/cancellation - it does
+            // NOT return normally past the deadline - so this line itself is where a timed-out
+            // connect attempt is detected, not the IsConnected check below.
             await ConnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
 
             NativeRefreshIsConnected();
@@ -176,6 +179,35 @@ public abstract partial class BaseBluetoothRemoteDevice
             {
                 throw new DeviceFailedToConnectException(this);
             }
+        }
+        catch (Exception e)
+        {
+            // Giving up here (timeout, cancellation, or the "wait completed but IsConnected is still
+            // false" edge case above) does NOT retract the native connect request already issued by
+            // NativeConnectAsync above (e.g. CoreBluetooth's connectPeripheral: has no concept of a
+            // timeout - once called, iOS keeps trying indefinitely until explicitly told to stop).
+            // Left alone, that request can succeed or fail later, completely detached from this call
+            // and its caller - confirmed against real hardware via a Legacy DFU rediscovery flow that
+            // abandoned a timed-out ConnectAsync(timeout:) and then connected to a second, different
+            // device shortly after: the first device's stale connect request finally completed ~29s
+            // afterwards, on its own, with nothing left to observe it - and the second, legitimate
+            // connect failed right around the same time, consistent with two concurrent connection
+            // attempts confusing the shared central manager. Cancel the native request so giving up
+            // here actually means the device stops trying, not just that this caller stops watching.
+            try { await NativeDisconnectAsync(timeout: null, cancellationToken: CancellationToken.None).ConfigureAwait(false); }
+            catch { /* best-effort - we are already about to report the connection as failed */ }
+
+            // Timeout/cancellation are documented, BCL-recognized outcomes of this method (see
+            // IBluetoothRemoteDevice.Connection.cs) - callers following the standard .NET cancellation
+            // idiom (catch (OperationCanceledException)) depend on the exact type surviving unwrapped.
+            // Only normalize genuinely opaque failures (e.g. a raw native exception from
+            // NativeConnectAsync) into DeviceFailedToConnectException.
+            if (e is DeviceFailedToConnectException or TimeoutException or OperationCanceledException)
+            {
+                throw;
+            }
+
+            throw new DeviceFailedToConnectException(this, innerException: e);
         }
         finally
         {
