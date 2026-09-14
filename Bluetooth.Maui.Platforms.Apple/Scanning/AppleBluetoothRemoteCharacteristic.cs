@@ -106,18 +106,55 @@ public class AppleBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacteris
 
     #region Write
 
+    /// <summary>
+    /// Upper bound on how long to wait for CoreBluetooth's write-without-response flow-control
+    /// signal before writing anyway. <see cref="AppleBluetoothRemoteDevice.WaitForReadyToSendWriteWithoutResponseAsync"/>
+    /// silently proceeds once this elapses rather than throwing, so this is a safety net against an
+    /// indefinite stall, not a hard deadline.
+    /// </summary>
+    private static readonly TimeSpan ReadyToSendWriteWithoutResponseTimeout = TimeSpan.FromSeconds(5);
+
     /// <inheritdoc />
     /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbperipheral/1518747-writevalue">iOS CBPeripheral.writeValue</seealso>
-    protected override ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
+    protected override async ValueTask NativeWriteValueAsync(ReadOnlyMemory<byte> value)
     {
+        // A characteristic that only exposes WriteWithoutResponse (no Write bit) has no
+        // CBCharacteristicWriteType.WithResponse capability, so that branch below is unreachable
+        // for it - .WithoutResponse is always what gets sent in that case.
+        var writeType = CbCharacteristic.Properties.HasFlag(CBCharacteristicProperties.WriteWithoutResponse)
+            ? CBCharacteristicWriteType.WithoutResponse
+            : CBCharacteristicWriteType.WithResponse;
+
+        if (writeType == CBCharacteristicWriteType.WithoutResponse)
+        {
+            // Per Apple's docs: if canSendWriteWithoutResponse is false, a .WithoutResponse write
+            // is silently discarded - no error, no delegate call, nothing. A fast producer (e.g. a
+            // DFU firmware-chunk loop) that never checks this can blast bytes straight into that
+            // black hole, which very plausibly explains transfers that report "success" per-chunk
+            // (see the immediate OnWriteValueSucceeded below) yet leave the device with a
+            // corrupted/incomplete image. peripheralIsReadyToSendWriteWithoutResponse: is the
+            // native flow-control signal for exactly this; AppleBluetoothRemoteDevice already wires
+            // it up, it just had no caller before now.
+            await AppleBluetoothRemoteService.AppleBluetoothRemoteDevice
+                .WaitForReadyToSendWriteWithoutResponseAsync(ReadyToSendWriteWithoutResponseTimeout, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+
         Logger?.LogCharacteristicWrite(Id, Service.Device.Id, value.Length);
-        AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.WriteValue(value.ToNSData(),
-                                                                                                           CbCharacteristic,
-                                                                                                           CbCharacteristic.Properties.HasFlag(CBCharacteristicProperties
-                                                                                                              .WriteWithoutResponse) ?
-                                                                                                               CBCharacteristicWriteType.WithoutResponse :
-                                                                                                               CBCharacteristicWriteType.WithResponse);
-        return ValueTask.CompletedTask;
+        AppleBluetoothRemoteService.AppleBluetoothRemoteDevice.CbPeripheralWrapper.CbPeripheral.WriteValue(value.ToNSData(), CbCharacteristic, writeType);
+
+        // CoreBluetooth never invokes peripheral:didWriteValueForCharacteristic:error: for a
+        // .WithoutResponse write - per Apple's own docs, that delegate callback only fires for
+        // .WithResponse - so WroteCharacteristicValue/OnWriteValueSucceeded would otherwise never
+        // run and the caller's WriteValueAsync would hang until the connection itself eventually
+        // times out. Confirmed against real hardware: Nordic Legacy DFU's Packet characteristic is
+        // WriteWithoutResponse-only (used to stream firmware bytes quickly), and every write to it
+        // hung for ~30s before the whole BLE link was torn down by iOS. Signal completion here
+        // instead, immediately after handing the write to CoreBluetooth.
+        if (writeType == CBCharacteristicWriteType.WithoutResponse)
+        {
+            OnWriteValueSucceeded();
+        }
     }
 
     /// <inheritdoc />
