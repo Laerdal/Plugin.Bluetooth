@@ -15,6 +15,44 @@ public abstract partial class BaseBluetoothScanner
 
     #endregion
 
+    #region Advertisement - Extras
+
+    private readonly static Func<IBluetoothAdvertisement, bool> _defaultAcceptAllAdvertisementFilter = _ => true;
+
+    /// <inheritdoc />
+    public ValueTask<IBluetoothAdvertisement> WaitForAdvertisementAsync(string bluetoothAddress, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        return WaitForAdvertisementAsync(ad => ad.BluetoothAddress == bluetoothAddress, timeout, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<IBluetoothAdvertisement> WaitForAdvertisementAsync(Func<IBluetoothAdvertisement, bool>? filter = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        filter ??= _defaultAcceptAllAdvertisementFilter;
+        var tcs = new TaskCompletionSource<IBluetoothAdvertisement>();
+
+        void OnAdvertisementReceivedForWait(object? sender, AdvertisementReceivedEventArgs ea)
+        {
+            if (filter.Invoke(ea.Advertisement))
+            {
+                tcs.TrySetResult(ea.Advertisement);
+            }
+        }
+
+        try
+        {
+            AdvertisementReceived += OnAdvertisementReceivedForWait;
+
+            return await tcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            AdvertisementReceived -= OnAdvertisementReceivedForWait;
+        }
+    }
+
+    #endregion
+
     #region Device Factory
 
     /// <summary>

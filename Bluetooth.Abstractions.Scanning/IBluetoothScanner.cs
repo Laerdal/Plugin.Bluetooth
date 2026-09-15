@@ -23,6 +23,31 @@ public partial interface IBluetoothScanner : IAsyncDisposable
     Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; set; }
 
     /// <summary>
+    ///     Waits for a raw advertisement from the device with the specified Bluetooth address to be received.
+    /// </summary>
+    /// <param name="bluetoothAddress">The Bluetooth address to wait for.</param>
+    /// <param name="timeout">The timeout for this operation.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
+    /// <returns>The matching <see cref="IBluetoothAdvertisement" /> when it is received.</returns>
+    ValueTask<IBluetoothAdvertisement> WaitForAdvertisementAsync(string bluetoothAddress, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Waits for the first raw advertisement that matches the specified filter to be received.
+    /// </summary>
+    /// <param name="filter">A function to filter advertisements. Should return true for a matching advertisement. Defaults to null for the first advertisement received.</param>
+    /// <param name="timeout">The timeout for this operation.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
+    /// <returns>The <see cref="IBluetoothAdvertisement" /> that matches the filter when it is received.</returns>
+    /// <remarks>
+    ///     Unlike <see cref="IBluetoothScanner.WaitForDeviceToAppearAsync(string, TimeSpan?, CancellationToken)" />,
+    ///     this matches directly on the raw advertisement as it comes in, before it is folded into the device
+    ///     registry - useful when the identity being waited for isn't known to have a registry entry yet
+    ///     (e.g. a device rebooting into a different advertised identity), or when a device-level filter would
+    ///     race a device's own first-sight registration.
+    /// </remarks>
+    ValueTask<IBluetoothAdvertisement> WaitForAdvertisementAsync(Func<IBluetoothAdvertisement, bool>? filter = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Gets or sets an optional function that wraps a newly created device before it is added to the device list.
     /// </summary>
     /// <remarks>

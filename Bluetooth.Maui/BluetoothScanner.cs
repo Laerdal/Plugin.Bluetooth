@@ -456,6 +456,24 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
         return _platformScanner.GetClosestDeviceOrDefault(filter);
     }
 
+    /// <inheritdoc />
+    public ValueTask<IBluetoothAdvertisement> WaitForAdvertisementAsync(
+        string bluetoothAddress,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        return _platformScanner.WaitForAdvertisementAsync(bluetoothAddress, timeout, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public ValueTask<IBluetoothAdvertisement> WaitForAdvertisementAsync(
+        Func<IBluetoothAdvertisement, bool>? filter = null,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        return _platformScanner.WaitForAdvertisementAsync(filter, timeout, cancellationToken);
+    }
+
     #endregion
 
     #region IBluetoothScanner Implementation - Device Management - Has
