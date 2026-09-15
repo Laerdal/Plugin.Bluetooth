@@ -26,21 +26,33 @@ public abstract partial class BaseBluetoothRemoteService
     #region Characteristics - Clear
 
     /// <inheritdoc />
+    /// <remarks>
+    ///     Safe to call concurrently with itself: the collection is snapshotted and emptied under a
+    ///     single lock before any disposal happens, so a second, overlapping call (e.g. this
+    ///     device's own disconnect-triggered cleanup racing an explicit caller-driven clear) sees an
+    ///     already-empty collection and returns immediately instead of also enumerating/disposing
+    ///     the same characteristics.
+    /// </remarks>
     public async ValueTask ClearCharacteristicsAsync()
     {
-        var characteristicCount = Characteristics.Count;
+        List<IBluetoothRemoteCharacteristic> characteristicsToDispose;
+        lock (Characteristics)
+        {
+            if (Characteristics.Count == 0)
+            {
+                return;
+            }
 
-        foreach (var characteristic in Characteristics)
+            characteristicsToDispose = Characteristics.ToList();
+            Characteristics.Clear();
+        }
+
+        foreach (var characteristic in characteristicsToDispose)
         {
             await characteristic.DisposeAsync().ConfigureAwait(false);
         }
 
-        lock (Characteristics)
-        {
-            Characteristics.Clear();
-        }
-
-        LogCharacteristicsCleared(Id, Device.Id, characteristicCount);
+        LogCharacteristicsCleared(Id, Device.Id, characteristicsToDispose.Count);
     }
 
     #endregion

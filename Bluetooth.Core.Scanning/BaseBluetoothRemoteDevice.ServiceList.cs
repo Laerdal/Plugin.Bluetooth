@@ -25,21 +25,33 @@ public abstract partial class BaseBluetoothRemoteDevice
     ///     Clears all services and their characteristics, disposing of them properly.
     /// </summary>
     /// <returns>A task that completes when all services have been cleared and disposed.</returns>
+    /// <remarks>
+    ///     Safe to call concurrently with itself: the collection is snapshotted and emptied under a
+    ///     single lock before any disposal happens, so a second, overlapping call (e.g. this
+    ///     device's own disconnect-triggered cleanup racing an explicit caller-driven clear) sees an
+    ///     already-empty collection and returns immediately instead of also enumerating/disposing
+    ///     the same services.
+    /// </remarks>
     public async ValueTask ClearServicesAsync()
     {
-        var serviceCount = Services.Count;
+        List<IBluetoothRemoteService> servicesToDispose;
+        lock (Services)
+        {
+            if (Services.Count == 0)
+            {
+                return;
+            }
 
-        foreach (var service in Services)
+            servicesToDispose = Services.ToList();
+            Services.Clear();
+        }
+
+        foreach (var service in servicesToDispose)
         {
             await service.DisposeAsync().ConfigureAwait(false);
         }
 
-        lock (Services)
-        {
-            Services.Clear();
-        }
-
-        LogServicesCleared(Id, serviceCount);
+        LogServicesCleared(Id, servicesToDispose.Count);
     }
 
     #endregion
