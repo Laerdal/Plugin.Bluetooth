@@ -38,13 +38,14 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async ValueTask WaitForIsConnectedAsync(bool isConnected, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
         await WaitForPropertyToBeOfValue(nameof(IsConnected), isConnected, timeout, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
     ///     Platform-specific implementation to refresh the current connection state from the native platform.
     /// </summary>
-    protected abstract void NativeRefreshIsConnected();
+    protected abstract ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -71,9 +72,9 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <summary>
     ///     Called when a connection attempt succeeds. Updates the connection state and completes the connection task.
     /// </summary>
-    protected void OnConnectSucceeded()
+    protected async ValueTask OnConnectSucceededAsync(CancellationToken cancellationToken = default)
     {
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         // Attempt to dispatch success to the TaskCompletionSource
         var success = ConnectionTcs?.TrySetResult() ?? false;
@@ -96,10 +97,11 @@ public abstract partial class BaseBluetoothRemoteDevice
     ///     Called when a connection attempt fails. Completes the connection task with an exception or dispatches to the unhandled exception listener.
     /// </summary>
     /// <param name="e">The exception that occurred during the connection attempt.</param>
-    protected void OnConnectFailed(Exception e)
+    /// <param name="cancellationToken">Token to cancel the refresh operation.</param>
+    protected async ValueTask OnConnectFailedAsync(Exception e, CancellationToken cancellationToken = default)
     {
         LogDeviceConnectionFailed(Id, e);
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         // Attempt to dispatch exception to the TaskCompletionSource
         var success = (ConnectionTcs?.TrySetException(e) ?? false) || (DisconnectionTcs?.TrySetException(e) ?? false);
@@ -116,7 +118,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     public async virtual ValueTask ConnectIfNeededAsync(ConnectionOptions? connectionOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         connectionOptions ??= new ConnectionOptions();
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
         if (IsConnected)
         {
             return;
@@ -162,7 +164,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         catch (Exception e)
         {
-            OnConnectFailed(e); // if exception is thrown during start, we trigger the failure
+            await OnConnectFailedAsync(e, cancellationToken).ConfigureAwait(false); // if exception is thrown during start, we trigger the failure
         }
 
         // try-finally to ensure disposal and release of resources
@@ -174,7 +176,7 @@ public abstract partial class BaseBluetoothRemoteDevice
             // connect attempt is detected, not the IsConnected check below.
             await ConnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
 
-            NativeRefreshIsConnected();
+            await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
             if (!IsConnected)
             {
                 throw new DeviceFailedToConnectException(this);
@@ -251,9 +253,10 @@ public abstract partial class BaseBluetoothRemoteDevice
     ///     Called when a disconnection occurs, either intentionally or unexpectedly. Completes the disconnection task.
     /// </summary>
     /// <param name="e">Optional exception that caused the disconnection.</param>
-    protected void OnDisconnect(Exception? e = null)
+    /// <param name="cancellationToken">Token to cancel the refresh operation.</param>
+    protected async ValueTask OnDisconnectAsync(Exception? e = null, CancellationToken cancellationToken = default)
     {
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         // Attempt to dispatch success/failure to a pending explicit Connect/Disconnect await.
         var success = (DisconnectionTcs?.TrySetResultOrException(e) ?? false) || (ConnectionTcs?.TrySetResultOrException(e) ?? false);
@@ -283,7 +286,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async ValueTask DisconnectIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
         if (!IsConnected)
         {
             return;
@@ -322,7 +325,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         catch (Exception e)
         {
-            OnDisconnect(e); // if exception is thrown during start, we trigger the failure
+            await OnDisconnectAsync(e, cancellationToken).ConfigureAwait(false); // if exception is thrown during start, we trigger the failure
         }
 
         // try-finally to ensure disposal and release of resources
@@ -331,7 +334,7 @@ public abstract partial class BaseBluetoothRemoteDevice
             // Wait for OnDisconnection to be called
             await DisconnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             await ClearServicesAsync().ConfigureAwait(false);
-            NativeRefreshIsConnected();
+            await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
             if (IsConnected)
             {
                 throw new DeviceFailedToDisconnectException(this);

@@ -286,16 +286,17 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     #region Connection
 
     /// <inheritdoc />
-    protected override void NativeRefreshIsConnected()
+    protected override ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
     {
         if (_bluetoothGattProxy == null)
         {
             IsConnected = false;
-            return;
+            return ValueTask.CompletedTask;
         }
 
         // On Android, we rely on connection state callbacks
         // The IsConnected property is updated via OnConnectionStateChange
+        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />
@@ -312,7 +313,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         // Store connection options for GATT operations
         _connectionOptions = connectionOptions;
 
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         Logger?.LogConnecting(Id);
 
@@ -379,7 +380,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         catch (Exception e)
         {
             Logger?.LogConnectionFailed(Id, Math.Max(attempt, 1), e);
-            OnConnectFailed(e);
+            await OnConnectFailedAsync(e, cancellationToken).ConfigureAwait(false);
             throw;
         }
     }
@@ -446,7 +447,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         Logger?.LogDisconnecting(Id);
 
@@ -462,7 +463,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         catch (Exception e)
         {
             Logger?.LogDisconnectError(Id, e);
-            OnDisconnect(e);
+            await OnDisconnectAsync(e, cancellationToken).ConfigureAwait(false);
             throw;
         }
     }
@@ -513,12 +514,12 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 if (status != GattStatus.Success)
                 {
                     // Connection failed
-                    OnConnectFailed(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
+                    _ = OnConnectFailedAsync(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
                     break;
                 }
 
                 IsConnected = true;
-                OnConnectSucceeded();
+                _ = OnConnectSucceededAsync();
                 break;
 
             case ProfileState.Disconnected:
@@ -533,7 +534,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 // DisconnectAsync() call that hangs forever waiting for a connection-state callback
                 // Android will never fire again for an already-disconnected GATT object.
                 IsConnected = false;
-                OnDisconnect(status != GattStatus.Success ? new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status) : null);
+                _ = OnDisconnectAsync(status != GattStatus.Success ? new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status) : null);
                 break;
 
             case ProfileState.Connecting:

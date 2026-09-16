@@ -180,17 +180,29 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     #region Connection
 
     /// <inheritdoc />
-    protected override void NativeRefreshIsConnected()
+    protected override ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
     {
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         MainThreadDispatcher.BeginInvokeOnMainThread(() => {
-            IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
+            try
+            {
+                IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
+                tcs.TrySetResult();
+            }
+            catch (Exception e)
+            {
+                tcs.TrySetException(e);
+            }
         });
+
+        return new ValueTask(tcs.Task.WaitAsync(cancellationToken));
     }
 
     /// <inheritdoc />
     public void ConnectionEventDidOccur(CBConnectionEvent connectionEvent)
     {
-        NativeRefreshIsConnected();
+        _ = NativeRefreshIsConnectedAsync();
     }
 
     #region Connect
@@ -203,7 +215,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
         Logger?.LogConnecting(Id);
 
-        NativeRefreshIsConnected();
+        _ = NativeRefreshIsConnectedAsync();
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
@@ -224,7 +236,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     public void FailedToConnectPeripheral(NSError? error)
     {
-        NativeRefreshIsConnected();
+        _ = NativeRefreshIsConnectedAsync();
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
@@ -233,16 +245,16 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         catch (Exception e)
         {
             Logger?.LogConnectionFailed(Id, 1, e);
-            OnConnectFailed(e);
+            _ = OnConnectFailedAsync(e);
         }
     }
 
     /// <inheritdoc />
     public void ConnectedPeripheral()
     {
-        NativeRefreshIsConnected();
+        _ = NativeRefreshIsConnectedAsync();
         Logger?.LogConnected(Id);
-        OnConnectSucceeded();
+        _ = OnConnectSucceededAsync();
     }
 
     #endregion
@@ -255,7 +267,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     {
         Logger?.LogDisconnecting(Id);
 
-        NativeRefreshIsConnected();
+        _ = NativeRefreshIsConnectedAsync();
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
@@ -275,39 +287,39 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     public void DisconnectedPeripheral(NSError? error)
     {
-        NativeRefreshIsConnected();
+        _ = NativeRefreshIsConnectedAsync();
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
             Logger?.LogDisconnected(Id);
-            OnDisconnect();
+            _ = OnDisconnectAsync();
         }
         catch (Exception e)
         {
             Logger?.LogDisconnected(Id);
-            OnDisconnect(e);
+            _ = OnDisconnectAsync(e);
         }
     }
 
     /// <inheritdoc />
     public void DidDisconnectPeripheral(double timestamp, bool isReconnecting, NSError? error)
     {
-        NativeRefreshIsConnected();
+        _ = NativeRefreshIsConnectedAsync();
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
             if (isReconnecting)
             {
-                OnDisconnect(new DeviceReconnectingException(this));
+                _ = OnDisconnectAsync(new DeviceReconnectingException(this));
             }
             else
             {
-                OnDisconnect();
+                _ = OnDisconnectAsync();
             }
         }
         catch (Exception e)
         {
-            OnDisconnect(e);
+            _ = OnDisconnectAsync(e);
         }
     }
 
