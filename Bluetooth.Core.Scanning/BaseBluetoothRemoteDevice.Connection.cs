@@ -194,7 +194,11 @@ public abstract partial class BaseBluetoothRemoteDevice
         // Prevents multiple calls to ConnectAsync, if already starting, we merge the calls.
         // The refresh above just awaited a real yield point, so the check-and-set below needs
         // _connectionOperationLock to stay atomic across concurrent callers - see its doc comment.
-        Task? pendingConnectionTask = null;
+        // ownConnectionTcs (rather than re-reading the live ConnectionTcs property later) is what
+        // lets the finally below tell whether it still owns the live TCS or a newer, concurrent
+        // attempt has already replaced it.
+        var ownConnectionTcs = new TaskCompletionSource();
+        Task? pendingConnectionTask;
         lock (_connectionOperationLock)
         {
             if (ConnectionTcs is { Task.IsCompleted: false })
@@ -203,7 +207,8 @@ public abstract partial class BaseBluetoothRemoteDevice
             }
             else
             {
-                ConnectionTcs = new TaskCompletionSource(); // Reset the TCS
+                pendingConnectionTask = null;
+                ConnectionTcs = ownConnectionTcs; // Reset the TCS
             }
         }
 
@@ -242,8 +247,10 @@ public abstract partial class BaseBluetoothRemoteDevice
             // Wait for OnConnectSucceeded to be called. NOTE: WaitBetterAsync throws
             // TimeoutException/OperationCanceledException directly on timeout/cancellation - it does
             // NOT return normally past the deadline - so this line itself is where a timed-out
-            // connect attempt is detected, not the IsConnected check below.
-            await ConnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+            // connect attempt is detected, not the IsConnected check below. Awaits the captured
+            // ownConnectionTcs, not the live ConnectionTcs property, which a concurrent attempt may
+            // have already replaced by the time this runs.
+            await ownConnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
 
             await NativeRefreshIsConnectedAsync(cancellationToken).AsTask().WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             if (!IsConnected)
@@ -283,7 +290,18 @@ public abstract partial class BaseBluetoothRemoteDevice
         finally
         {
             IsConnecting = false; // Set the connecting state to false
-            ConnectionTcs = null;
+
+            // Only clear the live ConnectionTcs if it's still the instance *this* attempt
+            // installed - a concurrent attempt may have already replaced it with its own (see
+            // the merge branch above), and clearing unconditionally here would erase that newer
+            // attempt's TCS out from under it.
+            lock (_connectionOperationLock)
+            {
+                if (ReferenceEquals(ConnectionTcs, ownConnectionTcs))
+                {
+                    ConnectionTcs = null;
+                }
+            }
         }
     }
 
@@ -397,7 +415,11 @@ public abstract partial class BaseBluetoothRemoteDevice
         // Prevents multiple calls to ConnectAsync, if already starting, we merge the calls.
         // The refresh above just awaited a real yield point, so the check-and-set below needs
         // _connectionOperationLock to stay atomic across concurrent callers - see its doc comment.
-        Task? pendingDisconnectionTask = null;
+        // ownDisconnectionTcs (rather than re-reading the live DisconnectionTcs property later) is
+        // what lets the finally below tell whether it still owns the live TCS or a newer,
+        // concurrent attempt has already replaced it.
+        var ownDisconnectionTcs = new TaskCompletionSource();
+        Task? pendingDisconnectionTask;
         lock (_connectionOperationLock)
         {
             if (DisconnectionTcs is { Task.IsCompleted: false })
@@ -406,7 +428,8 @@ public abstract partial class BaseBluetoothRemoteDevice
             }
             else
             {
-                DisconnectionTcs = new TaskCompletionSource(); // Reset the TCS
+                pendingDisconnectionTask = null;
+                DisconnectionTcs = ownDisconnectionTcs; // Reset the TCS
             }
         }
 
@@ -436,8 +459,10 @@ public abstract partial class BaseBluetoothRemoteDevice
                 await OnDisconnectAsync(e, cancellationToken).ConfigureAwait(false); // if exception is thrown during start, we trigger the failure
             }
 
-            // Wait for OnDisconnection to be called
-            await DisconnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+            // Wait for OnDisconnection to be called. Awaits the captured ownDisconnectionTcs, not
+            // the live DisconnectionTcs property, which a concurrent attempt may have already
+            // replaced by the time this runs.
+            await ownDisconnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             await ClearServicesAsync().ConfigureAwait(false);
             await NativeRefreshIsConnectedAsync(cancellationToken).AsTask().WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             if (IsConnected)
@@ -448,7 +473,18 @@ public abstract partial class BaseBluetoothRemoteDevice
         finally
         {
             IsDisconnecting = false; // Set the disconnecting state to false
-            DisconnectionTcs = null;
+
+            // Only clear the live DisconnectionTcs if it's still the instance *this* attempt
+            // installed - a concurrent attempt may have already replaced it with its own (see
+            // the merge branch above), and clearing unconditionally here would erase that newer
+            // attempt's TCS out from under it.
+            lock (_connectionOperationLock)
+            {
+                if (ReferenceEquals(DisconnectionTcs, ownDisconnectionTcs))
+                {
+                    DisconnectionTcs = null;
+                }
+            }
         }
     }
 
