@@ -65,6 +65,26 @@ public abstract partial class BaseBluetoothRemoteDevice
     protected abstract ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Safety-valve bound applied to the refresh inside native-callback-driven completion
+    ///     methods (<see cref="OnConnectSucceededAsync" />/<see cref="OnConnectFailedAsync" />/
+    ///     <see cref="OnDisconnectAsync" />), which are always invoked with
+    ///     <c>cancellationToken: default</c> and have no caller-supplied timeout of their own to
+    ///     bound this refresh with otherwise.
+    /// </summary>
+    /// <remarks>
+    ///     Before this change, a stalled Apple main-thread queue here could hang
+    ///     <see cref="ConnectAsync" />/<see cref="DisconnectAsync" /> indefinitely even when called
+    ///     with their documented default (no timeout) - awaiting this refresh is now on the
+    ///     operation-completion path (needed to validate the refreshed state before declaring
+    ///     success/failure), unlike the pre-ADR-0003 fire-and-forget refresh this replaced, which
+    ///     could never block a caller no matter how long it took. Five seconds is generous for what
+    ///     is normally a near-instant local property read (Apple's <c>CBPeripheral.state</c> or a
+    ///     synchronous Android/Windows check) - this is a backstop against a genuinely stuck main
+    ///     thread, not a normal-path timing constraint.
+    /// </remarks>
+    private static readonly TimeSpan CallbackRefreshTimeout = TimeSpan.FromSeconds(5);
+
+    /// <summary>
     ///     Awaits <see cref="NativeRefreshIsConnectedAsync" />, bounding it by <paramref name="timeout" />.
     /// </summary>
     /// <param name="timeout">Optional timeout for the refresh.</param>
@@ -226,7 +246,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         // forever once the owning ConnectAsync's finally clears the live ConnectionTcs property.
         try
         {
-            await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
+            await RefreshIsConnectedAsync(CallbackRefreshTimeout, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -303,7 +323,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         // prevent the captured TCS below from being completed.
         try
         {
-            await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
+            await RefreshIsConnectedAsync(CallbackRefreshTimeout, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -316,9 +336,16 @@ public abstract partial class BaseBluetoothRemoteDevice
             ReportBestEffortFailure(refreshException);
         }
 
-        // Attempt to dispatch exception to the TaskCompletionSource
-        var success = (connectionTcs?.TrySetException(e) ?? false) || (disconnectionTcs?.TrySetException(e) ?? false);
-        if (success)
+        // Attempt to dispatch exception to the TaskCompletionSource(s). Evaluated independently
+        // (not via ||) because OnDisconnectAsync's IsConnectionAttemptPending routing can land
+        // here with BOTH connectionTcs and disconnectionTcs live and incomplete (a disconnect
+        // arriving while a connect attempt is pending, itself concurrent with an explicit
+        // DisconnectAsync caller) - short-circuiting on connectionTcs succeeding would skip
+        // disconnectionTcs entirely, leaving that caller waiting until its own timeout instead of
+        // being completed with this same failure.
+        var connectionTcsCompleted = connectionTcs?.TrySetException(e) ?? false;
+        var disconnectionTcsCompleted = disconnectionTcs?.TrySetException(e) ?? false;
+        if (connectionTcsCompleted || disconnectionTcsCompleted)
         {
             return;
         }
@@ -567,7 +594,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         // prevent the captured TCS below from being completed.
         try
         {
-            await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
+            await RefreshIsConnectedAsync(CallbackRefreshTimeout, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

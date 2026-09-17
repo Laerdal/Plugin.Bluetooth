@@ -231,11 +231,18 @@ above cannot do without platform-specific knowledge.
 
 Native-callback-driven calls into `OnConnectSucceededAsync`/`OnConnectFailedAsync`/`OnDisconnectAsync`
 always pass `cancellationToken: default` (delegate methods are `void` by contract and have no
-per-call token to supply), so their internal `NativeRefreshIsConnectedAsync` call is unbounded on
-every platform - on Apple specifically, a stalled main-thread queue could hang that refresh
-indefinitely. This is a pre-existing characteristic of the native-callback-driven design as a
-whole (not introduced by this change), applies uniformly to all three call sites, and isn't fixed
-here - see Follow-up Actions.
+per-call token to supply), and none of the three take a `timeout` parameter either (there is no
+caller-supplied one to use - they're triggered by native events, not a user call). Unlike the
+pre-ADR-0003 fire-and-forget refresh this replaced (which could never block a caller no matter how
+long it took), this refresh is now on the operation-completion path: `ConnectAsync`/
+`DisconnectAsync`, even called with their documented default (no timeout), await the TCS these
+methods complete, so a refresh that never completes here means they never complete either. All
+three now bound their refresh with a fixed `CallbackRefreshTimeout` (5 seconds) via
+`RefreshIsConnectedAsync`, instead of calling `NativeRefreshIsConnectedAsync` directly with no
+bound at all. Five seconds is a backstop against a genuinely stuck main thread, not a normal-path
+timing constraint - this is normally a near-instant local property read. A refresh that exceeds
+this bound is treated like any other refresh failure (see above): it faults the live TCS, or
+reports via `ReportBestEffortFailure` if there's no live TCS to deliver it to.
 
 This is a breaking change with two independent surfaces:
 - `BaseBluetoothRemoteDevice.NativeRefreshIsConnected()` no longer exists. Any external subclass
@@ -307,6 +314,14 @@ This is a breaking change with two independent surfaces:
 - `OnConnectFailedAsync`'s no-live-TCS fallback no longer reports the same failure to
   `BluetoothUnhandledExceptionListener` twice (once directly, once via the calling native
   callback's own `StartAndForget` wrapper after the direct call rethrows).
+- `OnConnectFailedAsync` now evaluates completing `connectionTcs` and `disconnectionTcs`
+  independently instead of via `||`, so a disconnect routed here while both a connect attempt and
+  an explicit `DisconnectAsync` call are concurrently pending completes both instead of
+  short-circuiting after the first and leaving the other waiting until its own timeout.
+- Native-callback-driven refreshes (`OnConnectSucceededAsync`/`OnConnectFailedAsync`/
+  `OnDisconnectAsync`) are now bounded by a fixed safety-valve timeout instead of being fully
+  unbounded, closing a real (not just theoretical) way for a stalled Apple main thread to hang
+  `ConnectAsync`/`DisconnectAsync` indefinitely even at their documented default.
 
 ### Negative
 
@@ -333,11 +348,11 @@ This is a breaking change with two independent surfaces:
       activation of `Windows.Devices.Bluetooth` still requires an actual Windows machine to test).
 - [ ] Confirm on real hardware that iOS connect/disconnect no longer produces false
       `DeviceFailedToConnectException`/`DeviceFailedToDisconnectException`.
-- [ ] Give native-callback-driven refresh calls (`OnConnectSucceededAsync`/`OnConnectFailedAsync`/
-      `OnDisconnectAsync`, all invoked with `cancellationToken: default`) a bounded/cancelable
-      lifetime instead of an unbounded one, so a stalled Apple main-thread queue can't hang them
-      indefinitely - a pre-existing characteristic of the native-callback-driven design, not
-      introduced by this change.
+- [x] Give native-callback-driven refresh calls (`OnConnectSucceededAsync`/`OnConnectFailedAsync`/
+      `OnDisconnectAsync`, all invoked with `cancellationToken: default`) a bounded lifetime
+      (fixed 5s `CallbackRefreshTimeout` via `RefreshIsConnectedAsync`) instead of an unbounded
+      one, so a stalled Apple main-thread queue can't hang `ConnectAsync`/`DisconnectAsync`
+      indefinitely even at their documented default (no timeout).
 - [ ] Thread an app-level generation/attempt token through every native delegate callback across
       all three platforms (the same redesign already needed for the callback-correlation gap in
       Decision, above) - this would also close: `ConnectAttemptTerminalSignalReceived`'s
