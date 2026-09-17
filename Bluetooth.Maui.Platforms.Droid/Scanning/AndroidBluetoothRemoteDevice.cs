@@ -532,9 +532,15 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 // made every later "is this device already disconnected" check downstream
                 // (ClearDeviceAsync, DisconnectIfNeededAsync) wrongly attempt a redundant
                 // DisconnectAsync() call that hangs forever waiting for a connection-state callback
-                // Android will never fire again for an already-disconnected GATT object.
+                // Android will never fire again for an already-disconnected GATT object. For the
+                // same reason, status must not be surfaced as a failure exception here either - by
+                // the time this callback fires with newState == Disconnected, the device genuinely
+                // is disconnected regardless of status, so a non-Success value must not fault
+                // DisconnectionTcs (making an explicit, caller-awaited DisconnectAsync() throw for a
+                // disconnect that actually succeeded) or make OnUnexpectedDisconnection log a normal
+                // peer/DFU-reboot disconnect as a WARNING-level unexpected one.
                 IsConnected = false;
-                OnDisconnectAsync(status != GattStatus.Success ? new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status) : null).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+                OnDisconnectAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                 break;
 
             case ProfileState.Connecting:
