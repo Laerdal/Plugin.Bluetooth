@@ -37,8 +37,10 @@ checks inside `ConnectAsync`/`DisconnectAsync`, and inside `OnConnectSucceededAs
 `OnConnectFailedAsync`/`OnDisconnectAsync`.
 
 Apple's implementation dispatches to the main thread via `MainThreadDispatcher.InvokeOnMainThreadAsync`
-and awaits completion. Android, Windows, and the DotNetCore fallback keep synchronous bodies
-wrapped in `ValueTask.CompletedTask` — their runtime behavior does not change.
+and awaits completion. Android and Windows keep synchronous bodies wrapped in
+`ValueTask.CompletedTask` — their runtime behavior does not change. The DotNetCore fallback keeps
+throwing `PlatformNotSupportedException`, consistent with the rest of that platform's unimplemented
+BLE surface — it is not a no-op success like Android/Windows.
 
 Native-callback-driven call sites that cannot become `async` (CoreBluetooth/BluetoothGatt/Windows
 delegate methods are `void` by contract) fire the refresh via `.StartAndForget(onException)`,
@@ -119,8 +121,9 @@ This is a breaking change with two independent surfaces:
 
 ### Neutral
 
-- Android, Windows, and DotNetCore implementations remain effectively synchronous
-  (`ValueTask.CompletedTask`); this ADR changes their method shape, not their runtime behavior.
+- Android and Windows implementations remain effectively synchronous (`ValueTask.CompletedTask`);
+  this ADR changes their method shape, not their runtime behavior. The DotNetCore fallback keeps
+  throwing `PlatformNotSupportedException` as before, unaffected by this change.
 
 ## Follow-up Actions
 
