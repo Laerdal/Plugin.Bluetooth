@@ -38,13 +38,114 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async ValueTask WaitForIsConnectedAsync(bool isConnected, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        await RefreshIsConnectedAsync(timeout, cancellationToken).ConfigureAwait(false);
         await WaitForPropertyToBeOfValue(nameof(IsConnected), isConnected, timeout, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
+    ///     Synchronizes the check-and-set of <see cref="ConnectionTcs" />/<see cref="DisconnectionTcs" />
+    ///     in <see cref="ConnectAsync" />/<see cref="DisconnectAsync" />. The refresh those methods await
+    ///     immediately beforehand is a real yield point (a main-thread dispatch on Apple), so without this
+    ///     lock two concurrent calls could both observe no pending TCS and both issue separate native
+    ///     connect/disconnect requests instead of merging onto one. The critical section never awaits, so
+    ///     a plain lock is sufficient - no need for a SemaphoreSlim here.
+    /// </summary>
+    private readonly object _connectionOperationLock = new();
+
+    /// <summary>
     ///     Platform-specific implementation to refresh the current connection state from the native platform.
     /// </summary>
-    protected abstract void NativeRefreshIsConnected();
+    /// <param name="cancellationToken">Token to cancel the refresh operation.</param>
+    /// <returns>A task that represents the asynchronous refresh operation.</returns>
+    /// <remarks>
+    ///     Not every platform can offer a real freshness guarantee: Apple and Windows perform a synchronous
+    ///     native query, but Android relies entirely on the <c>OnConnectionStateChange</c> callback and only
+    ///     clears <see cref="IsConnected" /> here when its GATT proxy is null - see ADR 0003.
+    /// </remarks>
+    protected abstract ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Safety-valve bound applied to the refresh inside native-callback-driven completion
+    ///     methods (<see cref="OnConnectSucceededAsync" />/<see cref="OnConnectFailedAsync" />/
+    ///     <see cref="OnDisconnectAsync" />), which are always invoked with
+    ///     <c>cancellationToken: default</c> and have no caller-supplied timeout of their own to
+    ///     bound this refresh with otherwise.
+    /// </summary>
+    /// <remarks>
+    ///     Before this change, a stalled Apple main-thread queue here could hang
+    ///     <see cref="ConnectAsync" />/<see cref="DisconnectAsync" /> indefinitely even when called
+    ///     with their documented default (no timeout) - awaiting this refresh is now on the
+    ///     operation-completion path (needed to validate the refreshed state before declaring
+    ///     success/failure), unlike the pre-ADR-0003 fire-and-forget refresh this replaced, which
+    ///     could never block a caller no matter how long it took. Five seconds is generous for what
+    ///     is normally a near-instant local property read (Apple's <c>CBPeripheral.state</c> or a
+    ///     synchronous Android/Windows check) - this is a backstop against a genuinely stuck main
+    ///     thread, not a normal-path timing constraint.
+    /// </remarks>
+    private static readonly TimeSpan CallbackRefreshTimeout = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    ///     Awaits <see cref="NativeRefreshIsConnectedAsync" />, bounding it by <paramref name="timeout" />.
+    /// </summary>
+    /// <param name="timeout">Optional timeout for the refresh.</param>
+    /// <param name="cancellationToken">Token to cancel the refresh operation.</param>
+    /// <returns>A task that represents the asynchronous, timeout-bounded refresh operation.</returns>
+    /// <remarks>
+    ///     Wrapping the call in an outer <c>WaitBetterAsync(timeout, cancellationToken)</c> (as every
+    ///     call site used to) bounds how long the *caller* waits, but never actually cancels the
+    ///     token handed to the platform implementation - so a platform that only reports a late fault
+    ///     once its own token is cancelled (see <c>AppleBluetoothRemoteDevice.NativeRefreshIsConnectedAsync</c>)
+    ///     never learns that a purely timeout-triggered abandonment happened, and a fault arriving
+    ///     after that point goes unreported. Linking <paramref name="timeout" /> directly into the
+    ///     token passed down makes a timeout indistinguishable from an explicit cancellation to the
+    ///     platform implementation, closing that gap without any platform-specific timeout plumbing.
+    /// </remarks>
+    private async ValueTask RefreshIsConnectedAsync(TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        if (timeout is not { } timeoutValue)
+        {
+            await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        linkedCts.CancelAfter(timeoutValue);
+        try
+        {
+            await NativeRefreshIsConnectedAsync(linkedCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            // The caller's own cancellationToken was checked above, so linkedCts can only have been
+            // cancelled by CancelAfter here - surface this as a timeout rather than an ambiguous
+            // OperationCanceledException that callers would otherwise mistake for their own
+            // requested cancellation.
+            throw new TimeoutException($"{nameof(NativeRefreshIsConnectedAsync)} timed out after {timeoutValue}.");
+        }
+    }
+
+    /// <summary>
+    ///     Reports an exception to <see cref="BluetoothUnhandledExceptionListener" /> without letting its
+    ///     own throw-when-unobserved behavior propagate to the caller.
+    /// </summary>
+    /// <param name="exception">The exception to report.</param>
+    /// <remarks>
+    ///     <see cref="BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException" /> rethrows when no
+    ///     listener is registered. Callers that must guarantee they reach code after this call regardless
+    ///     (e.g. completing a captured <see cref="TaskCompletionSource" /> for a best-effort refresh failure
+    ///     that is secondary to the operation's real outcome) need this instead of calling it directly.
+    /// </remarks>
+    private void ReportBestEffortFailure(Exception exception)
+    {
+        try
+        {
+            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, exception);
+        }
+        catch
+        {
+            // Intentionally swallowed - see remarks above.
+        }
+    }
 
     #endregion
 
@@ -69,21 +170,130 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
+    ///     Gets or sets a value indicating whether a native connect-attempt-terminal signal (a
+    ///     "connected" or "connect failed" callback) has been *received* for the current connect
+    ///     attempt - set the moment <see cref="OnConnectSucceededAsync" />/<see cref="OnConnectFailedAsync" />
+    ///     are entered, not once they finish processing it.
+    /// </summary>
+    /// <remarks>
+    ///     Needed because both methods await their own refresh before completing <see cref="ConnectionTcs" />:
+    ///     without this, <see cref="IsConnectionAttemptPending" /> would still read <c>true</c> for the
+    ///     entire duration of that await, so a disconnect signal arriving while a just-succeeded (or
+    ///     just-failed) connect is still mid-refresh would be misclassified as arriving *before* any
+    ///     terminal signal, racing to complete the same <see cref="ConnectionTcs" /> a second time.
+    /// </remarks>
+    private bool ConnectAttemptTerminalSignalReceived
+    {
+        get => GetValue(false);
+        set => SetValue(value);
+    }
+
+    /// <summary>
+    ///     Gets a value indicating whether a connect attempt is pending and no terminal native signal
+    ///     (a "connected" or "connect failed" callback) has been received for it yet.
+    /// </summary>
+    /// <remarks>
+    ///     More precise than <see cref="IsConnecting" /> for classifying a native disconnect callback:
+    ///     <see cref="IsConnecting" /> stays true until <see cref="ConnectAsync" />'s own <c>finally</c>
+    ///     runs, which can be well after a successful connect's TCS is already completed - checking it
+    ///     alone would misclassify a genuine disconnect that follows a fast, already-succeeded connect
+    ///     as a failed connect. Checking <see cref="ConnectionTcs" />'s completion alone has a narrower
+    ///     but still real gap: it stays incomplete for the entire duration of
+    ///     <see cref="OnConnectSucceededAsync" />/<see cref="OnConnectFailedAsync" />'s own awaited
+    ///     refresh, so a disconnect signal arriving mid-refresh would still be misclassified as
+    ///     "no terminal signal received yet" without also checking
+    ///     <see cref="ConnectAttemptTerminalSignalReceived" />. Reads both under
+    ///     <see cref="_connectionOperationLock" /> because <see cref="ConnectAsync" /> installs a new
+    ///     attempt's <see cref="ConnectionTcs" /> and resets <see cref="ConnectAttemptTerminalSignalReceived" />
+    ///     as two separate writes under that same lock - without also taking it here, a disconnect
+    ///     callback could observe the new, genuinely-pending TCS alongside the *previous* attempt's
+    ///     stale `true` flag (read between those two writes), wrongly conclude no attempt is pending,
+    ///     and complete the brand-new attempt's TCS instead of routing to it as a failure.
+    /// </remarks>
+    protected bool IsConnectionAttemptPending
+    {
+        get
+        {
+            lock (_connectionOperationLock)
+            {
+                return ConnectionTcs is { Task.IsCompleted: false } && !ConnectAttemptTerminalSignalReceived;
+            }
+        }
+    }
+
+    /// <summary>
     ///     Called when a connection attempt succeeds. Updates the connection state and completes the connection task.
     /// </summary>
-    protected void OnConnectSucceeded()
+    /// <param name="cancellationToken">Token to cancel the refresh operation.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    protected async ValueTask OnConnectSucceededAsync(CancellationToken cancellationToken = default)
     {
-        NativeRefreshIsConnected();
+        // Set before anything else (even before capturing the TCS below) - see
+        // ConnectAttemptTerminalSignalReceived's remarks for why IsConnectionAttemptPending needs
+        // this set at entry, not once this method finishes processing the signal.
+        ConnectAttemptTerminalSignalReceived = true;
 
-        // Attempt to dispatch success to the TaskCompletionSource
-        var success = ConnectionTcs?.TrySetResult() ?? false;
-        if (success)
+        // Capture the TCS for *this* attempt before awaiting below - ConnectAsync's own finally
+        // can null out (or replace with a new attempt's) the live ConnectionTcs property while
+        // this await is in flight (e.g. if the caller already gave up on this attempt via
+        // timeout/cancellation), so completing whatever ConnectionTcs happens to be live *after*
+        // the await would risk resolving a later, unrelated connect attempt instead of this one.
+        var connectionTcs = ConnectionTcs;
+
+        // Best-effort: a failed/cancelled refresh must not prevent the captured TCS below from
+        // being completed - ConnectAsync's "merge concurrent attempts" branch awaits this exact
+        // TCS with no timeout of its own, so leaving it uncompleted here would hang that caller
+        // forever once the owning ConnectAsync's finally clears the live ConnectionTcs property.
+        try
         {
-            LogDeviceConnected(Id);
-            return;
+            await RefreshIsConnectedAsync(CallbackRefreshTimeout, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller's own requested cancellation is a normal, documented outcome, not a
+            // fault - proceed to the TCS completion below silently instead of reporting it as an
+            // unhandled Bluetooth exception to every registered listener.
+        }
+        catch (Exception refreshException)
+        {
+            // The refresh itself failed, so IsConnected can no longer be trusted to reflect
+            // reality - fail the captured TCS with that failure rather than falling through to
+            // report a success we can no longer verify. If a live TCS absorbs it, ConnectAsync's
+            // own caller receives it directly via that captured task - no need to also notify
+            // BluetoothUnhandledExceptionListener here. If there's no live TCS (e.g. an
+            // automatic/late connection with no explicit ConnectAsync caller), just throw and let
+            // it reach that listener the one time via the calling native callback's own
+            // StartAndForget(onException) wrapper - reporting here too would deliver the same
+            // failure to that listener twice.
+            if (connectionTcs?.TrySetException(refreshException) ?? false)
+            {
+                return;
+            }
+
+            throw new DeviceFailedToConnectException(this, innerException: refreshException);
         }
 
         if (IsConnected)
+        {
+            // The just-awaited refresh confirms the device is actually connected - safe to
+            // declare success. connectionTcs may be null/already-completed for an
+            // automatic/late connection with no live ConnectAsync caller; nothing more to do
+            // in that case either.
+            if (connectionTcs?.TrySetResult() ?? false)
+            {
+                LogDeviceConnected(Id);
+            }
+            return;
+        }
+
+        // The just-awaited refresh confirms the device is NOT actually connected, despite the
+        // native "connected" callback that led here - it must have disconnected again
+        // immediately. Fault the captured TCS instead of declaring success: a merged caller (see
+        // ConnectAsync's merge branch) awaits this exact TCS and returns as soon as it completes,
+        // so leaving this to be discovered only by the owning ConnectAsync's own later
+        // IsConnected check would let a merged caller observe success for a connection that's
+        // already known to be dead.
+        if (connectionTcs?.TrySetException(new DeviceFailedToConnectException(this)) ?? false)
         {
             return;
         }
@@ -96,38 +306,85 @@ public abstract partial class BaseBluetoothRemoteDevice
     ///     Called when a connection attempt fails. Completes the connection task with an exception or dispatches to the unhandled exception listener.
     /// </summary>
     /// <param name="e">The exception that occurred during the connection attempt.</param>
-    protected void OnConnectFailed(Exception e)
+    /// <param name="cancellationToken">Token to cancel the refresh operation.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    protected async ValueTask OnConnectFailedAsync(Exception e, CancellationToken cancellationToken = default)
     {
-        LogDeviceConnectionFailed(Id, e);
-        NativeRefreshIsConnected();
+        // Set before anything else - see OnConnectSucceededAsync for why.
+        ConnectAttemptTerminalSignalReceived = true;
 
-        // Attempt to dispatch exception to the TaskCompletionSource
-        var success = (ConnectionTcs?.TrySetException(e) ?? false) || (DisconnectionTcs?.TrySetException(e) ?? false);
-        if (success)
+        LogDeviceConnectionFailed(Id, e);
+
+        // Capture both TCS instances before awaiting below - see OnConnectSucceededAsync for why.
+        var connectionTcs = ConnectionTcs;
+        var disconnectionTcs = DisconnectionTcs;
+
+        // Best-effort: see OnConnectSucceededAsync for why a failed/cancelled refresh must not
+        // prevent the captured TCS below from being completed.
+        try
+        {
+            await RefreshIsConnectedAsync(CallbackRefreshTimeout, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller's own requested cancellation is a normal, documented outcome, not a
+            // fault - proceed to the TCS completion below silently instead of reporting it as an
+            // unhandled Bluetooth exception to every registered listener.
+        }
+        catch (Exception refreshException)
+        {
+            ReportBestEffortFailure(refreshException);
+        }
+
+        // Attempt to dispatch exception to the TaskCompletionSource(s). Evaluated independently
+        // (not via ||) because OnDisconnectAsync's IsConnectionAttemptPending routing can land
+        // here with BOTH connectionTcs and disconnectionTcs live and incomplete (a disconnect
+        // arriving while a connect attempt is pending, itself concurrent with an explicit
+        // DisconnectAsync caller) - short-circuiting on connectionTcs succeeding would skip
+        // disconnectionTcs entirely, leaving that caller waiting until its own timeout instead of
+        // being completed with this same failure.
+        var connectionTcsCompleted = connectionTcs?.TrySetException(e) ?? false;
+        var disconnectionTcsCompleted = disconnectionTcs?.TrySetException(e) ?? false;
+        if (connectionTcsCompleted || disconnectionTcsCompleted)
         {
             return;
         }
 
-        // If the TaskCompletionSource was already completed, dispatch the exception to the listener
-        BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+        // If the TaskCompletionSource was already completed (or never existed - e.g. a native
+        // callback for an already-abandoned attempt), report via ReportBestEffortFailure rather
+        // than calling the listener directly: every native callback wraps a call to this method
+        // in its own StartAndForget(ex => BluetoothUnhandledExceptionListener...), so letting this
+        // rethrow (the listener's documented behavior when nothing is registered) would let that
+        // wrapper deliver the same failure to the listener a second time.
+        ReportBestEffortFailure(e);
     }
 
     /// <inheritdoc />
     public async virtual ValueTask ConnectIfNeededAsync(ConnectionOptions? connectionOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        connectionOptions ??= new ConnectionOptions();
-        NativeRefreshIsConnected();
-        if (IsConnected)
+        // Delegates entirely to ConnectAsync (which already refreshes before its own
+        // already-connected guard) instead of refreshing here too - a caller going through this
+        // method would otherwise pay for two main-thread dispatches on Apple for one conditional
+        // connect. The only difference from ConnectAsync is silently no-op'ing when already
+        // connected instead of throwing.
+        try
         {
-            return;
+            await ConnectAsync(connectionOptions, timeout, cancellationToken).ConfigureAwait(false);
         }
-
-        await ConnectAsync(connectionOptions, timeout, cancellationToken).ConfigureAwait(false);
+        catch (DeviceIsAlreadyConnectedException)
+        {
+            // Already connected - a no-op for this method, unlike ConnectAsync's explicit throw.
+        }
     }
 
     /// <inheritdoc />
     public async virtual ValueTask ConnectAsync(ConnectionOptions? connectionOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        // Refresh before the already-connected guard below - callers invoking ConnectAsync
+        // directly (rather than through ConnectIfNeededAsync, which already refreshes) would
+        // otherwise have this guard decide against a stale cached IsConnected value.
+        await RefreshIsConnectedAsync(timeout, cancellationToken).ConfigureAwait(false);
+
         // Ensure we are not already connected
         if (IsConnected)
         {
@@ -137,44 +394,72 @@ public abstract partial class BaseBluetoothRemoteDevice
         DeviceIsAlreadyConnectedException.ThrowIfAlreadyConnected(this);
         connectionOptions ??= new ConnectionOptions();
 
-        // Prevents multiple calls to ConnectAsync, if already starting, we merge the calls
-        if (ConnectionTcs is { Task.IsCompleted: false })
+        // Prevents multiple calls to ConnectAsync, if already starting, we merge the calls.
+        // The refresh above just awaited a real yield point, so the check-and-set below needs
+        // _connectionOperationLock to stay atomic across concurrent callers - see its doc comment.
+        // ownConnectionTcs (rather than re-reading the live ConnectionTcs property later) is what
+        // lets the finally below tell whether it still owns the live TCS or a newer, concurrent
+        // attempt has already replaced it.
+        var ownConnectionTcs = new TaskCompletionSource();
+        Task? pendingConnectionTask;
+        lock (_connectionOperationLock)
+        {
+            if (ConnectionTcs is { Task.IsCompleted: false })
+            {
+                pendingConnectionTask = ConnectionTcs.Task;
+            }
+            else
+            {
+                pendingConnectionTask = null;
+                ConnectionTcs = ownConnectionTcs; // Reset the TCS
+                ConnectAttemptTerminalSignalReceived = false; // New attempt - no terminal signal received yet.
+            }
+        }
+
+        if (pendingConnectionTask != null)
         {
             LogMergingConnectionAttempts(Id);
-            await ConnectionTcs.Task.ConfigureAwait(false);
+            // Bounded by this caller's own timeout/cancellationToken, not just the owning
+            // attempt's - otherwise a merged caller would wait on the owner's TCS indefinitely
+            // if the owner gives up (or its refresh keeps it pending) without ever completing it.
+            await pendingConnectionTask.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             return;
         }
 
-        ConnectionTcs = new TaskCompletionSource(); // Reset the TCS
         IsConnecting = true; // Set the connecting state to true
         Connecting?.Invoke(this, EventArgs.Empty);
 
-        try // try-catch to dispatch exceptions rising from start
-        {
-            LogDeviceConnecting(Id);
-            if (connectionOptions.WaitForAdvertisementBeforeConnecting)
-            {
-                LogWaitingForAdvertisement(Id);
-                await WaitForAdvertisementAsync(timeout, cancellationToken).ConfigureAwait(false);
-            }
-
-            await NativeConnectAsync(connectionOptions, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
-        }
-        catch (Exception e)
-        {
-            OnConnectFailed(e); // if exception is thrown during start, we trigger the failure
-        }
-
-        // try-finally to ensure disposal and release of resources
+        // Single outer try/finally so state cleanup below always runs, even if OnConnectFailedAsync
+        // itself throws (e.g. cancellation racing NativeRefreshIsConnectedAsync's own await) - without
+        // this, that exception would escape past this finally and leave IsConnecting/ConnectionTcs
+        // permanently stuck, wedging every subsequent ConnectAsync call on this device.
         try
         {
+            try // try-catch to dispatch exceptions rising from start
+            {
+                LogDeviceConnecting(Id);
+                if (connectionOptions.WaitForAdvertisementBeforeConnecting)
+                {
+                    LogWaitingForAdvertisement(Id);
+                    await WaitForAdvertisementAsync(timeout, cancellationToken).ConfigureAwait(false);
+                }
+
+                await NativeConnectAsync(connectionOptions, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
+            }
+            catch (Exception e)
+            {
+                await OnConnectFailedAsync(e, cancellationToken).ConfigureAwait(false); // if exception is thrown during start, we trigger the failure
+            }
+
             // Wait for OnConnectSucceeded to be called. NOTE: WaitBetterAsync throws
             // TimeoutException/OperationCanceledException directly on timeout/cancellation - it does
             // NOT return normally past the deadline - so this line itself is where a timed-out
-            // connect attempt is detected, not the IsConnected check below.
-            await ConnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+            // connect attempt is detected, not the IsConnected check below. Awaits the captured
+            // ownConnectionTcs, not the live ConnectionTcs property, which a concurrent attempt may
+            // have already replaced by the time this runs.
+            await ownConnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
 
-            NativeRefreshIsConnected();
+            await RefreshIsConnectedAsync(timeout, cancellationToken).ConfigureAwait(false);
             if (!IsConnected)
             {
                 throw new DeviceFailedToConnectException(this);
@@ -211,8 +496,32 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         finally
         {
-            IsConnecting = false; // Set the connecting state to false
-            ConnectionTcs = null;
+            // Guarantee ownConnectionTcs reaches a terminal state no matter how we're leaving
+            // this method. A caller that merged onto it above holds a direct reference to its
+            // Task, bounded only by *its own* timeout/cancellationToken - if that caller used the
+            // documented defaults (no timeout, no cancellation) and this attempt is giving up
+            // here (e.g. timeout/cancellation) before any native callback ever completed
+            // ownConnectionTcs, clearing the live ConnectionTcs below would strand that merged
+            // caller forever, since a later native callback reads whatever's live *then*, not this
+            // specific instance. A harmless no-op if it already completed normally.
+            // CancellationToken.None here is deliberate: this is a generic "the attempt is over"
+            // signal for whichever reason (timeout, cancellation, or native failure), not specifically
+            // this method's own cancellationToken.
+            ownConnectionTcs.TrySetCanceled(CancellationToken.None);
+
+            // Only reset IsConnecting/ConnectionTcs if this attempt still owns the live
+            // operation - a concurrent attempt may have already replaced ConnectionTcs and set
+            // IsConnecting back to true for its own in-flight connect (see the merge branch
+            // above); resetting unconditionally here would corrupt that newer attempt's state,
+            // not just its TCS.
+            lock (_connectionOperationLock)
+            {
+                if (ReferenceEquals(ConnectionTcs, ownConnectionTcs))
+                {
+                    IsConnecting = false; // Set the connecting state to false
+                    ConnectionTcs = null;
+                }
+            }
         }
     }
 
@@ -251,23 +560,91 @@ public abstract partial class BaseBluetoothRemoteDevice
     ///     Called when a disconnection occurs, either intentionally or unexpectedly. Completes the disconnection task.
     /// </summary>
     /// <param name="e">Optional exception that caused the disconnection.</param>
-    protected void OnDisconnect(Exception? e = null)
+    /// <param name="cancellationToken">Token to cancel the refresh operation.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    protected async ValueTask OnDisconnectAsync(Exception? e = null, CancellationToken cancellationToken = default)
     {
-        NativeRefreshIsConnected();
+        // A disconnect signal that arrives before any terminal native signal (connected/failed)
+        // has been received for a pending connect attempt is itself the terminal result of a
+        // *failed* connect, not a completed disconnect - the device never actually finished
+        // connecting. Route through the connect-failure path instead - otherwise
+        // TrySetResultOrException(null) below would complete the still-pending ConnectionTcs as a
+        // success. Applies uniformly to every platform's disconnect callback (Android additionally
+        // special-cases this itself to attach its native GATT status as the failure reason - see
+        // AndroidBluetoothRemoteDevice.OnConnectionStateChange). See IsConnectionAttemptPending's
+        // remarks for why it checks more than just ConnectionTcs's completion.
+        if (IsConnectionAttemptPending)
+        {
+            await OnConnectFailedAsync(e ?? new DeviceFailedToConnectException(this, "Device disconnected while a connection attempt was in progress"), cancellationToken).ConfigureAwait(false);
+            return;
+        }
 
-        // Attempt to dispatch success/failure to a pending explicit Connect/Disconnect await.
-        var success = (DisconnectionTcs?.TrySetResultOrException(e) ?? false) || (ConnectionTcs?.TrySetResultOrException(e) ?? false);
+        // Capture before awaiting below - see OnConnectSucceededAsync for why. ConnectionTcs is
+        // deliberately NOT captured/touched here (unlike OnConnectFailedAsync's failure dispatch):
+        // by this point IsConnectionAttemptPending has already routed a disconnect that arrived
+        // before any terminal connect signal to OnConnectFailedAsync above, so any ConnectionTcs
+        // still live here belongs to an attempt whose OnConnectSucceededAsync/OnConnectFailedAsync
+        // has already received its terminal signal and is (or will be) completing it based on its
+        // own, more-informed refresh - this method completing it instead (e.g. with a stale
+        // "disconnected" outcome while that other call is still mid-refresh) would let it steal
+        // ownership of an outcome it isn't positioned to correctly determine.
+        var disconnectionTcs = DisconnectionTcs;
+
+        // Best-effort: see OnConnectSucceededAsync for why a failed/cancelled refresh must not
+        // prevent the captured TCS below from being completed.
+        try
+        {
+            await RefreshIsConnectedAsync(CallbackRefreshTimeout, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller's own requested cancellation is a normal, documented outcome, not a
+            // fault - proceed to the TCS completion below silently instead of reporting it as an
+            // unhandled Bluetooth exception to every registered listener.
+        }
+        catch (Exception refreshException)
+        {
+            // The refresh itself failed, so IsConnected can no longer be trusted to reflect
+            // reality - fail the captured TCS with that failure instead of completing it with e
+            // below, which may represent a success outcome we can no longer verify. If a live TCS
+            // absorbs it, DisconnectAsync's own caller receives it directly via that captured
+            // task - no need to also notify BluetoothUnhandledExceptionListener here (see
+            // OnConnectSucceededAsync for why).
+            if (disconnectionTcs?.TrySetException(refreshException) ?? false)
+            {
+                return;
+            }
+
+            // No live TCS to deliver this to directly (an unexpected disconnection, e.g. a
+            // device rebooting mid-DFU) - this branch doesn't throw, so report directly here;
+            // nothing else downstream would otherwise ever notify
+            // BluetoothUnhandledExceptionListener about it.
+            ReportBestEffortFailure(refreshException);
+            OnUnexpectedDisconnection(e);
+            return;
+        }
+
+        // Attempt to dispatch success/failure to a pending explicit DisconnectAsync await. When e
+        // is null (a "clean disconnect" signal), gate success on the just-refreshed IsConnected
+        // actually confirming the device is disconnected - a merged caller (see DisconnectAsync's
+        // merge branch) awaits this exact TCS and returns as soon as it completes, so declaring
+        // success without checking IsConnected could have it observe success for a "disconnect"
+        // that, per the refresh just awaited, never actually took effect - something the owning
+        // DisconnectAsync call would otherwise only discover moments later via its own
+        // post-native refresh/check.
+        var tcsOutcome = e ?? (IsConnected ? new DeviceFailedToDisconnectException(this) : null);
+        var success = disconnectionTcs?.TrySetResultOrException(tcsOutcome) ?? false;
         if (success)
         {
             // Explicitly requested (someone is awaiting DisconnectAsync/ConnectAsync) - log its
-            // outcome directly. This is not an unexpected disconnection, regardless of e.
-            if (e == null)
+            // outcome directly. This is not an unexpected disconnection, regardless of tcsOutcome.
+            if (tcsOutcome == null)
             {
                 LogDeviceDisconnected(Id);
             }
             else
             {
-                LogDeviceDisconnectionFailed(Id, e);
+                LogDeviceDisconnectionFailed(Id, tcsOutcome);
             }
             return;
         }
@@ -283,18 +660,28 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async ValueTask DisconnectIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        NativeRefreshIsConnected();
-        if (!IsConnected)
+        // Delegates entirely to DisconnectAsync (which already refreshes before its own
+        // already-disconnected guard) instead of refreshing here too - see ConnectIfNeededAsync
+        // for why. The only difference from DisconnectAsync is silently no-op'ing when already
+        // disconnected instead of throwing.
+        try
         {
-            return;
+            await DisconnectAsync(timeout, cancellationToken).ConfigureAwait(false);
         }
-
-        await DisconnectAsync(timeout, cancellationToken).ConfigureAwait(false);
+        catch (DeviceIsAlreadyDisconnectedException)
+        {
+            // Already disconnected - a no-op for this method, unlike DisconnectAsync's explicit throw.
+        }
     }
 
     /// <inheritdoc />
     public async ValueTask DisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        // Refresh before the already-disconnected guard below - callers invoking DisconnectAsync
+        // directly (rather than through DisconnectIfNeededAsync, which already refreshes) would
+        // otherwise have this guard decide against a stale cached IsConnected value.
+        await RefreshIsConnectedAsync(timeout, cancellationToken).ConfigureAwait(false);
+
         // Ensure we are not already disconnected
         if (!IsConnected)
         {
@@ -303,35 +690,62 @@ public abstract partial class BaseBluetoothRemoteDevice
 
         DeviceIsAlreadyDisconnectedException.ThrowIfAlreadyDisconnected(this);
 
-        // Prevents multiple calls to ConnectAsync, if already starting, we merge the calls
-        if (DisconnectionTcs is { Task.IsCompleted: false })
+        // Prevents multiple calls to ConnectAsync, if already starting, we merge the calls.
+        // The refresh above just awaited a real yield point, so the check-and-set below needs
+        // _connectionOperationLock to stay atomic across concurrent callers - see its doc comment.
+        // ownDisconnectionTcs (rather than re-reading the live DisconnectionTcs property later) is
+        // what lets the finally below tell whether it still owns the live TCS or a newer,
+        // concurrent attempt has already replaced it.
+        var ownDisconnectionTcs = new TaskCompletionSource();
+        Task? pendingDisconnectionTask;
+        lock (_connectionOperationLock)
+        {
+            if (DisconnectionTcs is { Task.IsCompleted: false })
+            {
+                pendingDisconnectionTask = DisconnectionTcs.Task;
+            }
+            else
+            {
+                pendingDisconnectionTask = null;
+                DisconnectionTcs = ownDisconnectionTcs; // Reset the TCS
+            }
+        }
+
+        if (pendingDisconnectionTask != null)
         {
             LogMergingDisconnectionAttempts(Id);
-            await DisconnectionTcs.Task.ConfigureAwait(false);
+            // Bounded by this caller's own timeout/cancellationToken, not just the owning
+            // attempt's - otherwise a merged caller would wait on the owner's TCS indefinitely
+            // if the owner gives up (or its refresh keeps it pending) without ever completing it.
+            await pendingDisconnectionTask.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             return;
         }
 
-        DisconnectionTcs = new TaskCompletionSource(); // Reset the TCS
         IsDisconnecting = true; // Set the disconnecting state to true
         Disconnecting?.Invoke(this, EventArgs.Empty);
 
-        try // try-catch to dispatch exceptions rising from start
-        {
-            LogDeviceDisconnecting(Id);
-            await NativeDisconnectAsync(timeout, cancellationToken).ConfigureAwait(false); // actual start native call
-        }
-        catch (Exception e)
-        {
-            OnDisconnect(e); // if exception is thrown during start, we trigger the failure
-        }
-
-        // try-finally to ensure disposal and release of resources
+        // Single outer try/finally so state cleanup below always runs, even if OnDisconnectAsync
+        // itself throws (e.g. cancellation racing NativeRefreshIsConnectedAsync's own await) - without
+        // this, that exception would escape past this finally and leave IsDisconnecting/DisconnectionTcs
+        // permanently stuck, wedging every subsequent DisconnectAsync call on this device.
         try
         {
-            // Wait for OnDisconnection to be called
-            await DisconnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+            try // try-catch to dispatch exceptions rising from start
+            {
+                LogDeviceDisconnecting(Id);
+                await NativeDisconnectAsync(timeout, cancellationToken).ConfigureAwait(false); // actual start native call
+            }
+            catch (Exception e)
+            {
+                await OnDisconnectAsync(e, cancellationToken).ConfigureAwait(false); // if exception is thrown during start, we trigger the failure
+            }
+
+            // Wait for OnDisconnection to be called. Awaits the captured ownDisconnectionTcs, not
+            // the live DisconnectionTcs property, which a concurrent attempt may have already
+            // replaced by the time this runs.
+            await ownDisconnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             await ClearServicesAsync().ConfigureAwait(false);
-            NativeRefreshIsConnected();
+            await RefreshIsConnectedAsync(timeout, cancellationToken).ConfigureAwait(false);
             if (IsConnected)
             {
                 throw new DeviceFailedToDisconnectException(this);
@@ -339,8 +753,24 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         finally
         {
-            IsDisconnecting = false; // Set the disconnecting state to false
-            DisconnectionTcs = null;
+            // Guarantee ownDisconnectionTcs reaches a terminal state - see ConnectAsync's finally
+            // for why a merged caller using the documented defaults would otherwise be stranded.
+            // CancellationToken.None here is deliberate - see ConnectAsync's finally.
+            ownDisconnectionTcs.TrySetCanceled(CancellationToken.None);
+
+            // Only reset IsDisconnecting/DisconnectionTcs if this attempt still owns the live
+            // operation - a concurrent attempt may have already replaced DisconnectionTcs and set
+            // IsDisconnecting back to true for its own in-flight disconnect (see the merge branch
+            // above); resetting unconditionally here would corrupt that newer attempt's state,
+            // not just its TCS.
+            lock (_connectionOperationLock)
+            {
+                if (ReferenceEquals(DisconnectionTcs, ownDisconnectionTcs))
+                {
+                    IsDisconnecting = false; // Set the disconnecting state to false
+                    DisconnectionTcs = null;
+                }
+            }
         }
     }
 
