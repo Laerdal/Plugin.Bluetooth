@@ -186,10 +186,16 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
             IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
         });
 
-        // Observe the dispatched task's fault independently of the cancellable wait below -
-        // cancellationToken can make that wait return before the main-thread dispatch actually
-        // completes, and an unobserved fault on it afterward would otherwise be silently lost.
-        dispatchTask.StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+        if (cancellationToken.CanBeCanceled)
+        {
+            // WaitAsync(cancellationToken) below only cancels the *wait* - the dispatched action
+            // keeps running regardless. Only start observing the dispatch task's own outcome once
+            // cancellation actually fires: at that point the WaitAsync call has already returned
+            // (with OperationCanceledException) and nothing else is left to observe a late fault on
+            // it. Registering unconditionally here would double-report every ordinary (non-cancelled)
+            // fault, since the awaited ValueTask below would also propagate it to its own caller.
+            cancellationToken.Register(() => dispatchTask.StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex)));
+        }
 
         return new ValueTask(dispatchTask.WaitAsync(cancellationToken));
     }
@@ -204,13 +210,17 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
     /// <inheritdoc />
     /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1518766-connect">iOS CBCentralManager.connect</seealso>
-    protected override async ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(connectionOptions);
 
         Logger?.LogConnecting(Id);
 
-        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
+        // No refresh here - this method doesn't branch on IsConnected, and the caller (Core's
+        // ConnectAsync) already refreshes both before its already-connected guard and again after
+        // this native call completes. Awaiting one more here would also be unbounded when this is
+        // invoked from the "abandon the connect attempt" cleanup path with no timeout at all - see
+        // that path's comment for why it deliberately uses CancellationToken.None.
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
@@ -225,6 +235,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
             NotifyOnNotification = connectionOptions.Apple?.NotifyOnNotification ?? true
         };
         scanner.CbCentralManagerWrapper.CbCentralManager.ConnectPeripheral(CbPeripheralWrapper.CbPeripheral, appleOptions);
+        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />
@@ -259,17 +270,20 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
     /// <inheritdoc />
     /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1518952-cancelperipheralconnection">iOS CBCentralManager.cancelPeripheralConnection</seealso>
-    protected override async ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogDisconnecting(Id);
 
-        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
+        // No refresh here - see NativeConnectAsync. This is also invoked from ConnectAsync's
+        // "abandon the attempt" cleanup path with timeout: null and CancellationToken.None, where
+        // an unbounded refresh could hang that best-effort cleanup indefinitely.
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
         }
 
         scanner.CbCentralManagerWrapper.CbCentralManager.CancelPeripheralConnection(CbPeripheralWrapper.CbPeripheral);
+        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />
