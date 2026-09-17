@@ -320,6 +320,19 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         finally
         {
+            // Guarantee ownConnectionTcs reaches a terminal state no matter how we're leaving
+            // this method. A caller that merged onto it above holds a direct reference to its
+            // Task, bounded only by *its own* timeout/cancellationToken - if that caller used the
+            // documented defaults (no timeout, no cancellation) and this attempt is giving up
+            // here (e.g. timeout/cancellation) before any native callback ever completed
+            // ownConnectionTcs, clearing the live ConnectionTcs below would strand that merged
+            // caller forever, since a later native callback reads whatever's live *then*, not this
+            // specific instance. A harmless no-op if it already completed normally.
+            // CancellationToken.None here is deliberate: this is a generic "the attempt is over"
+            // signal for whichever reason (timeout, cancellation, or native failure), not specifically
+            // this method's own cancellationToken.
+            ownConnectionTcs.TrySetCanceled(CancellationToken.None);
+
             // Only reset IsConnecting/ConnectionTcs if this attempt still owns the live
             // operation - a concurrent attempt may have already replaced ConnectionTcs and set
             // IsConnecting back to true for its own in-flight connect (see the merge branch
@@ -506,6 +519,11 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         finally
         {
+            // Guarantee ownDisconnectionTcs reaches a terminal state - see ConnectAsync's finally
+            // for why a merged caller using the documented defaults would otherwise be stranded.
+            // CancellationToken.None here is deliberate - see ConnectAsync's finally.
+            ownDisconnectionTcs.TrySetCanceled(CancellationToken.None);
+
             // Only reset IsDisconnecting/DisconnectionTcs if this attempt still owns the live
             // operation - a concurrent attempt may have already replaced DisconnectionTcs and set
             // IsDisconnecting back to true for its own in-flight disconnect (see the merge branch
