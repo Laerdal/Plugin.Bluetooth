@@ -151,25 +151,28 @@ public abstract partial class BaseBluetoothRemoteDevice
         IsConnecting = true; // Set the connecting state to true
         Connecting?.Invoke(this, EventArgs.Empty);
 
-        try // try-catch to dispatch exceptions rising from start
-        {
-            LogDeviceConnecting(Id);
-            if (connectionOptions.WaitForAdvertisementBeforeConnecting)
-            {
-                LogWaitingForAdvertisement(Id);
-                await WaitForAdvertisementAsync(timeout, cancellationToken).ConfigureAwait(false);
-            }
-
-            await NativeConnectAsync(connectionOptions, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
-        }
-        catch (Exception e)
-        {
-            await OnConnectFailedAsync(e, cancellationToken).ConfigureAwait(false); // if exception is thrown during start, we trigger the failure
-        }
-
-        // try-finally to ensure disposal and release of resources
+        // Single outer try/finally so state cleanup below always runs, even if OnConnectFailedAsync
+        // itself throws (e.g. cancellation racing NativeRefreshIsConnectedAsync's own await) - without
+        // this, that exception would escape past this finally and leave IsConnecting/ConnectionTcs
+        // permanently stuck, wedging every subsequent ConnectAsync call on this device.
         try
         {
+            try // try-catch to dispatch exceptions rising from start
+            {
+                LogDeviceConnecting(Id);
+                if (connectionOptions.WaitForAdvertisementBeforeConnecting)
+                {
+                    LogWaitingForAdvertisement(Id);
+                    await WaitForAdvertisementAsync(timeout, cancellationToken).ConfigureAwait(false);
+                }
+
+                await NativeConnectAsync(connectionOptions, timeout, cancellationToken).ConfigureAwait(false); // actual start native call
+            }
+            catch (Exception e)
+            {
+                await OnConnectFailedAsync(e, cancellationToken).ConfigureAwait(false); // if exception is thrown during start, we trigger the failure
+            }
+
             // Wait for OnConnectSucceeded to be called. NOTE: WaitBetterAsync throws
             // TimeoutException/OperationCanceledException directly on timeout/cancellation - it does
             // NOT return normally past the deadline - so this line itself is where a timed-out
@@ -318,19 +321,22 @@ public abstract partial class BaseBluetoothRemoteDevice
         IsDisconnecting = true; // Set the disconnecting state to true
         Disconnecting?.Invoke(this, EventArgs.Empty);
 
-        try // try-catch to dispatch exceptions rising from start
-        {
-            LogDeviceDisconnecting(Id);
-            await NativeDisconnectAsync(timeout, cancellationToken).ConfigureAwait(false); // actual start native call
-        }
-        catch (Exception e)
-        {
-            await OnDisconnectAsync(e, cancellationToken).ConfigureAwait(false); // if exception is thrown during start, we trigger the failure
-        }
-
-        // try-finally to ensure disposal and release of resources
+        // Single outer try/finally so state cleanup below always runs, even if OnDisconnectAsync
+        // itself throws (e.g. cancellation racing NativeRefreshIsConnectedAsync's own await) - without
+        // this, that exception would escape past this finally and leave IsDisconnecting/DisconnectionTcs
+        // permanently stuck, wedging every subsequent DisconnectAsync call on this device.
         try
         {
+            try // try-catch to dispatch exceptions rising from start
+            {
+                LogDeviceDisconnecting(Id);
+                await NativeDisconnectAsync(timeout, cancellationToken).ConfigureAwait(false); // actual start native call
+            }
+            catch (Exception e)
+            {
+                await OnDisconnectAsync(e, cancellationToken).ConfigureAwait(false); // if exception is thrown during start, we trigger the failure
+            }
+
             // Wait for OnDisconnection to be called
             await DisconnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             await ClearServicesAsync().ConfigureAwait(false);

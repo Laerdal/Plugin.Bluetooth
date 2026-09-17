@@ -332,15 +332,15 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     {
         Logger?.LogConnectionStatusChanged(Id, newConnectionStatus);
         BluetoothConnectionStatus = newConnectionStatus;
-        _ = NativeRefreshIsConnectedAsync();
+        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
 
         switch (newConnectionStatus)
         {
             case BluetoothConnectionStatus.Connected:
-                _ = OnConnectSucceededAsync();
+                OnConnectSucceededAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                 break;
             case BluetoothConnectionStatus.Disconnected:
-                _ = OnDisconnectAsync();
+                OnDisconnectAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                 break;
         }
     }
@@ -356,7 +356,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     public void OnGattSessionStatusChanged(GattSessionStatus argsStatus)
     {
         GattSessionStatus = argsStatus;
-        _ = NativeRefreshIsConnectedAsync();
+        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
     }
 
     /// <summary>

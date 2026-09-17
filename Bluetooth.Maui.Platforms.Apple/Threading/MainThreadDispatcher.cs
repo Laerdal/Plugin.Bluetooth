@@ -52,4 +52,14 @@ internal static class MainThreadDispatcher
     {
         Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(action);
     }
+
+    /// <summary>
+    ///     Executes an action on the main thread and returns a task that completes once the action has run,
+    ///     propagating any exception it throws back to the awaiter.
+    /// </summary>
+    /// <param name="action">The action to execute.</param>
+    public static Task InvokeOnMainThreadAsync(Action action)
+    {
+        return Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(action);
+    }
 }

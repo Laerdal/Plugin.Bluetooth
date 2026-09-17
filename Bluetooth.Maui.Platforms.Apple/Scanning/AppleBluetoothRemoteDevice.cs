@@ -180,42 +180,30 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     #region Connection
 
     /// <inheritdoc />
-    protected override ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
+    protected override async ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
     {
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        MainThreadDispatcher.BeginInvokeOnMainThread(() => {
-            try
-            {
-                IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
-                tcs.TrySetResult();
-            }
-            catch (Exception e)
-            {
-                tcs.TrySetException(e);
-            }
-        });
-
-        return new ValueTask(tcs.Task.WaitAsync(cancellationToken));
+        await MainThreadDispatcher.InvokeOnMainThreadAsync(() => {
+            IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
+        }).WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public void ConnectionEventDidOccur(CBConnectionEvent connectionEvent)
     {
-        _ = NativeRefreshIsConnectedAsync();
+        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
     }
 
     #region Connect
 
     /// <inheritdoc />
     /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1518766-connect">iOS CBCentralManager.connect</seealso>
-    protected override ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override async ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(connectionOptions);
 
         Logger?.LogConnecting(Id);
 
-        _ = NativeRefreshIsConnectedAsync();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
@@ -230,13 +218,12 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
             NotifyOnNotification = connectionOptions.Apple?.NotifyOnNotification ?? true
         };
         scanner.CbCentralManagerWrapper.CbCentralManager.ConnectPeripheral(CbPeripheralWrapper.CbPeripheral, appleOptions);
-        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />
     public void FailedToConnectPeripheral(NSError? error)
     {
-        _ = NativeRefreshIsConnectedAsync();
+        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
@@ -245,16 +232,16 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         catch (Exception e)
         {
             Logger?.LogConnectionFailed(Id, 1, e);
-            _ = OnConnectFailedAsync(e);
+            OnConnectFailedAsync(e).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         }
     }
 
     /// <inheritdoc />
     public void ConnectedPeripheral()
     {
-        _ = NativeRefreshIsConnectedAsync();
+        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         Logger?.LogConnected(Id);
-        _ = OnConnectSucceededAsync();
+        OnConnectSucceededAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
     }
 
     #endregion
@@ -263,18 +250,17 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
     /// <inheritdoc />
     /// <seealso href="https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/1518952-cancelperipheralconnection">iOS CBCentralManager.cancelPeripheralConnection</seealso>
-    protected override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    protected override async ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogDisconnecting(Id);
 
-        _ = NativeRefreshIsConnectedAsync();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
         }
 
         scanner.CbCentralManagerWrapper.CbCentralManager.CancelPeripheralConnection(CbPeripheralWrapper.CbPeripheral);
-        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />
@@ -287,39 +273,39 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     public void DisconnectedPeripheral(NSError? error)
     {
-        _ = NativeRefreshIsConnectedAsync();
+        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
             Logger?.LogDisconnected(Id);
-            _ = OnDisconnectAsync();
+            OnDisconnectAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         }
         catch (Exception e)
         {
             Logger?.LogDisconnected(Id);
-            _ = OnDisconnectAsync(e);
+            OnDisconnectAsync(e).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         }
     }
 
     /// <inheritdoc />
     public void DidDisconnectPeripheral(double timestamp, bool isReconnecting, NSError? error)
     {
-        _ = NativeRefreshIsConnectedAsync();
+        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
             if (isReconnecting)
             {
-                _ = OnDisconnectAsync(new DeviceReconnectingException(this));
+                OnDisconnectAsync(new DeviceReconnectingException(this)).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
             }
             else
             {
-                _ = OnDisconnectAsync();
+                OnDisconnectAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
             }
         }
         catch (Exception e)
         {
-            _ = OnDisconnectAsync(e);
+            OnDisconnectAsync(e).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         }
     }
 
