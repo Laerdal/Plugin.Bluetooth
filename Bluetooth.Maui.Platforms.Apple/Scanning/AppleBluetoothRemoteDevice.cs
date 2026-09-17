@@ -193,12 +193,10 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         // via OperationCanceledException without ever seeing dispatchTask's eventual result, so
         // nothing else is left to observe or report a fault that arrives later - that's exactly
         // the case this registration exists for. Disposed once this call is done so it doesn't
-        // outlive it.
-        //
-        // Known gap: this does not cover a caller-side *timeout* that never cancels this token -
-        // Core wraps every call to this method in WaitBetterAsync(timeout, cancellationToken), and
-        // that timeout race is decoupled from cancellationToken entirely, so a timeout-only
-        // abandonment still leaves a later fault unreported. See ADR 0003.
+        // outlive it. Core's callers that also have a timeout (BaseBluetoothRemoteDevice.Connection's
+        // RefreshIsConnectedAsync) link it into this same cancellationToken before calling this
+        // method, so a purely timeout-triggered abandonment is indistinguishable from an explicit
+        // cancellation here too - see ADR 0003.
         using var registration = cancellationToken.CanBeCanceled
             ? cancellationToken.Register(() => dispatchTask.StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex)))
             : default;

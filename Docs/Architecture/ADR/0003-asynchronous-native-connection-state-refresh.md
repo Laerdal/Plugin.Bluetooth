@@ -103,13 +103,23 @@ still holds through Core's own pre/post-native-call refreshes. Apple's `NativeRe
 also only starts observing the dispatched task's own fault *after* cancellation actually fires
 (via `CancellationToken.Register`, disposed once the call completes), rather than unconditionally -
 otherwise an ordinary (non-cancelled) fault would be reported twice: once by that observer and once
-through the normal awaited-propagation path. This conditional observer only covers cancellation-
-triggered abandonment, not a caller-side *timeout* that never cancels this token (Core wraps every
-call to this method in `WaitBetterAsync(timeout, cancellationToken)`, and that timeout race is
-decoupled from `cancellationToken` entirely) - a timeout-only abandonment can still leave a later
-dispatch fault unreported. Closing that gap would require threading the caller's timeout into this
-method's own contract (or linking a timeout-derived cancellation token through it), which is out of
-scope for this change; see Follow-up Actions.
+through the normal awaited-propagation path.
+
+Every Core call site that has a `timeout` (`WaitForIsConnectedAsync`, and the pre/post-native
+checks in `ConnectAsync`/`DisconnectAsync`) now goes through a private `RefreshIsConnectedAsync`
+helper instead of wrapping `NativeRefreshIsConnectedAsync` directly in
+`WaitBetterAsync(timeout, cancellationToken)`. That old pattern bounded how long the *caller*
+waited but never actually cancelled the token handed to the platform implementation, so Apple's
+cancellation-triggered observer above never learned that a purely timeout-triggered abandonment
+had happened, and a fault arriving after that point went unreported. The helper instead links
+`timeout` into an actual `CancellationTokenSource` (via `CancelAfter`) before calling
+`NativeRefreshIsConnectedAsync`, translating a timeout into a real cancellation of the same token -
+making a timeout indistinguishable from an explicit cancellation to the platform implementation,
+and closing the gap without any platform-specific timeout plumbing. It throws `TimeoutException`
+when its own linked timeout fires, matching what `WaitBetterAsync` would have thrown. The three
+callback-driven methods (`OnConnectSucceededAsync`/`OnConnectFailedAsync`/`OnDisconnectAsync`) have
+no `timeout` parameter at all - only `cancellationToken` - so they call
+`NativeRefreshIsConnectedAsync` directly and are unaffected by this helper.
 
 When the refresh itself fails (a non-cancellation exception) inside `OnConnectSucceededAsync` or
 `OnDisconnectAsync`, the captured TCS is now failed with that refresh exception instead of being
@@ -118,13 +128,26 @@ held - `IsConnected` can no longer be trusted once its own refresh has faulted, 
 without being able to verify it would be misleading. `ReportBestEffortFailure` still runs first so
 the failure also reaches `BluetoothUnhandledExceptionListener`.
 
-On Android, `OnConnectionStateChange`'s `ProfileState.Disconnected` case now checks `IsConnecting`
-before deciding which TCS to resolve: a disconnected callback that arrives while a connect attempt
-is still pending is the terminal result of a *failed connect*, not a completed disconnect - the
-device never actually finished connecting. Routing that case through `OnDisconnectAsync()` would
-call `TrySetResultOrException(null)` on the pending `ConnectionTcs`, completing the connect attempt
-as a success. It now routes to `OnConnectFailedAsync` instead, preserving the native `GattStatus` as
-the failure reason when non-`Success`, or a generic `DeviceFailedToConnectException` otherwise.
+`OnDisconnectAsync` now also checks a new `IsConnectionAttemptPending` property
+(`ConnectionTcs is { Task.IsCompleted: false }`) before doing anything else: a disconnect signal
+that arrives while a connect attempt's TCS is still uncompleted is the terminal result of a
+*failed connect*, not a completed disconnect - the device never actually finished connecting.
+Routing that case through the normal `TrySetResultOrException(e)` path would complete the pending
+`ConnectionTcs` as a success (when `e` is `null`, the common case for a plain native disconnect
+callback). It now routes to `OnConnectFailedAsync` instead, defaulting to a generic
+`DeviceFailedToConnectException` when no more specific exception is available. This lives in the
+shared base method so Apple's and Windows's disconnect callbacks - which call `OnDisconnectAsync()`
+directly with no equivalent check of their own - are covered automatically, not just Android's.
+`IsConnectionAttemptPending` is deliberately checked instead of the existing `IsConnecting` flag:
+`IsConnecting` stays `true` until `ConnectAsync`'s own `finally` runs, which can be well after a
+successful connect's TCS is already completed, so checking it alone would misclassify a genuine
+disconnect that follows a fast, already-succeeded connect as a failed connect.
+
+On Android, `OnConnectionStateChange`'s `ProfileState.Disconnected` case additionally checks the
+same `IsConnectionAttemptPending` property itself (exposed as `protected` from Core) before calling
+`OnDisconnectAsync` at all, so it can attach the native `GattStatus` as the failure reason (via
+`AndroidNativeGattCallbackStatusException`) when non-`Success`, which the generic Core-level check
+above cannot do without platform-specific knowledge.
 
 This is a breaking change with two independent surfaces:
 - `BaseBluetoothRemoteDevice.NativeRefreshIsConnected()` no longer exists. Any external subclass
@@ -171,8 +194,11 @@ This is a breaking change with two independent surfaces:
   longer evaluates the already-connected/already-disconnected guard against a stale cached value.
 - A refresh failure inside `OnConnectSucceededAsync`/`OnDisconnectAsync` now fails the pending
   operation instead of silently completing it as a success that was never actually verified.
-- An Android disconnected callback that arrives mid-connect no longer completes the pending
-  connect attempt as a success; it now fails it via `OnConnectFailedAsync`.
+- A disconnect signal that arrives while a connect attempt is still pending no longer completes
+  that attempt as a success on any platform (previously only handled on Android); it now fails it
+  via `OnConnectFailedAsync`.
+- A purely timeout-triggered abandonment of the refresh on Apple is now reported the same way a
+  cancellation-triggered one already was, closing what was previously an accepted gap.
 
 ### Negative
 
@@ -198,9 +224,6 @@ This is a breaking change with two independent surfaces:
       activation of `Windows.Devices.Bluetooth` still requires an actual Windows machine to test).
 - [ ] Confirm on real hardware that iOS connect/disconnect no longer produces false
       `DeviceFailedToConnectException`/`DeviceFailedToDisconnectException`.
-- [ ] Thread the caller's timeout into `NativeRefreshIsConnectedAsync`'s own contract (or link a
-      timeout-derived cancellation token through it) so a purely timeout-triggered abandonment on
-      Apple also reports a later dispatch fault, matching the cancellation-triggered case.
 
 ## References
 
