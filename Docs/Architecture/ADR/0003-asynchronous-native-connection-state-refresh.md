@@ -32,9 +32,12 @@ platforms regardless.
 Change `BaseBluetoothRemoteDevice.NativeRefreshIsConnected()` (`protected abstract void`) to
 `NativeRefreshIsConnectedAsync(CancellationToken)` (`protected abstract ValueTask`), and await it
 everywhere the base class needs a guaranteed-fresh `IsConnected` value before branching:
-`WaitForIsConnectedAsync`, `ConnectIfNeededAsync`, `DisconnectIfNeededAsync`, the pre/post-native
-checks inside `ConnectAsync`/`DisconnectAsync`, and inside `OnConnectSucceededAsync`/
-`OnConnectFailedAsync`/`OnDisconnectAsync`.
+`WaitForIsConnectedAsync`, the pre/post-native checks inside `ConnectAsync`/`DisconnectAsync`, and
+inside `OnConnectSucceededAsync`/`OnConnectFailedAsync`/`OnDisconnectAsync`. `ConnectIfNeededAsync`/
+`DisconnectIfNeededAsync` do *not* refresh themselves - they delegate entirely to `ConnectAsync`/
+`DisconnectAsync` (which already refresh) and catch+swallow `DeviceIsAlreadyConnectedException`/
+`DeviceIsAlreadyDisconnectedException` to turn the throw into a no-op; refreshing in both places
+would cost two main-thread dispatches on Apple for one conditional connect/disconnect.
 
 Apple's implementation dispatches to the main thread via `MainThreadDispatcher.InvokeOnMainThreadAsync`
 and awaits completion. Android and Windows keep synchronous bodies wrapped in
@@ -64,7 +67,18 @@ native event actually fired, not whatever attempt happens to be live once the aw
 the refresh itself throws, that failure is reported via a `ReportBestEffortFailure` helper instead
 of calling `BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException` directly - that
 listener rethrows when no listener is registered, which would otherwise skip the TCS completion
-below it and hang any caller merged onto that TCS.
+below it and hang any caller merged onto that TCS. An `OperationCanceledException` caused by the
+caller's own requested cancellation is swallowed before that reporting step entirely - it's a
+normal, documented outcome of `ConnectAsync`/`DisconnectAsync`, not a fault worth notifying
+registered listeners about.
+
+This does **not** attempt to correlate a native callback with the specific `ConnectAsync`/
+`DisconnectAsync` call that triggered it - CoreBluetooth (and the WinRT/Android equivalents) don't
+expose a per-call token to correlate against, so a stale callback for an attempt abandoned via
+timeout/cancellation can still resolve whatever attempt is live when it eventually arrives. This is
+the same risk already documented in `ConnectAsync`'s own comment (confirmed via real hardware); a
+real fix would need an app-level generation/attempt token threaded through every native delegate
+callback across all three platforms, which is out of scope for this change.
 
 `ConnectAsync`/`DisconnectAsync` also now refresh before their own initial already-connected /
 already-disconnected guard, not just via the `*IfNeededAsync` wrappers - calling either method
