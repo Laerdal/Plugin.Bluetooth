@@ -131,6 +131,12 @@ public abstract partial class BaseBluetoothRemoteDevice
         {
             await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller's own requested cancellation is a normal, documented outcome, not a
+            // fault - proceed to the TCS completion below silently instead of reporting it as an
+            // unhandled Bluetooth exception to every registered listener.
+        }
         catch (Exception refreshException)
         {
             ReportBestEffortFailure(refreshException);
@@ -173,6 +179,12 @@ public abstract partial class BaseBluetoothRemoteDevice
         {
             await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller's own requested cancellation is a normal, documented outcome, not a
+            // fault - proceed to the TCS completion below silently instead of reporting it as an
+            // unhandled Bluetooth exception to every registered listener.
+        }
         catch (Exception refreshException)
         {
             ReportBestEffortFailure(refreshException);
@@ -192,14 +204,19 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async virtual ValueTask ConnectIfNeededAsync(ConnectionOptions? connectionOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        connectionOptions ??= new ConnectionOptions();
-        await NativeRefreshIsConnectedAsync(cancellationToken).AsTask().WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
-        if (IsConnected)
+        // Delegates entirely to ConnectAsync (which already refreshes before its own
+        // already-connected guard) instead of refreshing here too - a caller going through this
+        // method would otherwise pay for two main-thread dispatches on Apple for one conditional
+        // connect. The only difference from ConnectAsync is silently no-op'ing when already
+        // connected instead of throwing.
+        try
         {
-            return;
+            await ConnectAsync(connectionOptions, timeout, cancellationToken).ConfigureAwait(false);
         }
-
-        await ConnectAsync(connectionOptions, timeout, cancellationToken).ConfigureAwait(false);
+        catch (DeviceIsAlreadyConnectedException)
+        {
+            // Already connected - a no-op for this method, unlike ConnectAsync's explicit throw.
+        }
     }
 
     /// <inheritdoc />
@@ -398,6 +415,12 @@ public abstract partial class BaseBluetoothRemoteDevice
         {
             await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller's own requested cancellation is a normal, documented outcome, not a
+            // fault - proceed to the TCS completion below silently instead of reporting it as an
+            // unhandled Bluetooth exception to every registered listener.
+        }
         catch (Exception refreshException)
         {
             ReportBestEffortFailure(refreshException);
@@ -431,13 +454,18 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async ValueTask DisconnectIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        await NativeRefreshIsConnectedAsync(cancellationToken).AsTask().WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
-        if (!IsConnected)
+        // Delegates entirely to DisconnectAsync (which already refreshes before its own
+        // already-disconnected guard) instead of refreshing here too - see ConnectIfNeededAsync
+        // for why. The only difference from DisconnectAsync is silently no-op'ing when already
+        // disconnected instead of throwing.
+        try
         {
-            return;
+            await DisconnectAsync(timeout, cancellationToken).ConfigureAwait(false);
         }
-
-        await DisconnectAsync(timeout, cancellationToken).ConfigureAwait(false);
+        catch (DeviceIsAlreadyDisconnectedException)
+        {
+            // Already disconnected - a no-op for this method, unlike DisconnectAsync's explicit throw.
+        }
     }
 
     /// <inheritdoc />
