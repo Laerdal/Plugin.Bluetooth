@@ -180,24 +180,29 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     #region Connection
 
     /// <inheritdoc />
-    protected override ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
+    protected override async ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
     {
         var dispatchTask = MainThreadDispatcher.InvokeOnMainThreadAsync(() => {
             IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
         });
 
-        if (cancellationToken.CanBeCanceled)
+        if (!cancellationToken.CanBeCanceled)
         {
-            // WaitAsync(cancellationToken) below only cancels the *wait* - the dispatched action
-            // keeps running regardless. Only start observing the dispatch task's own outcome once
-            // cancellation actually fires: at that point the WaitAsync call has already returned
-            // (with OperationCanceledException) and nothing else is left to observe a late fault on
-            // it. Registering unconditionally here would double-report every ordinary (non-cancelled)
-            // fault, since the awaited ValueTask below would also propagate it to its own caller.
-            cancellationToken.Register(() => dispatchTask.StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex)));
+            await dispatchTask.ConfigureAwait(false);
+            return;
         }
 
-        return new ValueTask(dispatchTask.WaitAsync(cancellationToken));
+        // WaitAsync(cancellationToken) below only cancels the *wait* - the dispatched action keeps
+        // running regardless. Only start observing the dispatch task's own outcome once
+        // cancellation actually fires: at that point the wait has already returned (with
+        // OperationCanceledException) and nothing else is left to observe a late fault on it.
+        // Registering unconditionally would double-report every ordinary (non-cancelled) fault,
+        // since the awaited call below would also propagate it to its own caller. Scoped to this
+        // call via `using` so a long-lived token (e.g. an application-lifetime one) doesn't
+        // accumulate one registration - and keep this device/task rooted - per refresh call for
+        // its entire lifetime.
+        using var registration = cancellationToken.Register(() => dispatchTask.StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex)));
+        await dispatchTask.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
