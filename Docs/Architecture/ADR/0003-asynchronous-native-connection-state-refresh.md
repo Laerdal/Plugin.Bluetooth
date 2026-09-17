@@ -143,8 +143,7 @@ This is a breaking change with two independent surfaces:
   `BluetoothUnhandledExceptionListener`.
 - `ConnectAsync`/`DisconnectAsync` can no longer get permanently stuck due to a refresh exception
   or cancellation escaping mid-cleanup.
-- A stale, abandoned connect/disconnect attempt's native callback can no longer resolve a later,
-  unrelated attempt's `TaskCompletionSource` (see the captured-TCS note in Decision).
+- A stale, abandoned connect/disconnect attempt's native callback can still resolve whichever attempt is live when it eventually arrives; generation correlation is out of scope (see Decision).
 - Calling `ConnectAsync`/`DisconnectAsync` directly (not through the `*IfNeededAsync` wrappers) no
   longer evaluates the already-connected/already-disconnected guard against a stale cached value.
 
