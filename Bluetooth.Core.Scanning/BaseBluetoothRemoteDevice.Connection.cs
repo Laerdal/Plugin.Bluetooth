@@ -182,9 +182,24 @@ public abstract partial class BaseBluetoothRemoteDevice
     ///     <see cref="OnConnectSucceededAsync" />/<see cref="OnConnectFailedAsync" />'s own awaited
     ///     refresh, so a disconnect signal arriving mid-refresh would still be misclassified as
     ///     "no terminal signal received yet" without also checking
-    ///     <see cref="ConnectAttemptTerminalSignalReceived" />.
+    ///     <see cref="ConnectAttemptTerminalSignalReceived" />. Reads both under
+    ///     <see cref="_connectionOperationLock" /> because <see cref="ConnectAsync" /> installs a new
+    ///     attempt's <see cref="ConnectionTcs" /> and resets <see cref="ConnectAttemptTerminalSignalReceived" />
+    ///     as two separate writes under that same lock - without also taking it here, a disconnect
+    ///     callback could observe the new, genuinely-pending TCS alongside the *previous* attempt's
+    ///     stale `true` flag (read between those two writes), wrongly conclude no attempt is pending,
+    ///     and complete the brand-new attempt's TCS instead of routing to it as a failure.
     /// </remarks>
-    protected bool IsConnectionAttemptPending => ConnectionTcs is { Task.IsCompleted: false } && !ConnectAttemptTerminalSignalReceived;
+    protected bool IsConnectionAttemptPending
+    {
+        get
+        {
+            lock (_connectionOperationLock)
+            {
+                return ConnectionTcs is { Task.IsCompleted: false } && !ConnectAttemptTerminalSignalReceived;
+            }
+        }
+    }
 
     /// <summary>
     ///     Called when a connection attempt succeeds. Updates the connection state and completes the connection task.

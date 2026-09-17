@@ -105,6 +105,16 @@ also only starts observing the dispatched task's own fault *after* cancellation 
 otherwise an ordinary (non-cancelled) fault would be reported twice: once by that observer and once
 through the normal awaited-propagation path.
 
+`MainThread.InvokeOnMainThreadAsync`'s queued action cannot itself be cancelled once queued - it
+runs regardless of what happens to the caller awaiting it. The dispatched action now checks
+`cancellationToken.IsCancellationRequested` before publishing to `IsConnected`, so an abandoned
+refresh that only actually runs on the main thread later (after its caller gave up) doesn't
+overwrite `IsConnected`/raise state events with a stale reading that could clobber a newer, more
+current connect/disconnect attempt's own state. This narrows but doesn't fully close the window -
+cancellation could still land microseconds after the check, immediately before the write - closing
+it completely would need the same generation/attempt correlation already out of scope for native
+callbacks in general (see above).
+
 Every Core call site that has a `timeout` (`WaitForIsConnectedAsync`, and the pre/post-native
 checks in `ConnectAsync`/`DisconnectAsync`) now goes through a private `RefreshIsConnectedAsync`
 helper instead of wrapping `NativeRefreshIsConnectedAsync` directly in
@@ -172,6 +182,14 @@ own - are covered automatically, not just Android's.
   statement in both methods (before either captures the TCS or awaits anything), and reset to
   `false` only when `ConnectAsync` installs a new attempt's TCS - so it accurately reflects "has a
   terminal signal been *received*", independent of how long that signal takes to finish processing.
+
+`IsConnectionAttemptPending`'s getter reads both conditions under `_connectionOperationLock`.
+`ConnectAsync`'s merge-check block writes `ConnectionTcs` and resets
+`ConnectAttemptTerminalSignalReceived` as two separate statements under that same lock; without
+also taking it on the read side, a disconnect callback could observe the newly-installed, genuinely
+incomplete `ConnectionTcs` alongside the *previous* attempt's stale `true` flag (a read landing
+between those two writes) - concluding no attempt is pending and completing the brand-new attempt's
+TCS instead of correctly routing to it as a failure.
 
 On Android, `OnConnectionStateChange`'s `ProfileState.Disconnected` case additionally checks the
 same `IsConnectionAttemptPending` property itself (exposed as `protected` from Core) before calling
@@ -244,6 +262,12 @@ This is a breaking change with two independent surfaces:
 - A refresh failure with no live TCS to deliver it to is no longer reported to
   `BluetoothUnhandledExceptionListener` twice (once directly, once via the thrown wrapper
   exception's own `StartAndForget` reporting).
+- `IsConnectionAttemptPending`'s read is now atomic with `ConnectAsync`'s compound write of
+  `ConnectionTcs`/`ConnectAttemptTerminalSignalReceived`, closing a narrow window where a
+  disconnect callback could otherwise complete a brand-new connect attempt's TCS instead of
+  correctly failing it.
+- An abandoned Apple refresh whose queued main-thread action only runs after its caller gave up no
+  longer overwrites `IsConnected` with a stale reading (narrowed, not fully closed - see Decision).
 
 ### Negative
 

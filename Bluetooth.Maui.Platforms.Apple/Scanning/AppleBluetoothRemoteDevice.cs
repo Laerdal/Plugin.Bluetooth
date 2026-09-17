@@ -183,6 +183,19 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     protected override async ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
     {
         var dispatchTask = MainThreadDispatcher.InvokeOnMainThreadAsync(() => {
+            // MainThread.InvokeOnMainThreadAsync's queued action cannot be cancelled once queued -
+            // it will run regardless of what happens to the caller waiting on it below. Skip
+            // publishing IsConnected if the caller already gave up by the time this actually runs
+            // on the main thread: a stale read published this late could overwrite a newer
+            // connect/disconnect attempt's own, more current state. This narrows but doesn't fully
+            // close the window (cancellation could still land microseconds after this check) - full
+            // closure would need the same generation/attempt correlation already out of scope for
+            // native callbacks in general; see ADR 0003.
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
         });
 
