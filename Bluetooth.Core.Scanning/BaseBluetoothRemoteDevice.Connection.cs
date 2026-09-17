@@ -56,8 +56,36 @@ public abstract partial class BaseBluetoothRemoteDevice
     ///     Platform-specific implementation to refresh the current connection state from the native platform.
     /// </summary>
     /// <param name="cancellationToken">Token to cancel the refresh operation.</param>
-    /// <returns>A task that completes once <see cref="IsConnected" /> reflects the current native state.</returns>
+    /// <returns>A task that represents the asynchronous refresh operation.</returns>
+    /// <remarks>
+    ///     Not every platform can offer a real freshness guarantee: Apple and Windows perform a synchronous
+    ///     native query, but Android relies entirely on the <c>OnConnectionStateChange</c> callback and only
+    ///     clears <see cref="IsConnected" /> here when its GATT proxy is null - see ADR 0003.
+    /// </remarks>
     protected abstract ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Reports an exception to <see cref="BluetoothUnhandledExceptionListener" /> without letting its
+    ///     own throw-when-unobserved behavior propagate to the caller.
+    /// </summary>
+    /// <param name="exception">The exception to report.</param>
+    /// <remarks>
+    ///     <see cref="BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException" /> rethrows when no
+    ///     listener is registered. Callers that must guarantee they reach code after this call regardless
+    ///     (e.g. completing a captured <see cref="TaskCompletionSource" /> for a best-effort refresh failure
+    ///     that is secondary to the operation's real outcome) need this instead of calling it directly.
+    /// </remarks>
+    private void ReportBestEffortFailure(Exception exception)
+    {
+        try
+        {
+            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, exception);
+        }
+        catch
+        {
+            // Intentionally swallowed - see remarks above.
+        }
+    }
 
     #endregion
 
@@ -105,7 +133,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         catch (Exception refreshException)
         {
-            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, refreshException);
+            ReportBestEffortFailure(refreshException);
         }
 
         // Attempt to dispatch success to the TaskCompletionSource
@@ -147,7 +175,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         catch (Exception refreshException)
         {
-            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, refreshException);
+            ReportBestEffortFailure(refreshException);
         }
 
         // Attempt to dispatch exception to the TaskCompletionSource
@@ -215,7 +243,10 @@ public abstract partial class BaseBluetoothRemoteDevice
         if (pendingConnectionTask != null)
         {
             LogMergingConnectionAttempts(Id);
-            await pendingConnectionTask.ConfigureAwait(false);
+            // Bounded by this caller's own timeout/cancellationToken, not just the owning
+            // attempt's - otherwise a merged caller would wait on the owner's TCS indefinitely
+            // if the owner gives up (or its refresh keeps it pending) without ever completing it.
+            await pendingConnectionTask.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -289,16 +320,16 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         finally
         {
-            IsConnecting = false; // Set the connecting state to false
-
-            // Only clear the live ConnectionTcs if it's still the instance *this* attempt
-            // installed - a concurrent attempt may have already replaced it with its own (see
-            // the merge branch above), and clearing unconditionally here would erase that newer
-            // attempt's TCS out from under it.
+            // Only reset IsConnecting/ConnectionTcs if this attempt still owns the live
+            // operation - a concurrent attempt may have already replaced ConnectionTcs and set
+            // IsConnecting back to true for its own in-flight connect (see the merge branch
+            // above); resetting unconditionally here would corrupt that newer attempt's state,
+            // not just its TCS.
             lock (_connectionOperationLock)
             {
                 if (ReferenceEquals(ConnectionTcs, ownConnectionTcs))
                 {
+                    IsConnecting = false; // Set the connecting state to false
                     ConnectionTcs = null;
                 }
             }
@@ -356,7 +387,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         catch (Exception refreshException)
         {
-            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, refreshException);
+            ReportBestEffortFailure(refreshException);
         }
 
         // Attempt to dispatch success/failure to a pending explicit Connect/Disconnect await.
@@ -436,7 +467,10 @@ public abstract partial class BaseBluetoothRemoteDevice
         if (pendingDisconnectionTask != null)
         {
             LogMergingDisconnectionAttempts(Id);
-            await pendingDisconnectionTask.ConfigureAwait(false);
+            // Bounded by this caller's own timeout/cancellationToken, not just the owning
+            // attempt's - otherwise a merged caller would wait on the owner's TCS indefinitely
+            // if the owner gives up (or its refresh keeps it pending) without ever completing it.
+            await pendingDisconnectionTask.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -472,16 +506,16 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         finally
         {
-            IsDisconnecting = false; // Set the disconnecting state to false
-
-            // Only clear the live DisconnectionTcs if it's still the instance *this* attempt
-            // installed - a concurrent attempt may have already replaced it with its own (see
-            // the merge branch above), and clearing unconditionally here would erase that newer
-            // attempt's TCS out from under it.
+            // Only reset IsDisconnecting/DisconnectionTcs if this attempt still owns the live
+            // operation - a concurrent attempt may have already replaced DisconnectionTcs and set
+            // IsDisconnecting back to true for its own in-flight disconnect (see the merge branch
+            // above); resetting unconditionally here would corrupt that newer attempt's state,
+            // not just its TCS.
             lock (_connectionOperationLock)
             {
                 if (ReferenceEquals(DisconnectionTcs, ownDisconnectionTcs))
                 {
+                    IsDisconnecting = false; // Set the disconnecting state to false
                     DisconnectionTcs = null;
                 }
             }
