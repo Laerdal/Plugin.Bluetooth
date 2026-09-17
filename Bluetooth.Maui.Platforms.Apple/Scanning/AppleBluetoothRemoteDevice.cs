@@ -186,22 +186,17 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
             IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
         });
 
-        if (!cancellationToken.CanBeCanceled)
-        {
-            await dispatchTask.ConfigureAwait(false);
-            return;
-        }
+        // Always observe dispatchTask independently of the awaited call below - this call can be
+        // abandoned for reasons this method has no visibility into: not just cancellationToken
+        // being cancelled, but also a caller-side timeout (Core wraps every call to this method in
+        // WaitBetterAsync(timeout, cancellationToken), and that timeout race is decoupled from
+        // cancellationToken entirely). An unobserved fault on dispatchTask after abandonment would
+        // otherwise be silently lost. Deliberately does NOT report to
+        // BluetoothUnhandledExceptionListener here - the awaited call below already does that
+        // exactly once whenever this refresh is actually still being awaited by a live caller;
+        // reporting here too would double-report every ordinary (non-abandoned) fault.
+        dispatchTask.StartAndForget(_ => { /* Intentionally silent - see remarks above. */ });
 
-        // WaitAsync(cancellationToken) below only cancels the *wait* - the dispatched action keeps
-        // running regardless. Only start observing the dispatch task's own outcome once
-        // cancellation actually fires: at that point the wait has already returned (with
-        // OperationCanceledException) and nothing else is left to observe a late fault on it.
-        // Registering unconditionally would double-report every ordinary (non-cancelled) fault,
-        // since the awaited call below would also propagate it to its own caller. Scoped to this
-        // call via `using` so a long-lived token (e.g. an application-lifetime one) doesn't
-        // accumulate one registration - and keep this device/task rooted - per refresh call for
-        // its entire lifetime.
-        using var registration = cancellationToken.Register(() => dispatchTask.StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex)));
         await dispatchTask.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
