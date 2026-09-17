@@ -323,8 +323,13 @@ public abstract partial class BaseBluetoothRemoteDevice
             return;
         }
 
-        // If the TaskCompletionSource was already completed, dispatch the exception to the listener
-        BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+        // If the TaskCompletionSource was already completed (or never existed - e.g. a native
+        // callback for an already-abandoned attempt), report via ReportBestEffortFailure rather
+        // than calling the listener directly: every native callback wraps a call to this method
+        // in its own StartAndForget(ex => BluetoothUnhandledExceptionListener...), so letting this
+        // rethrow (the listener's documented behavior when nothing is registered) would let that
+        // wrapper deliver the same failure to the listener a second time.
+        ReportBestEffortFailure(e);
     }
 
     /// <inheritdoc />
@@ -547,9 +552,16 @@ public abstract partial class BaseBluetoothRemoteDevice
             return;
         }
 
-        // Capture both TCS instances before awaiting below - see OnConnectSucceededAsync for why.
+        // Capture before awaiting below - see OnConnectSucceededAsync for why. ConnectionTcs is
+        // deliberately NOT captured/touched here (unlike OnConnectFailedAsync's failure dispatch):
+        // by this point IsConnectionAttemptPending has already routed a disconnect that arrived
+        // before any terminal connect signal to OnConnectFailedAsync above, so any ConnectionTcs
+        // still live here belongs to an attempt whose OnConnectSucceededAsync/OnConnectFailedAsync
+        // has already received its terminal signal and is (or will be) completing it based on its
+        // own, more-informed refresh - this method completing it instead (e.g. with a stale
+        // "disconnected" outcome while that other call is still mid-refresh) would let it steal
+        // ownership of an outcome it isn't positioned to correctly determine.
         var disconnectionTcs = DisconnectionTcs;
-        var connectionTcs = ConnectionTcs;
 
         // Best-effort: see OnConnectSucceededAsync for why a failed/cancelled refresh must not
         // prevent the captured TCS below from being completed.
@@ -566,12 +578,12 @@ public abstract partial class BaseBluetoothRemoteDevice
         catch (Exception refreshException)
         {
             // The refresh itself failed, so IsConnected can no longer be trusted to reflect
-            // reality - fail the captured TCS(s) with that failure instead of completing them
-            // with e below, which may represent a success outcome we can no longer verify. If a
-            // live TCS absorbs it, DisconnectAsync's/ConnectAsync's own caller receives it
-            // directly via that captured task - no need to also notify
-            // BluetoothUnhandledExceptionListener here (see OnConnectSucceededAsync for why).
-            if ((disconnectionTcs?.TrySetException(refreshException) ?? false) || (connectionTcs?.TrySetException(refreshException) ?? false))
+            // reality - fail the captured TCS with that failure instead of completing it with e
+            // below, which may represent a success outcome we can no longer verify. If a live TCS
+            // absorbs it, DisconnectAsync's own caller receives it directly via that captured
+            // task - no need to also notify BluetoothUnhandledExceptionListener here (see
+            // OnConnectSucceededAsync for why).
+            if (disconnectionTcs?.TrySetException(refreshException) ?? false)
             {
                 return;
             }
@@ -585,8 +597,8 @@ public abstract partial class BaseBluetoothRemoteDevice
             return;
         }
 
-        // Attempt to dispatch success/failure to a pending explicit Connect/Disconnect await. When
-        // e is null (a "clean disconnect" signal), gate success on the just-refreshed IsConnected
+        // Attempt to dispatch success/failure to a pending explicit DisconnectAsync await. When e
+        // is null (a "clean disconnect" signal), gate success on the just-refreshed IsConnected
         // actually confirming the device is disconnected - a merged caller (see DisconnectAsync's
         // merge branch) awaits this exact TCS and returns as soon as it completes, so declaring
         // success without checking IsConnected could have it observe success for a "disconnect"
@@ -594,7 +606,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         // DisconnectAsync call would otherwise only discover moments later via its own
         // post-native refresh/check.
         var tcsOutcome = e ?? (IsConnected ? new DeviceFailedToDisconnectException(this) : null);
-        var success = (disconnectionTcs?.TrySetResultOrException(tcsOutcome) ?? false) || (connectionTcs?.TrySetResultOrException(tcsOutcome) ?? false);
+        var success = disconnectionTcs?.TrySetResultOrException(tcsOutcome) ?? false;
         if (success)
         {
             // Explicitly requested (someone is awaiting DisconnectAsync/ConnectAsync) - log its
