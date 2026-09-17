@@ -92,8 +92,9 @@ migrate to `NativeRefreshIsConnectedAsync(CancellationToken)`.
 ## Follow-up Actions
 
 - [ ] Bump the package major version and call out this break explicitly in the release notes.
-- [ ] Validate the Windows `StartAndForget` conversion on an actual Windows build agent (not
-      verifiable from a macOS-only development session).
+- [ ] Confirm on real Windows hardware that the `StartAndForget` conversion behaves correctly at
+      runtime (compile-verified cross-platform via `EnableWindowsTargeting`, but WinRT COM
+      activation of `Windows.Devices.Bluetooth` still requires an actual Windows machine to test).
 - [ ] Confirm on real hardware that iOS connect/disconnect no longer produces false
       `DeviceFailedToConnectException`/`DeviceFailedToDisconnectException`.
 
