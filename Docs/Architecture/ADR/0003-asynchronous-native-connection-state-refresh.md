@@ -60,11 +60,36 @@ call that already timed out) could resume mid-await after `ConnectAsync`'s own `
 already cleared `ConnectionTcs` and a *later*, unrelated attempt had installed a new one — and,
 without capturing, would complete that newer attempt's TCS with the stale attempt's outcome.
 Capturing the reference up front ties each signal to the specific attempt that was live when the
-native event actually fired, not whatever attempt happens to be live once the await resumes.
+native event actually fired, not whatever attempt happens to be live once the await resumes. If
+the refresh itself throws, that failure is reported via a `ReportBestEffortFailure` helper instead
+of calling `BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException` directly - that
+listener rethrows when no listener is registered, which would otherwise skip the TCS completion
+below it and hang any caller merged onto that TCS.
 
 `ConnectAsync`/`DisconnectAsync` also now refresh before their own initial already-connected /
 already-disconnected guard, not just via the `*IfNeededAsync` wrappers - calling either method
-directly previously evaluated that guard against a potentially stale cached value.
+directly previously evaluated that guard against a potentially stale cached value. Both methods
+own their `TaskCompletionSource` end to end: they capture it in a local (`ownConnectionTcs`/
+`ownDisconnectionTcs`) rather than re-reading the live `ConnectionTcs`/`DisconnectionTcs` property,
+and their `finally` only resets `IsConnecting`/`ConnectionTcs` (or the disconnect equivalents) - both
+together, under `_connectionOperationLock` - if the live property still points at the instance they
+installed. Without that, a concurrent newer attempt that had already taken over the live property
+and set its own `IsConnecting`/`IsDisconnecting` could have that state wiped out by the older
+attempt's cleanup. The "merge concurrent attempts" branch also now bounds its wait with the
+*merging* caller's own `timeout`/`cancellationToken`, not just the owning attempt's - otherwise a
+merged caller would keep waiting even after its own timeout, since only the owner's wait was ever
+bounded.
+
+Apple's `NativeConnectAsync`/`NativeDisconnectAsync` no longer refresh internally before issuing
+the native call: neither method branches on `IsConnected`, so the refresh was pure overhead there,
+and it was unboundable on the path where `ConnectAsync` calls `NativeDisconnectAsync` during
+cleanup with `timeout: null`/`CancellationToken.None` - a stuck main-thread dispatch there could
+have hung that best-effort cleanup indefinitely. The freshness guarantee they don't provide anymore
+still holds through Core's own pre/post-native-call refreshes. Apple's `NativeRefreshIsConnectedAsync`
+also only starts observing the dispatched task's own fault *after* cancellation actually fires
+(via `CancellationToken.Register`), rather than unconditionally - otherwise an ordinary (non-cancelled)
+fault would be reported twice: once by that observer and once through the normal awaited-propagation
+path.
 
 This is a breaking change with two independent surfaces:
 - `BaseBluetoothRemoteDevice.NativeRefreshIsConnected()` no longer exists. Any external subclass
