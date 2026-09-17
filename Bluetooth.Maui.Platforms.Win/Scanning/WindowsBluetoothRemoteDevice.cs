@@ -332,8 +332,11 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     {
         Logger?.LogConnectionStatusChanged(Id, newConnectionStatus);
         BluetoothConnectionStatus = newConnectionStatus;
-        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
 
+        // No standalone refresh here - OnConnectSucceededAsync/OnDisconnectAsync below already
+        // refresh internally, and firing a second main-thread dispatch for the same event would
+        // be pure overhead. BluetoothConnectionStatus only has Connected/Disconnected, so this
+        // switch already covers every case.
         switch (newConnectionStatus)
         {
             case BluetoothConnectionStatus.Connected:

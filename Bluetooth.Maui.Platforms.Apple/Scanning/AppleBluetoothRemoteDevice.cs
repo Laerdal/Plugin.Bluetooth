@@ -180,11 +180,18 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     #region Connection
 
     /// <inheritdoc />
-    protected override async ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
+    protected override ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
     {
-        await MainThreadDispatcher.InvokeOnMainThreadAsync(() => {
+        var dispatchTask = MainThreadDispatcher.InvokeOnMainThreadAsync(() => {
             IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
-        }).WaitAsync(cancellationToken).ConfigureAwait(false);
+        });
+
+        // Observe the dispatched task's fault independently of the cancellable wait below -
+        // cancellationToken can make that wait return before the main-thread dispatch actually
+        // completes, and an unobserved fault on it afterward would otherwise be silently lost.
+        dispatchTask.StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+
+        return new ValueTask(dispatchTask.WaitAsync(cancellationToken));
     }
 
     /// <inheritdoc />
@@ -223,7 +230,8 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     public void FailedToConnectPeripheral(NSError? error)
     {
-        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+        // No standalone refresh here - OnConnectFailedAsync below already refreshes internally,
+        // and firing a second main-thread dispatch for the same event would be pure overhead.
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
@@ -239,7 +247,8 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     public void ConnectedPeripheral()
     {
-        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+        // No standalone refresh here - OnConnectSucceededAsync below already refreshes internally,
+        // and firing a second main-thread dispatch for the same event would be pure overhead.
         Logger?.LogConnected(Id);
         OnConnectSucceededAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
     }
@@ -273,7 +282,9 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     public void DisconnectedPeripheral(NSError? error)
     {
-        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+        // No standalone refresh here - OnDisconnectAsync below already refreshes internally in
+        // both branches, and firing a second main-thread dispatch for the same event would be
+        // pure overhead.
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
@@ -290,7 +301,9 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     public void DidDisconnectPeripheral(double timestamp, bool isReconnecting, NSError? error)
     {
-        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+        // No standalone refresh here - OnDisconnectAsync below already refreshes internally in
+        // every branch, and firing a second main-thread dispatch for the same event would be
+        // pure overhead.
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
