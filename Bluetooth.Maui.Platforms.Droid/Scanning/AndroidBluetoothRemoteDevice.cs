@@ -540,6 +540,23 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 // disconnect that actually succeeded) or make OnUnexpectedDisconnection log a normal
                 // peer/DFU-reboot disconnect as a WARNING-level unexpected one.
                 IsConnected = false;
+
+                if (IsConnecting)
+                {
+                    // A disconnected callback while a connect attempt is still pending is the
+                    // terminal result of a *failed connect*, not a completed disconnect - the
+                    // device never actually finished connecting. Routing it through
+                    // OnDisconnectAsync() here would call TrySetResultOrException(null) on the
+                    // pending ConnectionTcs, completing the connect attempt as a *success*.
+                    // Route to OnConnectFailedAsync instead, preserving the native status as the
+                    // failure reason.
+                    Exception connectFailure = status != GattStatus.Success
+                        ? new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status)
+                        : new DeviceFailedToConnectException(this, "Device disconnected while a connection attempt was in progress");
+                    OnConnectFailedAsync(connectFailure).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+                    break;
+                }
+
                 OnDisconnectAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                 break;
 

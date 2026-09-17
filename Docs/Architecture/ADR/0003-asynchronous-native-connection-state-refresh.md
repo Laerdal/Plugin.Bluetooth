@@ -101,9 +101,30 @@ cleanup with `timeout: null`/`CancellationToken.None` - a stuck main-thread disp
 have hung that best-effort cleanup indefinitely. The freshness guarantee they don't provide anymore
 still holds through Core's own pre/post-native-call refreshes. Apple's `NativeRefreshIsConnectedAsync`
 also only starts observing the dispatched task's own fault *after* cancellation actually fires
-(via `CancellationToken.Register`), rather than unconditionally - otherwise an ordinary (non-cancelled)
-fault would be reported twice: once by that observer and once through the normal awaited-propagation
-path.
+(via `CancellationToken.Register`, disposed once the call completes), rather than unconditionally -
+otherwise an ordinary (non-cancelled) fault would be reported twice: once by that observer and once
+through the normal awaited-propagation path. This conditional observer only covers cancellation-
+triggered abandonment, not a caller-side *timeout* that never cancels this token (Core wraps every
+call to this method in `WaitBetterAsync(timeout, cancellationToken)`, and that timeout race is
+decoupled from `cancellationToken` entirely) - a timeout-only abandonment can still leave a later
+dispatch fault unreported. Closing that gap would require threading the caller's timeout into this
+method's own contract (or linking a timeout-derived cancellation token through it), which is out of
+scope for this change; see Follow-up Actions.
+
+When the refresh itself fails (a non-cancellation exception) inside `OnConnectSucceededAsync` or
+`OnDisconnectAsync`, the captured TCS is now failed with that refresh exception instead of being
+completed as if the original outcome (a successful connect, or `e == null` for disconnect) still
+held - `IsConnected` can no longer be trusted once its own refresh has faulted, so reporting success
+without being able to verify it would be misleading. `ReportBestEffortFailure` still runs first so
+the failure also reaches `BluetoothUnhandledExceptionListener`.
+
+On Android, `OnConnectionStateChange`'s `ProfileState.Disconnected` case now checks `IsConnecting`
+before deciding which TCS to resolve: a disconnected callback that arrives while a connect attempt
+is still pending is the terminal result of a *failed connect*, not a completed disconnect - the
+device never actually finished connecting. Routing that case through `OnDisconnectAsync()` would
+call `TrySetResultOrException(null)` on the pending `ConnectionTcs`, completing the connect attempt
+as a success. It now routes to `OnConnectFailedAsync` instead, preserving the native `GattStatus` as
+the failure reason when non-`Success`, or a generic `DeviceFailedToConnectException` otherwise.
 
 This is a breaking change with two independent surfaces:
 - `BaseBluetoothRemoteDevice.NativeRefreshIsConnected()` no longer exists. Any external subclass
@@ -148,6 +169,10 @@ This is a breaking change with two independent surfaces:
   Decision).
 - Calling `ConnectAsync`/`DisconnectAsync` directly (not through the `*IfNeededAsync` wrappers) no
   longer evaluates the already-connected/already-disconnected guard against a stale cached value.
+- A refresh failure inside `OnConnectSucceededAsync`/`OnDisconnectAsync` now fails the pending
+  operation instead of silently completing it as a success that was never actually verified.
+- An Android disconnected callback that arrives mid-connect no longer completes the pending
+  connect attempt as a success; it now fails it via `OnConnectFailedAsync`.
 
 ### Negative
 
@@ -173,6 +198,9 @@ This is a breaking change with two independent surfaces:
       activation of `Windows.Devices.Bluetooth` still requires an actual Windows machine to test).
 - [ ] Confirm on real hardware that iOS connect/disconnect no longer produces false
       `DeviceFailedToConnectException`/`DeviceFailedToDisconnectException`.
+- [ ] Thread the caller's timeout into `NativeRefreshIsConnectedAsync`'s own contract (or link a
+      timeout-derived cancellation token through it) so a purely timeout-triggered abandonment on
+      Apple also reports a later dispatch fault, matching the cancellation-triggered case.
 
 ## References
 

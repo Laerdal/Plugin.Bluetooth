@@ -186,16 +186,22 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
             IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
         });
 
-        // Always observe dispatchTask independently of the awaited call below - this call can be
-        // abandoned for reasons this method has no visibility into: not just cancellationToken
-        // being cancelled, but also a caller-side timeout (Core wraps every call to this method in
-        // WaitBetterAsync(timeout, cancellationToken), and that timeout race is decoupled from
-        // cancellationToken entirely). An unobserved fault on dispatchTask after abandonment would
-        // otherwise be silently lost. Deliberately does NOT report to
-        // BluetoothUnhandledExceptionListener here - the awaited call below already does that
-        // exactly once whenever this refresh is actually still being awaited by a live caller;
-        // reporting here too would double-report every ordinary (non-abandoned) fault.
-        dispatchTask.StartAndForget(_ => { /* Intentionally silent - see remarks above. */ });
+        // Only start independently observing dispatchTask's own fault once cancellation actually
+        // fires. Before that, the await below is still live and will propagate an ordinary fault
+        // to its caller (who reports it) exactly once - registering unconditionally would report
+        // every such fault a second time here. If cancellation fires first, the await below exits
+        // via OperationCanceledException without ever seeing dispatchTask's eventual result, so
+        // nothing else is left to observe or report a fault that arrives later - that's exactly
+        // the case this registration exists for. Disposed once this call is done so it doesn't
+        // outlive it.
+        //
+        // Known gap: this does not cover a caller-side *timeout* that never cancels this token -
+        // Core wraps every call to this method in WaitBetterAsync(timeout, cancellationToken), and
+        // that timeout race is decoupled from cancellationToken entirely, so a timeout-only
+        // abandonment still leaves a later fault unreported. See ADR 0003.
+        using var registration = cancellationToken.CanBeCanceled
+            ? cancellationToken.Register(() => dispatchTask.StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex)))
+            : default;
 
         await dispatchTask.WaitAsync(cancellationToken).ConfigureAwait(false);
     }

@@ -140,6 +140,16 @@ public abstract partial class BaseBluetoothRemoteDevice
         catch (Exception refreshException)
         {
             ReportBestEffortFailure(refreshException);
+
+            // The refresh itself failed, so IsConnected can no longer be trusted to reflect
+            // reality - fail the captured TCS with that failure rather than falling through to
+            // report a success we can no longer verify.
+            if (connectionTcs?.TrySetException(refreshException) ?? false)
+            {
+                return;
+            }
+
+            throw new DeviceFailedToConnectException(this, innerException: refreshException);
         }
 
         // Attempt to dispatch success to the TaskCompletionSource
@@ -424,6 +434,17 @@ public abstract partial class BaseBluetoothRemoteDevice
         catch (Exception refreshException)
         {
             ReportBestEffortFailure(refreshException);
+
+            // The refresh itself failed, so IsConnected can no longer be trusted to reflect
+            // reality - fail the captured TCS(s) with that failure instead of completing them
+            // with e below, which may represent a success outcome we can no longer verify.
+            if ((disconnectionTcs?.TrySetException(refreshException) ?? false) || (connectionTcs?.TrySetException(refreshException) ?? false))
+            {
+                return;
+            }
+
+            OnUnexpectedDisconnection(e);
+            return;
         }
 
         // Attempt to dispatch success/failure to a pending explicit Connect/Disconnect await.
