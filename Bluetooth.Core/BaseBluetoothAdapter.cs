@@ -12,4 +12,11 @@ public abstract class BaseBluetoothAdapter : BaseBindableObject, IBluetoothAdapt
     protected BaseBluetoothAdapter(ILogger<IBluetoothAdapter>? logger = null) : base(logger)
     {
     }
+
+    /// <inheritdoc />
+    public bool IsEnabled
+    {
+        get => GetValue(false);
+        protected set => SetValue(value);
+    }
 }

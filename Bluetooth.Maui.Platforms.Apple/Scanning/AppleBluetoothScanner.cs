@@ -157,6 +157,11 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         MainThreadDispatcher.BeginInvokeOnMainThread(() => {
             Logger?.LogCentralManagerStateChanged(centralState);
             State = centralState;
+
+            if (Adapter is AppleBluetoothAdapter appleAdapter)
+            {
+                appleAdapter.UpdateIsEnabled(centralState == CBManagerState.PoweredOn);
+            }
         });
     }
 

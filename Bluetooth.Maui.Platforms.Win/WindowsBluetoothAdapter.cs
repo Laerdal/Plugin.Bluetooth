@@ -35,6 +35,33 @@ public partial class WindowsBluetoothAdapter : BaseBluetoothAdapter, IDisposable
         ArgumentNullException.ThrowIfNull(ticker);
         _loggerFactory = loggerFactory;
         _ticker = ticker;
+
+        // Fire-and-forget: initializes the radio wrapper eagerly so IsEnabled is live as soon as
+        // the app starts, not only once something first tries to scan. Failure (e.g. no Bluetooth
+        // radio, missing manifest capability) just leaves IsEnabled at its default (false).
+        _ = InitializeIsEnabledTrackingAsync();
+    }
+
+    private async Task InitializeIsEnabledTrackingAsync()
+    {
+        try
+        {
+            var radioWrapper = await GetRadioWrapperAsync().ConfigureAwait(false);
+            radioWrapper.PropertyChanged += OnRadioWrapperPropertyChanged;
+            IsEnabled = radioWrapper.RadioState == RadioState.On;
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogRadioWrapperInitializationFailed(ex);
+        }
+    }
+
+    private void OnRadioWrapperPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IRadioWrapper.RadioState) && sender is IRadioWrapper radioWrapper)
+        {
+            IsEnabled = radioWrapper.RadioState == RadioState.On;
+        }
     }
 
     /// <summary>

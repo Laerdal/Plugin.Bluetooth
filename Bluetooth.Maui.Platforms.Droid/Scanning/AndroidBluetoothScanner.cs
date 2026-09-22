@@ -90,6 +90,17 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         ArgumentNullException.ThrowIfNull(BluetoothLeScanner);
         ArgumentNullException.ThrowIfNull(scanningOptions);
 
+        // BluetoothLeScanner.StartScan() can succeed (no onScanFailed callback) even when the
+        // adapter isn't really enabled - Android's internal BLE_ON low-power state (opportunistic
+        // system-level scanning while the user's own Bluetooth toggle is off) accepts the call but
+        // never delivers advertisements. Without this check that's indistinguishable from "started
+        // fine, nothing nearby". Mirrors the CBManagerState.PoweredOn check in
+        // AppleBluetoothScanner.NativeStartAsync.
+        if (!Adapter.IsEnabled)
+        {
+            throw new ScannerFailedToStartException(this, "Failed to start scanning because Bluetooth is not enabled.");
+        }
+
         Logger?.LogScanStarting();
         // TODO: Add LogScanStarting overload that accepts ScanMode and CallbackType parameters
 
