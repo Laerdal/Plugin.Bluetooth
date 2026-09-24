@@ -133,6 +133,19 @@ earlier version that effectively did (via the shared-central-manager contention 
 weighed against that cost and rejected - this residual is accepted as the practical floor for an
 app-level-only correlation scheme, not an oversight.
 
+A narrower instance of the same class of gap: `TryClaimPendingConnectAttempt`'s claim and the
+subsequent `TryGetLiveDisconnectionTcs` lookup in `OnConnectFailedAsync`/`OnDisconnectAsync`'s
+routing branch are two separate statements, not one atomic operation - a brand-new `DisconnectAsync`
+call could install its own token/TCS in the handful of lines between them, and get swept up by a
+connect failure it has nothing to do with. Unlike the connect-vs-connect and disconnect-vs-disconnect
+cases above, this one *could* be closed without native platform support, by capturing both under one
+lock acquisition - but doing so would mean changing `CompleteClaimedConnectFailureAsync`'s signature
+a second time to accept a pre-captured disconnect TCS from callers (Android, Windows) that would then
+also need their own call site updated, on a claim surface that has already been restructured three
+times this same review cycle. Given how narrow the window is (synchronous code, no `await`, between
+the two calls), this was left as part of the same accepted residual rather than risk a fourth
+restructuring.
+
 `ConnectAsync`/`DisconnectAsync` also now refresh before their own initial already-connected /
 already-disconnected guard, not just via the `*IfNeededAsync` wrappers - calling either method
 directly previously evaluated that guard against a potentially stale cached value. Both methods
@@ -304,7 +317,47 @@ issues, all fixed:
   value. It now tracks elapsed time across the refresh via a `Stopwatch` and gives the property wait
   only the remaining budget, throwing `TimeoutException` directly if that budget is already
   exhausted - `WaitBetterAsync` treats a zero/negative timeout as "no timeout" (waits forever), not
-  "time already up", so the exhausted case can't simply be passed through as-is.
+  "time already up", so the exhausted case can't simply be passed through as-is. That same fix
+  initially only checked for `null`, missing that `Timeout.InfiniteTimeSpan` (-1ms) is also `<=
+  TimeSpan.Zero` and would fall into the timed branch, subtracting elapsed time from an
+  already-negative budget and throwing immediately instead of waiting indefinitely - a later pass
+  widened the check to `timeout is not { } timeoutValue || timeoutValue <= TimeSpan.Zero`, matching
+  `WaitBetterAsync`'s own convention, and applied the same fix to `RefreshIsConnectedAsync` itself
+  (previously only null-checked there too, so a raw `TimeSpan.Zero` would arm `CancelAfter` for
+  near-immediate cancellation instead of no timeout).
+
+Two further review passes surfaced four more issues, all fixed:
+- `ownConnectionTcs`/`ownDisconnectionTcs` are completed (`TrySetCanceled`) inside
+  `_connectionOperationLock` in `ConnectAsync`/`DisconnectAsync`'s `finally` blocks, but were created
+  with default inline-continuation behavior - a merged caller's `await` on that same task could
+  therefore resume on the completing thread while it still held the lock. Both now use
+  `TaskCreationOptions.RunContinuationsAsynchronously`.
+- The internal `ConnectAttemptTerminalSignalReceived` flag (renamed `_connectAttemptTerminalSignalReceived`)
+  was a bindable property, set inside the same lock; its setter synchronously raised the public
+  `PropertyChanged` event to arbitrary subscribers while the lock was held. Converted to a plain
+  field - nothing outside this class observed its changes.
+- `IsConnecting`/`IsDisconnecting` *are* legitimately public, bindable properties (unlike the flag
+  above), so they can't be converted the same way, but they were also being set inside
+  `_connectionOperationLock`. Since nothing in the correlation logic itself reads either property,
+  both are now set immediately *after* the lock is released instead of inside it, closing the same
+  reentrancy risk without changing any observable behavior.
+- `CompleteConnectFailureAsync` faulted a concurrently-live `DisconnectionTcs` with the *connect*
+  failure's own exception - contradicting the very principle Android's `OnConnectionStateChange`
+  documents for its own non-routed case (a non-Success GATT status must not fault an explicit
+  `DisconnectAsync`, since the device genuinely did disconnect). The disconnect side now resolves
+  independently, gated on the post-refresh `IsConnected` value (mirroring `OnDisconnectAsync`'s own
+  `e == null` gating) - a device that's actually disconnected is a *successful* disconnect
+  regardless of why a concurrent connect attempt failed. If the refresh itself failed, `IsConnected`
+  can't be trusted either way, so the disconnect side faults with that refresh failure instead.
+
+Android's and Windows's own disconnect-state-change handlers (`OnConnectionStateChange`/
+`OnConnectionStatusChanged`) each publish more than one public, bindable property before dispatching
+to the shared completion path - Android also has `CurrentConnectionState` alongside `IsConnected`;
+Windows has `BluetoothConnectionStatus`. Both are now set per-case, ordered *after* the connect-
+attempt claim for the disconnected case specifically (Windows didn't previously claim inline at all
+- it now does, calling `TryClaimPendingConnectAttempt`/`CompleteClaimedConnectFailureAsync` directly
+instead of relying solely on `OnDisconnectAsync`'s own, later-running internal claim), for the same
+reactive-handler reason `IsConnected`'s own reordering already covered.
 
 This is a breaking change with two independent surfaces:
 - `BaseBluetoothRemoteDevice.NativeRefreshIsConnected()` no longer exists. Any external subclass
@@ -435,6 +488,17 @@ This is a breaking change with two independent surfaces:
       current state of this branch. Android's callback routing changed substantially since then
       (see the `OnConnectionStateChange` changes throughout this ADR), so that original note should
       not be read as covering it.
+- [ ] Reconcile `null` timeout's documented meaning with what the code does. `Docs/API-Reference/README.md`
+      promises `null` = "use the default timeout (typically 30s)" and reserves `Timeout.InfiniteTimeSpan`
+      for "no timeout" - two distinct meanings. `RefreshIsConnectedAsync`/`WaitForIsConnectedAsync`
+      (and, by extension, `ConnectAsync`/`DisconnectAsync`) have always treated a `null` timeout as
+      unbounded (no timeout applied at all) rather than substituting any actual default - this
+      predates this PR and isn't something it introduced, but this PR's own fixes (correctly
+      widening the zero/negative check to match `WaitBetterAsync`'s convention) made the `null` case
+      explicitly share a code path with `Timeout.InfiniteTimeSpan`, so it's now more visible that
+      the "default timeout" the docs promise is never actually implemented anywhere in this call
+      chain. Deciding what those per-operation defaults should actually be is a design call, not a
+      bug fix - tracked in Plugin.Bluetooth#59 rather than decided unilaterally here.
 - [x] Give native-callback-driven refresh calls (`OnConnectSucceededAsync`/`OnConnectFailedAsync`/
       `OnDisconnectAsync`, all invoked with `cancellationToken: default`) a bounded lifetime
       (fixed 5s `CallbackRefreshTimeout` via `RefreshIsConnectedAsync`) instead of an unbounded
