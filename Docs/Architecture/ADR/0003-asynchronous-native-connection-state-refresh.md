@@ -428,8 +428,13 @@ This is a breaking change with two independent surfaces:
       immediately after a burst of abandoned/retried attempts like the one above - the stress test
       above only confirmed retries fail cleanly, not that a subsequent real connect afterward
       succeeds normally. Not yet confirmed as of 2026-09-24.
-- [ ] Repeat real-hardware validation on Android - not yet attempted; all testing so far has been
-      iOS-only.
+- [ ] Repeat real-hardware validation on Android - not yet attempted; all testing so far (see above)
+      has been iOS-only. This does not contradict this PR's own description, whose "Only checked
+      android and ios so far" validation note refers to David's original, single-commit fix from
+      2026-09-16, before any of the round-2-onward correlation work above existed - not to the
+      current state of this branch. Android's callback routing changed substantially since then
+      (see the `OnConnectionStateChange` changes throughout this ADR), so that original note should
+      not be read as covering it.
 - [x] Give native-callback-driven refresh calls (`OnConnectSucceededAsync`/`OnConnectFailedAsync`/
       `OnDisconnectAsync`, all invoked with `cancellationToken: default`) a bounded lifetime
       (fixed 5s `CallbackRefreshTimeout` via `RefreshIsConnectedAsync`) instead of an unbounded
