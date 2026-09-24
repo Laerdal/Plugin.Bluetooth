@@ -286,16 +286,17 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     #region Connection
 
     /// <inheritdoc />
-    protected override void NativeRefreshIsConnected()
+    protected override ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
     {
         if (_bluetoothGattProxy == null)
         {
             IsConnected = false;
-            return;
+            return ValueTask.CompletedTask;
         }
 
         // On Android, we rely on connection state callbacks
         // The IsConnected property is updated via OnConnectionStateChange
+        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />
@@ -312,7 +313,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         // Store connection options for GATT operations
         _connectionOptions = connectionOptions;
 
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         Logger?.LogConnecting(Id);
 
@@ -379,7 +380,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         catch (Exception e)
         {
             Logger?.LogConnectionFailed(Id, Math.Max(attempt, 1), e);
-            OnConnectFailed(e);
+            await OnConnectFailedAsync(e, cancellationToken).ConfigureAwait(false);
             throw;
         }
     }
@@ -446,7 +447,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         Logger?.LogDisconnecting(Id);
 
@@ -462,7 +463,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         catch (Exception e)
         {
             Logger?.LogDisconnectError(Id, e);
-            OnDisconnect(e);
+            await OnDisconnectAsync(e, cancellationToken).ConfigureAwait(false);
             throw;
         }
     }
@@ -505,20 +506,25 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <inheritdoc />
     public void OnConnectionStateChange(GattStatus status, ProfileState newState)
     {
-        CurrentConnectionState = newState;
-
+        // CurrentConnectionState is set per-case below, not uniformly here - it's a public,
+        // bindable property whose setter synchronously raises PropertyChanged, and the
+        // Disconnected case below needs to claim a pending connect attempt *before* publishing any
+        // bindable state (see its own comment) to close the same reactive-handler race IsConnected
+        // already guards against there.
         switch (newState)
         {
             case ProfileState.Connected:
                 if (status != GattStatus.Success)
                 {
+                    CurrentConnectionState = newState;
                     // Connection failed
-                    OnConnectFailed(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status));
+                    OnConnectFailedAsync(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status)).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                     break;
                 }
 
+                CurrentConnectionState = newState;
                 IsConnected = true;
-                OnConnectSucceeded();
+                OnConnectSucceededAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                 break;
 
             case ProfileState.Disconnected:
@@ -531,17 +537,55 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 // made every later "is this device already disconnected" check downstream
                 // (ClearDeviceAsync, DisconnectIfNeededAsync) wrongly attempt a redundant
                 // DisconnectAsync() call that hangs forever waiting for a connection-state callback
-                // Android will never fire again for an already-disconnected GATT object.
+                // Android will never fire again for an already-disconnected GATT object. For the
+                // same reason, status must not be surfaced as a failure exception here either - by
+                // the time this callback fires with newState == Disconnected, the device genuinely
+                // is disconnected regardless of status, so a non-Success value must not fault
+                // DisconnectionTcs (making an explicit, caller-awaited DisconnectAsync() throw for a
+                // disconnect that actually succeeded) or make OnUnexpectedDisconnection log a normal
+                // peer/DFU-reboot disconnect as a WARNING-level unexpected one.
+                //
+                // Claim before publishing IsConnected below, not after: IsConnected's setter
+                // synchronously raises the public Disconnected/ConnectionStateChanged events, and an
+                // external handler could react by calling ConnectAsync() again - installing a new
+                // ConnectionTcs/token - before this method reaches TryClaimPendingConnectAttempt.
+                // Claiming first means the pending attempt this signal actually belongs to is locked
+                // in (or correctly found to be already gone) before any such handler gets a chance
+                // to run.
+                //
+                // A disconnected callback while a connect attempt is still pending is the terminal
+                // result of a *failed connect*, not a completed disconnect - the device never
+                // actually finished connecting. Routing it through OnDisconnectAsync() as a plain
+                // disconnect would call TrySetResultOrException(null) on the pending ConnectionTcs,
+                // completing the connect attempt as a *success*. TryClaimPendingConnectAttempt
+                // atomically checks for and claims that pending attempt (in one lock acquisition,
+                // so no concurrent ConnectAsync call can install a newer attempt in between the
+                // check and the claim - see its remarks), letting this method attach the native
+                // GattStatus as the failure reason via CompleteClaimedConnectFailureAsync instead of
+                // OnDisconnectAsync's generic default.
+                var pendingConnectAttempt = TryClaimPendingConnectAttempt();
+                CurrentConnectionState = newState;
                 IsConnected = false;
-                OnDisconnect(status != GattStatus.Success ? new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status) : null);
+                if (pendingConnectAttempt != null)
+                {
+                    Exception connectFailure = status != GattStatus.Success
+                        ? new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status)
+                        : new DeviceFailedToConnectException(this, "Device disconnected while a connection attempt was in progress");
+                    CompleteClaimedConnectFailureAsync(pendingConnectAttempt, connectFailure).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+                    break;
+                }
+
+                OnDisconnectAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                 break;
 
             case ProfileState.Connecting:
                 // Transitional state, no action needed
+                CurrentConnectionState = newState;
                 break;
 
             case ProfileState.Disconnecting:
                 // Transitional state, no action needed
+                CurrentConnectionState = newState;
                 break;
 
             default:
