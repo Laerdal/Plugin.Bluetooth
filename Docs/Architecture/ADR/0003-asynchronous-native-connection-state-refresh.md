@@ -104,15 +104,24 @@ observe the just-cancelled TCS as "completed" and install its own attempt in the
 cancel and the separately-locked clear.
 
 This closes the correlation gap for every attempt-abandonment path reachable through this library's
-own documented usage (timeout/cancel-then-retry, concurrent connect vs. disconnect, merge races).
-It does not reach a scenario outside this library's control: if a native platform were to somehow
-deliver two genuinely overlapping callbacks for the *same* peripheral - one stale, for an already-
-retired attempt, and one for a brand-new attempt that has since fully installed its own token - in
-the exact instant between them, the stale one would find the fields already pointing at the newer
-attempt and be misattributed to it. This requires CoreBluetooth/BluetoothGatt/WinRT to violate their
-own single-outstanding-native-operation-per-peripheral behavior to manifest, is dramatically
-narrower than the gap this ADR previously left open, and remains the only case a real per-call
-native context token (which none of the three platforms' delegate APIs expose) could fully close.
+own documented usage (timeout/cancel-then-retry, concurrent connect vs. disconnect, merge races) on
+the *connect* side, where `ConnectAsync`'s abandon path can (and now does) actively retire its own
+token before issuing a compensating cancellation - see the real-hardware-confirmed 29-second-late
+example in that method's own comment, which this closes directly.
+
+The *disconnect* side has a narrower but real residual: unlike connect, there is no native "cancel
+my disconnect request" call to issue on abandonment - once `NativeDisconnectAsync` is called, the
+underlying native disconnect either completes on its own timeline or doesn't; nothing retracts it.
+If `DisconnectAsync` gives up (timeout/cancellation) before that confirmation arrives, `finally`
+retires `_disconnectAttemptToken` promptly (no intervening `await`, unlike connect's compensating
+call), but a genuinely new `DisconnectAsync` call *could* still start, claim its own token, and
+receive its *own* native confirmation before the original, abandoned request's late confirmation
+finally arrives - at which point that late confirmation would find `_disconnectAttemptToken`
+matching the newer attempt and be misattributed to it. This requires a real device to actually take
+that long to confirm a disconnect after the app gave up waiting and try again in the meantime - a
+real but comparatively rare timing window, not a normal-path occurrence, and one no application-level
+token scheme can close without the native platform itself exposing a per-call context token (which
+none of the three platforms' delegate APIs do for connect or disconnect).
 
 `ConnectAsync`/`DisconnectAsync` also now refresh before their own initial already-connected /
 already-disconnected guard, not just via the `*IfNeededAsync` wrappers - calling either method
@@ -260,6 +269,32 @@ bound at all. Five seconds is a backstop against a genuinely stuck main thread, 
 timing constraint - this is normally a near-instant local property read. A refresh that exceeds
 this bound is treated like any other refresh failure (see above): it faults the live TCS, or
 reports via `ReportBestEffortFailure` if there's no live TCS to deliver it to.
+
+A second Copilot review pass against the attempt-correlation redesign above surfaced three further
+issues, all fixed:
+- `OnConnectFailedAsync` (and, by extension, `OnDisconnectAsync`'s connect-attempt-pending branch
+  and `CompleteClaimedConnectFailureAsync`) previously read the live `DisconnectionTcs` raw instead
+  of validating it against `_disconnectAttemptToken` first. Since `OnConnectFailedAsync` can itself
+  be a stale signal for a connect attempt abandoned long ago, an unvalidated read could fault a
+  `DisconnectAsync` call that started well after that connect attempt was abandoned, with an
+  exception describing a failure that has nothing to do with it. All three now validate first,
+  matching the pattern `OnDisconnectAsync`'s own disconnect-completion branch already used.
+- `ConnectAsync`'s abandon path called its compensating `NativeDisconnectAsync` unconditionally,
+  even when `_connectAttemptToken` no longer matched `ownConnectionTcs` - which can happen when
+  `ownConnectionTcs.Task` already completed *successfully* (a native "connected" callback ran and
+  confirmed it) before this method's own subsequent refresh/`IsConnected` check decided to give up
+  anyway (e.g. the device disconnected again immediately after), letting a fresh `ConnectAsync` call
+  install its own attempt while this one is still unwinding. Issuing the native disconnect
+  unconditionally in that case would tear down whatever the newer, unrelated attempt has since
+  established. It's now only issued when this attempt still owns `_connectAttemptToken` at the point
+  of retirement.
+- `WaitForIsConnectedAsync` passed the same `timeout` value to both `RefreshIsConnectedAsync` and
+  the subsequent `WaitForPropertyToBeOfValue`, letting the method run for up to ~2x the documented
+  timeout when the refresh takes non-trivial time and the property isn't already at the target
+  value. It now tracks elapsed time across the refresh via a `Stopwatch` and gives the property wait
+  only the remaining budget, throwing `TimeoutException` directly if that budget is already
+  exhausted - `WaitBetterAsync` treats a zero/negative timeout as "no timeout" (waits forever), not
+  "time already up", so the exhausted case can't simply be passed through as-is.
 
 This is a breaking change with two independent surfaces:
 - `BaseBluetoothRemoteDevice.NativeRefreshIsConnected()` no longer exists. Any external subclass
