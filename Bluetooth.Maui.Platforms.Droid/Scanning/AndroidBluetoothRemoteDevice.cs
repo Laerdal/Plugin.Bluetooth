@@ -541,22 +541,23 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 // peer/DFU-reboot disconnect as a WARNING-level unexpected one.
                 IsConnected = false;
 
-                if (IsConnectionAttemptPending)
+                // A disconnected callback while a connect attempt is still pending is the terminal
+                // result of a *failed connect*, not a completed disconnect - the device never
+                // actually finished connecting. Routing it through OnDisconnectAsync() as a plain
+                // disconnect would call TrySetResultOrException(null) on the pending ConnectionTcs,
+                // completing the connect attempt as a *success*. TryClaimPendingConnectAttempt
+                // atomically checks for and claims that pending attempt (in one lock acquisition,
+                // so no concurrent ConnectAsync call can install a newer attempt in between the
+                // check and the claim - see its remarks), letting this method attach the native
+                // GattStatus as the failure reason via CompleteClaimedConnectFailureAsync instead of
+                // OnDisconnectAsync's generic default.
+                var pendingConnectAttempt = TryClaimPendingConnectAttempt();
+                if (pendingConnectAttempt != null)
                 {
-                    // A disconnected callback while a connect attempt is still pending is the
-                    // terminal result of a *failed connect*, not a completed disconnect - the
-                    // device never actually finished connecting. Routing it through
-                    // OnDisconnectAsync() here would call TrySetResultOrException(null) on the
-                    // pending ConnectionTcs, completing the connect attempt as a *success*.
-                    // Route to OnConnectFailedAsync instead, preserving the native status as the
-                    // failure reason. Checking IsConnectionAttemptPending rather than IsConnecting
-                    // avoids misclassifying a genuine disconnect that follows a fast,
-                    // already-succeeded connect - IsConnecting stays true until ConnectAsync's own
-                    // finally runs, well after a successful connect's TCS is already completed.
                     Exception connectFailure = status != GattStatus.Success
                         ? new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status)
                         : new DeviceFailedToConnectException(this, "Device disconnected while a connection attempt was in progress");
-                    OnConnectFailedAsync(connectFailure).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+                    CompleteClaimedConnectFailureAsync(pendingConnectAttempt, connectFailure).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                     break;
                 }
 
