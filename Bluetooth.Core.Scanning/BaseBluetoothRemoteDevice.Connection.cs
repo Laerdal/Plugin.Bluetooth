@@ -133,6 +133,18 @@ public abstract partial class BaseBluetoothRemoteDevice
     }
 
     /// <summary>
+    ///     Returns the live <see cref="DisconnectionTcs" /> if it still matches <see cref="_disconnectAttemptToken" />
+    ///     (a genuinely current, non-stale disconnect attempt), or <c>null</c> otherwise - see
+    ///     <see cref="TryClaimPendingConnectAttempt" />'s remarks for why the same validation applies
+    ///     symmetrically to the disconnect side. A mismatch means either no explicit
+    ///     <see cref="DisconnectAsync" /> caller exists, or this signal is stale/superseded.
+    /// </summary>
+    private TaskCompletionSource? TryGetLiveDisconnectionTcs()
+    {
+        return ReferenceEquals(_disconnectAttemptToken, DisconnectionTcs) ? DisconnectionTcs : null;
+    }
+
+    /// <summary>
     ///     Completes an already-claimed pending connect attempt (see <see cref="TryClaimPendingConnectAttempt" />)
     ///     as a failure. Exposed as a lower-level primitive (rather than requiring callers to go through
     ///     <see cref="OnConnectFailedAsync" />, which performs its own claim) for platform disconnect
@@ -148,10 +160,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     {
         ArgumentNullException.ThrowIfNull(claimedConnectionTcs);
         LogDeviceConnectionFailed(Id, e);
-        // See OnConnectFailedAsync for why DisconnectionTcs must be validated against
-        // _disconnectAttemptToken rather than read raw.
-        var disconnectionTcs = ReferenceEquals(_disconnectAttemptToken, DisconnectionTcs) ? DisconnectionTcs : null;
-        return CompleteConnectFailureAsync(claimedConnectionTcs, disconnectionTcs, e, cancellationToken);
+        return CompleteConnectFailureAsync(claimedConnectionTcs, TryGetLiveDisconnectionTcs(), e, cancellationToken);
     }
 
     /// <summary>
@@ -252,7 +261,11 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// </remarks>
     private async ValueTask RefreshIsConnectedAsync(TimeSpan? timeout, CancellationToken cancellationToken)
     {
-        if (timeout is not { } timeoutValue)
+        // null, zero, and negative all mean "no timeout" per WaitBetterAsync's own documented
+        // contract (see its callers throughout this repo). Without this, CancelAfter(TimeSpan.Zero)
+        // below would schedule near-immediate cancellation - the opposite of what a caller passing
+        // TimeSpan.Zero (or Timeout.InfiniteTimeSpan) to ConnectAsync/DisconnectAsync intends.
+        if (timeout is not { } timeoutValue || timeoutValue <= TimeSpan.Zero)
         {
             await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
             return;
@@ -427,18 +440,17 @@ public abstract partial class BaseBluetoothRemoteDevice
         LogDeviceConnectionFailed(Id, e);
 
         // Claim atomically - see OnConnectSucceededAsync/TryClaimPendingConnectAttempt for why.
-        // DisconnectionTcs is validated against _disconnectAttemptToken (not read raw) for the
-        // same reason OnDisconnectAsync validates it below: this callback can itself be a stale
-        // signal for a connect attempt abandoned long ago, arriving well after a *different*,
-        // currently-live DisconnectAsync call installed its own DisconnectionTcs - completing that
-        // unrelated, current disconnect with this ancient connect failure would be wrong. A live,
-        // validated DisconnectionTcs here means a genuinely concurrent DisconnectAsync call is
-        // in-flight for the *same* live moment as this callback - see CompleteConnectFailureAsync
-        // for why both must then be completed independently.
+        // DisconnectionTcs is validated via TryGetLiveDisconnectionTcs (not read raw) for the same
+        // reason OnDisconnectAsync validates it below: this callback can itself be a stale signal
+        // for a connect attempt abandoned long ago, arriving well after a *different*, currently-live
+        // DisconnectAsync call installed its own DisconnectionTcs - completing that unrelated,
+        // current disconnect with this ancient connect failure would be wrong. A live, validated
+        // DisconnectionTcs here means a genuinely concurrent DisconnectAsync call is in-flight for
+        // the *same* live moment as this callback - see CompleteConnectFailureAsync for why both
+        // must then be completed independently.
         var connectionTcs = TryClaimPendingConnectAttempt();
-        var disconnectionTcs = ReferenceEquals(_disconnectAttemptToken, DisconnectionTcs) ? DisconnectionTcs : null;
 
-        await CompleteConnectFailureAsync(connectionTcs, disconnectionTcs, e, cancellationToken).ConfigureAwait(false);
+        await CompleteConnectFailureAsync(connectionTcs, TryGetLiveDisconnectionTcs(), e, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -710,18 +722,17 @@ public abstract partial class BaseBluetoothRemoteDevice
             // read raw - this disconnect signal is real-time (it's what triggered this very call),
             // but the connect attempt it's failing may not be, and a genuinely live, validated
             // DisconnectionTcs at this exact instant is still the right thing to also fail.
-            var concurrentDisconnectionTcs = ReferenceEquals(_disconnectAttemptToken, DisconnectionTcs) ? DisconnectionTcs : null;
-            await CompleteConnectFailureAsync(connectionTcs, concurrentDisconnectionTcs, connectFailure, cancellationToken).ConfigureAwait(false);
+            await CompleteConnectFailureAsync(connectionTcs, TryGetLiveDisconnectionTcs(), connectFailure, cancellationToken).ConfigureAwait(false);
             return;
         }
 
-        // Validate against _disconnectAttemptToken before capturing - see
+        // Validate via TryGetLiveDisconnectionTcs before capturing - see
         // TryClaimPendingConnectAttempt's remarks on why the connect side needs this; the same
         // reasoning applies here. A mismatch (null for an unsolicited disconnect with no explicit
         // DisconnectAsync caller, or non-null but stale/superseded) means there is no live
         // DisconnectionTcs this specific signal may complete - IsConnected is still refreshed below
         // either way, since the device's native state is real regardless of who's tracking it.
-        var disconnectionTcs = ReferenceEquals(_disconnectAttemptToken, DisconnectionTcs) ? DisconnectionTcs : null;
+        var disconnectionTcs = TryGetLiveDisconnectionTcs();
 
         // Best-effort: see OnConnectSucceededAsync for why a failed/cancelled refresh must not
         // prevent the captured TCS below from being completed.
