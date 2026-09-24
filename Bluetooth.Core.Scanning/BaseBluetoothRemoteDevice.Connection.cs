@@ -38,8 +38,30 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async ValueTask WaitForIsConnectedAsync(bool isConnected, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        await RefreshIsConnectedAsync(timeout, cancellationToken).ConfigureAwait(false);
-        await WaitForPropertyToBeOfValue(nameof(IsConnected), isConnected, timeout, cancellationToken).ConfigureAwait(false);
+        if (timeout is not { } timeoutValue)
+        {
+            await RefreshIsConnectedAsync(null, cancellationToken).ConfigureAwait(false);
+            await WaitForPropertyToBeOfValue(nameof(IsConnected), isConnected, null, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        // Passing the same timeout to both awaits would let this method run for up to ~2x
+        // timeout when the refresh takes non-zero time and the property isn't already at the
+        // target value - the documented contract is one timeout for the whole operation, not one
+        // each. Track elapsed time across the refresh and give the property wait only what's left.
+        // WaitBetterAsync treats a zero/negative timeout as "no timeout" (waits forever), not "time
+        // already up" - so an exhausted budget must throw directly here instead of being passed
+        // through as-is.
+        var stopwatch = Stopwatch.StartNew();
+        await RefreshIsConnectedAsync(timeoutValue, cancellationToken).ConfigureAwait(false);
+
+        var remaining = timeoutValue - stopwatch.Elapsed;
+        if (remaining <= TimeSpan.Zero)
+        {
+            throw new TimeoutException($"{nameof(WaitForIsConnectedAsync)} timed out after {timeoutValue}.");
+        }
+
+        await WaitForPropertyToBeOfValue(nameof(IsConnected), isConnected, remaining, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -119,7 +141,10 @@ public abstract partial class BaseBluetoothRemoteDevice
     {
         ArgumentNullException.ThrowIfNull(claimedConnectionTcs);
         LogDeviceConnectionFailed(Id, e);
-        return CompleteConnectFailureAsync(claimedConnectionTcs, DisconnectionTcs, e, cancellationToken);
+        // See OnConnectFailedAsync for why DisconnectionTcs must be validated against
+        // _disconnectAttemptToken rather than read raw.
+        var disconnectionTcs = ReferenceEquals(_disconnectAttemptToken, DisconnectionTcs) ? DisconnectionTcs : null;
+        return CompleteConnectFailureAsync(claimedConnectionTcs, disconnectionTcs, e, cancellationToken);
     }
 
     /// <summary>
@@ -395,11 +420,16 @@ public abstract partial class BaseBluetoothRemoteDevice
         LogDeviceConnectionFailed(Id, e);
 
         // Claim atomically - see OnConnectSucceededAsync/TryClaimPendingConnectAttempt for why.
-        // DisconnectionTcs is read directly (not claimed) because a live one here always belongs
-        // to a genuinely concurrent, still-in-flight DisconnectAsync call of its own - see
-        // CompleteConnectFailureAsync for why both must be completed independently.
+        // DisconnectionTcs is validated against _disconnectAttemptToken (not read raw) for the
+        // same reason OnDisconnectAsync validates it below: this callback can itself be a stale
+        // signal for a connect attempt abandoned long ago, arriving well after a *different*,
+        // currently-live DisconnectAsync call installed its own DisconnectionTcs - completing that
+        // unrelated, current disconnect with this ancient connect failure would be wrong. A live,
+        // validated DisconnectionTcs here means a genuinely concurrent DisconnectAsync call is
+        // in-flight for the *same* live moment as this callback - see CompleteConnectFailureAsync
+        // for why both must then be completed independently.
         var connectionTcs = TryClaimPendingConnectAttempt();
-        var disconnectionTcs = DisconnectionTcs;
+        var disconnectionTcs = ReferenceEquals(_disconnectAttemptToken, DisconnectionTcs) ? DisconnectionTcs : null;
 
         await CompleteConnectFailureAsync(connectionTcs, disconnectionTcs, e, cancellationToken).ConfigureAwait(false);
     }
@@ -526,22 +556,40 @@ public abstract partial class BaseBluetoothRemoteDevice
             // attempts confusing the shared central manager. Cancel the native request so giving up
             // here actually means the device stops trying, not just that this caller stops watching.
             //
-            // Retire _connectAttemptToken *before* issuing that cancellation - not in the finally
-            // below, which only clears it if ConnectionTcs still points at ownConnectionTcs at that
-            // later point. A new ConnectAsync call cannot start until this call returns to its own
-            // caller (retiring here happens-before that), so a stale native callback for the request
-            // just cancelled can never find a *newer* attempt's token here by coincidence - closing
-            // the gap ADR 0003 previously left open. See TryClaimPendingConnectAttempt.
+            // Only if this attempt still owns _connectAttemptToken: retire it *before* issuing that
+            // cancellation - not in the finally below, which only clears it if ConnectionTcs still
+            // points at ownConnectionTcs at that later point. A new ConnectAsync call cannot start
+            // until this call returns to its own caller (retiring here happens-before that), so a
+            // stale native callback for the request just cancelled can never find a *newer*
+            // attempt's token here by coincidence - closing the gap ADR 0003 previously left open.
+            // See TryClaimPendingConnectAttempt.
+            //
+            // Ownership can already have moved to a newer attempt by this point even though this
+            // method hasn't reached its own finally yet: ownConnectionTcs.Task may have already
+            // completed *successfully* (e.g. OnConnectSucceededAsync ran, confirmed the device was
+            // genuinely connected, and resolved it) before this method's own subsequent refresh/
+            // IsConnected check decided to give up anyway (e.g. the device disconnected again
+            // immediately after) - a fresh ConnectAsync call reads a completed ConnectionTcs.Task as
+            // "no pending attempt" and installs its own, entirely independently of this method still
+            // running. If that happened, the native connect request this method issued is no longer
+            // "stuck" (it already resolved) and calling NativeDisconnectAsync unconditionally here
+            // would tear down whatever that newer, unrelated attempt has since established instead
+            // of retracting anything of this attempt's own.
+            bool stillOwnsAttempt;
             lock (_connectionOperationLock)
             {
-                if (ReferenceEquals(_connectAttemptToken, ownConnectionTcs))
+                stillOwnsAttempt = ReferenceEquals(_connectAttemptToken, ownConnectionTcs);
+                if (stillOwnsAttempt)
                 {
                     _connectAttemptToken = null;
                 }
             }
 
-            try { await NativeDisconnectAsync(timeout: null, cancellationToken: CancellationToken.None).ConfigureAwait(false); }
-            catch { /* best-effort - we are already about to report the connection as failed */ }
+            if (stillOwnsAttempt)
+            {
+                try { await NativeDisconnectAsync(timeout: null, cancellationToken: CancellationToken.None).ConfigureAwait(false); }
+                catch { /* best-effort - we are already about to report the connection as failed */ }
+            }
 
             // Timeout/cancellation are documented, BCL-recognized outcomes of this method (see
             // IBluetoothRemoteDevice.Connection.cs) - callers following the standard .NET cancellation
@@ -651,7 +699,12 @@ public abstract partial class BaseBluetoothRemoteDevice
         {
             var connectFailure = e ?? new DeviceFailedToConnectException(this, "Device disconnected while a connection attempt was in progress");
             LogDeviceConnectionFailed(Id, connectFailure);
-            await CompleteConnectFailureAsync(connectionTcs, DisconnectionTcs, connectFailure, cancellationToken).ConfigureAwait(false);
+            // See OnConnectFailedAsync for why DisconnectionTcs must be validated here too, not
+            // read raw - this disconnect signal is real-time (it's what triggered this very call),
+            // but the connect attempt it's failing may not be, and a genuinely live, validated
+            // DisconnectionTcs at this exact instant is still the right thing to also fail.
+            var concurrentDisconnectionTcs = ReferenceEquals(_disconnectAttemptToken, DisconnectionTcs) ? DisconnectionTcs : null;
+            await CompleteConnectFailureAsync(connectionTcs, concurrentDisconnectionTcs, connectFailure, cancellationToken).ConfigureAwait(false);
             return;
         }
 
