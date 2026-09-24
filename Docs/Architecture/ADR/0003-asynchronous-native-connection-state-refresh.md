@@ -416,8 +416,20 @@ This is a breaking change with two independent surfaces:
 - [ ] Confirm on real Windows hardware that the `StartAndForget` conversion behaves correctly at
       runtime (compile-verified cross-platform via `EnableWindowsTargeting`, but WinRT COM
       activation of `Windows.Devices.Bluetooth` still requires an actual Windows machine to test).
-- [ ] Confirm on real hardware that iOS connect/disconnect no longer produces false
-      `DeviceFailedToConnectException`/`DeviceFailedToDisconnectException`.
+- [x] Confirm on real hardware that iOS connect/disconnect no longer produces false
+      `DeviceFailedToConnectException`/`DeviceFailedToDisconnectException`. Verified 2026-09-24 on
+      a physical iPhone via the sample scanner app: 20 consecutive connect/disconnect cycles against
+      real Little devices produced zero false failures. Separately stress-tested the attempt-
+      correlation redesign itself with a temporarily-shortened (50ms) connect timeout - deliberately
+      forcing every attempt to time out client-side while the native request was still in flight -
+      then retried 6 times back-to-back on the same device: every retry produced a clean timeout, no
+      hang, no crash, no wrong-state result.
+- [ ] Confirm the device still reaches a normal, working connection (not a stuck/wrong-state one)
+      immediately after a burst of abandoned/retried attempts like the one above - the stress test
+      above only confirmed retries fail cleanly, not that a subsequent real connect afterward
+      succeeds normally. Not yet confirmed as of 2026-09-24.
+- [ ] Repeat real-hardware validation on Android - not yet attempted; all testing so far has been
+      iOS-only.
 - [x] Give native-callback-driven refresh calls (`OnConnectSucceededAsync`/`OnConnectFailedAsync`/
       `OnDisconnectAsync`, all invoked with `cancellationToken: default`) a bounded lifetime
       (fixed 5s `CallbackRefreshTimeout` via `RefreshIsConnectedAsync`) instead of an unbounded
