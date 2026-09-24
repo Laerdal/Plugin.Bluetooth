@@ -539,8 +539,15 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 // DisconnectionTcs (making an explicit, caller-awaited DisconnectAsync() throw for a
                 // disconnect that actually succeeded) or make OnUnexpectedDisconnection log a normal
                 // peer/DFU-reboot disconnect as a WARNING-level unexpected one.
-                IsConnected = false;
-
+                //
+                // Claim before publishing IsConnected below, not after: IsConnected's setter
+                // synchronously raises the public Disconnected/ConnectionStateChanged events, and an
+                // external handler could react by calling ConnectAsync() again - installing a new
+                // ConnectionTcs/token - before this method reaches TryClaimPendingConnectAttempt.
+                // Claiming first means the pending attempt this signal actually belongs to is locked
+                // in (or correctly found to be already gone) before any such handler gets a chance
+                // to run.
+                //
                 // A disconnected callback while a connect attempt is still pending is the terminal
                 // result of a *failed connect*, not a completed disconnect - the device never
                 // actually finished connecting. Routing it through OnDisconnectAsync() as a plain
@@ -552,6 +559,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 // GattStatus as the failure reason via CompleteClaimedConnectFailureAsync instead of
                 // OnDisconnectAsync's generic default.
                 var pendingConnectAttempt = TryClaimPendingConnectAttempt();
+                IsConnected = false;
                 if (pendingConnectAttempt != null)
                 {
                     Exception connectFailure = status != GattStatus.Success
