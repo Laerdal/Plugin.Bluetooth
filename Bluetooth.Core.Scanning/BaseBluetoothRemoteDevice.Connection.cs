@@ -38,7 +38,14 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async ValueTask WaitForIsConnectedAsync(bool isConnected, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        if (timeout is not { } timeoutValue)
+        // WaitBetterAsync's own documented contract (see its callers throughout this repo) treats
+        // null, zero, AND negative - including Timeout.InfiniteTimeSpan (-1ms), this repo's
+        // documented "wait forever" sentinel per Docs/API-Reference/README.md - as "no timeout".
+        // Only checking for null here would let Timeout.InfiniteTimeSpan fall into the timed branch
+        // below, where subtracting elapsed time from an already-negative budget always leaves
+        // `remaining <= TimeSpan.Zero` - throwing TimeoutException immediately instead of waiting
+        // indefinitely as documented.
+        if (timeout is not { } timeoutValue || timeoutValue <= TimeSpan.Zero)
         {
             await RefreshIsConnectedAsync(null, cancellationToken).ConfigureAwait(false);
             await WaitForPropertyToBeOfValue(nameof(IsConnected), isConnected, null, cancellationToken).ConfigureAwait(false);
