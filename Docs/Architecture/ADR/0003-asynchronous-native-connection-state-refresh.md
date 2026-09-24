@@ -103,25 +103,35 @@ in one lock acquisition instead of two separate ones - previously, a new call's 
 observe the just-cancelled TCS as "completed" and install its own attempt in the gap between the
 cancel and the separately-locked clear.
 
-This closes the correlation gap for every attempt-abandonment path reachable through this library's
-own documented usage (timeout/cancel-then-retry, concurrent connect vs. disconnect, merge races) on
-the *connect* side, where `ConnectAsync`'s abandon path can (and now does) actively retire its own
-token before issuing a compensating cancellation - see the real-hardware-confirmed 29-second-late
-example in that method's own comment, which this closes directly.
+This closes the specific two-lock-acquisition and unsynchronized-write races described above, and
+the window between a *cancelled* TCS and its property clear in `ConnectAsync`/`DisconnectAsync`'s
+`finally` blocks. It does **not** close the deeper gap a second Copilot review pass correctly kept
+re-raising against `TryClaimPendingConnectAttempt` (used by `OnConnectSucceededAsync`,
+`OnConnectFailedAsync`, and `OnDisconnectAsync`'s connect-attempt routing) and the equivalent
+`_disconnectAttemptToken` check in `OnDisconnectAsync`'s disconnect-completion branch: a match only
+proves *some* attempt is live right now, not that *this specific native callback* belongs to it. If
+attempt A is abandoned, attempt B installs its own token, and A's late callback then arrives, the
+comparison succeeds and wrongly resolves B's attempt with A's stale outcome - on *both* the connect
+and disconnect sides, symmetrically. (An earlier version of this section claimed `ConnectAsync`'s
+early token retirement in its abandon path closed the real-hardware-confirmed 29-second-late example
+in that method's own comment - that was inaccurate: that example involved two *different* device
+instances, each with their own independent `_connectAttemptToken`, and the actual failure was
+`CBCentralManager` contention at the native level, not a same-instance C# token match. The early
+retirement is still correct and worth keeping - it closes the narrower window where A's own stale
+callback could otherwise land during A's own cleanup - but it does not, and was never able to, close
+this deeper class of race.)
 
-The *disconnect* side has a narrower but real residual: unlike connect, there is no native "cancel
-my disconnect request" call to issue on abandonment - once `NativeDisconnectAsync` is called, the
-underlying native disconnect either completes on its own timeline or doesn't; nothing retracts it.
-If `DisconnectAsync` gives up (timeout/cancellation) before that confirmation arrives, `finally`
-retires `_disconnectAttemptToken` promptly (no intervening `await`, unlike connect's compensating
-call), but a genuinely new `DisconnectAsync` call *could* still start, claim its own token, and
-receive its *own* native confirmation before the original, abandoned request's late confirmation
-finally arrives - at which point that late confirmation would find `_disconnectAttemptToken`
-matching the newer attempt and be misattributed to it. This requires a real device to actually take
-that long to confirm a disconnect after the app gave up waiting and try again in the meantime - a
-real but comparatively rare timing window, not a normal-path occurrence, and one no application-level
-token scheme can close without the native platform itself exposing a per-call context token (which
-none of the three platforms' delegate APIs do for connect or disconnect).
+Closing this fully needs one of two things, both of which have real costs: a native per-call context
+token passed through the connect/disconnect delegate callbacks (none of iOS/Android/Windows's BLE
+APIs expose this for connect or disconnect), or serializing native operations so a new `ConnectAsync`/
+`DisconnectAsync` attempt cannot start until the *previous* one's native operation is positively
+confirmed dead rather than just abandoned by the C# caller. The second option directly reverts the
+design this same PR already validated on real hardware: `ConnectAsync`'s abandon path deliberately
+does *not* wait for native confirmation before letting a caller retry, specifically because an
+earlier version that effectively did (via the shared-central-manager contention above) produced the
+29-second hang. Reintroducing that blocking behavior to close an already-narrow race window was
+weighed against that cost and rejected - this residual is accepted as the practical floor for an
+app-level-only correlation scheme, not an oversight.
 
 `ConnectAsync`/`DisconnectAsync` also now refresh before their own initial already-connected /
 already-disconnected guard, not just via the `*IfNeededAsync` wrappers - calling either method
