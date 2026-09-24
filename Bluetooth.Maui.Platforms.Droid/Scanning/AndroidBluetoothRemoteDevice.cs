@@ -506,18 +506,23 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
     /// <inheritdoc />
     public void OnConnectionStateChange(GattStatus status, ProfileState newState)
     {
-        CurrentConnectionState = newState;
-
+        // CurrentConnectionState is set per-case below, not uniformly here - it's a public,
+        // bindable property whose setter synchronously raises PropertyChanged, and the
+        // Disconnected case below needs to claim a pending connect attempt *before* publishing any
+        // bindable state (see its own comment) to close the same reactive-handler race IsConnected
+        // already guards against there.
         switch (newState)
         {
             case ProfileState.Connected:
                 if (status != GattStatus.Success)
                 {
+                    CurrentConnectionState = newState;
                     // Connection failed
                     OnConnectFailedAsync(new AndroidNativeGattCallbackStatusException((GattCallbackStatus) status)).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                     break;
                 }
 
+                CurrentConnectionState = newState;
                 IsConnected = true;
                 OnConnectSucceededAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                 break;
@@ -559,6 +564,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
                 // GattStatus as the failure reason via CompleteClaimedConnectFailureAsync instead of
                 // OnDisconnectAsync's generic default.
                 var pendingConnectAttempt = TryClaimPendingConnectAttempt();
+                CurrentConnectionState = newState;
                 IsConnected = false;
                 if (pendingConnectAttempt != null)
                 {
@@ -574,10 +580,12 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
 
             case ProfileState.Connecting:
                 // Transitional state, no action needed
+                CurrentConnectionState = newState;
                 break;
 
             case ProfileState.Disconnecting:
                 // Transitional state, no action needed
+                CurrentConnectionState = newState;
                 break;
 
             default:

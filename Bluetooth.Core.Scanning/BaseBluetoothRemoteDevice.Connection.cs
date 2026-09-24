@@ -180,11 +180,11 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// </summary>
     private async ValueTask CompleteConnectFailureAsync(TaskCompletionSource? connectionTcs, TaskCompletionSource? disconnectionTcs, Exception e, CancellationToken cancellationToken)
     {
-        // Best-effort: a failed/cancelled refresh must not prevent the captured TCS(s) below from
-        // being completed - ConnectAsync's/DisconnectAsync's "merge concurrent attempts" branches
-        // await these exact instances with no timeout of their own, so leaving them uncompleted
-        // here would hang those callers forever once the owning call's finally clears the live
-        // property.
+        // Best-effort: a failed/cancelled refresh must not prevent connectionTcs from being
+        // completed with e below - ConnectAsync's "merge concurrent attempts" branch awaits this
+        // exact TCS with no timeout of its own, so leaving it uncompleted here would hang that
+        // caller forever once the owning call's finally clears the live property.
+        Exception? refreshFailure = null;
         try
         {
             await RefreshIsConnectedAsync(CallbackRefreshTimeout, cancellationToken).ConfigureAwait(false);
@@ -195,27 +195,46 @@ public abstract partial class BaseBluetoothRemoteDevice
             // fault - proceed to the TCS completion below silently instead of reporting it as an
             // unhandled Bluetooth exception to every registered listener.
         }
-        catch (Exception refreshException)
+        catch (Exception ex)
         {
-            ReportBestEffortFailure(refreshException);
+            refreshFailure = ex;
         }
 
-        // Evaluated independently (not via ||): a disconnect arriving while both a connect attempt
-        // and an explicit DisconnectAsync call are concurrently pending must complete both instead
-        // of short-circuiting after the first and leaving the other waiting until its own timeout.
+        // connectionTcs always faults with e - the connect failure's own reason - regardless of
+        // whether the refresh above succeeded; that refresh is only relevant to the disconnect
+        // side below.
         var connectionTcsCompleted = connectionTcs?.TrySetException(e) ?? false;
-        var disconnectionTcsCompleted = disconnectionTcs?.TrySetException(e) ?? false;
+
+        // The disconnect side isn't failing *because of* this unrelated connect failure - if a
+        // live DisconnectAsync call is racing the same moment, its own outcome is independent: a
+        // device that's actually disconnected (confirmed by the refresh above) represents a
+        // *successful* disconnect regardless of why the concurrent connect attempt failed - mirrors
+        // OnDisconnectAsync's own e==null gating. Blindly faulting it with e (as this used to)
+        // contradicted that same principle - e.g. Android's OnConnectionStateChange explicitly
+        // documents that a non-Success GATT status here must not fault an explicit DisconnectAsync,
+        // yet this path did exactly that. If the refresh itself failed, IsConnected can no longer be
+        // trusted either way, so fault with that refresh failure instead of guessing.
+        var disconnectOutcome = refreshFailure ?? (IsConnected ? new DeviceFailedToDisconnectException(this) : null);
+        var disconnectionTcsCompleted = disconnectionTcs?.TrySetResultOrException(disconnectOutcome) ?? false;
+
+        if (!disconnectionTcsCompleted && refreshFailure != null)
+        {
+            // No live DisconnectAsync caller to deliver the refresh failure to directly - report it
+            // so it isn't silently lost.
+            ReportBestEffortFailure(refreshFailure);
+        }
+
         if (connectionTcsCompleted || disconnectionTcsCompleted)
         {
             return;
         }
 
-        // If neither TaskCompletionSource was live (e.g. a native callback for an
-        // already-abandoned attempt), report via ReportBestEffortFailure rather than calling the
-        // listener directly: every native callback wraps its call to this method's callers in its
-        // own StartAndForget(ex => BluetoothUnhandledExceptionListener...), so letting this rethrow
-        // (the listener's documented behavior when nothing is registered) would let that wrapper
-        // deliver the same failure to the listener a second time.
+        // Neither TaskCompletionSource was live (e.g. a native callback for an already-abandoned
+        // attempt) - report the connect failure too, via ReportBestEffortFailure rather than
+        // calling the listener directly: every native callback wraps its call to this method's
+        // callers in its own StartAndForget(ex => BluetoothUnhandledExceptionListener...), so
+        // letting this rethrow (the listener's documented behavior when nothing is registered)
+        // would let that wrapper deliver the same failure to the listener a second time.
         ReportBestEffortFailure(e);
     }
 
@@ -225,9 +244,11 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <param name="cancellationToken">Token to cancel the refresh operation.</param>
     /// <returns>A task that represents the asynchronous refresh operation.</returns>
     /// <remarks>
-    ///     Not every platform can offer a real freshness guarantee: Apple and Windows perform a synchronous
-    ///     native query, but Android relies entirely on the <c>OnConnectionStateChange</c> callback and only
-    ///     clears <see cref="IsConnected" /> here when its GATT proxy is null - see ADR 0003.
+    ///     Not every platform can offer a real freshness guarantee: Windows performs a synchronous
+    ///     native query, and Apple dispatches to the main thread and awaits completion (not
+    ///     synchronous, but still a real, awaited query rather than a fire-and-forget one) - see
+    ///     ADR 0003. Android relies entirely on the <c>OnConnectionStateChange</c> callback and only
+    ///     clears <see cref="IsConnected" /> here when its GATT proxy is null.
     /// </remarks>
     protected abstract ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default);
 
@@ -647,6 +668,13 @@ public abstract partial class BaseBluetoothRemoteDevice
             // far as this lock is concerned but not as far as the overall cleanup below is - see
             // TryClaimPendingConnectAttempt for why _connectAttemptToken must stay in lockstep with
             // ConnectionTcs at every observable point, not just at the start and end of this method.
+            //
+            // IsConnecting (a public, bindable property) is deliberately set *outside* this lock,
+            // below - its setter synchronously raises PropertyChanged to arbitrary external
+            // subscribers, and a handler reacting by calling ConnectAsync/DisconnectAsync again
+            // while this thread still held the lock could re-enter or corrupt state still being
+            // cleaned up. Safe to defer: nothing in the correlation logic above reads IsConnecting.
+            bool stillOwnsAttempt;
             lock (_connectionOperationLock)
             {
                 // Guarantee ownConnectionTcs reaches a terminal state no matter how we're leaving
@@ -662,20 +690,24 @@ public abstract partial class BaseBluetoothRemoteDevice
                 // this method's own cancellationToken.
                 ownConnectionTcs.TrySetCanceled(CancellationToken.None);
 
-                // Only reset IsConnecting/ConnectionTcs if this attempt still owns the live
-                // operation - a concurrent attempt may have already replaced ConnectionTcs and set
-                // IsConnecting back to true for its own in-flight connect (see the merge branch
-                // above); resetting unconditionally here would corrupt that newer attempt's state,
-                // not just its TCS.
-                if (ReferenceEquals(ConnectionTcs, ownConnectionTcs))
+                // Only reset ConnectionTcs/_connectAttemptToken if this attempt still owns the live
+                // operation - a concurrent attempt may have already replaced them for its own
+                // in-flight connect (see the merge branch above); resetting unconditionally here
+                // would corrupt that newer attempt's state, not just its TCS.
+                stillOwnsAttempt = ReferenceEquals(ConnectionTcs, ownConnectionTcs);
+                if (stillOwnsAttempt)
                 {
-                    IsConnecting = false; // Set the connecting state to false
                     ConnectionTcs = null;
                     if (ReferenceEquals(_connectAttemptToken, ownConnectionTcs))
                     {
                         _connectAttemptToken = null;
                     }
                 }
+            }
+
+            if (stillOwnsAttempt)
+            {
+                IsConnecting = false; // Set the connecting state to false
             }
         }
     }
@@ -918,6 +950,9 @@ public abstract partial class BaseBluetoothRemoteDevice
             // Cancelling ownDisconnectionTcs and clearing DisconnectionTcs/_disconnectAttemptToken
             // (if still owned) happen under one lock acquisition - see ConnectAsync's finally for
             // why splitting them into two separate lock acquisitions would reopen this same window.
+            // IsDisconnecting (public, bindable) is set outside the lock below - see ConnectAsync's
+            // finally for why.
+            bool stillOwnsAttempt;
             lock (_connectionOperationLock)
             {
                 // Guarantee ownDisconnectionTcs reaches a terminal state - see ConnectAsync's finally
@@ -925,20 +960,24 @@ public abstract partial class BaseBluetoothRemoteDevice
                 // CancellationToken.None here is deliberate - see ConnectAsync's finally.
                 ownDisconnectionTcs.TrySetCanceled(CancellationToken.None);
 
-                // Only reset IsDisconnecting/DisconnectionTcs if this attempt still owns the live
-                // operation - a concurrent attempt may have already replaced DisconnectionTcs and set
-                // IsDisconnecting back to true for its own in-flight disconnect (see the merge branch
-                // above); resetting unconditionally here would corrupt that newer attempt's state,
-                // not just its TCS.
-                if (ReferenceEquals(DisconnectionTcs, ownDisconnectionTcs))
+                // Only reset DisconnectionTcs/_disconnectAttemptToken if this attempt still owns the
+                // live operation - a concurrent attempt may have already replaced them for its own
+                // in-flight disconnect (see the merge branch above); resetting unconditionally here
+                // would corrupt that newer attempt's state, not just its TCS.
+                stillOwnsAttempt = ReferenceEquals(DisconnectionTcs, ownDisconnectionTcs);
+                if (stillOwnsAttempt)
                 {
-                    IsDisconnecting = false; // Set the disconnecting state to false
                     DisconnectionTcs = null;
                     if (ReferenceEquals(_disconnectAttemptToken, ownDisconnectionTcs))
                     {
                         _disconnectAttemptToken = null;
                     }
                 }
+            }
+
+            if (stillOwnsAttempt)
+            {
+                IsDisconnecting = false; // Set the disconnecting state to false
             }
         }
     }
