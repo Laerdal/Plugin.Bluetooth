@@ -47,5 +47,6 @@ Each ADR should include:
 - [0000 - Template](0000-template.md)
 - [0001 - Facade Registrations Override Platform Interface Bindings](0001-facade-overrides-platform-registrations.md)
 - [0002 - Broadcasting Factory Consistency Strategy](0002-broadcasting-factory-consistency-strategy.md)
+- [0003 - Asynchronous Native Connection-State Refresh](0003-asynchronous-native-connection-state-refresh.md)
 
 When adding new ADRs, append them to this index.
