@@ -527,7 +527,7 @@ public class BluetoothRemoteDevice : IBluetoothRemoteDevice
     public TimeSpan IntervalBetweenAdvertisement => _platformDevice.IntervalBetweenAdvertisement;
 
     /// <inheritdoc />
-    public void OnAdvertisementReceived(IBluetoothAdvertisement advertisement)
+    public virtual void OnAdvertisementReceived(IBluetoothAdvertisement advertisement)
     {
         _platformDevice.OnAdvertisementReceived(advertisement);
     }
