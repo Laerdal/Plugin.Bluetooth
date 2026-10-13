@@ -182,9 +182,30 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     protected override void NativeRefreshIsConnected()
     {
-        MainThreadDispatcher.BeginInvokeOnMainThread(() => {
-            IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
-        });
+        QueueIsConnectedRefresh();
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     <see cref="NativeRefreshIsConnected" /> only queues the update on the main thread. This awaits it, so a caller
+    ///     reading <c>IsConnected</c> afterwards sees the peripheral's current state rather than the previous one.
+    /// </remarks>
+    protected override async ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
+    {
+        await MainThreadDispatcher.InvokeOnMainThreadAsync(UpdateIsConnectedFromPeripheral).WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Queues the <c>IsConnected</c> update on the main thread without waiting for it, for callers that do not read the result.
+    /// </summary>
+    private void QueueIsConnectedRefresh()
+    {
+        MainThreadDispatcher.BeginInvokeOnMainThread(UpdateIsConnectedFromPeripheral);
+    }
+
+    private void UpdateIsConnectedFromPeripheral()
+    {
+        IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
     }
 
     /// <inheritdoc />
@@ -203,7 +224,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
         Logger?.LogConnecting(Id);
 
-        NativeRefreshIsConnected();
+        QueueIsConnectedRefresh();
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
@@ -255,7 +276,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     {
         Logger?.LogDisconnecting(Id);
 
-        NativeRefreshIsConnected();
+        QueueIsConnectedRefresh();
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");

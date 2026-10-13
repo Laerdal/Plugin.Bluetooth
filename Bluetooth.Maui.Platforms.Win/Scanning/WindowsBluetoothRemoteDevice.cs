@@ -146,7 +146,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     protected async override ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogConnecting(Id);
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
@@ -204,7 +204,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     protected async override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogDisconnecting(Id);
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {

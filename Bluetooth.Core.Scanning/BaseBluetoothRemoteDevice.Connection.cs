@@ -46,6 +46,19 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// </summary>
     protected abstract void NativeRefreshIsConnected();
 
+    /// <summary>
+    ///     Refreshes the connection state from the native platform and completes once <see cref="IsConnected" />
+    ///     reflects it. Callers that read <see cref="IsConnected" /> right after refreshing must await this rather than
+    ///     call <see cref="NativeRefreshIsConnected" />, which may only schedule the update. The default runs the
+    ///     synchronous refresh; platforms whose refresh completes asynchronously override it.
+    /// </summary>
+    /// <param name="cancellationToken">Token to cancel the wait.</param>
+    protected virtual ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
+    {
+        NativeRefreshIsConnected();
+        return ValueTask.CompletedTask;
+    }
+
     #endregion
 
     #region Connecting
@@ -116,7 +129,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     public async virtual ValueTask ConnectIfNeededAsync(ConnectionOptions? connectionOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         connectionOptions ??= new ConnectionOptions();
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
         if (IsConnected)
         {
             return;
@@ -174,7 +187,7 @@ public abstract partial class BaseBluetoothRemoteDevice
             // connect attempt is detected, not the IsConnected check below.
             await ConnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
 
-            NativeRefreshIsConnected();
+            await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
             if (!IsConnected)
             {
                 throw new DeviceFailedToConnectException(this);
@@ -283,7 +296,7 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public async ValueTask DisconnectIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
         if (!IsConnected)
         {
             return;
@@ -331,7 +344,7 @@ public abstract partial class BaseBluetoothRemoteDevice
             // Wait for OnDisconnection to be called
             await DisconnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             await ClearServicesAsync().ConfigureAwait(false);
-            NativeRefreshIsConnected();
+            await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
             if (IsConnected)
             {
                 throw new DeviceFailedToDisconnectException(this);
