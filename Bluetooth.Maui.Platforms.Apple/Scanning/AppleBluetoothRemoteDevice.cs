@@ -180,17 +180,47 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     #region Connection
 
     /// <inheritdoc />
-    protected override void NativeRefreshIsConnected()
+    protected override async ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
     {
-        MainThreadDispatcher.BeginInvokeOnMainThread(() => {
+        var dispatchTask = MainThreadDispatcher.InvokeOnMainThreadAsync(() => {
+            // MainThread.InvokeOnMainThreadAsync's queued action cannot be cancelled once queued -
+            // it will run regardless of what happens to the caller waiting on it below. Skip
+            // publishing IsConnected if the caller already gave up by the time this actually runs
+            // on the main thread: a stale read published this late could overwrite a newer
+            // connect/disconnect attempt's own, more current state. This narrows but doesn't fully
+            // close the window (cancellation could still land microseconds after this check) - full
+            // closure would need the same generation/attempt correlation already out of scope for
+            // native callbacks in general; see ADR 0003.
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             IsConnected = CbPeripheralWrapper.CbPeripheral.State == CBPeripheralState.Connected;
         });
+
+        // Only start independently observing dispatchTask's own fault once cancellation actually
+        // fires. Before that, the await below is still live and will propagate an ordinary fault
+        // to its caller (who reports it) exactly once - registering unconditionally would report
+        // every such fault a second time here. If cancellation fires first, the await below exits
+        // via OperationCanceledException without ever seeing dispatchTask's eventual result, so
+        // nothing else is left to observe or report a fault that arrives later - that's exactly
+        // the case this registration exists for. Disposed once this call is done so it doesn't
+        // outlive it. Core's callers that also have a timeout (BaseBluetoothRemoteDevice.Connection's
+        // RefreshIsConnectedAsync) link it into this same cancellationToken before calling this
+        // method, so a purely timeout-triggered abandonment is indistinguishable from an explicit
+        // cancellation here too - see ADR 0003.
+        using var registration = cancellationToken.CanBeCanceled
+            ? cancellationToken.Register(() => dispatchTask.StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex)))
+            : default;
+
+        await dispatchTask.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public void ConnectionEventDidOccur(CBConnectionEvent connectionEvent)
     {
-        NativeRefreshIsConnected();
+        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
     }
 
     #region Connect
@@ -203,7 +233,11 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
         Logger?.LogConnecting(Id);
 
-        NativeRefreshIsConnected();
+        // No refresh here - this method doesn't branch on IsConnected, and the caller (Core's
+        // ConnectAsync) already refreshes both before its already-connected guard and again after
+        // this native call completes. Awaiting one more here would also be unbounded when this is
+        // invoked from the "abandon the connect attempt" cleanup path with no timeout at all - see
+        // that path's comment for why it deliberately uses CancellationToken.None.
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
@@ -224,7 +258,8 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     public void FailedToConnectPeripheral(NSError? error)
     {
-        NativeRefreshIsConnected();
+        // No standalone refresh here - OnConnectFailedAsync below already refreshes internally,
+        // and firing a second main-thread dispatch for the same event would be pure overhead.
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
@@ -233,16 +268,17 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         catch (Exception e)
         {
             Logger?.LogConnectionFailed(Id, 1, e);
-            OnConnectFailed(e);
+            OnConnectFailedAsync(e).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         }
     }
 
     /// <inheritdoc />
     public void ConnectedPeripheral()
     {
-        NativeRefreshIsConnected();
+        // No standalone refresh here - OnConnectSucceededAsync below already refreshes internally,
+        // and firing a second main-thread dispatch for the same event would be pure overhead.
         Logger?.LogConnected(Id);
-        OnConnectSucceeded();
+        OnConnectSucceededAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
     }
 
     #endregion
@@ -255,7 +291,9 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     {
         Logger?.LogDisconnecting(Id);
 
-        NativeRefreshIsConnected();
+        // No refresh here - see NativeConnectAsync. This is also invoked from ConnectAsync's
+        // "abandon the attempt" cleanup path with timeout: null and CancellationToken.None, where
+        // an unbounded refresh could hang that best-effort cleanup indefinitely.
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
@@ -275,39 +313,43 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     public void DisconnectedPeripheral(NSError? error)
     {
-        NativeRefreshIsConnected();
+        // No standalone refresh here - OnDisconnectAsync below already refreshes internally in
+        // both branches, and firing a second main-thread dispatch for the same event would be
+        // pure overhead.
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
             Logger?.LogDisconnected(Id);
-            OnDisconnect();
+            OnDisconnectAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         }
         catch (Exception e)
         {
             Logger?.LogDisconnected(Id);
-            OnDisconnect(e);
+            OnDisconnectAsync(e).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         }
     }
 
     /// <inheritdoc />
     public void DidDisconnectPeripheral(double timestamp, bool isReconnecting, NSError? error)
     {
-        NativeRefreshIsConnected();
+        // No standalone refresh here - OnDisconnectAsync below already refreshes internally in
+        // every branch, and firing a second main-thread dispatch for the same event would be
+        // pure overhead.
         try
         {
             AppleNativeBluetoothException.ThrowIfError(error);
             if (isReconnecting)
             {
-                OnDisconnect(new DeviceReconnectingException(this));
+                OnDisconnectAsync(new DeviceReconnectingException(this)).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
             }
             else
             {
-                OnDisconnect();
+                OnDisconnectAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
             }
         }
         catch (Exception e)
         {
-            OnDisconnect(e);
+            OnDisconnectAsync(e).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
         }
     }
 

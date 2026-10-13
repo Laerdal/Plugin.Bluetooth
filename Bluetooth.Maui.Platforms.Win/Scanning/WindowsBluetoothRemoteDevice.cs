@@ -137,16 +137,17 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     #region Connection
 
     /// <inheritdoc />
-    protected override void NativeRefreshIsConnected()
+    protected override ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
     {
         IsConnected = BluetoothLeDeviceProxy?.BluetoothLeDevice is { ConnectionStatus: BluetoothConnectionStatus.Connected };
+        return ValueTask.CompletedTask;
     }
 
     /// <inheritdoc />
     protected async override ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogConnecting(Id);
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
@@ -195,7 +196,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
         catch (Exception e)
         {
             Logger?.LogConnectionFailed(Id, 1, e);
-            OnConnectFailed(e);
+            await OnConnectFailedAsync(e, cancellationToken).ConfigureAwait(false);
             throw;
         }
     }
@@ -204,7 +205,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     protected async override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogDisconnecting(Id);
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
@@ -230,7 +231,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
         }
         catch (Exception e)
         {
-            OnDisconnect(e);
+            await OnDisconnectAsync(e, cancellationToken).ConfigureAwait(false);
             throw;
         }
     }
@@ -330,16 +331,35 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     public void OnConnectionStatusChanged(BluetoothConnectionStatus newConnectionStatus)
     {
         Logger?.LogConnectionStatusChanged(Id, newConnectionStatus);
-        BluetoothConnectionStatus = newConnectionStatus;
-        NativeRefreshIsConnected();
 
+        // No standalone refresh here - OnConnectSucceededAsync/OnDisconnectAsync below already
+        // refresh internally, and firing a second main-thread dispatch for the same event would
+        // be pure overhead. BluetoothConnectionStatus only has Connected/Disconnected, so this
+        // switch already covers every case.
+        //
+        // BluetoothConnectionStatus is set per-case below, not uniformly here - it's a public,
+        // bindable property whose setter synchronously raises PropertyChanged, and the Disconnected
+        // case needs to claim a pending connect attempt *before* publishing any bindable state (see
+        // Android's OnConnectionStateChange for the same reasoning): an external handler reacting to
+        // the notification by calling ConnectAsync() again could otherwise install a new
+        // ConnectionTcs/token before OnDisconnectAsync's own internal claim runs, letting this old
+        // disconnect signal be routed to that unrelated, newer attempt instead.
         switch (newConnectionStatus)
         {
             case BluetoothConnectionStatus.Connected:
-                OnConnectSucceeded();
+                BluetoothConnectionStatus = newConnectionStatus;
+                OnConnectSucceededAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                 break;
             case BluetoothConnectionStatus.Disconnected:
-                OnDisconnect();
+                var pendingConnectAttempt = TryClaimPendingConnectAttempt();
+                BluetoothConnectionStatus = newConnectionStatus;
+                if (pendingConnectAttempt != null)
+                {
+                    CompleteClaimedConnectFailureAsync(pendingConnectAttempt, new DeviceFailedToConnectException(this, "Device disconnected while a connection attempt was in progress")).StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+                    break;
+                }
+
+                OnDisconnectAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
                 break;
         }
     }
@@ -355,7 +375,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     public void OnGattSessionStatusChanged(GattSessionStatus argsStatus)
     {
         GattSessionStatus = argsStatus;
-        NativeRefreshIsConnected();
+        NativeRefreshIsConnectedAsync().StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
     }
 
     /// <summary>
