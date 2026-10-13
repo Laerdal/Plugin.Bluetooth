@@ -53,6 +53,11 @@ public abstract partial class BaseBluetoothRemoteDevice
     ///     synchronous refresh; platforms whose refresh completes asynchronously override it.
     /// </summary>
     /// <param name="cancellationToken">Token to cancel the wait.</param>
+    /// <returns>A task that completes once <see cref="IsConnected" /> reflects the native connection state.</returns>
+    /// <exception cref="OperationCanceledException">
+    ///     Thrown by overrides that complete asynchronously when <paramref name="cancellationToken" /> is cancelled before the refresh
+    ///     completes. The default implementation completes synchronously and does not observe the token.
+    /// </exception>
     protected virtual ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
     {
         NativeRefreshIsConnected();
