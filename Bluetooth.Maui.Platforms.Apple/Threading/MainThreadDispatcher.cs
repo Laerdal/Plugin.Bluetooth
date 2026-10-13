@@ -58,6 +58,7 @@ internal static class MainThreadDispatcher
     ///     propagating any exception it throws back to the awaiter.
     /// </summary>
     /// <param name="action">The action to execute.</param>
+    /// <returns>A task that completes once the action has run on the main thread, or faults with the exception it threw.</returns>
     public static Task InvokeOnMainThreadAsync(Action action)
     {
         return Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(action);
