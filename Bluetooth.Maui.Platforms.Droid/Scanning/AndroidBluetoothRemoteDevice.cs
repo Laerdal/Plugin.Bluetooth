@@ -312,7 +312,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         // Store connection options for GATT operations
         _connectionOptions = connectionOptions;
 
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         Logger?.LogConnecting(Id);
 
@@ -446,7 +446,7 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        NativeRefreshIsConnected();
+        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         Logger?.LogDisconnecting(Id);
 
