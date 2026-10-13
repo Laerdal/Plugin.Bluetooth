@@ -182,7 +182,7 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// <inheritdoc />
     protected override void NativeRefreshIsConnected()
     {
-        QueueIsConnectedRefresh();
+        MainThreadDispatcher.BeginInvokeOnMainThread(UpdateIsConnectedFromPeripheral);
     }
 
     /// <inheritdoc />
@@ -192,15 +192,18 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     /// </remarks>
     protected override async ValueTask NativeRefreshIsConnectedAsync(CancellationToken cancellationToken = default)
     {
-        await MainThreadDispatcher.InvokeOnMainThreadAsync(UpdateIsConnectedFromPeripheral).WaitAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    ///     Queues the <c>IsConnected</c> update on the main thread without waiting for it, for callers that do not read the result.
-    /// </summary>
-    private void QueueIsConnectedRefresh()
-    {
-        MainThreadDispatcher.BeginInvokeOnMainThread(UpdateIsConnectedFromPeripheral);
+        var dispatch = MainThreadDispatcher.InvokeOnMainThreadAsync(UpdateIsConnectedFromPeripheral);
+        try
+        {
+            await dispatch.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // The queued update still runs after the caller gave up. Report a later failure instead of leaving it unobserved.
+            // A failure that arrives before cancellation propagates through the await above, so each fault is reported once.
+            dispatch.StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
+            throw;
+        }
     }
 
     private void UpdateIsConnectedFromPeripheral()
@@ -224,7 +227,10 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
 
         Logger?.LogConnecting(Id);
 
-        QueueIsConnectedRefresh();
+        // Queued, not awaited: the result is not read here, and awaiting would tie the native request to main-thread availability.
+#pragma warning disable CA1849 // Call async methods when in an async method
+        NativeRefreshIsConnected();
+#pragma warning restore CA1849
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
@@ -276,7 +282,10 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
     {
         Logger?.LogDisconnecting(Id);
 
-        QueueIsConnectedRefresh();
+        // Queued, not awaited: the result is not read here, and awaiting would tie the native request to main-thread availability.
+#pragma warning disable CA1849 // Call async methods when in an async method
+        NativeRefreshIsConnected();
+#pragma warning restore CA1849
         if (Scanner is not AppleBluetoothScanner scanner)
         {
             throw new InvalidOperationException("Scanner is not a BluetoothScanner");
