@@ -197,10 +197,11 @@ public class AppleBluetoothRemoteDevice : BaseBluetoothRemoteDevice, CbPeriphera
         {
             await dispatch.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException e) when (cancellationToken.CanBeCanceled && e.CancellationToken == cancellationToken)
         {
-            // The queued update still runs after the caller gave up. Report a later failure instead of leaving it unobserved.
-            // A failure that arrives before cancellation propagates through the await above, so each fault is reported once.
+            // The caller's cancellation won, so the queued update still runs after they gave up. Report a later failure instead
+            // of leaving it unobserved. Matching the token means a failure thrown by the update itself (including its own
+            // cancellation) propagates through the await above and is not also reported here.
             dispatch.StartAndForget(ex => BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, ex));
             throw;
         }
