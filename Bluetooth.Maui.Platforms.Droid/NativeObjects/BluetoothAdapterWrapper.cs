@@ -174,13 +174,12 @@ public class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAdapterWrap
         BluetoothAdapterState = BluetoothAdapter.State;
         BluetoothAdapterIsEnabled = BluetoothAdapter.IsEnabled;
 
-        // Name and Address require BLUETOOTH_CONNECT at runtime on Android 12+.
+        // Name requires BLUETOOTH_CONNECT at runtime on Android 12+.
         // Silently skip when the permission hasn't been granted yet — the ticker
         // will succeed on the next cycle once the user grants permission.
         try
         {
             BluetoothAdapterName = BluetoothAdapter.Name ?? string.Empty;
-            BluetoothAdapterAddress = BluetoothAdapter.Address ?? string.Empty;
         }
         catch (Java.Lang.SecurityException)
         {
@@ -237,15 +236,6 @@ public class BluetoothAdapterWrapper : BaseBindableObject, IBluetoothAdapterWrap
     ///     Gets the friendly name of the Bluetooth adapter.
     /// </summary>
     public string BluetoothAdapterName
-    {
-        get => GetValue(string.Empty);
-        private set => SetValue(value);
-    }
-
-    /// <summary>
-    ///     Gets the hardware address (MAC address) of the Bluetooth adapter.
-    /// </summary>
-    public string BluetoothAdapterAddress
     {
         get => GetValue(string.Empty);
         private set => SetValue(value);
