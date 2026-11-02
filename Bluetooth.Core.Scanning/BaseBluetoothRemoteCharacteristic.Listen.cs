@@ -16,7 +16,6 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     public async ValueTask StartListeningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        await ExploreDescriptorsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         LogStartingNotifications(Id, Service.Device.Id);
 
         await ReadIsListeningAsync(timeout, cancellationToken).ConfigureAwait(false);
