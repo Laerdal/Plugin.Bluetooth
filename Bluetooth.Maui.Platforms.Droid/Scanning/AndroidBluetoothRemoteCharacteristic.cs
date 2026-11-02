@@ -202,7 +202,7 @@ public class AndroidBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     protected async override ValueTask NativeReadIsListeningAsync()
     {
         // On Android, we need to check the CCCD descriptor to determine if notifications are enabled
-        var descriptor = GetDescriptor(_cccdUuid);
+        var descriptor = GetDescriptorOrDefault(_cccdUuid);
         if (descriptor == null)
         {
             // No CCCD descriptor found, assume not listening
