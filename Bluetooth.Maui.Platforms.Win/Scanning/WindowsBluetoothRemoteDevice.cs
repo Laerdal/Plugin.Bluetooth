@@ -225,6 +225,9 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
                 GattSessionProxy.Dispose();
                 GattSessionProxy = null;
             }
+            
+            // called manually as the BluetoothLeDeviceProxy is disposed and will not trigger the event
+            OnConnectionStatusChanged(BluetoothConnectionStatus.Disconnected);
 
             Logger?.LogDisconnected(Id);
         }
