@@ -290,6 +290,19 @@ public abstract partial class BaseBluetoothRemoteDevice
             return;
         }
 
+        // An explicit DisconnectAsync is still in progress but its TCS was already completed by an
+        // earlier callback. This is a duplicate completion, not an unexpected disconnection. Known
+        // sources: the native Windows ConnectionStatusChanged event racing the synthetic call in
+        // WindowsBluetoothRemoteDevice.NativeDisconnectAsync, and a failing NativeDisconnectAsync
+        // that reports via OnDisconnect(e) before DisconnectAsync's catch reports it again.
+        // IsDisconnecting is only reset in DisconnectAsync's finally, after NativeDisconnectAsync
+        // has returned, so it reliably covers this window.
+        if (IsDisconnecting)
+        {
+            LogDuplicateDisconnectionCallbackIgnored(Id);
+            return;
+        }
+
         // No pending explicit await - this is an unexpected disconnection (e.g. a device rebooting
         // mid-DFU). OnUnexpectedDisconnection() owns all logging for this path: WARNING normally, or
         // a quiet DEBUG entry when IgnoreNextUnexpectedDisconnection suppresses it. Do NOT also log a
