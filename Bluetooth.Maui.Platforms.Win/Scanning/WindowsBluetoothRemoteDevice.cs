@@ -67,6 +67,15 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
         private set => SetValue(value);
     }
 
+    /// <summary>
+    ///     1 once the current connection's disconnection has been reported, by either the native
+    ///     ConnectionStatusChanged callback or <see cref="NativeDisconnectAsync" />'s manual completion; 0 otherwise.
+    ///     Claimed atomically so each disconnection is reported exactly once: whichever path claims it first reports
+    ///     it, and the other drops out. Without this, a native Disconnected callback still in flight from the
+    ///     disposed proxy would reach OnDisconnect() after the manual completion and be reported as unexpected.
+    /// </summary>
+    private int _disconnectionClaimed;
+
     #region MTU
 
     /// <inheritdoc />
@@ -146,6 +155,7 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     protected async override ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogConnecting(Id);
+        Interlocked.Exchange(ref _disconnectionClaimed, 0); // new connection attempt: its disconnection is not reported yet
         await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
         try
@@ -228,11 +238,15 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
 
             // On Windows, releasing every reference to the device *is* the disconnection, and the disposed proxy
             // can no longer raise ConnectionStatusChanged, so OnDisconnect() would never be called. Complete a
-            // pending DisconnectAsync here instead. This is a no-op when nothing is pending (failed-connect
-            // cleanup) or when a native Disconnected callback already completed it, and it never reports an
-            // unexpected disconnection.
+            // pending DisconnectAsync here instead - unless a native Disconnected callback already claimed this
+            // disconnection, in which case that callback completes it. Claiming first also makes a native
+            // callback still in flight from the disposed proxy drop out instead of reporting an unexpected
+            // disconnection. TryCompleteDisconnection is a no-op when nothing is pending (failed-connect cleanup).
             BluetoothConnectionStatus = BluetoothConnectionStatus.Disconnected;
-            TryCompleteDisconnection();
+            if (Interlocked.Exchange(ref _disconnectionClaimed, 1) == 0)
+            {
+                TryCompleteDisconnection();
+            }
 
             Logger?.LogDisconnected(Id);
         }
@@ -337,6 +351,19 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     /// <param name="newConnectionStatus">The new connection status.</param>
     public void OnConnectionStatusChanged(BluetoothConnectionStatus newConnectionStatus)
     {
+        if (newConnectionStatus == BluetoothConnectionStatus.Connected)
+        {
+            // A new link (e.g. after MaintainConnection reconnects) may be reported as disconnected again.
+            Interlocked.Exchange(ref _disconnectionClaimed, 0);
+        }
+        else if (Interlocked.Exchange(ref _disconnectionClaimed, 1) == 1)
+        {
+            // This disconnection was already reported - typically by NativeDisconnectAsync after it released the
+            // device, with this native callback having been in flight when the proxy unsubscribed. Reporting it
+            // again would fall through to OnUnexpectedDisconnection for an explicitly requested disconnect.
+            return;
+        }
+
         Logger?.LogConnectionStatusChanged(Id, newConnectionStatus);
         BluetoothConnectionStatus = newConnectionStatus;
         NativeRefreshIsConnected();
