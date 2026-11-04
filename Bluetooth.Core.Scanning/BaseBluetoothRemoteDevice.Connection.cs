@@ -1,3 +1,5 @@
+using System.Runtime.ExceptionServices;
+
 namespace Bluetooth.Core.Scanning;
 
 public abstract partial class BaseBluetoothRemoteDevice
@@ -290,25 +292,35 @@ public abstract partial class BaseBluetoothRemoteDevice
             return;
         }
 
-        // An explicit DisconnectAsync is still in progress but its TCS was already completed by an
-        // earlier callback. This is a duplicate completion, not an unexpected disconnection. Known
-        // sources: the native Windows ConnectionStatusChanged event racing the synthetic call in
-        // WindowsBluetoothRemoteDevice.NativeDisconnectAsync, and a failing NativeDisconnectAsync
-        // that reports via OnDisconnect(e) before DisconnectAsync's catch reports it again.
-        // IsDisconnecting is only reset in DisconnectAsync's finally, after NativeDisconnectAsync
-        // has returned, so it reliably covers this window.
-        if (IsDisconnecting)
-        {
-            LogDuplicateDisconnectionCallbackIgnored(Id);
-            return;
-        }
-
         // No pending explicit await - this is an unexpected disconnection (e.g. a device rebooting
         // mid-DFU). OnUnexpectedDisconnection() owns all logging for this path: WARNING normally, or
         // a quiet DEBUG entry when IgnoreNextUnexpectedDisconnection suppresses it. Do NOT also log a
         // second, always-ERROR entry here - that bypassed IgnoreNextUnexpectedDisconnection entirely
         // and turned every expected DFU-reboot disconnection into ERROR-level noise.
         OnUnexpectedDisconnection(e);
+    }
+
+    /// <summary>
+    ///     Completes a pending explicit <see cref="DisconnectAsync" /> without ever treating the call as an
+    ///     unexpected disconnection. Intended for platforms where releasing the native resources in
+    ///     <see cref="NativeDisconnectAsync" /> is itself the disconnection and no native callback follows
+    ///     (e.g. Windows, where the disposed device no longer raises its connection-status event).
+    /// </summary>
+    /// <returns>
+    ///     <c>true</c> if this call completed the pending disconnection; <c>false</c> if none was pending
+    ///     (e.g. cleanup after a failed connection attempt) or a native callback had already completed it.
+    /// </returns>
+    protected bool TryCompleteDisconnection()
+    {
+        NativeRefreshIsConnected();
+
+        var success = DisconnectionTcs?.TrySetResult() ?? false;
+        if (success)
+        {
+            LogDeviceDisconnected(Id);
+        }
+
+        return success;
     }
 
     /// <inheritdoc />
@@ -346,23 +358,49 @@ public abstract partial class BaseBluetoothRemoteDevice
         IsDisconnecting = true; // Set the disconnecting state to true
         Disconnecting?.Invoke(this, EventArgs.Empty);
 
-        try // try-catch to dispatch exceptions rising from start
+        // A native teardown failure is tracked separately from DisconnectionTcs: a native disconnected
+        // callback may already have completed the TCS successfully before the teardown failed, and the
+        // failure must still reach the caller rather than being swallowed.
+        Exception? nativeDisconnectException = null;
+        try
         {
             LogDeviceDisconnecting(Id);
             await NativeDisconnectAsync(timeout, cancellationToken).ConfigureAwait(false); // actual start native call
         }
         catch (Exception e)
         {
-            OnDisconnect(e); // if exception is thrown during start, we trigger the failure
+            // Report the failure directly to this attempt's TCS rather than via OnDisconnect(e): if the
+            // TCS is already completed, OnDisconnect would misreport this as an unexpected disconnection.
+            nativeDisconnectException = e;
+            LogDeviceDisconnectionFailed(Id, e);
+            DisconnectionTcs.TrySetException(e);
         }
 
         // try-finally to ensure disposal and release of resources
         try
         {
-            // Wait for OnDisconnection to be called
-            await DisconnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
-            await ClearServicesAsync().ConfigureAwait(false);
-            await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                // Wait for the native disconnection callback (or TryCompleteDisconnection) to complete the TCS
+                await DisconnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                // Runs on success and failure alike: once the native connection is released, the existing
+                // service/characteristic wrappers are stale and must not survive into a later reconnect.
+                // CancellationToken.None: cancellation may be exactly why we are here.
+                await NativeRefreshIsConnectedAsync(CancellationToken.None).ConfigureAwait(false);
+                if (!IsConnected)
+                {
+                    await ClearServicesAsync().ConfigureAwait(false);
+                }
+            }
+
+            if (nativeDisconnectException != null)
+            {
+                ExceptionDispatchInfo.Throw(nativeDisconnectException);
+            }
+
             if (IsConnected)
             {
                 throw new DeviceFailedToDisconnectException(this);

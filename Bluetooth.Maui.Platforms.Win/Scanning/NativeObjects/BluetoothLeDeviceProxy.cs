@@ -30,6 +30,11 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     private IBluetoothLeDeviceProxyDelegate BluetoothLeDeviceProxyDelegate { get; }
 
     /// <summary>
+    ///     Set once <see cref="Dispose" /> starts; event handlers stop forwarding to the delegate from then on.
+    /// </summary>
+    private volatile bool _disposed;
+
+    /// <summary>
     ///     Gets the native Windows Bluetooth LE device instance.
     /// </summary>
     public BluetoothLEDevice BluetoothLeDevice { get; }
@@ -39,6 +44,10 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// </summary>
     public void Dispose()
     {
+        // Set before unsubscribing: WinRT raises events on thread-pool threads, so a handler invocation
+        // already in flight can still run after the unsubscribe below. Such stale events must not reach the
+        // delegate (e.g. a late Disconnected after DisconnectAsync finished would be reported as unexpected).
+        _disposed = true;
         BluetoothLeDevice.NameChanged -= OnNameChanged;
         BluetoothLeDevice.GattServicesChanged -= GattServicesChanged;
         BluetoothLeDevice.ConnectionStatusChanged -= OnConnectionStatusChanged;
@@ -117,6 +126,11 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="args">The event arguments (not used).</param>
     private void GattServicesChanged(BluetoothLEDevice sender, object args)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         try
         {
             BluetoothLeDeviceProxyDelegate.OnGattServicesChanged();
@@ -134,6 +148,11 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="args">The event arguments (not used).</param>
     private void OnConnectionStatusChanged(BluetoothLEDevice sender, object args)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         try
         {
             BluetoothLeDeviceProxyDelegate.OnConnectionStatusChanged(sender.ConnectionStatus);
@@ -151,6 +170,11 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="args">The event arguments (not used).</param>
     private void OnNameChanged(BluetoothLEDevice sender, object args)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         try
         {
             BluetoothLeDeviceProxyDelegate.OnNameChanged(sender.Name);
@@ -168,6 +192,11 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="args">The pairing spec event arguments.</param>
     private void OnCustomPairingRequested(DeviceInformationCustomPairing sender, DevicePairingRequestedEventArgs args)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         try
         {
             BluetoothLeDeviceProxyDelegate.OnCustomPairingRequested(args);
@@ -185,6 +214,11 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="args">The access change event arguments.</param>
     private void OnAccessChanged(DeviceAccessInformation sender, DeviceAccessChangedEventArgs args)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         try
         {
             BluetoothLeDeviceProxyDelegate.OnAccessChanged(args.Id, args.Status);

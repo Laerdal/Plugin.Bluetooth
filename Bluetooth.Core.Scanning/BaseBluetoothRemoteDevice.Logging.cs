@@ -50,10 +50,6 @@ public abstract partial class BaseBluetoothRemoteDevice
         Message = "Device {DeviceId} merging concurrent disconnection attempts")]
     partial void LogMergingDisconnectionAttempts(string deviceId);
 
-    [LoggerMessage(EventId = 215, Level = LogLevel.Debug,
-        Message = "Device {DeviceId} duplicate disconnection callback ignored (explicit disconnection already completed)")]
-    partial void LogDuplicateDisconnectionCallbackIgnored(string deviceId);
-
     // Unexpected disconnection (220-229)
     [LoggerMessage(EventId = 220, Level = LogLevel.Warning,
         Message = "Device {DeviceId} unexpectedly disconnected")]
