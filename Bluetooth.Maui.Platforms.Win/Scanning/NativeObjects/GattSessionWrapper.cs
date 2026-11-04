@@ -27,19 +27,6 @@ public sealed partial class GattSessionWrapper : IDisposable
     private IGattSessionDelegate GattSessionDelegate { get; }
 
     /// <summary>
-    ///     Guards <see cref="_disposed" /> together with each handler's entire check-and-forward step, so that once
-    ///     <see cref="Dispose" /> returns no stale session event (e.g. a late status change from this closed
-    ///     session) can overwrite state that already belongs to the device's next session. Same pattern and
-    ///     caveats as <see cref="BluetoothLeDeviceProxy" />'s callback gate.
-    /// </summary>
-    private readonly Lock _callbackGate = new();
-
-    /// <summary>
-    ///     Set by <see cref="Dispose" /> under <see cref="_callbackGate" />; event handlers stop forwarding from then on.
-    /// </summary>
-    private bool _disposed;
-
-    /// <summary>
     ///     Gets the native Windows GATT session instance.
     /// </summary>
     public GattSession GattSession { get; }
@@ -49,12 +36,6 @@ public sealed partial class GattSessionWrapper : IDisposable
     /// </summary>
     public void Dispose()
     {
-        // Waits for any forward in progress and rejects every later one; see _callbackGate.
-        lock (_callbackGate)
-        {
-            _disposed = true;
-        }
-
         GattSession.SessionStatusChanged -= OnSessionStatusChanged;
         GattSession.MaxPduSizeChanged -= OnMaxPduSizeChanged;
         GattSession.Dispose();
@@ -67,21 +48,13 @@ public sealed partial class GattSessionWrapper : IDisposable
     /// <param name="args">The event arguments (not used).</param>
     private void OnMaxPduSizeChanged(GattSession sender, object args)
     {
-        lock (_callbackGate)
+        try
         {
-            if (_disposed)
-            {
-                return;
-            }
-
-            try
-            {
-                GattSessionDelegate.OnMaxPduSizeChanged();
-            }
-            catch (Exception e)
-            {
-                BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
-            }
+            GattSessionDelegate.OnMaxPduSizeChanged();
+        }
+        catch (Exception e)
+        {
+            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
         }
     }
 
@@ -92,21 +65,13 @@ public sealed partial class GattSessionWrapper : IDisposable
     /// <param name="args">The session status change event arguments.</param>
     private void OnSessionStatusChanged(GattSession sender, GattSessionStatusChangedEventArgs args)
     {
-        lock (_callbackGate)
+        try
         {
-            if (_disposed)
-            {
-                return;
-            }
-
-            try
-            {
-                GattSessionDelegate.OnGattSessionStatusChanged(args.Status);
-            }
-            catch (Exception e)
-            {
-                BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
-            }
+            GattSessionDelegate.OnGattSessionStatusChanged(args.Status);
+        }
+        catch (Exception e)
+        {
+            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
         }
     }
 

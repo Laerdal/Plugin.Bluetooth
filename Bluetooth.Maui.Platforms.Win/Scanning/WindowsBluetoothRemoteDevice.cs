@@ -206,18 +206,14 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
         Logger?.LogDisconnecting(Id);
         await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
-        // Teardown failures are deliberately not reported via OnDisconnect(e): the caller (DisconnectAsync, or
-        // ConnectAsync's failed-connect cleanup) owns them, and a second report would be misread as an
-        // unexpected disconnection.
-
-        // Dispose device proxy
-        BluetoothLeDeviceProxy?.Dispose();
-        BluetoothLeDeviceProxy = null;
-
-        // Dispose GATT session
-        if (GattSessionProxy != null)
+        try
         {
-            try
+            // Dispose device proxy
+            BluetoothLeDeviceProxy?.Dispose();
+            BluetoothLeDeviceProxy = null;
+
+            // Dispose GATT session
+            if (GattSessionProxy != null)
             {
                 if (GattSessionProxy.GattSession.CanMaintainConnection)
                 {
@@ -225,30 +221,26 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
                 }
 
                 await WaitForPropertyToBeOfValue(nameof(GattSessionStatus), GattSessionStatus.Closed, timeout, cancellationToken).ConfigureAwait(false);
-            }
-            finally
-            {
-                // Release the session even if waiting for it to close failed or timed out, so a failed
-                // teardown does not leave it alive (and holding the connection) until the next connect.
+
                 GattSessionProxy.Dispose();
                 GattSessionProxy = null;
-
-                // The disposed wrapper no longer forwards status changes, so a wait that timed out or was
-                // cancelled would leave the cached status at Active. The next NativeConnectAsync would then
-                // skip waiting for its new session to become active.
-                GattSessionStatus = GattSessionStatus.Closed;
             }
+
+            // On Windows, releasing every reference to the device *is* the disconnection, and the disposed proxy
+            // can no longer raise ConnectionStatusChanged, so OnDisconnect() would never be called. Complete a
+            // pending DisconnectAsync here instead. This is a no-op when nothing is pending (failed-connect
+            // cleanup) or when a native Disconnected callback already completed it, and it never reports an
+            // unexpected disconnection.
+            BluetoothConnectionStatus = BluetoothConnectionStatus.Disconnected;
+            TryCompleteDisconnection();
+
+            Logger?.LogDisconnected(Id);
         }
-
-        // On Windows, releasing every reference to the device *is* the disconnection: the OS drops the
-        // link on its own afterwards, and the disposed proxy can no longer raise ConnectionStatusChanged.
-        // Complete a pending DisconnectAsync here. This is a no-op during failed-connect cleanup (nothing
-        // pending) or if a native Disconnected callback already completed it before the proxy was
-        // disposed, and it never reports an unexpected disconnection.
-        BluetoothConnectionStatus = BluetoothConnectionStatus.Disconnected;
-        TryCompleteDisconnection();
-
-        Logger?.LogDisconnected(Id);
+        catch (Exception e)
+        {
+            OnDisconnect(e);
+            throw;
+        }
     }
 
     #endregion
