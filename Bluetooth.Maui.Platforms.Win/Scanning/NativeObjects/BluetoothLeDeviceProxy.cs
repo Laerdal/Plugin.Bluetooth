@@ -29,10 +29,40 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// </summary>
     private IBluetoothLeDeviceProxyDelegate BluetoothLeDeviceProxyDelegate { get; }
 
+    private const int LinkOpen = 0;
+    private const int DisconnectionReported = 1;
+    private const int ProxyRetired = 2;
+
+    /// <summary>
+    ///     This proxy's connection-status state, changed only atomically. It ensures each disconnection of this
+    ///     proxy's link is reported once - by a native Disconnected callback or by the device's manual completion
+    ///     after an explicit teardown (see <see cref="Retire" />), never both. The state belongs to this proxy
+    ///     instance, so callbacks from a retired proxy can never affect a later connection's proxy.
+    ///     <list type="bullet">
+    ///         <item><see cref="LinkOpen" />: a Disconnected callback may claim and report the next disconnection.</item>
+    ///         <item><see cref="DisconnectionReported" />: a Disconnected callback reported it; a Connected callback (e.g. after MaintainConnection reconnects) re-opens.</item>
+    ///         <item><see cref="ProxyRetired" />: terminal; no further connection-status changes are forwarded.</item>
+    ///     </list>
+    /// </summary>
+    private int _linkState = LinkOpen;
+
     /// <summary>
     ///     Gets the native Windows Bluetooth LE device instance.
     /// </summary>
     public BluetoothLEDevice BluetoothLeDevice { get; }
+
+    /// <summary>
+    ///     Retires this proxy ahead of an explicit teardown: from now on it forwards no connection-status changes,
+    ///     including callbacks already in flight. Call before <see cref="Dispose" />.
+    /// </summary>
+    /// <returns>
+    ///     <c>true</c> if the caller must report the disconnection itself; <c>false</c> if a native Disconnected
+    ///     callback from this proxy already claimed it (that callback reports it).
+    /// </returns>
+    public bool Retire()
+    {
+        return Interlocked.Exchange(ref _linkState, ProxyRetired) == LinkOpen;
+    }
 
     /// <summary>
     ///     Releases all resources used by the <see cref="BluetoothLeDeviceProxy" /> instance.
@@ -134,9 +164,24 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="args">The event arguments (not used).</param>
     private void OnConnectionStatusChanged(BluetoothLEDevice sender, object args)
     {
+        var connectionStatus = sender.ConnectionStatus;
+        if (connectionStatus == BluetoothConnectionStatus.Disconnected)
+        {
+            // Claim this disconnection; drop the callback if it was already reported or the proxy is retired.
+            if (Interlocked.CompareExchange(ref _linkState, DisconnectionReported, LinkOpen) != LinkOpen)
+            {
+                return;
+            }
+        }
+        else if (Interlocked.CompareExchange(ref _linkState, LinkOpen, DisconnectionReported) == ProxyRetired)
+        {
+            // Connected (re-)opens the link for the next disconnection, unless the proxy is retired.
+            return;
+        }
+
         try
         {
-            BluetoothLeDeviceProxyDelegate.OnConnectionStatusChanged(sender.ConnectionStatus);
+            BluetoothLeDeviceProxyDelegate.OnConnectionStatusChanged(connectionStatus);
         }
         catch (Exception e)
         {
