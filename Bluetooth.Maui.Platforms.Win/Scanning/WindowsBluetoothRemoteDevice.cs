@@ -232,6 +232,11 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
                 // teardown does not leave it alive (and holding the connection) until the next connect.
                 GattSessionProxy.Dispose();
                 GattSessionProxy = null;
+
+                // The disposed wrapper no longer forwards status changes, so a wait that timed out or was
+                // cancelled would leave the cached status at Active. The next NativeConnectAsync would then
+                // skip waiting for its new session to become active.
+                GattSessionStatus = GattSessionStatus.Closed;
             }
         }
 

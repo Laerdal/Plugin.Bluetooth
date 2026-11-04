@@ -30,9 +30,23 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     private IBluetoothLeDeviceProxyDelegate BluetoothLeDeviceProxyDelegate { get; }
 
     /// <summary>
-    ///     Set once <see cref="Dispose" /> starts; event handlers stop forwarding to the delegate from then on.
+    ///     Guards <see cref="_disposed" /> together with each handler's entire check-and-forward step, so that once
+    ///     <see cref="Dispose" /> returns no event is being forwarded and none will be. A plain flag check is not
+    ///     enough: WinRT raises events on thread-pool threads, so a handler could pass the check, pause, and only
+    ///     forward a stale event after the device has disconnected (or even reconnected with a new proxy).
     /// </summary>
-    private volatile bool _disposed;
+    /// <remarks>
+    ///     Forwarding runs device code while holding this lock (including task continuations that resume inline),
+    ///     so <see cref="Dispose" /> waits for an in-flight forward to finish. Code running inside a forward must
+    ///     therefore not block synchronously on the thread that is disposing this proxy. The lock is re-entrant,
+    ///     so disposing from within a forward on the same thread is fine.
+    /// </remarks>
+    private readonly Lock _callbackGate = new();
+
+    /// <summary>
+    ///     Set by <see cref="Dispose" /> under <see cref="_callbackGate" />; event handlers stop forwarding from then on.
+    /// </summary>
+    private bool _disposed;
 
     /// <summary>
     ///     Gets the native Windows Bluetooth LE device instance.
@@ -44,10 +58,15 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// </summary>
     public void Dispose()
     {
-        // Set before unsubscribing: WinRT raises events on thread-pool threads, so a handler invocation
-        // already in flight can still run after the unsubscribe below. Such stale events must not reach the
-        // delegate (e.g. a late Disconnected after DisconnectAsync finished would be reported as unexpected).
-        _disposed = true;
+        // Set before unsubscribing: a handler invocation already in flight can still run after the unsubscribe
+        // below. Taking the gate waits for any forward in progress and rejects every later one, so no stale event
+        // reaches the delegate (e.g. a late Disconnected after DisconnectAsync finished, which would be reported
+        // as an unexpected disconnection or hit the next connection attempt).
+        lock (_callbackGate)
+        {
+            _disposed = true;
+        }
+
         BluetoothLeDevice.NameChanged -= OnNameChanged;
         BluetoothLeDevice.GattServicesChanged -= GattServicesChanged;
         BluetoothLeDevice.ConnectionStatusChanged -= OnConnectionStatusChanged;
@@ -126,18 +145,21 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="args">The event arguments (not used).</param>
     private void GattServicesChanged(BluetoothLEDevice sender, object args)
     {
-        if (_disposed)
+        lock (_callbackGate)
         {
-            return;
-        }
+            if (_disposed)
+            {
+                return;
+            }
 
-        try
-        {
-            BluetoothLeDeviceProxyDelegate.OnGattServicesChanged();
-        }
-        catch (Exception e)
-        {
-            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+            try
+            {
+                BluetoothLeDeviceProxyDelegate.OnGattServicesChanged();
+            }
+            catch (Exception e)
+            {
+                BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+            }
         }
     }
 
@@ -148,18 +170,21 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="args">The event arguments (not used).</param>
     private void OnConnectionStatusChanged(BluetoothLEDevice sender, object args)
     {
-        if (_disposed)
+        lock (_callbackGate)
         {
-            return;
-        }
+            if (_disposed)
+            {
+                return;
+            }
 
-        try
-        {
-            BluetoothLeDeviceProxyDelegate.OnConnectionStatusChanged(sender.ConnectionStatus);
-        }
-        catch (Exception e)
-        {
-            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+            try
+            {
+                BluetoothLeDeviceProxyDelegate.OnConnectionStatusChanged(sender.ConnectionStatus);
+            }
+            catch (Exception e)
+            {
+                BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+            }
         }
     }
 
@@ -170,18 +195,21 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="args">The event arguments (not used).</param>
     private void OnNameChanged(BluetoothLEDevice sender, object args)
     {
-        if (_disposed)
+        lock (_callbackGate)
         {
-            return;
-        }
+            if (_disposed)
+            {
+                return;
+            }
 
-        try
-        {
-            BluetoothLeDeviceProxyDelegate.OnNameChanged(sender.Name);
-        }
-        catch (Exception e)
-        {
-            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+            try
+            {
+                BluetoothLeDeviceProxyDelegate.OnNameChanged(sender.Name);
+            }
+            catch (Exception e)
+            {
+                BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+            }
         }
     }
 
@@ -192,18 +220,21 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="args">The pairing spec event arguments.</param>
     private void OnCustomPairingRequested(DeviceInformationCustomPairing sender, DevicePairingRequestedEventArgs args)
     {
-        if (_disposed)
+        lock (_callbackGate)
         {
-            return;
-        }
+            if (_disposed)
+            {
+                return;
+            }
 
-        try
-        {
-            BluetoothLeDeviceProxyDelegate.OnCustomPairingRequested(args);
-        }
-        catch (Exception e)
-        {
-            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+            try
+            {
+                BluetoothLeDeviceProxyDelegate.OnCustomPairingRequested(args);
+            }
+            catch (Exception e)
+            {
+                BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+            }
         }
     }
 
@@ -214,18 +245,21 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
     /// <param name="args">The access change event arguments.</param>
     private void OnAccessChanged(DeviceAccessInformation sender, DeviceAccessChangedEventArgs args)
     {
-        if (_disposed)
+        lock (_callbackGate)
         {
-            return;
-        }
+            if (_disposed)
+            {
+                return;
+            }
 
-        try
-        {
-            BluetoothLeDeviceProxyDelegate.OnAccessChanged(args.Id, args.Status);
-        }
-        catch (Exception e)
-        {
-            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+            try
+            {
+                BluetoothLeDeviceProxyDelegate.OnAccessChanged(args.Id, args.Status);
+            }
+            catch (Exception e)
+            {
+                BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+            }
         }
     }
 }
