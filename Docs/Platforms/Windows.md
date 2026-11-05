@@ -165,6 +165,16 @@ await device.ConnectAsync(connectionOptions);
 - `GattSession` keeps connection alive
 - Auto-reconnect not built-in (implement manually if needed)
 
+**Disconnection Process:**
+1. Release the explored services and their characteristics (a listening characteristic stops listening)
+2. Dispose the `BluetoothLEDevice`, set `MaintainConnection = false` and wait for the `GattSession` to report `Closed`
+3. Complete `DisconnectAsync`
+
+- Windows keeps the GATT session open while any native service object is alive, which is why step 1 comes first.
+- Windows reports the session as closed about 3 seconds after step 2, so `DisconnectAsync` takes about 3 seconds.
+- `DisconnectAsync` called while `ConnectAsync` is still running stops the connect and waits for it to unwind. The connect may then
+  return normally or fail with `DeviceFailedToConnectException`; the disconnect completes either way.
+
 #### 3. GATT Operations
 All standard GATT operations fully supported:
 
