@@ -226,6 +226,14 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
                 GattSessionProxy = null;
             }
 
+            // On Windows, releasing every reference to the device *is* the disconnection, and the disposed proxy
+            // can no longer raise ConnectionStatusChanged, so OnDisconnect() would never be called. Complete a
+            // pending DisconnectAsync here instead. This is a no-op when nothing is pending (failed-connect
+            // cleanup) or when a native Disconnected callback already completed it, and it never reports an
+            // unexpected disconnection.
+            BluetoothConnectionStatus = BluetoothConnectionStatus.Disconnected;
+            TryCompleteDisconnection();
+
             Logger?.LogDisconnected(Id);
         }
         catch (Exception e)

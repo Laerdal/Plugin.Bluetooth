@@ -298,6 +298,29 @@ public abstract partial class BaseBluetoothRemoteDevice
         OnUnexpectedDisconnection(e);
     }
 
+    /// <summary>
+    ///     Completes a pending explicit <see cref="DisconnectAsync" /> without ever treating the call as an
+    ///     unexpected disconnection. Intended for platforms where releasing the native resources in
+    ///     <see cref="NativeDisconnectAsync" /> is itself the disconnection and no native callback follows
+    ///     (e.g. Windows, where the disposed device no longer raises its connection-status event).
+    /// </summary>
+    /// <returns>
+    ///     <c>true</c> if this call completed the pending disconnection; <c>false</c> if none was pending
+    ///     (e.g. cleanup after a failed connection attempt) or a native callback had already completed it.
+    /// </returns>
+    protected bool TryCompleteDisconnection()
+    {
+        NativeRefreshIsConnected();
+
+        var success = DisconnectionTcs?.TrySetResult() ?? false;
+        if (success)
+        {
+            LogDeviceDisconnected(Id);
+        }
+
+        return success;
+    }
+
     /// <inheritdoc />
     public async ValueTask DisconnectIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
