@@ -71,7 +71,7 @@ and additive to the Windows concrete types — no changes to `IBluetoothAdvertis
 
 ### Behavior
 
-**Both modes share one rule**: a device is never created from a SCAN_RSP alone. A scan-response
+**In merge mode a device is never created from a SCAN_RSP alone.** A scan-response
 PDU is only ever dispatched once a device already exists in the scanner's device list for that
 `BluetoothAddress` (same address-lookup pattern PR #47 already established in
 `WindowsBluetoothScanner.OnAdvertisementReceived`, resolved through `UnderlyingPlatformDevice`
@@ -80,18 +80,21 @@ already has to unwrap `DeviceWrapper`-substituted subtypes). If no device exists
 is dropped silently, exactly as it is today.
 
 **`MergeScanResponses = false` (default)**:
-- An ADV PDU is dispatched immediately through the existing path — no buffering, no added
-  latency, no side state. This may create the device if it's the first sighting.
-- A SCAN_RSP PDU is looked up against the device list. If the device exists, its
-  `LastScanResponse` is set and `ScanResponseReceived` fires on the device. The primary
-  `AdvertisementReceived`/`LastAdvertisement`/`ManufacturerData` pipeline is untouched — Windows
-  keeps today's ADV-only `ManufacturerData` on that side.
-- Chosen over defaulting to merge-on because it doesn't need a pending-advertisement side buffer:
-  it stays entirely inside the existing "advertisement → device creation/update" flow, using the
-  device list itself as the only piece of state to correlate against. Trade-off (deliberately
-  accepted): a consumer reading `IBluetoothAdvertisement.ManufacturerData` in a platform-agnostic
-  way gets less on Windows by default than on Android/iOS, unless it also branches on
-  `WindowsBluetoothRemoteDevice.LastScanResponse`.
+- Every PDU, ADV and SCAN_RSP alike, is dispatched immediately through the existing path — no
+  buffering, no added latency, no side state — exactly as before this option existed. That
+  includes creating the device from whichever PDU is seen first.
+- A SCAN_RSP PDU additionally raises `ScanResponseReceived` on its device and sets its
+  `LastScanResponse`, once the device exists (it does by then unless an advertisement filter
+  dropped the PDU), so the raw scan response is available without merging.
+- Chosen over defaulting to merge-on because it doesn't need a pending-advertisement side buffer
+  and changes nothing for existing consumers. Trade-off (deliberately accepted): a consumer
+  reading `IBluetoothAdvertisement` in a platform-agnostic way still sees the ADV and the SCAN_RSP
+  as two alternating advertisements, unless it turns merging on.
+- **Revised after a hardware check (Windows 11, 2026-11-05).** The first version of this ADR sent
+  a SCAN_RSP only to `ScanResponseReceived` and kept it out of the normal pipeline. Against real
+  peripherals that dropped data that exists only in a scan response: a TV's name, and the battery
+  and version `ServiceData` of a peripheral that sends them only in its scan response, both vanished
+  from `AdvertisementReceived` and `LastAdvertisement`. The default therefore keeps today's behavior.
 
 **`MergeScanResponses = true`**:
 - Every ADV PDU is held in a short-lived per-address pending buffer instead of dispatched

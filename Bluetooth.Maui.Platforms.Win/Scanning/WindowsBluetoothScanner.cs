@@ -77,13 +77,15 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
 
         if (!_mergeScanResponses)
         {
+            // Every PDU, scan responses included, goes through the normal pipeline, as it always has: data that only a scan
+            // response carries (a name, service data) would otherwise never reach AdvertisementReceived or LastAdvertisement.
+            DispatchAdvertisement(new WindowsBluetoothAdvertisement(argsAdvertisement));
+
             if (isScanResponse)
             {
                 DispatchScanResponseToExistingDevice(argsAdvertisement);
-                return;
             }
 
-            DispatchAdvertisement(new WindowsBluetoothAdvertisement(argsAdvertisement));
             return;
         }
 

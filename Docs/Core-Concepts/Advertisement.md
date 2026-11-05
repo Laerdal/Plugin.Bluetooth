@@ -497,11 +497,10 @@ await scanner.StartScanningAsync(new ScanningOptions
 });
 ```
 
-- **`MergeScanResponses = false` (default)**: advertisements dispatch immediately, exactly as
-  today — no added latency, no buffering. A scan response is instead delivered separately via
-  `WindowsBluetoothRemoteDevice.ScanResponseReceived` / `.LastScanResponse`, once the device
-  already exists in the scanner's device list. A device is **never** created from a scan response
-  alone.
+- **`MergeScanResponses = false` (default)**: every PDU dispatches immediately as its own
+  advertisement, exactly as today — no added latency, no buffering — so data that only a scan
+  response carries (a name, service data) still reaches `AdvertisementReceived`. A scan response
+  additionally raises `WindowsBluetoothRemoteDevice.ScanResponseReceived` and sets `.LastScanResponse`.
 - **`MergeScanResponses = true`**: each ADV PDU is held for up to `ScanResponseMergeWindow` waiting
   for its matching SCAN_RSP before dispatching a single, merged `IBluetoothAdvertisement` — matching
   Android/iOS's `ManufacturerData` byte layout. If no scan response arrives before the window
