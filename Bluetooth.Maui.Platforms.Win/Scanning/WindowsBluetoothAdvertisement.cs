@@ -66,7 +66,7 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         TransmitPowerLevelInDBm = ExtractTransmitPowerLevel(primaryArgs);
         BluetoothAddress = ConvertNumericBleAddressToHexBleAddress(primaryArgs.BluetoothAddress);
         ManufacturerData = MergeManufacturerData(primaryArgs, scanResponseArgs);
-        ServiceData = ExtractServiceData(primaryArgs);
+        ServiceData = MergeServiceData(primaryArgs, scanResponseArgs);
         DateReceived = DateTimeOffset.UtcNow;
     }
 
@@ -192,6 +192,38 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         }
 
         return serviceData;
+    }
+
+    /// <summary>
+    ///     Merges the Service Data of a primary ADV PDU and its correlated SCAN_RSP PDU into one dictionary. A UUID that is in both
+    ///     keeps the scan response's data, the same "last occurrence wins" rule as within a single advertisement.
+    /// </summary>
+    private static IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> MergeServiceData(BluetoothLEAdvertisementReceivedEventArgs primaryArgs, BluetoothLEAdvertisementReceivedEventArgs? scanResponseArgs)
+    {
+        var primary = ExtractServiceData(primaryArgs);
+        if (scanResponseArgs == null)
+        {
+            return primary;
+        }
+
+        var scanResponse = ExtractServiceData(scanResponseArgs);
+        if (scanResponse.Count == 0)
+        {
+            return primary;
+        }
+
+        if (primary.Count == 0)
+        {
+            return scanResponse;
+        }
+
+        var merged = new Dictionary<Guid, ReadOnlyMemory<byte>>(primary);
+        foreach (var (uuid, data) in scanResponse)
+        {
+            merged[uuid] = data;
+        }
+
+        return merged;
     }
 
     private static byte[]? TryGetSectionData(BluetoothLEAdvertisementReceivedEventArgs args, byte recType)

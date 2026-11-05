@@ -208,7 +208,7 @@ if (advertisement.ServiceData.TryGetValue(batteryServiceUuid, out ReadOnlyMemory
 
 **Platform differences:**
 - **Android and iOS** report one advertisement per device in which the platform has already merged the scan response, so service data in a scan response is part of it.
-- **Windows** delivers a scan response as an advertisement of its own. Its service data is in that advertisement, not in the one that carries the manufacturer data, so read `ServiceData` from every advertisement you receive and not only from the first.
+- **Windows** delivers a scan response as an advertisement of its own. Its service data is in that advertisement, not in the one that carries the manufacturer data, so read `ServiceData` from every advertisement you receive and not only from the first. With `ScanningOptions.Windows.MergeScanResponses` enabled (see [Windows-Specific: Scan Responses](#windows-specific-scan-responses)) the scan response's service data is part of the merged advertisement.
 
 ## Common Patterns
 

@@ -106,7 +106,11 @@ is dropped silently, exactly as it is today.
   `IsConnectable`, `TransmitPowerLevelInDBm`) take the ADV PDU's values, falling back to the
   SCAN_RSP's only if the ADV's were empty/default — the firmware doc states advertising data
   carries manufacturing data + name, and scan response carries manufacturing data + UUID only, so
-  ADV is expected to be authoritative for those fields.
+  ADV is expected to be authoritative for those fields. `ServiceData` (added to
+  `IBluetoothAdvertisement` after this ADR was first written) is the union of both PDUs' entries; a
+  UUID present in both keeps the SCAN_RSP's data, the same last-occurrence-wins rule as within one
+  advertisement. This is the field that matters most in practice: a peripheral can send its name
+  and manufacturer data in the ADV and its battery and version service data only in the SCAN_RSP.
 - On timeout with no SCAN_RSP received (e.g. a non-scannable device), the advertisement fires
   **as-is**, ADV-only — it is never held indefinitely or dropped.
 - If a SCAN_RSP genuinely arrived (not just a timeout), `ScanResponseReceived`/`LastScanResponse`
