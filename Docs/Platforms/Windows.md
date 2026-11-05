@@ -196,6 +196,15 @@ await characteristic.StartListeningAsync(); // Notifications
 - Notifications and indications
 - Reliable write (if peripheral supports)
 
+**Notifications:**
+- Some peripherals refuse to let a client read the Client Characteristic Configuration Descriptor (ATT error 0x02, Read Not
+  Permitted) although writing it works. `IsListening` then reports what this client last wrote, so `StartListeningAsync` and
+  `StopListeningAsync` work on them.
+- Service Changed (`0x2A05`) reports `CanListen = false`: Windows subscribes to it by itself and refuses (`AccessDenied`) any change
+  an app makes to that subscription.
+- A failed GATT operation reports the device's ATT error code in the exception message, for example
+  `protocol error code: 0x0F (Insufficient Encryption)`.
+
 **Cache Modes:**
 ```csharp
 // Windows supports cache modes for GATT operations

@@ -165,12 +165,22 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
 
     #region Listen (Notify/Indicate)
 
+    // What this client last wrote to the CCCD. A peripheral that does not let a client read its CCCD cannot say better.
+    private bool _lastWrittenIsListening;
+
     /// <inheritdoc />
     protected async override ValueTask NativeReadIsListeningAsync()
     {
         try
         {
             var result = await NativeCharacteristicProxy.GattCharacteristic.ReadClientCharacteristicConfigurationDescriptorAsync().AsTask().ConfigureAwait(false);
+
+            if (result.Status == GattCommunicationStatus.ProtocolError && result.ProtocolError == GattProtocolError.ReadNotPermitted)
+            {
+                // The peripheral refuses to let a client read its CCCD (the Laerdal devices do), although writing it works.
+                OnReadIsListeningSucceeded(_lastWrittenIsListening);
+                return;
+            }
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status, result.ProtocolError);
 
@@ -218,6 +228,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
 
             WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status, result.ProtocolError);
 
+            _lastWrittenIsListening = shouldBeListening;
             OnWriteIsListeningSucceeded();
         }
         catch (Exception ex)
@@ -230,6 +241,13 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// <inheritdoc />
     protected override bool NativeCanListen()
     {
+        // Windows subscribes to Service Changed by itself and refuses (AccessDenied) any attempt by an app to change that
+        // subscription, so an app cannot listen to it.
+        if (Id == Core.Scanning.Profiles.BluetoothServiceDefinitions.FromShortId(0x2A05)) // Service Changed
+        {
+            return false;
+        }
+
         var properties = NativeCharacteristicProxy.GattCharacteristic.CharacteristicProperties;
         return properties.HasFlag(GattCharacteristicProperties.Notify) || properties.HasFlag(GattCharacteristicProperties.Indicate);
     }
