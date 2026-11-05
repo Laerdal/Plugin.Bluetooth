@@ -154,9 +154,10 @@ scanner.DeviceListChanged += (sender, args) =>
 - `ScanMode.LowPower` switches the native watcher to **passive** scanning — lowest power, but scan
   responses are never solicited at all (see below). Every other `ScanMode` value scans **active**,
   matching this plugin's existing default.
-- `ServiceUuids` scan filtering is currently performed **in software** after each advertisement is
-  received, not via the native `BluetoothLEAdvertisementWatcher.AdvertisementFilter` — tracked as a
-  follow-up (SC-3208).
+- `ScanningOptions.ServiceUuids` is **not applied on Windows**: neither the Windows scanner nor the shared
+  scanning code reads it, and the native `BluetoothLEAdvertisementWatcher.AdvertisementFilter` is not used
+  either. To filter by service, set `IBluetoothScanner.AdvertisementFilter`, which is invoked for every
+  advertisement, for example `scanner.AdvertisementFilter = ad => ad.ServicesGuids.Contains(serviceUuid);`.
 
 #### 2. Connection
 ```csharp
@@ -377,8 +378,14 @@ response from the peripheral at all — with either set, neither merging nor
 ```csharp
 scanner.DeviceListChanged += (sender, args) =>
 {
-    foreach (var device in scanner.Devices.OfType<WindowsBluetoothRemoteDevice>())
+    // Only the devices that were just added: subscribing every known device again would add duplicate handlers.
+    foreach (var added in args.AddedItems ?? [])
     {
+        if (added.UnderlyingPlatformDevice is not WindowsBluetoothRemoteDevice device)
+        {
+            continue;
+        }
+
         device.ScanResponseReceived += (s, scanResponseArgs) =>
         {
             Console.WriteLine($"Scan response from {device.Id}: "

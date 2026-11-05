@@ -8,9 +8,10 @@ public partial class WindowsBluetoothRemoteDevice
     /// </summary>
     /// <remarks>
     ///     Populated once a SCAN_RSP PDU has been correlated to this already-known device by
-    ///     <see cref="Bluetooth.Maui.Platforms.Win.Scanning.WindowsBluetoothScanner" /> — a device is
-    ///     never created from a scan response alone. Fires regardless of whether
-    ///     <c>WindowsScanningOptions.MergeScanResponses</c> is enabled; see ADR 0003
+    ///     <see cref="Bluetooth.Maui.Platforms.Win.Scanning.WindowsBluetoothScanner" />. With
+    ///     <c>WindowsScanningOptions.MergeScanResponses</c> enabled a device is never created from a scan
+    ///     response alone; with the default, every PDU goes through the normal pipeline first, so a device
+    ///     can be created from whichever PDU is seen first. Set in both modes; see ADR 0003
     ///     (<c>Docs/Architecture/ADR/0003-windows-scan-response-handling.md</c>).
     /// </remarks>
     public WindowsBluetoothAdvertisement? LastScanResponse
