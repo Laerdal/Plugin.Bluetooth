@@ -152,8 +152,9 @@ scanner.DeviceListChanged += (sender, args) =>
 - Advertisement data parsing (LocalName, ServiceUUIDs, ManufacturerData, ServiceData)
 - Lower power consumption than Android in most cases
 - `ScanMode.LowPower` switches the native watcher to **passive** scanning — lowest power, but scan
-  responses are never solicited at all (see below). Every other `ScanMode` value scans **active**,
-  matching this plugin's existing default.
+  responses are never solicited at all (see below) — unless `WindowsScanningOptions.ScanningMode`
+  is set, which takes precedence. Every other `ScanMode` value scans **active**, matching this
+  plugin's existing default.
 - `ScanningOptions.ServiceUuids` is **not applied on Windows**: neither the Windows scanner nor the shared
   scanning code reads it, and the native `BluetoothLEAdvertisementWatcher.AdvertisementFilter` is not used
   either. To filter by service, set `IBluetoothScanner.AdvertisementFilter`, which is invoked for every
@@ -389,10 +390,12 @@ await scanner.StartScanningAsync(new ScanningOptions
 SCAN_RSP PDU for an address with no previously-seen ADV is silently dropped. With the default, every
 PDU is dispatched as before, so a device can be created from whichever PDU is seen first.
 
-**Requires active scanning.** Passive scanning (`WindowsScanningOptions.ScanningMode = Passive`, or
-the cross-platform `ScanningOptions.ScanMode = BluetoothScanMode.LowPower`) never solicits a scan
-response from the peripheral at all — with either set, neither merging nor
-`ScanResponseReceived` will ever have anything to report, regardless of `MergeScanResponses`.
+**Requires active scanning.** Passive scanning never solicits a scan response from the peripheral
+at all, so then neither merging nor `ScanResponseReceived` will ever have anything to report,
+regardless of `MergeScanResponses`. The scanning mode is `WindowsScanningOptions.ScanningMode` when
+it is set (`Passive` or `Active`). When it is `null`, the cross-platform `ScanningOptions.ScanMode`
+decides: `BluetoothScanMode.LowPower` scans passively, every other value actively. So an explicit
+`ScanningMode = Active` keeps scan responses coming even with `LowPower`.
 
 ```csharp
 scanner.DeviceListChanged += (sender, args) =>

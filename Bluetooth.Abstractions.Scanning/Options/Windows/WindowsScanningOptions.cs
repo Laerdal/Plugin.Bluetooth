@@ -93,11 +93,12 @@ public record WindowsScanningOptions
 
     /// <summary>
     ///     Gets the Bluetooth LE scanning mode (active vs. passive). When <c>null</c> (default), the
-    ///     watcher keeps scanning actively, matching this plugin's existing behavior.
+    ///     cross-platform <see cref="ScanningOptions.ScanMode" /> decides: <c>LowPower</c> scans passively,
+    ///     every other value actively, matching this plugin's existing behavior.
     /// </summary>
     /// <remarks>
     ///     Takes precedence over the cross-platform <see cref="ScanningOptions.ScanMode" /> mapping
-    ///     when set. Passive scanning never solicits scan responses — incompatible with
+    ///     when set, so an explicit <c>Active</c> keeps scan responses coming even with <c>LowPower</c>. Passive scanning never solicits scan responses — incompatible with
     ///     <see cref="MergeScanResponses" /> and with ever observing
     ///     <c>WindowsBluetoothRemoteDevice.ScanResponseReceived</c>.
     /// </remarks>
