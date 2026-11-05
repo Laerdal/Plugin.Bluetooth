@@ -8,6 +8,7 @@ Comprehensive guide for Plugin.Bluetooth on Windows platform using Windows Runti
 - [WinRT Bluetooth Architecture](#winrt-bluetooth-architecture)
 - [Configuration](#configuration)
 - [Feature Support](#feature-support)
+- [Scan-Response Handling](#scan-response-handling)
 - [Platform Limitations](#platform-limitations)
 - [Best Practices](#best-practices)
 - [Troubleshooting](#troubleshooting)
@@ -120,8 +121,17 @@ No programmatic permission request needed (unlike Android/iOS).
 ```csharp
 var options = new ScanningOptions
 {
-    // Windows scans continuously when started
-    // No platform-specific options for Windows scanning
+    ScanMode = BluetoothScanMode.Balanced,   // maps to active scanning (see below)
+    RssiThreshold = -70,                     // maps to the native in-range RSSI threshold
+    EnableExtendedAdvertising = false,       // maps to AllowExtendedAdvertisements (Windows 10 2004+)
+    Windows = new WindowsScanningOptions
+    {
+        // See "Scan-Response Handling" below for MergeScanResponses/ScanResponseMergeWindow.
+        // Knobs with no cross-platform equivalent, forwarded straight to the native filter:
+        SignalStrengthOutOfRangeThresholdInDBm = -85,
+        SignalStrengthSamplingInterval = TimeSpan.FromSeconds(1),
+        SignalStrengthOutOfRangeTimeout = TimeSpan.FromSeconds(5)
+    }
 };
 
 await scanner.StartScanningAsync(options);
@@ -141,6 +151,14 @@ scanner.DeviceListChanged += (sender, args) =>
 - RSSI available during scan
 - Advertisement data parsing (LocalName, ServiceUUIDs, ManufacturerData, ServiceData)
 - Lower power consumption than Android in most cases
+- `ScanMode.LowPower` switches the native watcher to **passive** scanning — lowest power, but scan
+  responses are never solicited at all (see below) — unless `WindowsScanningOptions.ScanningMode`
+  is set, which takes precedence. Every other `ScanMode` value scans **active**, matching this
+  plugin's existing default.
+- `ScanningOptions.ServiceUuids` is **not applied on Windows**: neither the Windows scanner nor the shared
+  scanning code reads it, and the native `BluetoothLEAdvertisementWatcher.AdvertisementFilter` is not used
+  either. To filter by service, set `IBluetoothScanner.AdvertisementFilter`, which is invoked for every
+  advertisement, for example `scanner.AdvertisementFilter = ad => ad.ServicesGuids.Contains(serviceUuid);`.
 
 #### 2. Connection
 ```csharp
@@ -339,6 +357,65 @@ var mtu = device.Mtu;
 ```
 
 **Reason**: WinRT only provides RSSI during advertisement scanning, not from connected devices.
+
+## Scan-Response Handling
+
+Android and iOS deliver one `IBluetoothAdvertisement` per advertising interval, with the OS/library
+already merging the primary advertisement (ADV) and scan-response (SCAN_RSP) payloads into a single
+`ManufacturerData` byte array before this plugin ever sees it. Windows is the exception:
+`BluetoothLEAdvertisementWatcher.Received` fires once **per PDU**, so a device sending both a
+scannable ADV and a SCAN_RSP produces two separate native events instead of one merged snapshot —
+each carrying only what that specific PDU contains. See ADR 0003
+(`Docs/Architecture/ADR/0003-windows-scan-response-handling.md`) for the full background.
+
+`WindowsScanningOptions.MergeScanResponses` controls how this plugin bridges that gap:
+
+```csharp
+await scanner.StartScanningAsync(new ScanningOptions
+{
+    Windows = new WindowsScanningOptions
+    {
+        MergeScanResponses = true,                                // default: false
+        ScanResponseMergeWindow = TimeSpan.FromMilliseconds(500)   // default; tune per hardware
+    }
+});
+```
+
+| Mode | Behavior |
+| --- | --- |
+| `MergeScanResponses = false` (default) | Every PDU, advertisements and scan responses alike, dispatches immediately through the normal `AdvertisementReceived` path, exactly as before this option existed — no buffering, no added latency. A scan response additionally raises `WindowsBluetoothRemoteDevice.ScanResponseReceived` and sets `.LastScanResponse`. |
+| `MergeScanResponses = true` | Each ADV PDU is buffered for up to `ScanResponseMergeWindow` waiting for its matching SCAN_RSP. Once resolved (scan response arrived, or the window elapsed), it dispatches through the normal `AdvertisementReceived` path — merged (manufacturer data and service data) if a scan response arrived. If none did, it is merged with the last scan response received from that address when that one is younger than `ScanResponseMaxAge` (default 10 s, `TimeSpan.Zero` to turn off), ADV-only otherwise. `ScanResponseReceived`/`LastScanResponse` still fire afterward whenever a scan response was actually received, in both modes. |
+
+**With `MergeScanResponses = true`, a device is never created from a scan response alone** — a
+SCAN_RSP PDU for an address with no previously-seen ADV is silently dropped. With the default, every
+PDU is dispatched as before, so a device can be created from whichever PDU is seen first.
+
+**Requires active scanning.** Passive scanning never solicits a scan response from the peripheral
+at all, so then neither merging nor `ScanResponseReceived` will ever have anything to report,
+regardless of `MergeScanResponses`. The scanning mode is `WindowsScanningOptions.ScanningMode` when
+it is set (`Passive` or `Active`). When it is `null`, the cross-platform `ScanningOptions.ScanMode`
+decides: `BluetoothScanMode.LowPower` scans passively, every other value actively. So an explicit
+`ScanningMode = Active` keeps scan responses coming even with `LowPower`.
+
+```csharp
+scanner.DeviceListChanged += (sender, args) =>
+{
+    // Only the devices that were just added: subscribing every known device again would add duplicate handlers.
+    foreach (var added in args.AddedItems ?? [])
+    {
+        if (added.UnderlyingPlatformDevice is not WindowsBluetoothRemoteDevice device)
+        {
+            continue;
+        }
+
+        device.ScanResponseReceived += (s, scanResponseArgs) =>
+        {
+            Console.WriteLine($"Scan response from {device.Id}: "
+                + $"{BitConverter.ToString(scanResponseArgs.Advertisement.ManufacturerData.ToArray())}");
+        };
+    }
+};
+```
 
 ## Platform Limitations
 

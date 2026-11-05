@@ -21,14 +21,60 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
 
         DeviceName = ExtractDeviceName(args);
         ServicesGuids = args.Advertisement.ServiceUuids?.ToArray() ?? [];
-        IsConnectable = args.AdvertisementType is BluetoothLEAdvertisementType.ConnectableDirected
-            or BluetoothLEAdvertisementType.ConnectableUndirected;
+        IsConnectable = ExtractIsConnectable(args);
         SignalStrengthInDBm = args.RawSignalStrengthInDBm;
         TransmitPowerLevelInDBm = ExtractTransmitPowerLevel(args);
         BluetoothAddress = ConvertNumericBleAddressToHexBleAddress(args.BluetoothAddress);
         ManufacturerData = ExtractManufacturerData(args);
         ServiceData = ExtractServiceData(args);
         DateReceived = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="WindowsBluetoothAdvertisement" /> struct by
+    ///     merging a primary ADV PDU with its correlated SCAN_RSP PDU, when one was received in time.
+    /// </summary>
+    /// <param name="primaryArgs">The primary (ADV) advertisement event arguments.</param>
+    /// <param name="scanResponseArgs">
+    ///     The correlated scan-response event arguments, or <c>null</c> if none arrived before the
+    ///     merge window elapsed — in which case this behaves identically to the single-argument
+    ///     constructor.
+    /// </param>
+    /// <remarks>
+    ///     Used only when <c>WindowsScanningOptions.MergeScanResponses</c> is enabled. See ADR 0003
+    ///     (<c>Docs/Architecture/ADR/0003-windows-scan-response-handling.md</c>) for the merge
+    ///     rationale and byte-layout algorithm.
+    /// </remarks>
+    public WindowsBluetoothAdvertisement(BluetoothLEAdvertisementReceivedEventArgs primaryArgs, BluetoothLEAdvertisementReceivedEventArgs? scanResponseArgs)
+    {
+        ArgumentNullException.ThrowIfNull(primaryArgs);
+
+        var primaryName = ExtractDeviceName(primaryArgs);
+        DeviceName = !string.IsNullOrWhiteSpace(primaryName)
+            ? primaryName
+            : scanResponseArgs != null ? ExtractDeviceName(scanResponseArgs) : string.Empty;
+
+        // Both PDUs can list service UUIDs, and a filter must match whichever of them carried the one it looks for.
+        ServicesGuids = (primaryArgs.Advertisement.ServiceUuids ?? Enumerable.Empty<Guid>())
+            .Concat(scanResponseArgs?.Advertisement.ServiceUuids ?? Enumerable.Empty<Guid>())
+            .Distinct()
+            .ToArray();
+
+        IsConnectable = ExtractIsConnectable(primaryArgs);
+        SignalStrengthInDBm = primaryArgs.RawSignalStrengthInDBm;
+
+        // The advertisement's own value when it has one, the scan response's otherwise. The presence of the section is what
+        // counts: 0 dBm is a valid level and must not be mistaken for a missing one.
+        TransmitPowerLevelInDBm = TryGetTransmitPowerLevel(primaryArgs)
+                                  ?? (scanResponseArgs != null ? TryGetTransmitPowerLevel(scanResponseArgs) : null)
+                                  ?? 0;
+        BluetoothAddress = ConvertNumericBleAddressToHexBleAddress(primaryArgs.BluetoothAddress);
+        ManufacturerData = MergeManufacturerData(primaryArgs, scanResponseArgs);
+        ServiceData = MergeServiceData(primaryArgs, scanResponseArgs);
+
+        // When the radio heard the advertisement, not when the merge was delivered: the device's last-seen time and its advertising
+        // interval are derived from this, and the merge window and any queueing would otherwise be added to them.
+        DateReceived = primaryArgs.Timestamp;
     }
 
     #region IBluetoothAdvertisement Members
@@ -101,8 +147,29 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         return (sbyte) firstByteOrDefaultToZero;
     }
 
+    private static bool ExtractIsConnectable(BluetoothLEAdvertisementReceivedEventArgs args)
+    {
+        // The native flag also covers a connectable extended advertisement, whose advertisement type is Extended. Windows before
+        // build 19041 has no such flag and only the legacy types.
+        return OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041)
+            ? args.IsConnectable
+            : args.AdvertisementType is BluetoothLEAdvertisementType.ConnectableDirected or BluetoothLEAdvertisementType.ConnectableUndirected;
+    }
+
+    private static int? TryGetTransmitPowerLevel(BluetoothLEAdvertisementReceivedEventArgs args)
+    {
+        var data = TryGetSectionData(args, BluetoothLEAdvertisementDataTypes.TxPowerLevel);
+        return data is { Length: > 0 } ? (sbyte) data[0] : null;
+    }
+
     private static ReadOnlyMemory<byte> ExtractManufacturerData(BluetoothLEAdvertisementReceivedEventArgs args)
     {
+        // Extended advertisements (received only when they are enabled) carry the section like a legacy advertisement or scan response.
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041) && args.AdvertisementType == BluetoothLEAdvertisementType.Extended)
+        {
+            return TryGetSectionData(args, BluetoothLEAdvertisementDataTypes.ManufacturerSpecificData) ?? ReadOnlyMemory<byte>.Empty;
+        }
+
         switch (args.AdvertisementType)
         {
             case BluetoothLEAdvertisementType.ConnectableUndirected:
@@ -155,6 +222,38 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         return serviceData;
     }
 
+    /// <summary>
+    ///     Merges the Service Data of a primary ADV PDU and its correlated SCAN_RSP PDU into one dictionary. A UUID that is in both
+    ///     keeps the scan response's data, the same "last occurrence wins" rule as within a single advertisement.
+    /// </summary>
+    private static IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> MergeServiceData(BluetoothLEAdvertisementReceivedEventArgs primaryArgs, BluetoothLEAdvertisementReceivedEventArgs? scanResponseArgs)
+    {
+        var primary = ExtractServiceData(primaryArgs);
+        if (scanResponseArgs == null)
+        {
+            return primary;
+        }
+
+        var scanResponse = ExtractServiceData(scanResponseArgs);
+        if (scanResponse.Count == 0)
+        {
+            return primary;
+        }
+
+        if (primary.Count == 0)
+        {
+            return scanResponse;
+        }
+
+        var merged = new Dictionary<Guid, ReadOnlyMemory<byte>>(primary);
+        foreach (var (uuid, data) in scanResponse)
+        {
+            merged[uuid] = data;
+        }
+
+        return merged;
+    }
+
     private static byte[]? TryGetSectionData(BluetoothLEAdvertisementReceivedEventArgs args, byte recType)
     {
         var section = args.Advertisement.DataSections?.FirstOrDefault(x => x.DataType == recType);
@@ -162,7 +261,55 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         return data;
     }
 
-    private static string ConvertNumericBleAddressToHexBleAddress(ulong bluetoothAddress)
+    /// <summary>
+    ///     Merges the manufacturer-specific-data sections of a primary ADV PDU and its correlated
+    ///     SCAN_RSP PDU, producing the same byte layout Android/iOS already deliver:
+    ///     <c>[CompanyId(2)] + [ADV payload] + [SCAN_RSP payload]</c>. The scan response's own
+    ///     redundant 2-byte company-id prefix is stripped before appending when it is the same company id
+    ///     as the advertisement's; a different company id is kept whole.
+    /// </summary>
+    private static ReadOnlyMemory<byte> MergeManufacturerData(BluetoothLEAdvertisementReceivedEventArgs primaryArgs, BluetoothLEAdvertisementReceivedEventArgs? scanResponseArgs)
+    {
+        var primarySection = TryGetSectionData(primaryArgs, BluetoothLEAdvertisementDataTypes.ManufacturerSpecificData);
+
+        if (scanResponseArgs == null)
+        {
+            return primarySection ?? ReadOnlyMemory<byte>.Empty;
+        }
+
+        var scanResponseSection = TryGetSectionData(scanResponseArgs, BluetoothLEAdvertisementDataTypes.ManufacturerSpecificData);
+        if (scanResponseSection == null)
+        {
+            return primarySection ?? ReadOnlyMemory<byte>.Empty;
+        }
+
+        if (primarySection == null)
+        {
+            // Nothing to prefix - the scan response's own [CompanyId][payload] stands alone.
+            return scanResponseSection;
+        }
+
+        // The scan response repeats the company id of the advertisement's section, which is dropped. A different company id is
+        // another manufacturer's data and is kept whole: stripping it would file that payload under the first company.
+        var sameCompanyId = primarySection.Length >= 2 && scanResponseSection.Length >= 2
+                                                       && primarySection[0] == scanResponseSection[0]
+                                                       && primarySection[1] == scanResponseSection[1];
+        var scanResponsePart = sameCompanyId
+            ? scanResponseSection.Length > 2 ? scanResponseSection[2..] : Array.Empty<byte>()
+            : scanResponseSection;
+        var merged = new byte[primarySection.Length + scanResponsePart.Length];
+        primarySection.CopyTo(merged, 0);
+        scanResponsePart.CopyTo(merged, primarySection.Length);
+        return merged;
+    }
+
+    /// <summary>
+    ///     Converts a numeric Bluetooth LE address into its colon-separated hex string form. Exposed
+    ///     internally so <see cref="Bluetooth.Maui.Platforms.Win.Scanning.WindowsBluetoothScanner" />
+    ///     can key its pending-advertisement merge buffer without constructing a full
+    ///     <see cref="WindowsBluetoothAdvertisement" /> first.
+    /// </summary>
+    internal static string ConvertNumericBleAddressToHexBleAddress(ulong bluetoothAddress)
     {
         // Convert ulong address to hex string format (e.g., "00:11:22:33:44:55")
         var bytes = BitConverter.GetBytes(bluetoothAddress);

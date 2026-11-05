@@ -208,7 +208,7 @@ if (advertisement.ServiceData.TryGetValue(batteryServiceUuid, out ReadOnlyMemory
 
 **Platform differences:**
 - **Android and iOS** report one advertisement per device in which the platform has already merged the scan response, so service data in a scan response is part of it.
-- **Windows** delivers a scan response as an advertisement of its own. Its service data is in that advertisement, not in the one that carries the manufacturer data, so read `ServiceData` from every advertisement you receive and not only from the first.
+- **Windows** delivers a scan response as an advertisement of its own. Its service data is in that advertisement, not in the one that carries the manufacturer data, so read `ServiceData` from every advertisement you receive and not only from the first. With `ScanningOptions.Windows.MergeScanResponses` enabled (see [Windows-Specific: Scan Responses](#windows-specific-scan-responses)) the scan response's service data is part of the merged advertisement.
 
 ## Common Patterns
 
@@ -473,6 +473,46 @@ scanner.AdvertisementReceived += (s, args) =>
 - Not all devices provide manufacturer data
 - Check if device actually sends this information
 - Manufacturer data is optional in BLE spec
+- **Windows only**: some devices send manufacturer data in the scan-response PDU rather than the
+  primary advertisement — see [Windows-Specific: Scan Responses](#windows-specific-scan-responses)
+  below, since by default Windows does not merge the two into one `ManufacturerData` value the way
+  Android/iOS already do.
+
+## Windows-Specific: Scan Responses
+
+Android and iOS deliver one `IBluetoothAdvertisement` per advertising interval, with the OS/library
+already merging the primary advertisement (ADV) and scan-response (SCAN_RSP) payloads into a single
+`ManufacturerData` byte array. Windows does not do this by default: `BluetoothLEAdvertisementWatcher`
+fires a separate native event per PDU, so an ADV-only `WindowsBluetoothAdvertisement` and a
+SCAN_RSP-only one can arrive as two distinct `AdvertisementReceived` events for the same interval.
+
+```csharp
+await scanner.StartScanningAsync(new ScanningOptions
+{
+    Windows = new WindowsScanningOptions
+    {
+        MergeScanResponses = true,                                  // default: false
+        ScanResponseMergeWindow = TimeSpan.FromMilliseconds(500)    // default
+    }
+});
+```
+
+- **`MergeScanResponses = false` (default)**: every PDU dispatches immediately as its own
+  advertisement, exactly as today — no added latency, no buffering — so data that only a scan
+  response carries (a name, service data) still reaches `AdvertisementReceived`. A scan response
+  additionally raises `WindowsBluetoothRemoteDevice.ScanResponseReceived` and sets `.LastScanResponse`.
+- **`MergeScanResponses = true`**: each ADV PDU is held for up to `ScanResponseMergeWindow` waiting
+  for its matching SCAN_RSP before dispatching a single, merged `IBluetoothAdvertisement` — matching
+  Android/iOS's `ManufacturerData` byte layout. If no scan response arrives before the window
+  elapses, the advertisement is merged with the last scan response received from that address when it
+  is younger than `ScanResponseMaxAge` (default 10 s; `TimeSpan.Zero` turns this off), because a
+  peripheral does not answer every scan request. With nothing recent enough it fires **as-is**
+  (ADV-only) rather than being dropped or delayed indefinitely. `ScanResponseReceived`/`LastScanResponse` still fire afterward whenever a scan
+  response actually arrived, in both modes.
+
+Either mode requires active scanning to ever observe scan responses at all — a passive scanner never
+solicits one. See the [Windows Platform Guide](../Platforms/Windows.md#scan-response-handling) for
+the full option surface and rationale (ADR 0003).
 
 ### Advertisements Not Received
 
