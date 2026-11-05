@@ -164,6 +164,12 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
 
     private static ReadOnlyMemory<byte> ExtractManufacturerData(BluetoothLEAdvertisementReceivedEventArgs args)
     {
+        // Extended advertisements (received only when they are enabled) carry the section like a legacy advertisement or scan response.
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041) && args.AdvertisementType == BluetoothLEAdvertisementType.Extended)
+        {
+            return TryGetSectionData(args, BluetoothLEAdvertisementDataTypes.ManufacturerSpecificData) ?? ReadOnlyMemory<byte>.Empty;
+        }
+
         switch (args.AdvertisementType)
         {
             case BluetoothLEAdvertisementType.ConnectableUndirected:

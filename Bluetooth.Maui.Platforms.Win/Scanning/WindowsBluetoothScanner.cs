@@ -65,6 +65,9 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
 
     private sealed record ScanResponseDelivery(BluetoothLEAdvertisementReceivedEventArgs ScanResponse) : Delivery;
 
+    // The longest a stop waits for the deliveries still queued, whatever timeout the caller gives.
+    private static readonly TimeSpan MaxDrainWait = TimeSpan.FromSeconds(5);
+
     // The most deliveries a scan holds while its consumer is busy; past it the oldest are dropped, so a callback that blocks cannot make
     // the scanner grow without limit.
     private const int MaxQueuedDeliveries = 2048;
@@ -175,7 +178,10 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     {
         ArgumentNullException.ThrowIfNull(argsAdvertisement);
 
-        var isScanResponse = argsAdvertisement.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse;
+        // An extended scan response has the advertisement type Extended and is told apart by its own flag; Windows before build 19041 has only
+        // the legacy type.
+        var isScanResponse = argsAdvertisement.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse
+                             || (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041) && argsAdvertisement.IsScanResponse);
 
         if (!_mergeScanResponses)
         {
@@ -553,13 +559,20 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         {
             try
             {
-                // Bounded, so a handler that never returns cannot keep the scanner from stopping.
-                await session.Loop.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+                // Bounded, so a handler that never returns cannot keep the scanner from stopping: by the caller's timeout when it gives
+                // a finite one, and in any case by a safety limit.
+                var drainLimit = timeout is { } requested && requested >= TimeSpan.Zero && requested < MaxDrainWait ? requested : MaxDrainWait;
+                await session.Loop.WaitAsync(drainLimit, cancellationToken).ConfigureAwait(false);
             }
             catch (TimeoutException)
             {
                 // Stopping goes on. The session is given up on: what is still queued is skipped, so it cannot reach a later scan.
                 session.Retired = true;
+            }
+            catch (OperationCanceledException)
+            {
+                session.Retired = true; // The same, when the caller gave up waiting.
+                throw;
             }
         }
     }
