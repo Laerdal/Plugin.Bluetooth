@@ -95,7 +95,7 @@ public sealed partial class BluetoothLeDeviceProxy : IDisposable
 
                 if (result.Status != GattCommunicationStatus.Success)
                 {
-                    throw new WindowsNativeGattCommunicationStatusException(result.Status);
+                    throw new WindowsNativeGattCommunicationStatusException(result.Status, result.ProtocolError);
                 }
 
                 return result.Services.ToList();
