@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Threading.Channels;
 
 using Bluetooth.Maui.Platforms.Win.Exceptions;
 using Bluetooth.Maui.Platforms.Win.Logging;
@@ -32,11 +33,9 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     private bool _mergeScanResponses;
     private TimeSpan _scanResponseMergeWindow = TimeSpan.FromMilliseconds(500);
 
-    // The longest merge window accepted. An advertisement is held for the window, so a longer one only delays discovery.
-    private static readonly TimeSpan MaxScanResponseMergeWindow = TimeSpan.FromSeconds(10);
-
     /// <summary>
-    ///     Guards <see cref="_pendingAdvertisements" /> and the in-flight resolution count.
+    ///     Guards <see cref="_pendingAdvertisements" />, <see cref="_deliveries" /> and <see cref="_acceptingMergedAdvertisements" />.
+    ///     It is never held while a consumer callback runs.
     /// </summary>
     private readonly object _pendingGate = new();
 
@@ -47,16 +46,8 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     /// </summary>
     private readonly Dictionary<string, PendingAdvertisement> _pendingAdvertisements = new();
 
-    /// <summary>
-    ///     The number of pending advertisements that have left <see cref="_pendingAdvertisements" /> and are still being
-    ///     dispatched. Stopping waits for it to reach zero.
-    /// </summary>
-    private int _resolutionsInFlight;
-
-    private TaskCompletionSource? _resolutionsDrained;
-
-    // False from the moment a stop begins until the next start, so a late advertisement cannot be buffered into a stopped scan.
-    private volatile bool _acceptingMergedAdvertisements;
+    // False from the moment a stop begins until the next start, so a late callback cannot buffer into a stopped scan.
+    private bool _acceptingMergedAdvertisements;
 
     // A pending advertisement is identified by reference: the timer that resolves it must not resolve a newer one for the same address.
     private sealed class PendingAdvertisement(BluetoothLEAdvertisementReceivedEventArgs args)
@@ -65,6 +56,21 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
 
         public Timer? Timer { get; set; }
     }
+
+    /// <summary>
+    ///     What a scan delivers while merging, in the order it was decided. A single consumer, <see cref="ProcessDeliveriesAsync" />,
+    ///     runs them one at a time, so deliveries for an address never overlap and an older advertisement cannot overwrite a newer one,
+    ///     whichever thread (native callback or merge timer) produced them.
+    /// </summary>
+    private abstract record Delivery;
+
+    private sealed record AdvertisementDelivery(PendingAdvertisement Pending, BluetoothLEAdvertisementReceivedEventArgs? ScanResponse) : Delivery;
+
+    private sealed record ScanResponseDelivery(BluetoothLEAdvertisementReceivedEventArgs ScanResponse) : Delivery;
+
+    private Channel<Delivery>? _deliveries;
+
+    private Task _deliveryLoop = Task.CompletedTask;
 
     private TimeSpan _scanResponseMaxAge = TimeSpan.FromSeconds(10);
 
@@ -169,78 +175,70 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         {
             RememberScanResponse(hexAddress, argsAdvertisement);
 
-            var pending = TakePendingAdvertisement(hexAddress);
-            if (pending is not null)
+            lock (_pendingGate)
             {
-                DispatchPendingAdvertisement(pending, argsAdvertisement);
+                if (!_acceptingMergedAdvertisements)
+                {
+                    return; // The scanner is stopping.
+                }
+
+                if (_pendingAdvertisements.Remove(hexAddress, out var pending))
+                {
+                    Enqueue(new AdvertisementDelivery(pending, argsAdvertisement));
+                }
+
+                // Whether or not a pending merge was resolved above, also surface the raw scan response on the device if it is
+                // already known - a late scan response (buffer already timed out) falls back to the same path used when merging is
+                // off. Queued after the advertisement above, so the device exists by then when that advertisement created it.
+                Enqueue(new ScanResponseDelivery(argsAdvertisement));
             }
 
-            // Whether or not a pending merge was resolved above, also surface the raw scan response
-            // on the device if it's already known - a late scan response (buffer already timed out)
-            // falls back to the same path used when merging is off.
-            DispatchScanResponseToExistingDevice(argsAdvertisement);
             return;
         }
 
         // Primary ADV PDU: buffer it until its scan response arrives or the merge window ends.
-        if (!_acceptingMergedAdvertisements)
-        {
-            return; // The scanner is stopping.
-        }
-
         var entry = new PendingAdvertisement(argsAdvertisement);
-#pragma warning disable CA2000 // Disposed by DispatchPendingAdvertisement, or by NativeStopAsync for an entry that never resolved - not leaked.
+#pragma warning disable CA2000 // Disposed when the entry is delivered, or by NativeStopAsync / below when it never is - not leaked.
         entry.Timer = new Timer(_ => ResolvePendingAdvertisement(hexAddress, entry), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
 #pragma warning restore CA2000
 
-        PendingAdvertisement? previous;
         lock (_pendingGate)
         {
-            _pendingAdvertisements.TryGetValue(hexAddress, out previous);
-            _pendingAdvertisements[hexAddress] = entry;
-            if (previous is not null)
+            if (!_acceptingMergedAdvertisements)
             {
-                _resolutionsInFlight++;
+                entry.Timer.Dispose(); // The scanner is stopping.
+                return;
             }
+
+            if (_pendingAdvertisements.TryGetValue(hexAddress, out var previous))
+            {
+                // A newer advertisement from the same address must not postpone the older one's delivery: with an advertising
+                // interval shorter than the merge window and no scan response, the deadline would be pushed back forever.
+                Enqueue(new AdvertisementDelivery(previous, GetRememberedScanResponse(hexAddress)));
+            }
+
+            _pendingAdvertisements[hexAddress] = entry;
 
             // Armed only once the entry can be found, so even a zero window cannot fire before it is registered.
             entry.Timer.Change(_scanResponseMergeWindow, Timeout.InfiniteTimeSpan);
         }
-
-        if (previous is not null)
-        {
-            // A newer advertisement from the same address must not postpone the older one's delivery: with an advertising
-            // interval shorter than the merge window and no scan response, the deadline would be pushed back forever.
-            DispatchPendingAdvertisement(previous, GetRememberedScanResponse(hexAddress));
-        }
     }
 
     /// <summary>
-    ///     Removes and returns the pending advertisement of an address, counting it as being dispatched, or <c>null</c> when there is none.
+    ///     Queues a delivery. Called under <see cref="_pendingGate" />, which is what keeps the queue in the order decisions were made.
     /// </summary>
-    private PendingAdvertisement? TakePendingAdvertisement(string hexAddress)
+    private void Enqueue(Delivery delivery)
     {
-        lock (_pendingGate)
-        {
-            if (!_pendingAdvertisements.Remove(hexAddress, out var pending))
-            {
-                return null;
-            }
-
-            _resolutionsInFlight++;
-            return pending;
-        }
+        _deliveries?.Writer.TryWrite(delivery);
     }
 
     /// <summary>
     ///     Fires once <see cref="Abstractions.Scanning.Options.Windows.WindowsScanningOptions.ScanResponseMergeWindow" />
-    ///     elapses for a buffered advertisement with no scan response received - dispatches it merged with the last scan
+    ///     elapses for a buffered advertisement with no scan response received - queues it merged with the last scan
     ///     response remembered for the address when that one is recent enough, ADV-only otherwise.
     /// </summary>
     /// <remarks>
-    ///     Runs on a timer thread, outside the native wrapper's exception boundary, so failures go to the unhandled exception
-    ///     listener like those of native reception. It resolves exactly <paramref name="entry" />: a newer advertisement for the
-    ///     same address that replaced it is left alone.
+    ///     It resolves exactly <paramref name="entry" />: a newer advertisement for the same address that replaced it is left alone.
     /// </remarks>
     private void ResolvePendingAdvertisement(string hexAddress, PendingAdvertisement entry)
     {
@@ -248,43 +246,42 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         {
             if (!_pendingAdvertisements.TryGetValue(hexAddress, out var current) || !ReferenceEquals(current, entry))
             {
-                return; // Already resolved by a scan response, or replaced by a newer advertisement.
+                return; // Already resolved by a scan response, replaced by a newer advertisement, or dropped by a stop.
             }
 
             _pendingAdvertisements.Remove(hexAddress);
-            _resolutionsInFlight++;
-        }
-
-        try
-        {
-            DispatchPendingAdvertisement(entry, GetRememberedScanResponse(hexAddress));
-        }
-        catch (Exception e)
-        {
-            BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
+            Enqueue(new AdvertisementDelivery(entry, GetRememberedScanResponse(hexAddress)));
         }
     }
 
     /// <summary>
-    ///     Dispatches a pending advertisement merged with <paramref name="scanResponseArgs" />, which may be <c>null</c>, and
-    ///     ends its in-flight count, which the caller incremented when it removed the entry.
+    ///     Runs the deliveries one at a time until the queue is completed. A failure in a consumer callback goes to the unhandled
+    ///     exception listener, like those of native reception, and does not end the loop.
     /// </summary>
-    private void DispatchPendingAdvertisement(PendingAdvertisement pending, BluetoothLEAdvertisementReceivedEventArgs? scanResponseArgs)
+    private async Task ProcessDeliveriesAsync(ChannelReader<Delivery> reader)
     {
-        try
+        await foreach (var delivery in reader.ReadAllAsync().ConfigureAwait(false))
         {
-            pending.Timer?.Dispose();
-            DispatchAdvertisement(new WindowsBluetoothAdvertisement(pending.Args, scanResponseArgs));
-        }
-        finally
-        {
-            lock (_pendingGate)
+            try
             {
-                if (--_resolutionsInFlight == 0)
+                switch (delivery)
                 {
-                    _resolutionsDrained?.TrySetResult();
-                    _resolutionsDrained = null;
+                    case AdvertisementDelivery advertisement:
+                        if (advertisement.Pending.Timer is { } timer)
+                        {
+                            await timer.DisposeAsync().ConfigureAwait(false);
+                        }
+
+                        DispatchAdvertisement(new WindowsBluetoothAdvertisement(advertisement.Pending.Args, advertisement.ScanResponse));
+                        break;
+                    case ScanResponseDelivery scanResponse:
+                        DispatchScanResponseToExistingDevice(scanResponse.ScanResponse);
+                        break;
                 }
+            }
+            catch (Exception e)
+            {
+                BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
             }
         }
     }
@@ -354,21 +351,22 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         Logger?.LogScanStarting(scanningOptions.ScanMode, scanningOptions.CallbackType);
 
         var windowsOptions = scanningOptions.Windows as Abstractions.Scanning.Options.Windows.WindowsScanningOptions;
-        var mergeScanResponses = windowsOptions?.MergeScanResponses ?? false;
-        var mergeWindow = windowsOptions?.ScanResponseMergeWindow ?? TimeSpan.FromMilliseconds(500);
-
-        // Rejected before scanning starts: an infinite or negative window would leave unanswered advertisements undelivered, and an
-        // enormous one would only hold them back.
-        if (mergeScanResponses && (mergeWindow < TimeSpan.Zero || mergeWindow > MaxScanResponseMergeWindow))
-        {
-            throw new ArgumentOutOfRangeException(nameof(scanningOptions), mergeWindow, $"ScanResponseMergeWindow must be between zero and {MaxScanResponseMergeWindow.TotalSeconds:0} seconds.");
-        }
-
-        _mergeScanResponses = mergeScanResponses;
-        _scanResponseMergeWindow = mergeWindow;
+        _mergeScanResponses = windowsOptions?.MergeScanResponses ?? false;
+        _scanResponseMergeWindow = windowsOptions?.ScanResponseMergeWindow ?? TimeSpan.FromMilliseconds(500);
         _scanResponseMaxAge = windowsOptions?.ScanResponseMaxAge ?? TimeSpan.FromSeconds(10);
         _lastScanResponses.Clear(); // nothing remembered from an earlier scan, whatever its options were
-        _acceptingMergedAdvertisements = true;
+
+        if (_mergeScanResponses)
+        {
+            var deliveries = Channel.CreateUnbounded<Delivery>(new UnboundedChannelOptions { SingleReader = true });
+            lock (_pendingGate)
+            {
+                _deliveries = deliveries;
+                _acceptingMergedAdvertisements = true;
+            }
+
+            _deliveryLoop = Task.Run(() => ProcessDeliveriesAsync(deliveries.Reader), CancellationToken.None);
+        }
 
         var nativeWatcher = Watcher.BluetoothLeAdvertisementWatcher;
         ConfigureNativeWatcher(nativeWatcher, scanningOptions, windowsOptions);
@@ -454,24 +452,22 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     protected async override ValueTask NativeStopAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogScanStopping();
-        _acceptingMergedAdvertisements = false;
-        _watcher?.BluetoothLeAdvertisementWatcher.Stop();
 
-        // Advertisements still waiting for their scan response are dropped, and the ones a timer has already taken are awaited,
-        // so nothing is dispatched or buffered by this scan once the stop has returned (a restart clears the device list).
+        // Nothing is buffered from this moment: a callback that was already running finds the gate closed. Advertisements still waiting for
+        // their scan response are dropped; the deliveries already queued are run before the stop returns, so nothing from this scan
+        // is dispatched afterwards (a restart clears the device list).
         List<PendingAdvertisement> abandoned;
-        Task resolutionsDrained = Task.CompletedTask;
+        Channel<Delivery>? deliveries;
         lock (_pendingGate)
         {
+            _acceptingMergedAdvertisements = false;
             abandoned = [.. _pendingAdvertisements.Values];
             _pendingAdvertisements.Clear();
-
-            if (_resolutionsInFlight > 0)
-            {
-                _resolutionsDrained ??= new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                resolutionsDrained = _resolutionsDrained.Task;
-            }
+            deliveries = _deliveries;
+            _deliveries = null;
         }
+
+        _watcher?.BluetoothLeAdvertisementWatcher.Stop();
 
         foreach (var entry in abandoned)
         {
@@ -481,14 +477,16 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
             }
         }
 
+        deliveries?.Writer.TryComplete();
+
         try
         {
             // Bounded, so a handler that never returns cannot keep the scanner from stopping.
-            await resolutionsDrained.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+            await _deliveryLoop.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
         }
         catch (TimeoutException)
         {
-            // Stopping goes on; the handler still holds its in-flight count.
+            // Stopping goes on; the handler keeps the loop busy until it returns.
         }
 
         _lastScanResponses.Clear();
