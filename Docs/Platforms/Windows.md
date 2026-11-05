@@ -182,6 +182,16 @@ await device.ConnectAsync(connectionOptions);
 - `GattSession` keeps connection alive
 - Auto-reconnect not built-in (implement manually if needed)
 
+**Disconnection Process:**
+1. Release the explored services and their characteristics (a listening characteristic stops listening)
+2. Dispose the `BluetoothLEDevice`, set `MaintainConnection = false` and wait for the `GattSession` to report `Closed`
+3. Complete `DisconnectAsync`
+
+- Windows keeps the GATT session open while any native service object is alive, which is why step 1 comes first.
+- Windows reports the session as closed about 3 seconds after step 2, so `DisconnectAsync` takes about 3 seconds.
+- `DisconnectAsync` called while `ConnectAsync` is still running stops the connect and waits for it to unwind. The connect may then
+  return normally or fail with `DeviceFailedToConnectException`; the disconnect completes either way.
+
 #### 3. GATT Operations
 All standard GATT operations fully supported:
 
@@ -202,6 +212,15 @@ await characteristic.StartListeningAsync(); // Notifications
 - Write without response
 - Notifications and indications
 - Reliable write (if peripheral supports)
+
+**Notifications:**
+- Some peripherals refuse to let a client read the Client Characteristic Configuration Descriptor (ATT error 0x02, Read Not
+  Permitted) although writing it works. `IsListening` then reports what this client last wrote, so `StartListeningAsync` and
+  `StopListeningAsync` work on them.
+- Service Changed (`0x2A05`) reports `CanListen = false`: Windows subscribes to it by itself and refuses (`AccessDenied`) any change
+  an app makes to that subscription.
+- A failed GATT operation reports the device's ATT error code in the exception message, for example
+  `protocol error code: 0x0F (Insufficient Encryption)`.
 
 **Cache Modes:**
 ```csharp

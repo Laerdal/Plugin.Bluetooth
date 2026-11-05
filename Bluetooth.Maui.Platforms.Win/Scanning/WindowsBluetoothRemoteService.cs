@@ -56,10 +56,12 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
     #endregion
 
     /// <inheritdoc />
-    protected override ValueTask DisposeAsyncCore()
+    protected async override ValueTask DisposeAsyncCore()
     {
+        // The characteristics go first: a listening characteristic stops listening through the native service, which must
+        // still be open at that point.
+        await base.DisposeAsyncCore().ConfigureAwait(false);
         NativeServiceProxy.Dispose();
-        return base.DisposeAsyncCore();
     }
 
     #region Characteristic Exploration
@@ -73,7 +75,7 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
         {
             var result = await NativeServiceProxy.GattDeviceService.GetCharacteristicsAsync(BluetoothCacheMode.Uncached).AsTask(cancellationToken).ConfigureAwait(false);
 
-            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
+            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status, result.ProtocolError);
 
             Logger?.LogCharacteristicDiscoveryCompleted(Id, Device.Id, result.Characteristics.Count);
 
