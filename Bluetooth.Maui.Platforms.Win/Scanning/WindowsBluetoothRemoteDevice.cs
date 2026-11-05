@@ -50,6 +50,17 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     public NativeObjects.GattSessionWrapper? GattSessionProxy { get; protected set; }
 
     /// <summary>
+    ///     Serializes the native connect and disconnect routines, so that a disconnect never releases native objects that a
+    ///     running connect is still using.
+    /// </summary>
+    private SemaphoreSlim LinkGate { get; } = new(1, 1);
+
+    /// <summary>
+    ///     Gets or sets the source that stops the running native connect; <see langword="null" /> while none is running.
+    /// </summary>
+    private CancellationTokenSource? ConnectAbortSource { get; set; }
+
+    /// <summary>
     ///     Gets or sets the current Windows GATT session status.
     /// </summary>
     public GattSessionStatus GattSessionStatus
@@ -146,57 +157,83 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     protected async override ValueTask NativeConnectAsync(ConnectionOptions connectionOptions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogConnecting(Id);
-        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
+
+        // A disconnect cancels this connect through the linked token and then waits for the gate, so the native objects used
+        // below are never released while this method is still running.
+        await LinkGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        using var abortSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        ConnectAbortSource = abortSource;
+        var abortToken = abortSource.Token;
 
         try
         {
-            // Parse Bluetooth address from device ID (format: "XX:XX:XX:XX:XX:XX")
-            var addressString = Id.Replace(":", "", StringComparison.Ordinal);
-            if (!ulong.TryParse(addressString, NumberStyles.HexNumber, null, out var address))
+            await NativeRefreshIsConnectedAsync(abortToken).ConfigureAwait(false);
+
+            try
             {
-                throw new InvalidOperationException($"Invalid Bluetooth address format: {Id}");
+                // Parse Bluetooth address from device ID (format: "XX:XX:XX:XX:XX:XX")
+                var addressString = Id.Replace(":", "", StringComparison.Ordinal);
+                if (!ulong.TryParse(addressString, NumberStyles.HexNumber, null, out var address))
+                {
+                    throw new InvalidOperationException($"Invalid Bluetooth address format: {Id}");
+                }
+
+                // Create BluetoothLEDevice proxy
+                BluetoothLeDeviceProxy = await BluetoothLeDeviceProxy.GetInstanceAsync(address, this, abortToken).ConfigureAwait(false);
+
+                if (BluetoothLeDeviceProxy?.BluetoothLeDevice == null)
+                {
+                    throw new InvalidOperationException("Failed to create BluetoothLEDevice");
+                }
+
+                // Update cached name
+                CachedName = BluetoothLeDeviceProxy.BluetoothLeDevice.Name;
+
+                // Create GATT session for reliable connection
+                GattSessionProxy = await NativeObjects.GattSessionWrapper.GetInstanceAsync(BluetoothLeDeviceProxy.BluetoothLeDevice, this, abortToken).ConfigureAwait(false);
+
+                if (GattSessionProxy != null && GattSessionProxy.GattSession.CanMaintainConnection)
+                {
+                    GattSessionProxy.GattSession.MaintainConnection = true;
+                }
+
+                // Wait for session to become active
+                await WaitForPropertyToBeOfValue(nameof(GattSessionStatus), GattSessionStatus.Active, timeout, abortToken).ConfigureAwait(false);
+
+                // Request device access (permissions)
+                var accessStatus = await BluetoothLeDeviceProxy.BluetoothLeDevice.RequestAccessAsync().AsTask(abortToken).ConfigureAwait(false);
+
+                if (accessStatus != DeviceAccessStatus.Allowed)
+                {
+                    throw new WindowsNativeDeviceAccessStatusException(accessStatus);
+                }
+
+                // Kick the connection by reading services. The services are not kept: each native service object holds the
+                // GATT link open until it is disposed.
+                var kickServices = await BluetoothLeDeviceProxy.ReadGattServicesAsync(BluetoothCacheMode.Uncached, cancellationToken: abortToken).ConfigureAwait(false);
+                foreach (var kickService in kickServices)
+                {
+                    kickService.Dispose();
+                }
+
+                Logger?.LogConnected(Id);
             }
-
-            // Create BluetoothLEDevice proxy
-            BluetoothLeDeviceProxy = await BluetoothLeDeviceProxy.GetInstanceAsync(address, this, cancellationToken).ConfigureAwait(false);
-
-            if (BluetoothLeDeviceProxy?.BluetoothLeDevice == null)
+            catch (Exception) when (abortSource.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
             {
-                throw new InvalidOperationException("Failed to create BluetoothLEDevice");
+                // DisconnectAsync stopped this connect and releases the native objects right after this method returns. That is
+                // not a connection failure, so nothing is reported: a failure would also be delivered to the pending disconnect.
             }
-
-            // Update cached name
-            CachedName = BluetoothLeDeviceProxy.BluetoothLeDevice.Name;
-
-            // Create GATT session for reliable connection
-            GattSessionProxy = await NativeObjects.GattSessionWrapper.GetInstanceAsync(BluetoothLeDeviceProxy.BluetoothLeDevice, this, cancellationToken).ConfigureAwait(false);
-
-            if (GattSessionProxy != null && GattSessionProxy.GattSession.CanMaintainConnection)
+            catch (Exception e)
             {
-                GattSessionProxy.GattSession.MaintainConnection = true;
+                Logger?.LogConnectionFailed(Id, 1, e);
+                OnConnectFailed(e);
+                throw;
             }
-
-            // Wait for session to become active
-            await WaitForPropertyToBeOfValue(nameof(GattSessionStatus), GattSessionStatus.Active, timeout, cancellationToken).ConfigureAwait(false);
-
-            // Request device access (permissions)
-            var accessStatus = await BluetoothLeDeviceProxy.BluetoothLeDevice.RequestAccessAsync().AsTask(cancellationToken).ConfigureAwait(false);
-
-            if (accessStatus != DeviceAccessStatus.Allowed)
-            {
-                throw new WindowsNativeDeviceAccessStatusException(accessStatus);
-            }
-
-            // Kick the connection by reading services
-            var services = await BluetoothLeDeviceProxy.ReadGattServicesAsync(BluetoothCacheMode.Uncached, cancellationToken: cancellationToken).ConfigureAwait(false);
-
-            Logger?.LogConnected(Id);
         }
-        catch (Exception e)
+        finally
         {
-            Logger?.LogConnectionFailed(Id, 1, e);
-            OnConnectFailed(e);
-            throw;
+            ConnectAbortSource = null;
+            LinkGate.Release();
         }
     }
 
@@ -204,42 +241,72 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
     protected async override ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         Logger?.LogDisconnecting(Id);
-        await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
+
+        // A connect that is still running is told to stop and unwinds before the teardown starts: the teardown releases the
+        // native objects that the connect is using.
+        var runningConnect = ConnectAbortSource;
+        if (runningConnect is not null)
+        {
+            try
+            {
+                await runningConnect.CancelAsync().ConfigureAwait(false);
+            }
+            catch (ObjectDisposedException)
+            {
+                // The connect finished at that very moment.
+            }
+        }
+
+        await LinkGate.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
 
         try
         {
-            // Dispose device proxy
-            BluetoothLeDeviceProxy?.Dispose();
-            BluetoothLeDeviceProxy = null;
+            await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
 
-            // Dispose GATT session
-            if (GattSessionProxy != null)
+            try
             {
-                if (GattSessionProxy.GattSession.CanMaintainConnection)
+                // Release the explored services and their characteristics first, while the link is still up (a listening
+                // characteristic stops listening as it is released). Windows keeps the GATT session open as long as any
+                // native service object is alive, so the session cannot reach Closed below while they exist.
+                await ClearServicesAsync().ConfigureAwait(false);
+
+                // Dispose device proxy
+                BluetoothLeDeviceProxy?.Dispose();
+                BluetoothLeDeviceProxy = null;
+
+                // Dispose GATT session
+                if (GattSessionProxy != null)
                 {
-                    GattSessionProxy.GattSession.MaintainConnection = false;
+                    if (GattSessionProxy.GattSession.CanMaintainConnection)
+                    {
+                        GattSessionProxy.GattSession.MaintainConnection = false;
+                    }
+
+                    await WaitForPropertyToBeOfValue(nameof(GattSessionStatus), GattSessionStatus.Closed, timeout, cancellationToken).ConfigureAwait(false);
+
+                    GattSessionProxy.Dispose();
+                    GattSessionProxy = null;
                 }
 
-                await WaitForPropertyToBeOfValue(nameof(GattSessionStatus), GattSessionStatus.Closed, timeout, cancellationToken).ConfigureAwait(false);
+                // On Windows, releasing every reference to the device *is* the disconnection, and the disposed proxy
+                // can no longer raise ConnectionStatusChanged, so OnDisconnect() would never be called. Complete a
+                // pending DisconnectAsync here instead. This is a no-op when nothing is pending (failed-connect
+                // cleanup) or when a native Disconnected callback already completed it, and it never reports an
+                // unexpected disconnection.
+                BluetoothConnectionStatus = BluetoothConnectionStatus.Disconnected;
+                TryCompleteDisconnection();
 
-                GattSessionProxy.Dispose();
-                GattSessionProxy = null;
+                Logger?.LogDisconnected(Id);
             }
-
-            // On Windows, releasing every reference to the device *is* the disconnection, and the disposed proxy
-            // can no longer raise ConnectionStatusChanged, so OnDisconnect() would never be called. Complete a
-            // pending DisconnectAsync here instead. This is a no-op when nothing is pending (failed-connect
-            // cleanup) or when a native Disconnected callback already completed it, and it never reports an
-            // unexpected disconnection.
-            BluetoothConnectionStatus = BluetoothConnectionStatus.Disconnected;
-            TryCompleteDisconnection();
-
-            Logger?.LogDisconnected(Id);
+            catch (Exception e)
+            {
+                OnDisconnect(e);
+                throw;
+            }
         }
-        catch (Exception e)
+        finally
         {
-            OnDisconnect(e);
-            throw;
+            LinkGate.Release();
         }
     }
 
