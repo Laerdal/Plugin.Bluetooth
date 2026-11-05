@@ -78,6 +78,33 @@ public interface IBluetoothAdvertisement
     ReadOnlyMemory<byte> ManufacturerData { get; }
 
     /// <summary>
+    ///     Gets the Service Data carried by the advertisement and its scan response, keyed by service UUID.
+    ///     <br /><br />
+    ///     Service Data is the "Service Data" structure of the BLE advertising payload (AD types 0x16, 0x20 and 0x21):
+    ///     a service UUID followed by data that belongs to that service. It lets a peripheral publish small values,
+    ///     such as a battery level or a version number, without a connection.
+    ///     <br /><br />
+    ///     The key is the full 128-bit UUID: 16-bit and 32-bit UUIDs are expanded with the Bluetooth Base UUID, the same
+    ///     way as in <see cref="ServicesGuids" />. The value is the data that follows the UUID. When the same UUID occurs
+    ///     more than once in one advertisement, the last occurrence wins. The dictionary is empty when the advertisement
+    ///     carries no service data.
+    ///     <br /><br />
+    ///     Android : ScanResult.ScanRecord?.ServiceData
+    ///     iOS : AdvertisementData.ServiceData
+    ///     Windows : BluetoothLEAdvertisement.DataSections of type 0x16, 0x20 and 0x21
+    /// </summary>
+    /// <remarks>
+    ///     The default implementation returns an empty dictionary, so implementations that were written before this member
+    ///     existed keep compiling.
+    ///     <br /><br />
+    ///     Android and iOS report one advertisement per device in which the platform has already merged the scan response,
+    ///     so service data that a peripheral puts in its scan response is part of it. Windows delivers a scan response as
+    ///     an advertisement of its own: its service data is in that advertisement and not in the one that carries the
+    ///     manufacturer data.
+    /// </remarks>
+    IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> ServiceData => ReadOnlyDictionary<Guid, ReadOnlyMemory<byte>>.Empty;
+
+    /// <summary>
     ///     Gets the Primary Manufacturer based on the "Manufacturer Data" sectors in BLE "Advertising-Messages" and BLE
     ///     "Scan-Response-Messages".
     ///     <br /><br />

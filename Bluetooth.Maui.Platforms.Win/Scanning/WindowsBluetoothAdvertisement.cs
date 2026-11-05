@@ -27,6 +27,7 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         TransmitPowerLevelInDBm = ExtractTransmitPowerLevel(args);
         BluetoothAddress = ConvertNumericBleAddressToHexBleAddress(args.BluetoothAddress);
         ManufacturerData = ExtractManufacturerData(args);
+        ServiceData = ExtractServiceData(args);
         DateReceived = DateTimeOffset.UtcNow;
     }
 
@@ -55,6 +56,9 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
 
     /// <inheritdoc />
     public ReadOnlyMemory<byte> ManufacturerData { get; }
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> ServiceData { get; }
 
     /// <inheritdoc />
     public Manufacturer Manufacturer => ManufacturerData.Length >= 2
@@ -118,6 +122,37 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
             default:
                 return ReadOnlyMemory<byte>.Empty;
         }
+    }
+
+    private static IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> ExtractServiceData(BluetoothLEAdvertisementReceivedEventArgs args)
+    {
+        // Unlike manufacturer data, Service Data is read whatever the advertisement type is: a scan response is delivered as an
+        // advertisement of its own and its Service Data is only here.
+        var sections = args.Advertisement.DataSections;
+        if (sections == null || sections.Count == 0)
+        {
+            return ReadOnlyDictionary<Guid, ReadOnlyMemory<byte>>.Empty;
+        }
+
+        Dictionary<Guid, ReadOnlyMemory<byte>>? serviceData = null;
+        foreach (var section in sections)
+        {
+            if (!WindowsServiceDataParser.IsServiceDataType(section.DataType)
+                || !WindowsServiceDataParser.TryParse(section.DataType, section.Data.ToArray(), out var uuid, out var data))
+            {
+                continue;
+            }
+
+            serviceData ??= [];
+            serviceData[uuid] = data;
+        }
+
+        if (serviceData == null)
+        {
+            return ReadOnlyDictionary<Guid, ReadOnlyMemory<byte>>.Empty;
+        }
+
+        return serviceData;
     }
 
     private static byte[]? TryGetSectionData(BluetoothLEAdvertisementReceivedEventArgs args, byte recType)

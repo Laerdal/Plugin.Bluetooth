@@ -15,6 +15,7 @@ Advertisements allow you to:
 - See what services a device offers
 - Determine if a device is connectable
 - Receive manufacturer-specific data
+- Receive service data (small values a device publishes per service, such as a battery level)
 
 ## Role of Advertisements
 
@@ -70,6 +71,9 @@ scanner.AdvertisementReceived += (sender, args) =>
     ReadOnlyMemory<byte> mfgData = ad.ManufacturerData;
     Manufacturer manufacturer = ad.Manufacturer;
     int manufacturerId = ad.ManufacturerId;
+
+    // Service data, keyed by service UUID
+    IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> serviceData = ad.ServiceData;
 };
 ```
 
@@ -180,6 +184,31 @@ if (mfgData.Length > 0)
 - Microsoft: `0x0006` (6)
 - Samsung: `0x0075` (117)
 - Nordic Semiconductor: `0x0059` (89)
+
+### Service Data
+
+A device can publish a small value that belongs to a service, such as a battery level or a version number, in a "Service Data" structure of its advertisement or scan response. `ServiceData` returns these values keyed by service UUID, so they can be read without connecting:
+
+```csharp
+// The Battery Service UUID (0x180F) in its full 128-bit form
+var batteryServiceUuid = Guid.Parse("0000180F-0000-1000-8000-00805F9B34FB");
+
+if (advertisement.ServiceData.TryGetValue(batteryServiceUuid, out ReadOnlyMemory<byte> data)
+    && data.Length > 0)
+{
+    // For the Battery Service, the standard layout is one byte: the level in percent
+    Console.WriteLine($"Battery: {data.Span[0]} %");
+}
+```
+
+- The key is the full 128-bit UUID. 16-bit and 32-bit UUIDs are expanded with the Bluetooth Base UUID, as in `ServicesGuids`.
+- The value is the data that follows the UUID. Its layout is defined by the service or by the device's vendor; the library does not interpret it.
+- The dictionary is empty when the advertisement carries no service data. If the same UUID occurs more than once, the last occurrence wins.
+- Service Data is not the same as `ServicesGuids`: a device can carry service data for a service it does not list as advertised, and the other way around.
+
+**Platform differences:**
+- **Android and iOS** report one advertisement per device in which the platform has already merged the scan response, so service data in a scan response is part of it.
+- **Windows** delivers a scan response as an advertisement of its own. Its service data is in that advertisement, not in the one that carries the manufacturer data, so read `ServiceData` from every advertisement you receive and not only from the first.
 
 ## Common Patterns
 

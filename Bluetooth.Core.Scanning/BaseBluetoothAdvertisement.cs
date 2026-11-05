@@ -9,6 +9,31 @@ namespace Bluetooth.Core.Scanning;
 public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertisement
 {
     /// <summary>
+    ///     Initializes a new instance of the <see cref="BaseBluetoothAdvertisement" /> struct without service data.
+    /// </summary>
+    /// <param name="deviceName">The device name from the advertisement.</param>
+    /// <param name="servicesGuids">The collection of service GUIDs advertised.</param>
+    /// <param name="isConnectable">Whether the device is connectable.</param>
+    /// <param name="signalStrengthInDBm">The raw signal strength (RSSI) in dBm.</param>
+    /// <param name="transmitPowerLevelInDBm">The transmit power level in dBm.</param>
+    /// <param name="bluetoothAddress">The Bluetooth address of the device.</param>
+    /// <param name="manufacturerData">The manufacturer-specific data.</param>
+    /// <remarks>
+    ///     Kept so that code compiled against a version without <see cref="ServiceData" /> still binds to this constructor.
+    /// </remarks>
+    public BaseBluetoothAdvertisement(
+        string? deviceName,
+        IEnumerable<Guid>? servicesGuids,
+        bool isConnectable,
+        int signalStrengthInDBm,
+        int transmitPowerLevelInDBm,
+        string? bluetoothAddress,
+        ReadOnlyMemory<byte> manufacturerData)
+        : this(deviceName, servicesGuids, isConnectable, signalStrengthInDBm, transmitPowerLevelInDBm, bluetoothAddress, manufacturerData, null)
+    {
+    }
+
+    /// <summary>
     ///     Initializes a new instance of the <see cref="BaseBluetoothAdvertisement" /> struct.
     /// </summary>
     /// <param name="deviceName">The device name from the advertisement.</param>
@@ -18,6 +43,7 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
     /// <param name="transmitPowerLevelInDBm">The transmit power level in dBm.</param>
     /// <param name="bluetoothAddress">The Bluetooth address of the device.</param>
     /// <param name="manufacturerData">The manufacturer-specific data.</param>
+    /// <param name="serviceData">The service data, keyed by service UUID. <see langword="null" /> means none.</param>
     public BaseBluetoothAdvertisement(
         string? deviceName,
         IEnumerable<Guid>? servicesGuids,
@@ -25,7 +51,8 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
         int signalStrengthInDBm,
         int transmitPowerLevelInDBm,
         string? bluetoothAddress,
-        ReadOnlyMemory<byte> manufacturerData)
+        ReadOnlyMemory<byte> manufacturerData,
+        IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>>? serviceData)
     {
         DeviceName = deviceName ?? string.Empty;
         ServicesGuids = servicesGuids ?? [];
@@ -34,6 +61,7 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
         TransmitPowerLevelInDBm = transmitPowerLevelInDBm;
         BluetoothAddress = bluetoothAddress ?? string.Empty;
         ManufacturerData = manufacturerData;
+        ServiceData = serviceData ?? ReadOnlyDictionary<Guid, ReadOnlyMemory<byte>>.Empty;
         DateReceived = DateTimeOffset.UtcNow;
     }
 
@@ -62,6 +90,9 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
 
     /// <inheritdoc />
     public ReadOnlyMemory<byte> ManufacturerData { get; }
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> ServiceData { get; }
 
     /// <inheritdoc />
     public Manufacturer Manufacturer => ManufacturerData.Length >= 2
