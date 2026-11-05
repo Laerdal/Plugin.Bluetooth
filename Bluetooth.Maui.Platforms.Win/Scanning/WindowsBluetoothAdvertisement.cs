@@ -21,8 +21,7 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
 
         DeviceName = ExtractDeviceName(args);
         ServicesGuids = args.Advertisement.ServiceUuids?.ToArray() ?? [];
-        IsConnectable = args.AdvertisementType is BluetoothLEAdvertisementType.ConnectableDirected
-            or BluetoothLEAdvertisementType.ConnectableUndirected;
+        IsConnectable = ExtractIsConnectable(args);
         SignalStrengthInDBm = args.RawSignalStrengthInDBm;
         TransmitPowerLevelInDBm = ExtractTransmitPowerLevel(args);
         BluetoothAddress = ConvertNumericBleAddressToHexBleAddress(args.BluetoothAddress);
@@ -61,8 +60,7 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
             .Distinct()
             .ToArray();
 
-        IsConnectable = primaryArgs.AdvertisementType is BluetoothLEAdvertisementType.ConnectableDirected
-            or BluetoothLEAdvertisementType.ConnectableUndirected;
+        IsConnectable = ExtractIsConnectable(primaryArgs);
         SignalStrengthInDBm = primaryArgs.RawSignalStrengthInDBm;
 
         // The advertisement's own value when it has one, the scan response's otherwise. The presence of the section is what
@@ -73,7 +71,10 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         BluetoothAddress = ConvertNumericBleAddressToHexBleAddress(primaryArgs.BluetoothAddress);
         ManufacturerData = MergeManufacturerData(primaryArgs, scanResponseArgs);
         ServiceData = MergeServiceData(primaryArgs, scanResponseArgs);
-        DateReceived = DateTimeOffset.UtcNow;
+
+        // When the radio heard the advertisement, not when the merge was delivered: the device's last-seen time and its advertising
+        // interval are derived from this, and the merge window and any queueing would otherwise be added to them.
+        DateReceived = primaryArgs.Timestamp;
     }
 
     #region IBluetoothAdvertisement Members
@@ -144,6 +145,15 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         var data = TryGetSectionData(args, BluetoothLEAdvertisementDataTypes.TxPowerLevel);
         var firstByteOrDefaultToZero = data?[0] ?? 0;
         return (sbyte) firstByteOrDefaultToZero;
+    }
+
+    private static bool ExtractIsConnectable(BluetoothLEAdvertisementReceivedEventArgs args)
+    {
+        // The native flag also covers a connectable extended advertisement, whose advertisement type is Extended. Windows before
+        // build 19041 has no such flag and only the legacy types.
+        return OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041)
+            ? args.IsConnectable
+            : args.AdvertisementType is BluetoothLEAdvertisementType.ConnectableDirected or BluetoothLEAdvertisementType.ConnectableUndirected;
     }
 
     private static int? TryGetTransmitPowerLevel(BluetoothLEAdvertisementReceivedEventArgs args)
