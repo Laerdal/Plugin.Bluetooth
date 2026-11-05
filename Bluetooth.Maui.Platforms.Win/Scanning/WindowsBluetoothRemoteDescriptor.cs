@@ -50,7 +50,7 @@ public class WindowsBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
         {
             var result = await NativeDescriptor.ReadValueAsync(BluetoothCacheMode.Uncached).AsTask().ConfigureAwait(false);
 
-            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
+            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status, result.ProtocolError);
 
             if (result.Value is { Length: > 0 } buffer)
             {
@@ -104,7 +104,7 @@ public class WindowsBluetoothRemoteDescriptor : BaseBluetoothRemoteDescriptor
             // Write with result check
             var result = await NativeDescriptor.WriteValueWithResultAsync(buffer).AsTask().ConfigureAwait(false);
 
-            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
+            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status, result.ProtocolError);
 
             Logger?.LogDescriptorWriteCompleted(Id, Characteristic.Service.Device.Id);
             OnWriteValueSucceeded();

@@ -75,7 +75,7 @@ public class WindowsBluetoothRemoteService : BaseBluetoothRemoteService, GattDev
         {
             var result = await NativeServiceProxy.GattDeviceService.GetCharacteristicsAsync(BluetoothCacheMode.Uncached).AsTask(cancellationToken).ConfigureAwait(false);
 
-            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
+            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status, result.ProtocolError);
 
             Logger?.LogCharacteristicDiscoveryCompleted(Id, Device.Id, result.Characteristics.Count);
 

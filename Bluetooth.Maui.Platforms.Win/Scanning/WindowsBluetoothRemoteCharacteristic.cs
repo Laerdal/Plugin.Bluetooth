@@ -78,7 +78,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
         {
             var result = await NativeCharacteristicProxy.GattCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached).AsTask().ConfigureAwait(false);
 
-            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
+            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status, result.ProtocolError);
 
             if (result.Value is { Length: > 0 } buffer)
             {
@@ -142,7 +142,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
             // Write with result check
             var result = await NativeCharacteristicProxy.GattCharacteristic.WriteValueWithResultAsync(buffer, writeOption).AsTask().ConfigureAwait(false);
 
-            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
+            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status, result.ProtocolError);
 
             Logger?.LogCharacteristicWriteCompleted(Id, Service.Device.Id);
             OnWriteValueSucceeded();
@@ -172,7 +172,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
         {
             var result = await NativeCharacteristicProxy.GattCharacteristic.ReadClientCharacteristicConfigurationDescriptorAsync().AsTask().ConfigureAwait(false);
 
-            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
+            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status, result.ProtocolError);
 
             var isListening = result.ClientCharacteristicConfigurationDescriptor != GattClientCharacteristicConfigurationDescriptorValue.None;
             OnReadIsListeningSucceeded(isListening);
@@ -216,7 +216,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
             // Write CCCD to enable/disable notifications
             var result = await NativeCharacteristicProxy.GattCharacteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync(cccdValue).AsTask().ConfigureAwait(false);
 
-            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
+            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status, result.ProtocolError);
 
             OnWriteIsListeningSucceeded();
         }
@@ -270,7 +270,7 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
         {
             var result = await NativeCharacteristicProxy.GattCharacteristic.GetDescriptorsAsync(BluetoothCacheMode.Uncached).AsTask(cancellationToken).ConfigureAwait(false);
 
-            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status);
+            WindowsNativeGattCommunicationStatusException.ThrowIfNotSuccess(result.Status, result.ProtocolError);
 
             OnDescriptorsExplorationSucceeded(result.Descriptors.ToList(), AreRepresentingTheSameObject, FromInputTypeToOutputTypeConversion);
         }
