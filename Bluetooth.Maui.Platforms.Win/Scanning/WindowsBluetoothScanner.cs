@@ -407,11 +407,12 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     /// <inheritdoc />
     /// <remarks>
     ///     On Windows, this checks if the advertisement watcher status is <see cref="BluetoothLEAdvertisementWatcherStatus.Started" />.
-    ///     Uses the wrapper's observable Status property which is automatically refreshed by the ticker.
+    ///     It reads the native watcher's own status, not the wrapper's observable copy: that copy is refreshed by a separate
+    ///     tick, so right after the watcher stopped it can still say Started and would turn <c>IsRunning</c> back on.
     /// </remarks>
     protected override void NativeRefreshIsRunning()
     {
-        IsRunning = _watcher != null && _watcher.Status == BluetoothLEAdvertisementWatcherStatus.Started;
+        IsRunning = _watcher != null && _watcher.BluetoothLeAdvertisementWatcher.Status == BluetoothLEAdvertisementWatcherStatus.Started;
     }
 
     /// <inheritdoc />
