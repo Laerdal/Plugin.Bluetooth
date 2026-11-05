@@ -73,8 +73,8 @@ Known limitations or deferred follow-ups:
 
 ## Checklist
 
-- [ ] I reviewed [Docs/Best-Practices/Contribution-DoD.md](../Docs/Best-Practices/Contribution-DoD.md)
+- [ ] I reviewed [Docs/Best-Practices/Contribution-DoD.md](https://github.com/Laerdal/Plugin.Bluetooth/blob/main/Docs/Best-Practices/Contribution-DoD.md)
 - [ ] Commit header follows `type (scope): short imperative` and is <= 72 chars
 - [ ] Commit type is one of: feat, fix, refa, perf, docs, ci, chore, test, build
 - [ ] Commit body is 1-2 factual sentences (what/why), no emojis, refs, or co-authors
-- [ ] If architectural behavior changed, an ADR was added or updated under [Docs/Architecture/ADR](../Docs/Architecture/ADR/README.md)
+- [ ] If architectural behavior changed, an ADR was added or updated under [Docs/Architecture/ADR](https://github.com/Laerdal/Plugin.Bluetooth/blob/main/Docs/Architecture/ADR/README.md)
