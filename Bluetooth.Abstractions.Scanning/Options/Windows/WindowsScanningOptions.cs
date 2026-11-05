@@ -44,7 +44,10 @@ public record WindowsScanningOptions
     ///     <see cref="MergeScanResponses" /> is <c>true</c>. Ignored otherwise.
     /// </summary>
     /// <remarks>
-    ///     Defaults to 500ms. Raise it for a peripheral that answers a scan request slowly.
+    ///     Defaults to 500ms. Raise it for a peripheral that answers a scan request slowly. Must be between
+    ///     zero and 10 seconds when <see cref="MergeScanResponses" /> is <c>true</c>; scanning does not start
+    ///     with any other value. An advertisement is never held longer than this, whatever arrives from
+    ///     the same address in the meantime.
     /// </remarks>
     public TimeSpan ScanResponseMergeWindow { get; init; } = TimeSpan.FromMilliseconds(500);
 
