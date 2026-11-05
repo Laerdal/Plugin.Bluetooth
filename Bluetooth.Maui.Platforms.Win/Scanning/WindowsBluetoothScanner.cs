@@ -41,6 +41,55 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
 
     private sealed record PendingAdvertisement(BluetoothLEAdvertisementReceivedEventArgs Args, Timer Timer);
 
+    private TimeSpan _scanResponseMaxAge = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    ///     The last scan response received from each address, keyed by hex Bluetooth address, with the time it arrived
+    ///     (<see cref="Environment.TickCount64" />). A peripheral does not answer every scan request, so an advertisement whose
+    ///     own scan response was missed is completed from this one while it is younger than
+    ///     <c>WindowsScanningOptions.ScanResponseMaxAge</c>. Only populated when merging is enabled.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, RememberedScanResponse> _lastScanResponses = new();
+
+    private sealed record RememberedScanResponse(BluetoothLEAdvertisementReceivedEventArgs Args, long ReceivedAtTickCount);
+
+    // Addresses can rotate (private addresses), so the dictionary is swept of expired entries once it grows past this.
+    private const int MaxRememberedScanResponsesBeforeSweep = 256;
+
+    private void RememberScanResponse(string hexAddress, BluetoothLEAdvertisementReceivedEventArgs scanResponseArgs)
+    {
+        if (_scanResponseMaxAge <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        _lastScanResponses[hexAddress] = new RememberedScanResponse(scanResponseArgs, Environment.TickCount64);
+
+        if (_lastScanResponses.Count > MaxRememberedScanResponsesBeforeSweep)
+        {
+            var oldestUsable = Environment.TickCount64 - (long) _scanResponseMaxAge.TotalMilliseconds;
+            foreach (var (address, remembered) in _lastScanResponses)
+            {
+                if (remembered.ReceivedAtTickCount < oldestUsable)
+                {
+                    _lastScanResponses.TryRemove(address, out _);
+                }
+            }
+        }
+    }
+
+    private BluetoothLEAdvertisementReceivedEventArgs? GetRememberedScanResponse(string hexAddress)
+    {
+        if (_scanResponseMaxAge <= TimeSpan.Zero || !_lastScanResponses.TryGetValue(hexAddress, out var remembered))
+        {
+            return null;
+        }
+
+        return Environment.TickCount64 - remembered.ReceivedAtTickCount <= (long) _scanResponseMaxAge.TotalMilliseconds
+            ? remembered.Args
+            : null;
+    }
+
     #endregion
 
     /// <inheritdoc />
@@ -93,6 +142,8 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
 
         if (isScanResponse)
         {
+            RememberScanResponse(hexAddress, argsAdvertisement);
+
             if (_pendingAdvertisements.TryRemove(hexAddress, out var pending))
             {
                 pending.Timer.Dispose();
@@ -122,7 +173,8 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
 
     /// <summary>
     ///     Fires once <see cref="Abstractions.Scanning.Options.Windows.WindowsScanningOptions.ScanResponseMergeWindow" />
-    ///     elapses for a buffered advertisement with no scan response received - dispatches it ADV-only.
+    ///     elapses for a buffered advertisement with no scan response received - dispatches it merged with the last scan
+    ///     response remembered for the address when that one is recent enough, ADV-only otherwise.
     /// </summary>
     private void ResolvePendingAdvertisement(string hexAddress)
     {
@@ -132,7 +184,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         }
 
         pending.Timer.Dispose();
-        DispatchAdvertisement(new WindowsBluetoothAdvertisement(pending.Args, null));
+        DispatchAdvertisement(new WindowsBluetoothAdvertisement(pending.Args, GetRememberedScanResponse(hexAddress)));
     }
 
     private void DispatchAdvertisement(WindowsBluetoothAdvertisement advertisement)
@@ -202,6 +254,8 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         var windowsOptions = scanningOptions.Windows as Abstractions.Scanning.Options.Windows.WindowsScanningOptions;
         _mergeScanResponses = windowsOptions?.MergeScanResponses ?? false;
         _scanResponseMergeWindow = windowsOptions?.ScanResponseMergeWindow ?? TimeSpan.FromMilliseconds(500);
+        _scanResponseMaxAge = windowsOptions?.ScanResponseMaxAge ?? TimeSpan.FromSeconds(10);
+        _lastScanResponses.Clear(); // nothing remembered from an earlier scan, whatever its options were
 
         var nativeWatcher = Watcher.BluetoothLeAdvertisementWatcher;
         ConfigureNativeWatcher(nativeWatcher, scanningOptions, windowsOptions);
@@ -301,6 +355,8 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
                 await pending.Timer.DisposeAsync().ConfigureAwait(false);
             }
         }
+
+        _lastScanResponses.Clear();
     }
 
     #endregion

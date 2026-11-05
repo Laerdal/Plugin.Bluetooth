@@ -114,8 +114,13 @@ is dropped silently, exactly as it is today.
   UUID present in both keeps the SCAN_RSP's data, the same last-occurrence-wins rule as within one
   advertisement. This is the field that matters most in practice: a peripheral can send its name
   and manufacturer data in the ADV and its battery and version service data only in the SCAN_RSP.
-- On timeout with no SCAN_RSP received (e.g. a non-scannable device), the advertisement fires
-  **as-is**, ADV-only — it is never held indefinitely or dropped.
+- On timeout with no SCAN_RSP received, the advertisement is merged with the last SCAN_RSP remembered
+  for that address when that one is younger than `ScanResponseMaxAge` (default 10 s; zero turns it
+  off): a peripheral does not answer every scan request, and without this the event loses the name
+  or service data that the previous one carried. With nothing recent enough to use (a non-scannable
+  device, or a first sighting) it fires **as-is**, ADV-only — it is never held indefinitely or dropped.
+  The remembered data can be as old as `ScanResponseMaxAge`, so a quickly changing value (a battery
+  level) is as stale as that allows.
 - If a SCAN_RSP genuinely arrived (not just a timeout), `ScanResponseReceived`/`LastScanResponse`
   also fire on the device immediately afterward, same as the non-merge path — so power users get
   both the merged, cross-platform-consistent advertisement *and* the raw scan-response payload if
@@ -130,8 +135,9 @@ is dropped silently, exactly as it is today.
 Given this is the one place Windows behaves differently from Android/iOS by design (not by gap),
 both `Docs/Core-Concepts/Advertisement.md` and `Docs/Platforms/Windows.md` must explicitly document:
 default behavior, what `MergeScanResponses`/`ScanResponseMergeWindow` change, that a device is
-never created from a scan response alone, and that a merge-mode timeout fires the advertisement
-as-is rather than dropping or blocking it.
+never created from a scan response alone, and that a merge-mode timeout completes the advertisement
+from the last remembered scan response when it is recent enough and otherwise fires it as-is, rather
+than dropping or blocking it.
 
 ## Alternatives Considered
 

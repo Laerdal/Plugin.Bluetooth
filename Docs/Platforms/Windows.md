@@ -363,7 +363,7 @@ await scanner.StartScanningAsync(new ScanningOptions
 | Mode | Behavior |
 | --- | --- |
 | `MergeScanResponses = false` (default) | Every PDU, advertisements and scan responses alike, dispatches immediately through the normal `AdvertisementReceived` path, exactly as before this option existed — no buffering, no added latency. A scan response additionally raises `WindowsBluetoothRemoteDevice.ScanResponseReceived` and sets `.LastScanResponse`. |
-| `MergeScanResponses = true` | Each ADV PDU is buffered for up to `ScanResponseMergeWindow` waiting for its matching SCAN_RSP. Once resolved (scan response arrived, or the window elapsed), it dispatches through the normal `AdvertisementReceived` path — merged (manufacturer data and service data) if a scan response arrived, ADV-only otherwise. `ScanResponseReceived`/`LastScanResponse` still fire afterward whenever a scan response was actually received, in both modes. |
+| `MergeScanResponses = true` | Each ADV PDU is buffered for up to `ScanResponseMergeWindow` waiting for its matching SCAN_RSP. Once resolved (scan response arrived, or the window elapsed), it dispatches through the normal `AdvertisementReceived` path — merged (manufacturer data and service data) if a scan response arrived. If none did, it is merged with the last scan response received from that address when that one is younger than `ScanResponseMaxAge` (default 10 s, `TimeSpan.Zero` to turn off), ADV-only otherwise. `ScanResponseReceived`/`LastScanResponse` still fire afterward whenever a scan response was actually received, in both modes. |
 
 **With `MergeScanResponses = true`, a device is never created from a scan response alone** — a
 SCAN_RSP PDU for an address with no previously-seen ADV is silently dropped. With the default, every

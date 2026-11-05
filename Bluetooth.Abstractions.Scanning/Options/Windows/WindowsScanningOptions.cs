@@ -18,18 +18,19 @@ public record WindowsScanningOptions
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         Defaults to <c>false</c>: advertisements dispatch immediately with no buffering, same
-    ///         as today. Scan responses are instead dispatched separately via
-    ///         <c>WindowsBluetoothRemoteDevice.ScanResponseReceived</c> / <c>.LastScanResponse</c>,
-    ///         once the device already exists in the scanner's device list — a device is never
-    ///         created from a scan response alone.
+    ///         Defaults to <c>false</c>: every PDU, advertisements and scan responses alike, dispatches
+    ///         immediately with no buffering, same as before this option existed. A scan response
+    ///         additionally raises <c>WindowsBluetoothRemoteDevice.ScanResponseReceived</c> and sets
+    ///         <c>.LastScanResponse</c> on its device.
     ///     </para>
     ///     <para>
     ///         When <c>true</c>: each ADV PDU is held for up to <see cref="ScanResponseMergeWindow" />
     ///         waiting for a matching SCAN_RSP PDU before dispatching, merging their manufacturer
-    ///         data. On timeout the advertisement fires as-is (ADV-only). <c>ScanResponseReceived</c>
-    ///         / <c>LastScanResponse</c> still fire afterward whenever a scan response was actually
-    ///         received, in both modes.
+    ///         data and service data. A device is never created from a scan response alone. If no
+    ///         scan response arrives in time, the advertisement is merged with the last scan response
+    ///         received from that address when it is younger than <see cref="ScanResponseMaxAge" />,
+    ///         and fires as-is (ADV-only) otherwise. <c>ScanResponseReceived</c> / <c>LastScanResponse</c>
+    ///         still fire whenever a scan response was actually received, in both modes.
     ///     </para>
     ///     <para>
     ///         Requires active scanning to ever receive anything to merge — scan responses are never
@@ -43,10 +44,28 @@ public record WindowsScanningOptions
     ///     <see cref="MergeScanResponses" /> is <c>true</c>. Ignored otherwise.
     /// </summary>
     /// <remarks>
-    ///     Defaults to 500ms — a starting point, not yet validated against real hardware. Tune once
-    ///     tested (see ADR 0003 follow-up).
+    ///     Defaults to 500ms. Raise it for a peripheral that answers a scan request slowly.
     /// </remarks>
     public TimeSpan ScanResponseMergeWindow { get; init; } = TimeSpan.FromMilliseconds(500);
+
+    /// <summary>
+    ///     Gets how long the last scan response received from an address stays usable to complete a later
+    ///     advertisement from the same address whose own scan response did not arrive in time, when
+    ///     <see cref="MergeScanResponses" /> is <c>true</c>. Ignored otherwise.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         A peripheral does not always answer a scan request, so without this an advertisement whose
+    ///         scan response was missed would lose a name or service data that the previous one carried.
+    ///         Defaults to 10 seconds. <see cref="TimeSpan.Zero" /> turns it off: a missed scan response then
+    ///         leaves an advertisement-only event.
+    ///     </para>
+    ///     <para>
+    ///         The remembered data can be that old when it is used, so a value that changes quickly
+    ///         (a battery level) is as stale as this allows.
+    ///     </para>
+    /// </remarks>
+    public TimeSpan ScanResponseMaxAge { get; init; } = TimeSpan.FromSeconds(10);
 
     /// <summary>
     ///     Gets the Bluetooth LE scanning mode (active vs. passive). When <c>null</c> (default), the

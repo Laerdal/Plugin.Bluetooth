@@ -504,8 +504,10 @@ await scanner.StartScanningAsync(new ScanningOptions
 - **`MergeScanResponses = true`**: each ADV PDU is held for up to `ScanResponseMergeWindow` waiting
   for its matching SCAN_RSP before dispatching a single, merged `IBluetoothAdvertisement` — matching
   Android/iOS's `ManufacturerData` byte layout. If no scan response arrives before the window
-  elapses, the advertisement fires **as-is** (ADV-only) rather than being dropped or delayed
-  indefinitely. `ScanResponseReceived`/`LastScanResponse` still fire afterward whenever a scan
+  elapses, the advertisement is merged with the last scan response received from that address when it
+  is younger than `ScanResponseMaxAge` (default 10 s; `TimeSpan.Zero` turns this off), because a
+  peripheral does not answer every scan request. With nothing recent enough it fires **as-is**
+  (ADV-only) rather than being dropped or delayed indefinitely. `ScanResponseReceived`/`LastScanResponse` still fire afterward whenever a scan
   response actually arrived, in both modes.
 
 Either mode requires active scanning to ever observe scan responses at all — a passive scanner never
