@@ -71,6 +71,10 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         else
         {
             Logger?.LogScanStopped();
+
+            // IsRunning is otherwise refreshed only by the periodic tick. Until then it would still read true, and the
+            // StopScanningAsync that is waiting for this callback would fail with ScannerFailedToStopException.
+            IsRunning = false;
             OnStopSucceeded();
         }
     }
