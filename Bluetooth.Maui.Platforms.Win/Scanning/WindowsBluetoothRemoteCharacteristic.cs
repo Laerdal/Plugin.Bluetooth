@@ -44,6 +44,14 @@ public class WindowsBluetoothRemoteCharacteristic : BaseBluetoothRemoteCharacter
     /// </summary>
     public NativeObjects.GattCharacteristicProxy NativeCharacteristicProxy { get; }
 
+    /// <inheritdoc />
+    protected async override ValueTask DisposeAsyncCore()
+    {
+        // Stopping notifications needs the native characteristic and its value-changed subscription, so the base goes first.
+        await base.DisposeAsyncCore().ConfigureAwait(false);
+        NativeCharacteristicProxy.Dispose();
+    }
+
     #region Delegate Callbacks
 
     /// <summary>

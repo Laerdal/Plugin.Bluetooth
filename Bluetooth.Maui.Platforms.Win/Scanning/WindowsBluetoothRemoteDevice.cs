@@ -187,8 +187,13 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
                 throw new WindowsNativeDeviceAccessStatusException(accessStatus);
             }
 
-            // Kick the connection by reading services
-            var services = await BluetoothLeDeviceProxy.ReadGattServicesAsync(BluetoothCacheMode.Uncached, cancellationToken: cancellationToken).ConfigureAwait(false);
+            // Kick the connection by reading services. The services are not kept: each native service object holds the
+            // GATT link open until it is disposed.
+            var kickServices = await BluetoothLeDeviceProxy.ReadGattServicesAsync(BluetoothCacheMode.Uncached, cancellationToken: cancellationToken).ConfigureAwait(false);
+            foreach (var kickService in kickServices)
+            {
+                kickService.Dispose();
+            }
 
             Logger?.LogConnected(Id);
         }
@@ -208,6 +213,11 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
 
         try
         {
+            // Release the explored services and their characteristics first, while the link is still up (a listening
+            // characteristic stops listening as it is released). Windows keeps the GATT session open as long as any
+            // native service object is alive, so the session cannot reach Closed below while they exist.
+            await ClearServicesAsync().ConfigureAwait(false);
+
             // Dispose device proxy
             BluetoothLeDeviceProxy?.Dispose();
             BluetoothLeDeviceProxy = null;
