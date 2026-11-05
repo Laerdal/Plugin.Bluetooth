@@ -45,11 +45,32 @@ public record WindowsScanningOptions
     /// </summary>
     /// <remarks>
     ///     Defaults to 500ms. Raise it for a peripheral that answers a scan request slowly. Must be between
-    ///     zero and 10 seconds when <see cref="MergeScanResponses" /> is <c>true</c>; scanning does not start
-    ///     with any other value. An advertisement is never held longer than this, whatever arrives from
-    ///     the same address in the meantime.
+    ///     zero and <see cref="MaxScanResponseMergeWindow" />: any other value, including
+    ///     <see cref="Timeout.InfiniteTimeSpan" />, is rejected when it is set, because an advertisement whose
+    ///     scan response never comes would otherwise never be delivered. An advertisement is never held
+    ///     longer than this, whatever arrives from the same address in the meantime.
     /// </remarks>
-    public TimeSpan ScanResponseMergeWindow { get; init; } = TimeSpan.FromMilliseconds(500);
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative or longer than <see cref="MaxScanResponseMergeWindow" />.</exception>
+    public TimeSpan ScanResponseMergeWindow
+    {
+        get => _scanResponseMergeWindow;
+        init
+        {
+            if (value < TimeSpan.Zero || value > MaxScanResponseMergeWindow)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, $"ScanResponseMergeWindow must be between zero and {MaxScanResponseMergeWindow.TotalSeconds:0} seconds.");
+            }
+
+            _scanResponseMergeWindow = value;
+        }
+    }
+
+    /// <summary>
+    ///     The longest accepted <see cref="ScanResponseMergeWindow" />: a longer one only delays discovery.
+    /// </summary>
+    public static readonly TimeSpan MaxScanResponseMergeWindow = TimeSpan.FromSeconds(10);
+
+    private readonly TimeSpan _scanResponseMergeWindow = TimeSpan.FromMilliseconds(500);
 
     /// <summary>
     ///     Gets how long the last scan response received from an address stays usable to complete a later
