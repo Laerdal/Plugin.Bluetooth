@@ -208,12 +208,6 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
 
         try
         {
-            // Retire the proxy before disposing it, so that a native Disconnected callback still in flight from it
-            // is dropped instead of reaching OnDisconnect() after the manual completion below (where it would be
-            // reported as an unexpected disconnection). If such a callback already claimed this disconnection,
-            // that callback completes the pending DisconnectAsync and the manual completion is skipped.
-            var completeDisconnectionManually = BluetoothLeDeviceProxy?.Retire() ?? true;
-
             // Dispose device proxy
             BluetoothLeDeviceProxy?.Dispose();
             BluetoothLeDeviceProxy = null;
@@ -234,13 +228,11 @@ public class WindowsBluetoothRemoteDevice : BaseBluetoothRemoteDevice, Bluetooth
 
             // On Windows, releasing every reference to the device *is* the disconnection, and the disposed proxy
             // can no longer raise ConnectionStatusChanged, so OnDisconnect() would never be called. Complete a
-            // pending DisconnectAsync here instead. TryCompleteDisconnection is a no-op when nothing is pending
-            // (failed-connect cleanup) and never reports an unexpected disconnection.
+            // pending DisconnectAsync here instead. This is a no-op when nothing is pending (failed-connect
+            // cleanup) or when a native Disconnected callback already completed it, and it never reports an
+            // unexpected disconnection.
             BluetoothConnectionStatus = BluetoothConnectionStatus.Disconnected;
-            if (completeDisconnectionManually)
-            {
-                TryCompleteDisconnection();
-            }
+            TryCompleteDisconnection();
 
             Logger?.LogDisconnected(Id);
         }
