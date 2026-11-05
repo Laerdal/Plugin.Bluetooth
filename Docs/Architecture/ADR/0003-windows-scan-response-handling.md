@@ -105,9 +105,13 @@ is dropped silently, exactly as it is today.
 - Once resolved, it follows the **same path as the other platforms**: filter → `AdvertisementReceived`
   → device creation/update, with `ManufacturerData` merged per the byte layout above:
   `[CompanyId(2, from whichever PDU had it)] + [ADV's manufacturer-data payload, if any] +
-  [SCAN_RSP's manufacturer-data payload, if any]`. Other fields (`DeviceName`, `ServicesGuids`,
-  `IsConnectable`, `TransmitPowerLevelInDBm`) take the ADV PDU's values, falling back to the
-  SCAN_RSP's only if the ADV's were empty/default — the firmware doc states advertising data
+  [SCAN_RSP's manufacturer-data payload, if any]`. The SCAN_RSP's own company-id prefix is dropped
+  only when it is the same company id as the ADV's; a different company id is another
+  manufacturer's data and is kept whole. `ServicesGuids` is the union of both PDUs' lists, so a
+  service filter matches whichever PDU carried the UUID. `DeviceName` and
+  `TransmitPowerLevelInDBm` take the ADV PDU's value, falling back to the SCAN_RSP's when the ADV
+  has none (the presence of the Tx Power section decides, since 0 dBm is a valid level);
+  `IsConnectable` and the signal strength are the ADV's — the firmware doc states advertising data
   carries manufacturing data + name, and scan response carries manufacturing data + UUID only, so
   ADV is expected to be authoritative for those fields. `ServiceData` (added to
   `IBluetoothAdvertisement` after this ADR was first written) is the union of both PDUs' entries; a

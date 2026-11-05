@@ -55,15 +55,21 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
             ? primaryName
             : scanResponseArgs != null ? ExtractDeviceName(scanResponseArgs) : string.Empty;
 
-        var primaryServiceGuids = primaryArgs.Advertisement.ServiceUuids?.ToArray() ?? [];
-        ServicesGuids = primaryServiceGuids.Length > 0
-            ? primaryServiceGuids
-            : scanResponseArgs?.Advertisement.ServiceUuids?.ToArray() ?? [];
+        // Both PDUs can list service UUIDs, and a filter must match whichever of them carried the one it looks for.
+        ServicesGuids = (primaryArgs.Advertisement.ServiceUuids ?? Enumerable.Empty<Guid>())
+            .Concat(scanResponseArgs?.Advertisement.ServiceUuids ?? Enumerable.Empty<Guid>())
+            .Distinct()
+            .ToArray();
 
         IsConnectable = primaryArgs.AdvertisementType is BluetoothLEAdvertisementType.ConnectableDirected
             or BluetoothLEAdvertisementType.ConnectableUndirected;
         SignalStrengthInDBm = primaryArgs.RawSignalStrengthInDBm;
-        TransmitPowerLevelInDBm = ExtractTransmitPowerLevel(primaryArgs);
+
+        // The advertisement's own value when it has one, the scan response's otherwise. The presence of the section is what
+        // counts: 0 dBm is a valid level and must not be mistaken for a missing one.
+        TransmitPowerLevelInDBm = TryGetTransmitPowerLevel(primaryArgs)
+                                  ?? (scanResponseArgs != null ? TryGetTransmitPowerLevel(scanResponseArgs) : null)
+                                  ?? 0;
         BluetoothAddress = ConvertNumericBleAddressToHexBleAddress(primaryArgs.BluetoothAddress);
         ManufacturerData = MergeManufacturerData(primaryArgs, scanResponseArgs);
         ServiceData = MergeServiceData(primaryArgs, scanResponseArgs);
@@ -138,6 +144,12 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
         var data = TryGetSectionData(args, BluetoothLEAdvertisementDataTypes.TxPowerLevel);
         var firstByteOrDefaultToZero = data?[0] ?? 0;
         return (sbyte) firstByteOrDefaultToZero;
+    }
+
+    private static int? TryGetTransmitPowerLevel(BluetoothLEAdvertisementReceivedEventArgs args)
+    {
+        var data = TryGetSectionData(args, BluetoothLEAdvertisementDataTypes.TxPowerLevel);
+        return data is { Length: > 0 } ? (sbyte) data[0] : null;
     }
 
     private static ReadOnlyMemory<byte> ExtractManufacturerData(BluetoothLEAdvertisementReceivedEventArgs args)
@@ -237,7 +249,8 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
     ///     Merges the manufacturer-specific-data sections of a primary ADV PDU and its correlated
     ///     SCAN_RSP PDU, producing the same byte layout Android/iOS already deliver:
     ///     <c>[CompanyId(2)] + [ADV payload] + [SCAN_RSP payload]</c>. The scan response's own
-    ///     redundant 2-byte company-id prefix is stripped before appending.
+    ///     redundant 2-byte company-id prefix is stripped before appending when it is the same company id
+    ///     as the advertisement's; a different company id is kept whole.
     /// </summary>
     private static ReadOnlyMemory<byte> MergeManufacturerData(BluetoothLEAdvertisementReceivedEventArgs primaryArgs, BluetoothLEAdvertisementReceivedEventArgs? scanResponseArgs)
     {
@@ -260,10 +273,17 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
             return scanResponseSection;
         }
 
-        var scanResponsePayload = scanResponseSection.Length > 2 ? scanResponseSection[2..] : Array.Empty<byte>();
-        var merged = new byte[primarySection.Length + scanResponsePayload.Length];
+        // The scan response repeats the company id of the advertisement's section, which is dropped. A different company id is
+        // another manufacturer's data and is kept whole: stripping it would file that payload under the first company.
+        var sameCompanyId = primarySection.Length >= 2 && scanResponseSection.Length >= 2
+                                                       && primarySection[0] == scanResponseSection[0]
+                                                       && primarySection[1] == scanResponseSection[1];
+        var scanResponsePart = sameCompanyId
+            ? scanResponseSection.Length > 2 ? scanResponseSection[2..] : Array.Empty<byte>()
+            : scanResponseSection;
+        var merged = new byte[primarySection.Length + scanResponsePart.Length];
         primarySection.CopyTo(merged, 0);
-        scanResponsePayload.CopyTo(merged, primarySection.Length);
+        scanResponsePart.CopyTo(merged, primarySection.Length);
         return merged;
     }
 
