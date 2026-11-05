@@ -139,7 +139,7 @@ scanner.DeviceListChanged += (sender, args) =>
 **Scanning Characteristics:**
 - Continuous scanning when active
 - RSSI available during scan
-- Advertisement data parsing (LocalName, ServiceUUIDs, ManufacturerData)
+- Advertisement data parsing (LocalName, ServiceUUIDs, ManufacturerData, ServiceData)
 - Lower power consumption than Android in most cases
 
 #### 2. Connection

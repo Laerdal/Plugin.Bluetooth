@@ -129,7 +129,7 @@ await scanner.StartScanningAsync(options);
 
 **Capabilities:**
 - Service UUID filtering (recommended for battery efficiency)
-- Advertisement data parsing (ServiceUUIDs, LocalName, ManufacturerData)
+- Advertisement data parsing (ServiceUUIDs, LocalName, ManufacturerData, ServiceData)
 - RSSI reading during scan
 
 #### 2. Connection

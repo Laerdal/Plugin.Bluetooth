@@ -17,7 +17,7 @@ Every interface's members, XML doc descriptions, and platform-specific `<remarks
 | <xref:Bluetooth.Abstractions.Scanning.IBluetoothRemoteDescriptor> | Read/write on a discovered descriptor |
 | <xref:Bluetooth.Abstractions.Scanning.IBluetoothRemoteL2CapChannel> | An open L2CAP channel (Android/iOS/macOS only) |
 | <xref:Bluetooth.Abstractions.Scanning.IBluetoothPairingManager> | OS-level pairing/bonding |
-| <xref:Bluetooth.Abstractions.Scanning.IBluetoothAdvertisement> | A single received advertisement packet — device name, RSSI, manufacturer data, service UUIDs |
+| <xref:Bluetooth.Abstractions.Scanning.IBluetoothAdvertisement> | A single received advertisement packet — device name, RSSI, manufacturer data, service data, service UUIDs |
 | <xref:Bluetooth.Abstractions.Scanning.IBluetoothNameProvider> | Overriding device name resolution |
 
 Factory interfaces (`IBluetoothRemoteDeviceFactory`, `IBluetoothRemoteServiceFactory`, etc.) are platform-implementation details, not something app code typically calls directly — see <xref:Bluetooth.Abstractions.Scanning> if you're implementing a new platform.
