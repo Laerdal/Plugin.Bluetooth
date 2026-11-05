@@ -36,6 +36,7 @@ public readonly record struct AndroidBluetoothAdvertisement : IBluetoothAdvertis
         DeviceName = scanRecord.DeviceName ?? string.Empty; // Advertised name here, do NOT use scanResult.Device.Name as it may be null or outdated
         ServicesGuids = ExtractServiceGuids(scanRecord);
         ManufacturerData = ExtractManufacturerData(scanRecord);
+        ServiceData = ExtractServiceData(scanRecord);
         TransmitPowerLevelInDBm = scanRecord.TxPowerLevel;
 
         ArgumentNullException.ThrowIfNull(scanResult.Device, nameof(scanResult.Device));
@@ -69,6 +70,9 @@ public readonly record struct AndroidBluetoothAdvertisement : IBluetoothAdvertis
 
     /// <inheritdoc />
     public ReadOnlyMemory<byte> ManufacturerData { get; }
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> ServiceData { get; }
 
     /// <inheritdoc />
     public Manufacturer Manufacturer => ManufacturerData.Length >= 2
@@ -118,6 +122,30 @@ public readonly record struct AndroidBluetoothAdvertisement : IBluetoothAdvertis
         }
 
         return guids;
+    }
+
+    private static IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> ExtractServiceData(ScanRecord scanRecord)
+    {
+        // The platform already merges the 16-bit, 32-bit and 128-bit Service Data structures of the advertisement and its
+        // scan response into one map keyed by the expanded UUID.
+        var nativeServiceData = scanRecord.ServiceData;
+        if (nativeServiceData == null || nativeServiceData.Count == 0)
+        {
+            return ReadOnlyDictionary<Guid, ReadOnlyMemory<byte>>.Empty;
+        }
+
+        var serviceData = new Dictionary<Guid, ReadOnlyMemory<byte>>(nativeServiceData.Count);
+        foreach (var (parcelUuid, data) in nativeServiceData)
+        {
+            if (parcelUuid?.Uuid == null || data == null)
+            {
+                continue;
+            }
+
+            serviceData[parcelUuid.Uuid.ToGuid()] = data;
+        }
+
+        return serviceData;
     }
 
     private static ReadOnlyMemory<byte> ExtractManufacturerData(ScanRecord scanRecord)

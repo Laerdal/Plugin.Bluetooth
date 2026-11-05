@@ -18,6 +18,7 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
     /// <param name="transmitPowerLevelInDBm">The transmit power level in dBm.</param>
     /// <param name="bluetoothAddress">The Bluetooth address of the device.</param>
     /// <param name="manufacturerData">The manufacturer-specific data.</param>
+    /// <param name="serviceData">The service data, keyed by service UUID. <see langword="null" /> means none.</param>
     public BaseBluetoothAdvertisement(
         string? deviceName,
         IEnumerable<Guid>? servicesGuids,
@@ -25,7 +26,8 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
         int signalStrengthInDBm,
         int transmitPowerLevelInDBm,
         string? bluetoothAddress,
-        ReadOnlyMemory<byte> manufacturerData)
+        ReadOnlyMemory<byte> manufacturerData,
+        IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>>? serviceData = null)
     {
         DeviceName = deviceName ?? string.Empty;
         ServicesGuids = servicesGuids ?? [];
@@ -34,6 +36,7 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
         TransmitPowerLevelInDBm = transmitPowerLevelInDBm;
         BluetoothAddress = bluetoothAddress ?? string.Empty;
         ManufacturerData = manufacturerData;
+        ServiceData = serviceData ?? ReadOnlyDictionary<Guid, ReadOnlyMemory<byte>>.Empty;
         DateReceived = DateTimeOffset.UtcNow;
     }
 
@@ -62,6 +65,9 @@ public readonly record struct BaseBluetoothAdvertisement : IBluetoothAdvertiseme
 
     /// <inheritdoc />
     public ReadOnlyMemory<byte> ManufacturerData { get; }
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> ServiceData { get; }
 
     /// <inheritdoc />
     public Manufacturer Manufacturer => ManufacturerData.Length >= 2

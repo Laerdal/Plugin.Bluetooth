@@ -31,6 +31,7 @@ public readonly record struct AppleBluetoothAdvertisement : IBluetoothAdvertisem
         IsConnectable = adData.IsConnectable ?? false;
         TransmitPowerLevelInDBm = adData.TxPowerLevel?.Int32Value ?? 0;
         ManufacturerData = adData.ManufacturerData?.ToArray() ?? [];
+        ServiceData = ExtractServiceData(adData);
 
         SignalStrengthInDBm = rssi.Int32Value;
 
@@ -71,6 +72,9 @@ public readonly record struct AppleBluetoothAdvertisement : IBluetoothAdvertisem
     public ReadOnlyMemory<byte> ManufacturerData { get; }
 
     /// <inheritdoc />
+    public IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> ServiceData { get; }
+
+    /// <inheritdoc />
     public Manufacturer Manufacturer => ManufacturerData.Length >= 2
         ? (Manufacturer) ManufacturerId
         : (Manufacturer) (-1);
@@ -87,6 +91,31 @@ public readonly record struct AppleBluetoothAdvertisement : IBluetoothAdvertisem
 
             return BitConverter.ToInt16(ManufacturerData[..2].Span);
         }
+    }
+
+    #endregion
+
+    #region Private Helper Methods
+
+    private static IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> ExtractServiceData(AdvertisementData adData)
+    {
+        // Core Bluetooth reports Service Data as one dictionary (CBUUID to NSData) for the advertisement and its scan response.
+        var nativeServiceData = adData.ServiceData;
+        if (nativeServiceData == null || nativeServiceData.Count == 0)
+        {
+            return ReadOnlyDictionary<Guid, ReadOnlyMemory<byte>>.Empty;
+        }
+
+        var serviceData = new Dictionary<Guid, ReadOnlyMemory<byte>>((int) nativeServiceData.Count);
+        foreach (var entry in nativeServiceData)
+        {
+            if (entry.Key is CBUUID uuid && entry.Value is NSData data)
+            {
+                serviceData[uuid.ToGuid()] = data.ToArray();
+            }
+        }
+
+        return serviceData;
     }
 
     #endregion
