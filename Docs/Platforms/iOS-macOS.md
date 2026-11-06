@@ -392,7 +392,7 @@ var options = new ScanningOptions
 };
 ```
 
-`AppleScanningOptions.ServiceUuid` is added to the same list. Neither is used when `AppleScanningOptions.PeripheralUuids` is set.
+`AppleScanningOptions.ServiceUuid` is added to the same list. When `AppleScanningOptions.PeripheralUuids` is set, `ServiceUuids` is ignored, and setting `ServiceUuid` together with `PeripheralUuids` throws an `ArgumentException`.
 
 ### 3. Background Operation
 ✅ **Minimal operations in background**
