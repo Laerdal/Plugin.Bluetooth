@@ -132,21 +132,26 @@ public abstract partial class BaseBluetoothScanner
         scanningOptions ??= Options.Create(new ScanningOptions()).Value;
         permissionOptions ??= Options.Create(new PermissionOptions()).Value;
 
-        // A stop that is still draining has already cleared IsRunning; starting now would run beside it.
-        if (StopInFlight is { } stopping)
+        // A stop that is still draining has already cleared IsRunning; starting now would run beside it, so wait for it. IsRunning is
+        // read before the stop: a stop publishes its operation before it clears IsRunning, so a "stopped" scanner is never seen
+        // without the stop that is still going on.
+        bool isRunning;
+        while (true)
         {
-            try
+            isRunning = IsRunning;
+            if (StopInFlight is not { } stopping)
             {
-                await WaitForStopAsync(stopping, timeout, cancellationToken).ConfigureAwait(false);
+                break;
             }
-            catch (Exception) when (stopping.IsCompleted)
-            {
-                // The stop failed, and its own callers see that. A timeout or a cancellation of this call leaves the stop running.
-            }
+
+            // A stop that failed is its own callers' business, so it is turned into a task that always completes: the only
+            // exceptions this wait can throw are this call's own timeout and cancellation.
+            var stopped = stopping.ContinueWith(static _ => { }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            await WaitForStopAsync(stopped, timeout, cancellationToken).ConfigureAwait(false);
         }
 
         // Ensure we are not already started
-        if (IsRunning)
+        if (isRunning)
         {
             LogScannerAlreadyStarted();
             throw new ScannerIsAlreadyStartedException(this);
@@ -359,14 +364,17 @@ public abstract partial class BaseBluetoothScanner
     /// <inheritdoc />
     public virtual ValueTask StopScanningIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        // A stop that is still draining has already cleared IsRunning, but the scanner is not stopped yet.
+        // A stop that is still draining has already cleared IsRunning, but the scanner is not stopped yet. IsRunning is read before
+        // the stop: a stop publishes its operation before it clears IsRunning, so a "stopped" scanner is never seen without the stop
+        // that is still going on.
+        var isRunning = IsRunning;
         if (StopInFlight is { } inFlight)
         {
             LogMergingStopOperation();
             return new ValueTask(WaitForStopAsync(inFlight, timeout, cancellationToken));
         }
 
-        if (!IsRunning)
+        if (!isRunning)
         {
             return ValueTask.CompletedTask;
         }
