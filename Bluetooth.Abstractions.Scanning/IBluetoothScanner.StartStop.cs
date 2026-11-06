@@ -93,6 +93,11 @@ public partial interface IBluetoothScanner
     /// <exception cref="ScannerUnexpectedStopException">Thrown when an unexpected error occurs during stop.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
+    /// <remarks>
+    ///     Callers share one stop operation: a call made while a stop is in progress waits for that stop to finish instead of
+    ///     starting another or throwing <see cref="ScannerIsAlreadyStoppedException" />. "Finished" includes whatever the platform
+    ///     still drains after it reports that scanning stopped.
+    /// </remarks>
     Task StopScanningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -101,7 +106,10 @@ public partial interface IBluetoothScanner
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous stop operation.</returns>
-    /// <remarks>Checks if the Scanner is running before attempting to stop it.</remarks>
+    /// <remarks>
+    ///     Checks if the Scanner is running before attempting to stop it. When a stop is already in progress it waits for that stop
+    ///     to finish, so the scanner is stopped when this returns.
+    /// </remarks>
     ValueTask StopScanningIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
