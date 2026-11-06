@@ -132,14 +132,14 @@ public abstract partial class BaseBluetoothScanner
         scanningOptions ??= Options.Create(new ScanningOptions()).Value;
         permissionOptions ??= Options.Create(new PermissionOptions()).Value;
 
-        // A stop that is still draining has already cleared IsRunning; starting now would run beside it, so wait for it. IsRunning is
-        // read before the stop: a stop publishes its operation before it clears IsRunning, so a "stopped" scanner is never seen
-        // without the stop that is still going on.
+        // A stop that is still draining has already cleared IsRunning; starting now would run beside it, so wait for it, and look again
+        // afterwards.
         bool isRunning;
         while (true)
         {
-            isRunning = IsRunning;
-            if (StopInFlight is not { } stopping)
+            var (stopping, running) = GetStopState();
+            isRunning = running;
+            if (stopping is null)
             {
                 break;
             }
@@ -341,14 +341,19 @@ public abstract partial class BaseBluetoothScanner
     /// </summary>
     private TaskCompletionSource? _stopOperation;
 
-    private Task? StopInFlight
+    /// <summary>
+    ///     The stop in flight, if any, and whether the scanner runs, read together under <see cref="_stopGate" />. A stop publishes its
+    ///     operation under the same gate before it clears IsRunning, so it cannot begin between the two reads: a scanner that no longer
+    ///     runs is never seen without the stop that is still going on, and a stop that was in flight is never seen as finished with
+    ///     the scanner still running.
+    /// </summary>
+    private (Task? Stopping, bool IsRunning) GetStopState()
     {
-        get
+        lock (_stopGate)
         {
-            lock (_stopGate)
-            {
-                return _stopOperation is { Task.IsCompleted: false } operation ? operation.Task : null;
-            }
+            var stopping = _stopOperation is { Task.IsCompleted: false } operation ? operation.Task : null;
+            var isRunning = IsRunning;
+            return (stopping, isRunning);
         }
     }
 
@@ -364,11 +369,9 @@ public abstract partial class BaseBluetoothScanner
     /// <inheritdoc />
     public virtual ValueTask StopScanningIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        // A stop that is still draining has already cleared IsRunning, but the scanner is not stopped yet. IsRunning is read before
-        // the stop: a stop publishes its operation before it clears IsRunning, so a "stopped" scanner is never seen without the stop
-        // that is still going on.
-        var isRunning = IsRunning;
-        if (StopInFlight is { } inFlight)
+        // A stop that is still draining has already cleared IsRunning, but the scanner is not stopped yet.
+        var (inFlight, isRunning) = GetStopState();
+        if (inFlight is not null)
         {
             LogMergingStopOperation();
             return new ValueTask(WaitForStopAsync(inFlight, timeout, cancellationToken));
