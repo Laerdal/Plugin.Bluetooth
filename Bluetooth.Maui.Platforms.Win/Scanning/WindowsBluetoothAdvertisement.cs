@@ -164,31 +164,21 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
 
     private static ReadOnlyMemory<byte> ExtractManufacturerData(BluetoothLEAdvertisementReceivedEventArgs args)
     {
-        // Extended advertisements (received only when they are enabled) carry the section like a legacy advertisement or scan response.
-        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041) && args.AdvertisementType == BluetoothLEAdvertisementType.Extended)
+        // Whatever the advertisement type is: a non-connectable or scannable advertisement, a scan response and an extended
+        // advertisement carry the section like any other.
+        return WindowsManufacturerDataBuilder.Build(GetManufacturerSections(args));
+    }
+
+    private static IEnumerable<byte[]> GetManufacturerSections(BluetoothLEAdvertisementReceivedEventArgs args)
+    {
+        var sections = args.Advertisement.DataSections;
+        if (sections == null || sections.Count == 0)
         {
-            return TryGetSectionData(args, BluetoothLEAdvertisementDataTypes.ManufacturerSpecificData) ?? ReadOnlyMemory<byte>.Empty;
+            return [];
         }
 
-        switch (args.AdvertisementType)
-        {
-            case BluetoothLEAdvertisementType.ConnectableUndirected:
-                return TryGetSectionData(args, BluetoothLEAdvertisementDataTypes.ManufacturerSpecificData) ?? ReadOnlyMemory<byte>.Empty;
-
-            case BluetoothLEAdvertisementType.ScanResponse:
-                var baseScanResponse = TryGetSectionData(args, BluetoothLEAdvertisementDataTypes.ManufacturerSpecificData);
-                // It's perfectly normal that some devices might not advertise manufacturer data at all
-                return baseScanResponse ?? ReadOnlyMemory<byte>.Empty;
-
-            case BluetoothLEAdvertisementType.ConnectableDirected:
-            case BluetoothLEAdvertisementType.ScannableUndirected:
-            case BluetoothLEAdvertisementType.NonConnectableUndirected:
-                // Ignoring these advertisement types for manufacturer data
-                return ReadOnlyMemory<byte>.Empty;
-
-            default:
-                return ReadOnlyMemory<byte>.Empty;
-        }
+        return sections.Where(section => section.DataType == BluetoothLEAdvertisementDataTypes.ManufacturerSpecificData)
+                       .Select(section => section.Data.ToArray());
     }
 
     private static IReadOnlyDictionary<Guid, ReadOnlyMemory<byte>> ExtractServiceData(BluetoothLEAdvertisementReceivedEventArgs args)
@@ -265,42 +255,14 @@ public readonly record struct WindowsBluetoothAdvertisement : IBluetoothAdvertis
     ///     Merges the manufacturer-specific-data sections of a primary ADV PDU and its correlated
     ///     SCAN_RSP PDU, producing the same byte layout Android/iOS already deliver:
     ///     <c>[CompanyId(2)] + [ADV payload] + [SCAN_RSP payload]</c>. The scan response's own
-    ///     redundant 2-byte company-id prefix is stripped before appending when it is the same company id
-    ///     as the advertisement's; a different company id is kept whole.
+    ///     redundant 2-byte company-id prefix is dropped when it is the same company id as the
+    ///     advertisement's; a different company id is another manufacturer's data and keeps its own prefix.
     /// </summary>
     private static ReadOnlyMemory<byte> MergeManufacturerData(BluetoothLEAdvertisementReceivedEventArgs primaryArgs, BluetoothLEAdvertisementReceivedEventArgs? scanResponseArgs)
     {
-        var primarySection = TryGetSectionData(primaryArgs, BluetoothLEAdvertisementDataTypes.ManufacturerSpecificData);
-
-        if (scanResponseArgs == null)
-        {
-            return primarySection ?? ReadOnlyMemory<byte>.Empty;
-        }
-
-        var scanResponseSection = TryGetSectionData(scanResponseArgs, BluetoothLEAdvertisementDataTypes.ManufacturerSpecificData);
-        if (scanResponseSection == null)
-        {
-            return primarySection ?? ReadOnlyMemory<byte>.Empty;
-        }
-
-        if (primarySection == null)
-        {
-            // Nothing to prefix - the scan response's own [CompanyId][payload] stands alone.
-            return scanResponseSection;
-        }
-
-        // The scan response repeats the company id of the advertisement's section, which is dropped. A different company id is
-        // another manufacturer's data and is kept whole: stripping it would file that payload under the first company.
-        var sameCompanyId = primarySection.Length >= 2 && scanResponseSection.Length >= 2
-                                                       && primarySection[0] == scanResponseSection[0]
-                                                       && primarySection[1] == scanResponseSection[1];
-        var scanResponsePart = sameCompanyId
-            ? scanResponseSection.Length > 2 ? scanResponseSection[2..] : Array.Empty<byte>()
-            : scanResponseSection;
-        var merged = new byte[primarySection.Length + scanResponsePart.Length];
-        primarySection.CopyTo(merged, 0);
-        scanResponsePart.CopyTo(merged, primarySection.Length);
-        return merged;
+        return scanResponseArgs == null
+            ? ExtractManufacturerData(primaryArgs)
+            : WindowsManufacturerDataBuilder.Build(GetManufacturerSections(primaryArgs).Concat(GetManufacturerSections(scanResponseArgs)));
     }
 
     /// <summary>
