@@ -100,16 +100,39 @@ public abstract partial class BaseBluetoothScanner
         // Throw event
         AdvertisementReceived?.Invoke(this, new AdvertisementReceivedEventArgs(advertisement));
 
-        // Get or create device
-        if (GetDeviceOrDefault(advertisement.BluetoothAddress) is { } existingDevice)
+        // Get or create device. A device that was just created has already taken this advertisement.
+        var device = GetOrAddDevice(advertisement, out var created);
+        if (!created)
         {
-            // Process advertisement infos
-            existingDevice.OnAdvertisementReceived(advertisement);
+            device.OnAdvertisementReceived(advertisement);
         }
-        else
+    }
+
+    private readonly object _deviceCreationGate = new();
+
+    /// <summary>
+    ///     Returns the device of the advertisement's address, creating it when there is none. Two callbacks for the same new address
+    ///     must not both create one: a second device with the same id makes every later lookup of that address throw
+    ///     <see cref="MultipleDevicesFoundException" />, so the miss path checks again under a gate before it creates.
+    /// </summary>
+    private IBluetoothRemoteDevice GetOrAddDevice(IBluetoothAdvertisement advertisement, out bool created)
+    {
+        if (GetDeviceOrDefault(advertisement.BluetoothAddress) is { } existing)
         {
-            // New device
-            AddDeviceFromAdvertisement(advertisement);
+            created = false;
+            return existing;
+        }
+
+        lock (_deviceCreationGate)
+        {
+            if (GetDeviceOrDefault(advertisement.BluetoothAddress) is { } addedMeanwhile)
+            {
+                created = false;
+                return addedMeanwhile;
+            }
+
+            created = true;
+            return AddDeviceFromAdvertisement(advertisement);
         }
     }
 
@@ -136,23 +159,11 @@ public abstract partial class BaseBluetoothScanner
         var groupedAdvertisements = filteredAdvertisements.GroupBy(advertisement => advertisement.BluetoothAddress);
         foreach (var advertisementGroup in groupedAdvertisements)
         {
-            // Get or create device
-            if (GetDeviceOrDefault(advertisementGroup.Key) is { } existingDevice)
+            // Get or create device; a device that was just created has already taken the first advertisement
+            var device = GetOrAddDevice(advertisementGroup.First(), out var created);
+            foreach (var advertisement in created ? advertisementGroup.Skip(1) : advertisementGroup)
             {
-                // Process advertisement infos
-                foreach (var advertisement in advertisementGroup)
-                {
-                    existingDevice.OnAdvertisementReceived(advertisement);
-                }
-            }
-            else
-            {
-                // Process advertisement infos
-                var newDevice = AddDeviceFromAdvertisement(advertisementGroup.First());
-                foreach (var advertisement in advertisementGroup.Skip(1))
-                {
-                    newDevice.OnAdvertisementReceived(advertisement);
-                }
+                device.OnAdvertisementReceived(advertisement);
             }
         }
     }
