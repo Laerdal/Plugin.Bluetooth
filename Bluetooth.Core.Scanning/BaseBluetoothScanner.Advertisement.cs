@@ -108,32 +108,46 @@ public abstract partial class BaseBluetoothScanner
         }
     }
 
-    private readonly object _deviceCreationGate = new();
+    private readonly ConcurrentDictionary<string, object> _deviceCreationLocks = new();
 
     /// <summary>
     ///     Returns the device of the advertisement's address, creating it when there is none. Two callbacks for the same new address
     ///     must not both create one: a second device with the same id makes every later lookup of that address throw
-    ///     <see cref="MultipleDevicesFoundException" />, so the miss path checks again under a gate before it creates.
+    ///     <see cref="MultipleDevicesFoundException" />. Creating a device has side effects on the native objects (Apple's peripheral
+    ///     wrapper becomes its peripheral's delegate), so a loser cannot simply be thrown away: creation is serialized per address
+    ///     instead, and the miss path checks again under that lock. The lock is per address so that a consumer's
+    ///     <c>DeviceWrapper</c>, which runs under it, never holds up another address.
     /// </summary>
-    private IBluetoothRemoteDevice GetOrAddDevice(IBluetoothAdvertisement advertisement, out bool created)
+    private IBluetoothRemoteDevice GetOrAddDevice<TAdvertisement>(TAdvertisement advertisement, out bool created)
+        where TAdvertisement : IBluetoothAdvertisement
     {
-        if (GetDeviceOrDefault(advertisement.BluetoothAddress) is { } existing)
+        var address = advertisement.BluetoothAddress;
+        if (GetDeviceOrDefault(address) is { } existing)
         {
             created = false;
             return existing;
         }
 
-        lock (_deviceCreationGate)
+        IBluetoothRemoteDevice device;
+        var creationLock = _deviceCreationLocks.GetOrAdd(address, static _ => new object());
+        lock (creationLock)
         {
-            if (GetDeviceOrDefault(advertisement.BluetoothAddress) is { } addedMeanwhile)
+            if (GetDeviceOrDefault(address) is { } addedMeanwhile)
             {
                 created = false;
-                return addedMeanwhile;
+                device = addedMeanwhile;
             }
-
-            created = true;
-            return AddDeviceFromAdvertisement(advertisement);
+            else
+            {
+                created = true;
+                device = AddDeviceFromAdvertisement(advertisement);
+            }
         }
+
+        // The device is published: a later callback finds it on the first check and never needs the lock again. After a failed
+        // creation the lock stays, so that callbacks that already wait on it and a new one still share it.
+        _deviceCreationLocks.TryRemove(address, out _);
+        return device;
     }
 
     /// <summary>
