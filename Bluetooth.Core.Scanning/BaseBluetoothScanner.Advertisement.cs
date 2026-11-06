@@ -100,16 +100,79 @@ public abstract partial class BaseBluetoothScanner
         // Throw event
         AdvertisementReceived?.Invoke(this, new AdvertisementReceivedEventArgs(advertisement));
 
-        // Get or create device
-        if (GetDeviceOrDefault(advertisement.BluetoothAddress) is { } existingDevice)
+        // Get or create device. A device that was just created has already taken this advertisement.
+        var device = GetOrAddDevice(advertisement, out var created);
+        if (!created)
         {
-            // Process advertisement infos
-            existingDevice.OnAdvertisementReceived(advertisement);
+            device.OnAdvertisementReceived(advertisement);
         }
-        else
+    }
+
+    /// <summary>
+    ///     The lock of one address while a device for it is being created, and how many callbacks hold it or wait for it.
+    /// </summary>
+    private sealed class DeviceCreationLock
+    {
+        public int Users;
+    }
+
+    // Guards the entries and their Users counts. It is never held while a device is created or looked up.
+    private readonly Dictionary<string, DeviceCreationLock> _deviceCreationLocks = [];
+
+    /// <summary>
+    ///     Returns the device of the advertisement's address, creating it when there is none. Two callbacks for the same new address
+    ///     must not both create one: a second device with the same id makes every later lookup of that address throw
+    ///     <see cref="MultipleDevicesFoundException" />. Creating a device has side effects on the native objects (Apple's peripheral
+    ///     wrapper becomes its peripheral's delegate), so a loser cannot simply be thrown away: creation is serialized per address
+    ///     instead, and the miss path checks again under that lock. The lock is per address so that a consumer's
+    ///     <c>DeviceWrapper</c>, which runs under it, never holds up another address.
+    /// </summary>
+    private IBluetoothRemoteDevice GetOrAddDevice<TAdvertisement>(TAdvertisement advertisement, out bool created)
+        where TAdvertisement : IBluetoothAdvertisement
+    {
+        var address = advertisement.BluetoothAddress;
+        if (GetDeviceOrDefault(address) is { } existing)
         {
-            // New device
-            AddDeviceFromAdvertisement(advertisement);
+            created = false;
+            return existing;
+        }
+
+        // The entry lives as long as one callback holds or awaits it. Dropping it earlier would let a new callback take a new lock while an
+        // old one still waits on the previous, and both could create a device, for example when the device was removed in between.
+        DeviceCreationLock creationLock;
+        lock (_deviceCreationLocks)
+        {
+            if (!_deviceCreationLocks.TryGetValue(address, out creationLock!))
+            {
+                _deviceCreationLocks[address] = creationLock = new DeviceCreationLock();
+            }
+
+            creationLock.Users++;
+        }
+
+        try
+        {
+            lock (creationLock)
+            {
+                if (GetDeviceOrDefault(address) is { } addedMeanwhile)
+                {
+                    created = false;
+                    return addedMeanwhile;
+                }
+
+                created = true;
+                return AddDeviceFromAdvertisement(advertisement);
+            }
+        }
+        finally
+        {
+            lock (_deviceCreationLocks)
+            {
+                if (--creationLock.Users == 0)
+                {
+                    _deviceCreationLocks.Remove(address);
+                }
+            }
         }
     }
 
@@ -136,23 +199,11 @@ public abstract partial class BaseBluetoothScanner
         var groupedAdvertisements = filteredAdvertisements.GroupBy(advertisement => advertisement.BluetoothAddress);
         foreach (var advertisementGroup in groupedAdvertisements)
         {
-            // Get or create device
-            if (GetDeviceOrDefault(advertisementGroup.Key) is { } existingDevice)
+            // Get or create device; a device that was just created has already taken the first advertisement
+            var device = GetOrAddDevice(advertisementGroup.First(), out var created);
+            foreach (var advertisement in created ? advertisementGroup.Skip(1) : advertisementGroup)
             {
-                // Process advertisement infos
-                foreach (var advertisement in advertisementGroup)
-                {
-                    existingDevice.OnAdvertisementReceived(advertisement);
-                }
-            }
-            else
-            {
-                // Process advertisement infos
-                var newDevice = AddDeviceFromAdvertisement(advertisementGroup.First());
-                foreach (var advertisement in advertisementGroup.Skip(1))
-                {
-                    newDevice.OnAdvertisementReceived(advertisement);
-                }
+                device.OnAdvertisementReceived(advertisement);
             }
         }
     }
