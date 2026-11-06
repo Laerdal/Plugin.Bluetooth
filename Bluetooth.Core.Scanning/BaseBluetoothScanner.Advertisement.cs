@@ -108,7 +108,16 @@ public abstract partial class BaseBluetoothScanner
         }
     }
 
-    private readonly ConcurrentDictionary<string, object> _deviceCreationLocks = new();
+    /// <summary>
+    ///     The lock of one address while a device for it is being created, and how many callbacks hold it or wait for it.
+    /// </summary>
+    private sealed class DeviceCreationLock
+    {
+        public int Users;
+    }
+
+    // Guards the entries and their Users counts. It is never held while a device is created or looked up.
+    private readonly Dictionary<string, DeviceCreationLock> _deviceCreationLocks = [];
 
     /// <summary>
     ///     Returns the device of the advertisement's address, creating it when there is none. Two callbacks for the same new address
@@ -128,26 +137,43 @@ public abstract partial class BaseBluetoothScanner
             return existing;
         }
 
-        IBluetoothRemoteDevice device;
-        var creationLock = _deviceCreationLocks.GetOrAdd(address, static _ => new object());
-        lock (creationLock)
+        // The entry lives as long as one callback holds or awaits it. Dropping it earlier would let a new callback take a new lock while an
+        // old one still waits on the previous, and both could create a device, for example when the device was removed in between.
+        DeviceCreationLock creationLock;
+        lock (_deviceCreationLocks)
         {
-            if (GetDeviceOrDefault(address) is { } addedMeanwhile)
+            if (!_deviceCreationLocks.TryGetValue(address, out creationLock!))
             {
-                created = false;
-                device = addedMeanwhile;
+                _deviceCreationLocks[address] = creationLock = new DeviceCreationLock();
             }
-            else
-            {
-                created = true;
-                device = AddDeviceFromAdvertisement(advertisement);
-            }
+
+            creationLock.Users++;
         }
 
-        // The device is published: a later callback finds it on the first check and never needs the lock again. After a failed
-        // creation the lock stays, so that callbacks that already wait on it and a new one still share it.
-        _deviceCreationLocks.TryRemove(address, out _);
-        return device;
+        try
+        {
+            lock (creationLock)
+            {
+                if (GetDeviceOrDefault(address) is { } addedMeanwhile)
+                {
+                    created = false;
+                    return addedMeanwhile;
+                }
+
+                created = true;
+                return AddDeviceFromAdvertisement(advertisement);
+            }
+        }
+        finally
+        {
+            lock (_deviceCreationLocks)
+            {
+                if (--creationLock.Users == 0)
+                {
+                    _deviceCreationLocks.Remove(address);
+                }
+            }
+        }
     }
 
     /// <summary>
