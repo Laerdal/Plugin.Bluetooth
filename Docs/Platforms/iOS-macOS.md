@@ -388,12 +388,11 @@ iOS notifies via `IsReadyToSendWriteWithoutResponse` when ready for next write-w
 ```csharp
 var options = new ScanningOptions
 {
-    Apple = new AppleScanningOptions
-    {
-        ServiceUuids = new[] { myServiceGuid } // Reduces power consumption
-    }
+    ServiceUuids = new[] { myServiceGuid } // Reduces power consumption; CoreBluetooth reports peripherals advertising any of them
 };
 ```
+
+`AppleScanningOptions.ServiceUuid` is added to the same list. Neither is used when `AppleScanningOptions.PeripheralUuids` is set.
 
 ### 3. Background Operation
 ✅ **Minimal operations in background**

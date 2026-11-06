@@ -18,6 +18,7 @@ public record AppleScanningOptions : ScanningOptions
     /// </summary>
     /// <remarks>
     ///     When set, only peripherals advertising this service UUID will be discovered.
+    ///     It is added to <see cref="ScanningOptions.ServiceUuids" />: a peripheral is discovered when it advertises any of them.
     /// </remarks>
     public Guid? ServiceUuid { get; init; }
 
