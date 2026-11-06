@@ -155,10 +155,14 @@ scanner.DeviceListChanged += (sender, args) =>
   responses are never solicited at all (see below) — unless `WindowsScanningOptions.ScanningMode`
   is set, which takes precedence. Every other `ScanMode` value scans **active**, matching this
   plugin's existing default.
-- `ScanningOptions.ServiceUuids` is **not applied on Windows**: neither the Windows scanner nor the shared
-  scanning code reads it, and the native `BluetoothLEAdvertisementWatcher.AdvertisementFilter` is not used
-  either. To filter by service, set `IBluetoothScanner.AdvertisementFilter`, which is invoked for every
-  advertisement, for example `scanner.AdvertisementFilter = ad => ad.ServicesGuids.Contains(serviceUuid);`.
+- `ScanningOptions.ServiceUuids` is applied **in software**, after each advertisement is received: the
+  native `BluetoothLEAdvertisementWatcher.AdvertisementFilter` is not used, the radio still receives
+  everything, and the filter saves no power. An advertisement passes when it lists one of the UUIDs, or
+  when another PDU of the same address did in the last 10 seconds: Windows delivers an advertisement and
+  its scan response as separate PDUs and the UUID can be in either of them, so a device that matched is
+  not cut in half, and a device is never created from a PDU with no UUID and no match behind it. With
+  `MergeScanResponses` the filter sees the merged advertisement, whose service UUIDs are those of both
+  PDUs. `IBluetoothScanner.AdvertisementFilter` still runs afterwards, for anything the UUIDs cannot say.
 
 #### 2. Connection
 ```csharp

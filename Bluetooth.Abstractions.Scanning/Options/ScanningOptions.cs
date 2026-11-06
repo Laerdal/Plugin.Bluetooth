@@ -60,8 +60,10 @@ public record ScanningOptions
     ///             own, this list is ignored. iOS requires service UUIDs to scan while the app is in the background.
     ///         </item>
     ///         <item>
-    ///             <b>Windows</b>: Not applied yet. Set <c>IBluetoothScanner.AdvertisementFilter</c> and test
-    ///             <c>IBluetoothAdvertisement.ServicesGuids</c> instead.
+    ///             <b>Windows</b>: Applied in software, after the advertisement is received: the radio still receives everything, so
+    ///             it saves no power. An advertisement passes when it lists one of the UUIDs or when a PDU of the same address did in
+    ///             the last 10 seconds, because the UUID can be in the advertisement or in its scan response, which Windows delivers
+    ///             as separate PDUs. With <c>WindowsScanningOptions.MergeScanResponses</c> the filter sees both.
     ///         </item>
     ///     </list>
     /// </remarks>
