@@ -198,6 +198,46 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
     }
 
     /// <summary>
+    ///     Virtual method that resolves the options a scan starts with.
+    ///     Override this in client projects to supply defaults for callers that pass none, or only some.
+    /// </summary>
+    /// <param name="scanningOptions">The options passed to the start call, or <see langword="null" /> when it passed none.</param>
+    /// <returns>
+    ///     The options the scanner starts with, which are also the ones <see cref="OnScanStartingAsync" /> receives.
+    ///     Returning <see langword="null" /> leaves the choice to the platform scanner, which uses its own defaults.
+    /// </returns>
+    /// <remarks>
+    ///     <para>
+    ///         Called by <see cref="StartScanningAsync" /> and <see cref="StartScanningIfNeededAsync" />. It is not called by
+    ///         <see cref="CleanRestartScanningAsync" />, which without options restarts with those of the scan it replaces.
+    ///     </para>
+    ///     <para>
+    ///         <see cref="ScanningOptions" /> is immutable, so an override returns a modified copy:
+    ///     </para>
+    ///     <example>
+    ///     <code>
+    ///     protected override ScanningOptions? ResolveScanningOptions(ScanningOptions? scanningOptions)
+    ///     {
+    ///         // Keep what the caller chose for Windows; otherwise merge scan responses into their advertisements.
+    ///         if (scanningOptions?.Windows is not null)
+    ///         {
+    ///             return scanningOptions;
+    ///         }
+    ///
+    ///         return (scanningOptions ?? new ScanningOptions()) with
+    ///         {
+    ///             Windows = new WindowsScanningOptions { MergeScanResponses = true }
+    ///         };
+    ///     }
+    ///     </code>
+    ///     </example>
+    /// </remarks>
+    protected virtual ScanningOptions? ResolveScanningOptions(ScanningOptions? scanningOptions)
+    {
+        return scanningOptions;
+    }
+
+    /// <summary>
     ///     Virtual method called before scanning starts.
     ///     Override this in client projects to add custom pre-scan logic.
     /// </summary>
@@ -321,6 +361,7 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
+        scanningOptions = ResolveScanningOptions(scanningOptions);
         await OnScanStartingAsync(scanningOptions, cancellationToken).ConfigureAwait(false);
         await _platformScanner.StartScanningAsync(
             scanningOptions,
@@ -337,7 +378,7 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         await _platformScanner.StartScanningIfNeededAsync(
-            scanningOptions,
+            ResolveScanningOptions(scanningOptions),
             permissionOptions,
             timeout,
             cancellationToken).ConfigureAwait(false);
