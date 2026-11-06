@@ -185,6 +185,8 @@ if (mfgData.Length > 0)
 - Samsung: `0x0075` (117)
 - Nordic Semiconductor: `0x0059` (89)
 
+**Layout:** the first two bytes are the company ID, least significant byte first, followed by that manufacturer's data. When an advertisement carries several manufacturer-specific sections, the company ID is written once per manufacturer, in the order it first appears, followed by the data of every section that carries it. On Windows this holds whatever the type of the advertisement (connectable, scannable, non-connectable, scan response or extended), and in merge mode (`WindowsScanningOptions.MergeScanResponses`) it also covers the scan response.
+
 ### Service Data
 
 A device can publish a small value that belongs to a service, such as a battery level or a version number, in a "Service Data" structure of its advertisement or scan response. `ServiceData` returns these values keyed by service UUID, so they can be read without connecting:

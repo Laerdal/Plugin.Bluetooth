@@ -29,7 +29,10 @@ protocol is simpler — because the OS does the merging for you:
   scan response's; everything else → empty) but returns only whichever half arrived, and
   `BaseBluetoothRemoteDevice.OnAdvertisementReceived` overwrites `LastAdvertisement` wholesale —
   no field-level merge. Whichever PDU arrives last wins; the other's fields are silently lost
-  until the next interval.
+  until the next interval. (Update: the special-casing described here, which read the section for
+  two advertisement types only and took the first section, was replaced by one builder,
+  `WindowsManufacturerDataBuilder`, that reads every manufacturer-specific section of every
+  advertisement type.)
 
 The Laerdal firmware doc confirms the byte layout this needs to converge on. Normal case:
 `[CompanyId(2)] [DeviceId] [Status]` from the ADV, and separately `[CompanyId(2)] [0xFF
@@ -107,7 +110,8 @@ is dropped silently, exactly as it is today.
   `[CompanyId(2, from whichever PDU had it)] + [ADV's manufacturer-data payload, if any] +
   [SCAN_RSP's manufacturer-data payload, if any]`. The SCAN_RSP's own company-id prefix is dropped
   only when it is the same company id as the ADV's; a different company id is another
-  manufacturer's data and is kept whole. `ServicesGuids` is the union of both PDUs' lists, so a
+  manufacturer's data and is kept whole. The same grouping applies to several manufacturer-specific
+  sections inside one PDU, whatever the PDU's advertisement type. `ServicesGuids` is the union of both PDUs' lists, so a
   service filter matches whichever PDU carried the UUID. `DeviceName` and
   `TransmitPowerLevelInDBm` take the ADV PDU's value, falling back to the SCAN_RSP's when the ADV
   has none (the presence of the Tx Power section decides, since 0 dBm is a valid level);
