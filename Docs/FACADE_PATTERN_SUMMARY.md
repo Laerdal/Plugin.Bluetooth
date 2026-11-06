@@ -35,6 +35,7 @@ Successfully implemented unified cross-platform facade wrappers for `IBluetoothS
 - **Virtual Extension Points:**
   ```csharp
   protected virtual void OnAdvertisementReceived(IBluetoothAdvertisement advertisement)
+  protected virtual ScanningOptions? ResolveScanningOptions(ScanningOptions? scanningOptions)
   protected virtual ValueTask OnScanStartingAsync(ScanningOptions? options, CancellationToken ct)
   protected virtual ValueTask OnScanStoppedAsync(CancellationToken ct)
   ```
