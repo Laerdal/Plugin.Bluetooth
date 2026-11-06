@@ -156,7 +156,8 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
 
     /// <summary>
     ///     The last time a PDU from each address, keyed by hex Bluetooth address, listed one of the service UUIDs
-    ///     (<see cref="Environment.TickCount64" />). The other PDUs of that device do not have to list it again.
+    ///     (<see cref="Environment.TickCount64" />), noted when the PDU is received. The other PDUs of that device do not have to
+    ///     list it again.
     /// </summary>
     private readonly ConcurrentDictionary<string, long> _serviceUuidMatches = new();
 
@@ -173,7 +174,9 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     /// <remarks>
     ///     The second condition is what keeps the filter from cutting a matching device in half: with the UUID in the advertisement,
     ///     its scan response does not repeat it, and the other way round. It also means a device is never created from a PDU that
-    ///     has no UUID and no match behind it. With merging, the advertisement already carries the UUIDs of both PDUs.
+    ///     has no UUID and no match behind it. With merging, the advertisement already carries the UUIDs of both PDUs. The match
+    ///     is noted when a PDU is received (<see cref="NoteServiceUuidMatch" />), so a remembered scan response that is merged
+    ///     into a later advertisement does not extend it, and a scan response of a device that is not known yet still counts.
     /// </remarks>
     private bool PassesServiceUuidFilter(WindowsBluetoothAdvertisement advertisement)
     {
@@ -183,17 +186,37 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
             return true;
         }
 
-        var address = advertisement.BluetoothAddress;
         foreach (var advertised in advertisement.ServicesGuids)
         {
             if (Array.IndexOf(serviceUuids, advertised) >= 0)
             {
-                RememberServiceUuidMatch(address);
                 return true;
             }
         }
 
-        return _serviceUuidMatches.TryGetValue(address, out var matchedAt) && Environment.TickCount64 - matchedAt <= ServiceUuidMatchLifetimeMs;
+        return _serviceUuidMatches.TryGetValue(advertisement.BluetoothAddress, out var matchedAt)
+               && Environment.TickCount64 - matchedAt <= ServiceUuidMatchLifetimeMs;
+    }
+
+    /// <summary>
+    ///     Notes that a received PDU lists one of the service UUIDs, whichever PDU it is and whether or not the device exists yet.
+    /// </summary>
+    private void NoteServiceUuidMatch(BluetoothLEAdvertisementReceivedEventArgs args)
+    {
+        var serviceUuids = _serviceUuids;
+        if (serviceUuids == null)
+        {
+            return;
+        }
+
+        foreach (var advertised in args.Advertisement.ServiceUuids)
+        {
+            if (Array.IndexOf(serviceUuids, advertised) >= 0)
+            {
+                RememberServiceUuidMatch(WindowsBluetoothAdvertisement.ConvertNumericBleAddressToHexBleAddress(args.BluetoothAddress));
+                return;
+            }
+        }
     }
 
     private void RememberServiceUuidMatch(string address)
@@ -244,6 +267,8 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     public void OnAdvertisementReceived(BluetoothLEAdvertisementReceivedEventArgs argsAdvertisement)
     {
         ArgumentNullException.ThrowIfNull(argsAdvertisement);
+
+        NoteServiceUuidMatch(argsAdvertisement);
 
         // An extended scan response has the advertisement type Extended and is told apart by its own flag; Windows before build 19041 has only
         // the legacy type.
