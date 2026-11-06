@@ -379,7 +379,22 @@ public abstract partial class BaseBluetoothScanner
             return ValueTask.CompletedTask;
         }
 
-        return new ValueTask(StopScanningAsync(timeout, cancellationToken));
+        return new ValueTask(StopWhileRunningAsync(timeout, cancellationToken));
+    }
+
+    /// <summary>
+    ///     Stops a scanner that was running when <see cref="StopScanningIfNeededAsync" /> looked. If another caller finished stopping it
+    ///     in the meantime there is nothing left to do, and "if needed" must not throw for that.
+    /// </summary>
+    private async Task StopWhileRunningAsync(TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await StopScanningAsync(timeout, cancellationToken).ConfigureAwait(false);
+        }
+        catch (ScannerIsAlreadyStoppedException)
+        {
+        }
     }
 
     /// <inheritdoc />
