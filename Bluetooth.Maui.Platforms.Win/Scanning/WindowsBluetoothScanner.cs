@@ -148,6 +148,73 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
 
     #endregion
 
+    #region Service UUID Filter
+
+    // ScanningOptions.ServiceUuids, applied in software: Windows delivers an advertisement and its scan response as separate PDUs and
+    // the UUID can be in either of them. Set before the watcher starts; null when the scan has no service UUIDs.
+    private volatile Guid[]? _serviceUuids;
+
+    /// <summary>
+    ///     The last time a PDU from each address, keyed by hex Bluetooth address, listed one of the service UUIDs
+    ///     (<see cref="Environment.TickCount64" />). The other PDUs of that device do not have to list it again.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, long> _serviceUuidMatches = new();
+
+    // How long a match lets the other PDUs of the same address through.
+    private const long ServiceUuidMatchLifetimeMs = 10_000;
+
+    // Addresses can rotate (private addresses), so the dictionary is swept of expired entries once it grows past this.
+    private const int MaxServiceUuidMatchesBeforeSweep = 256;
+
+    /// <summary>
+    ///     Tells whether an advertisement passes <see cref="ScanningOptions.ServiceUuids" />: it lists at least one of them, or an
+    ///     advertisement or scan response of the same address did in the last 10 seconds. Without service UUIDs everything passes.
+    /// </summary>
+    /// <remarks>
+    ///     The second condition is what keeps the filter from cutting a matching device in half: with the UUID in the advertisement,
+    ///     its scan response does not repeat it, and the other way round. It also means a device is never created from a PDU that
+    ///     has no UUID and no match behind it. With merging, the advertisement already carries the UUIDs of both PDUs.
+    /// </remarks>
+    private bool PassesServiceUuidFilter(WindowsBluetoothAdvertisement advertisement)
+    {
+        var serviceUuids = _serviceUuids;
+        if (serviceUuids == null)
+        {
+            return true;
+        }
+
+        var address = advertisement.BluetoothAddress;
+        foreach (var advertised in advertisement.ServicesGuids)
+        {
+            if (Array.IndexOf(serviceUuids, advertised) >= 0)
+            {
+                RememberServiceUuidMatch(address);
+                return true;
+            }
+        }
+
+        return _serviceUuidMatches.TryGetValue(address, out var matchedAt) && Environment.TickCount64 - matchedAt <= ServiceUuidMatchLifetimeMs;
+    }
+
+    private void RememberServiceUuidMatch(string address)
+    {
+        var now = Environment.TickCount64;
+        _serviceUuidMatches[address] = now;
+
+        if (_serviceUuidMatches.Count > MaxServiceUuidMatchesBeforeSweep)
+        {
+            foreach (var (matchedAddress, matchedAt) in _serviceUuidMatches)
+            {
+                if (now - matchedAt > ServiceUuidMatchLifetimeMs)
+                {
+                    _serviceUuidMatches.TryRemove(matchedAddress, out _);
+                }
+            }
+        }
+    }
+
+    #endregion
+
     /// <inheritdoc />
     public WindowsBluetoothScanner(IBluetoothAdapter adapter,
         IBluetoothRssiToSignalStrengthConverter rssiToSignalStrengthConverter,
@@ -187,9 +254,9 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         {
             // Every PDU, scan responses included, goes through the normal pipeline, as it always has: data that only a scan
             // response carries (a name, service data) would otherwise never reach AdvertisementReceived or LastAdvertisement.
-            DispatchAdvertisement(new WindowsBluetoothAdvertisement(argsAdvertisement));
+            var dispatched = DispatchAdvertisement(new WindowsBluetoothAdvertisement(argsAdvertisement));
 
-            if (isScanResponse)
+            if (dispatched && isScanResponse)
             {
                 DispatchScanResponseToExistingDevice(argsAdvertisement);
             }
@@ -359,11 +426,18 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         }
     }
 
-    private void DispatchAdvertisement(WindowsBluetoothAdvertisement advertisement)
+    /// <returns><c>false</c> when the advertisement does not pass the service UUID filter and was dropped.</returns>
+    private bool DispatchAdvertisement(WindowsBluetoothAdvertisement advertisement)
     {
+        if (!PassesServiceUuidFilter(advertisement))
+        {
+            return false;
+        }
+
         var deviceName = string.IsNullOrEmpty(advertisement.DeviceName) ? "(no name)" : advertisement.DeviceName;
         Logger?.LogDeviceDiscovered(advertisement.BluetoothAddress, deviceName, advertisement.Manufacturer, advertisement.SignalStrengthInDBm);
         OnAdvertisementReceived(advertisement); // Base class method
+        return true;
     }
 
     /// <summary>
@@ -377,7 +451,12 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
 
         if (GetDeviceOrDefault(hexAddress)?.UnderlyingPlatformDevice is WindowsBluetoothRemoteDevice windowsDevice)
         {
-            windowsDevice.OnScanResponseReceived(new WindowsBluetoothAdvertisement(scanResponseArgs));
+            // A device of an earlier scan is still known, so the service UUID filter decides here as well.
+            var scanResponse = new WindowsBluetoothAdvertisement(scanResponseArgs);
+            if (PassesServiceUuidFilter(scanResponse))
+            {
+                windowsDevice.OnScanResponseReceived(scanResponse);
+            }
         }
     }
 
@@ -435,6 +514,10 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         _mergeScanResponses = windowsOptions?.MergeScanResponses ?? false;
         _scanResponseMergeWindow = windowsOptions?.ScanResponseMergeWindow ?? TimeSpan.FromMilliseconds(500);
         _scanResponseMaxAge = windowsOptions?.ScanResponseMaxAge ?? TimeSpan.FromSeconds(10);
+
+        // Nothing matched in an earlier scan counts in this one.
+        _serviceUuidMatches.Clear();
+        _serviceUuids = scanningOptions.ServiceUuids is { Count: > 0 } serviceUuids ? serviceUuids.ToArray() : null;
 
         var nativeWatcher = Watcher.BluetoothLeAdvertisementWatcher;
         ConfigureNativeWatcher(nativeWatcher, scanningOptions, windowsOptions);

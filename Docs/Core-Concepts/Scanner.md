@@ -129,7 +129,7 @@ var options = new ScanningOptions
 };
 ```
 
-A device is discovered when it advertises any of the UUIDs. Android and iOS/macOS apply the filter natively. Windows does not apply it yet: set `scanner.AdvertisementFilter = ad => ad.ServicesGuids.Contains(serviceUuid);` there.
+A device is discovered when it advertises any of the UUIDs. Android and iOS/macOS apply the filter natively. Windows applies it in software after it receives each advertisement, so it filters but saves no power; an advertisement passes when it lists one of the UUIDs or when another PDU of the same device did in the last 10 seconds.
 
 ### Scan Mode (Power vs Speed)
 

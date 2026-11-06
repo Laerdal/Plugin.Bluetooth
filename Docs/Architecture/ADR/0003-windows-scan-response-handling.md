@@ -244,11 +244,12 @@ breakdown. Summary:
       no equivalent anywhere in this codebase today:
   - `AdvertisementFilter` (`BluetoothLEAdvertisementFilter`) — native payload-section-based
     filtering via `.Advertisement` (ServiceUuids/ManufacturerData/LocalName) and `.BytePatterns`
-    (offset-based raw byte pattern matching). Today `ScanningOptions.ServiceUuids` is not applied
-    on Windows at all (neither the Windows scanner nor the shared scanning code reads it); filtering
-    needs an explicit `IBluetoothScanner.AdvertisementFilter`, which runs in software after each
-    advertisement is received. Native/radio-level filtering would be a real opportunity, and would
-    also reduce the volume of PDUs the new merge-buffer has to handle.
+    (offset-based raw byte pattern matching). `ScanningOptions.ServiceUuids` is applied by the
+    Windows scanner in software after each advertisement is received (update: it was not applied at
+    all when this ADR was written): an advertisement passes when it lists one of the UUIDs or when
+    another PDU of the same address did in the last 10 seconds, because the UUID can be in the ADV or
+    in the SCAN_RSP, and the merged advertisement carries both. Native/radio-level filtering would be
+    a real opportunity, and would also reduce the volume of PDUs the new merge-buffer has to handle.
   - `UseHardwareFilter`, `UseCodedPhy`, `UseUncoded1MPhy`, `ScanParameters` — newer watcher
     properties not yet described in the summary reference table; each needs its own docs lookup
     during implementation before deciding whether/how to expose via `WindowsScanningOptions`.
