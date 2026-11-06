@@ -137,7 +137,7 @@ public abstract partial class BaseBluetoothScanner
         {
             try
             {
-                await stopping.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+                await WaitForStopAsync(stopping, timeout, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception) when (stopping.IsCompleted)
             {
@@ -347,6 +347,15 @@ public abstract partial class BaseBluetoothScanner
         }
     }
 
+    /// <summary>
+    ///     Waits for a stop that someone else started, for at most <paramref name="timeout" /> and until <paramref name="cancellationToken" />
+    ///     is cancelled. Unlike <c>WaitBetterAsync</c>, which ignores the token when there is no timeout, a caller can always cancel here.
+    /// </summary>
+    private static Task WaitForStopAsync(Task stop, TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        return timeout is { } limit ? stop.WaitAsync(limit, cancellationToken) : stop.WaitAsync(cancellationToken);
+    }
+
     /// <inheritdoc />
     public virtual ValueTask StopScanningIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
@@ -354,7 +363,7 @@ public abstract partial class BaseBluetoothScanner
         if (StopInFlight is { } inFlight)
         {
             LogMergingStopOperation();
-            return new ValueTask(inFlight.WaitBetterAsync(timeout, cancellationToken));
+            return new ValueTask(WaitForStopAsync(inFlight, timeout, cancellationToken));
         }
 
         if (!IsRunning)
@@ -394,7 +403,7 @@ public abstract partial class BaseBluetoothScanner
         if (!owner)
         {
             LogMergingStopOperation();
-            await operation.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+            await WaitForStopAsync(operation.Task, timeout, cancellationToken).ConfigureAwait(false);
             return;
         }
 
