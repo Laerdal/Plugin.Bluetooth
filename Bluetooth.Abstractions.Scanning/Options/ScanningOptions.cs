@@ -47,14 +47,22 @@ public record ScanningOptions
 
     /// <summary>
     ///     Gets the list of service UUIDs to filter during scanning.
-    ///     When set, only devices advertising these services will be discovered.
+    ///     When set, only devices advertising at least one of these services will be discovered.
     /// </summary>
     /// <remarks>
     ///     <b>Platform Support:</b>
     ///     <list type="bullet">
-    ///         <item><b>Android</b>: Full support via ScanFilter</item>
-    ///         <item><b>iOS/macOS</b>: Full support via CBCentralManager scanForPeripherals serviceUUIDs parameter</item>
-    ///         <item><b>Windows</b>: Filtering performed in software after advertisement received</item>
+    ///         <item><b>Android</b>: Applied natively, one ScanFilter per UUID.</item>
+    ///         <item>
+    ///             <b>iOS/macOS</b>: Applied natively, as the serviceUUIDs argument of CBCentralManager scanForPeripherals.
+    ///             <c>AppleScanningOptions.ServiceUuid</c> is added to this list; it cannot be set together with
+    ///             <c>AppleScanningOptions.PeripheralUuids</c> (an <c>ArgumentException</c>). When <c>PeripheralUuids</c> is set on its
+    ///             own, this list is ignored. iOS requires service UUIDs to scan while the app is in the background.
+    ///         </item>
+    ///         <item>
+    ///             <b>Windows</b>: Not applied yet. Set <c>IBluetoothScanner.AdvertisementFilter</c> and test
+    ///             <c>IBluetoothAdvertisement.ServicesGuids</c> instead.
+    ///         </item>
     ///     </list>
     /// </remarks>
     public IReadOnlyList<Guid>? ServiceUuids { get; init; }

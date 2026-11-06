@@ -19,21 +19,15 @@ public static class CbCentralManagerExtensions
         ArgumentNullException.ThrowIfNull(cbCentralManager);
         ArgumentNullException.ThrowIfNull(scanningOptions);
 
+        // The cross-platform list, plus the Apple-specific single UUID. CoreBluetooth reports the peripherals that advertise any of them.
+        var serviceUuids = GetServiceUuids(scanningOptions);
+
         if (scanningOptions is AppleScanningOptions appleScanningOptions)
         {
             if (appleScanningOptions is { ServiceUuid: not null, PeripheralUuids: not null })
             {
                 throw new
                     ArgumentException("AppleScanningOptions cannot have both ServiceUuid and PeripheralUuids set. Please provide only one of these options to avoid conflicting filters.");
-            }
-            else if (appleScanningOptions.ServiceUuid != null)
-            {
-                // If only ServiceUuid is provided, filter by service UUID
-                cbCentralManager.ScanForPeripherals(appleScanningOptions.ServiceUuid.Value.ToCBUuid(),
-                                                    new PeripheralScanningOptions
-                                                    {
-                                                        AllowDuplicatesKey = appleScanningOptions.AllowDuplicates ?? false
-                                                    }.Dictionary);
             }
             else if (appleScanningOptions.PeripheralUuids != null)
             {
@@ -49,8 +43,8 @@ public static class CbCentralManagerExtensions
             }
             else
             {
-                // If neither is provided, scan for all peripherals
-                cbCentralManager.ScanForPeripherals((CBUUID[]?)null,
+                // Filter by the service UUIDs; without any, scan for all peripherals
+                cbCentralManager.ScanForPeripherals(serviceUuids,
                                                     new PeripheralScanningOptions
                                                     {
                                                         AllowDuplicatesKey = appleScanningOptions.AllowDuplicates ?? false
@@ -59,8 +53,23 @@ public static class CbCentralManagerExtensions
         }
         else
         {
-            // For base ScanningOptions type, scan for all devices (no UUID filtering)
-            cbCentralManager.ScanForPeripherals(null, (PeripheralScanningOptions?) null);
+            // For base ScanningOptions type, filter by the service UUIDs; without any, scan for all devices
+            cbCentralManager.ScanForPeripherals(serviceUuids, (PeripheralScanningOptions?) null);
         }
+    }
+
+    /// <summary>
+    ///     Gets the service UUIDs to scan for: <see cref="ScanningOptions.ServiceUuids" /> and, for <see cref="AppleScanningOptions" />, its <see cref="AppleScanningOptions.ServiceUuid" />.
+    /// </summary>
+    /// <returns>The service UUIDs, or <see langword="null" /> when there is none, which scans for all peripherals.</returns>
+    private static CBUUID[]? GetServiceUuids(ScanningOptions scanningOptions)
+    {
+        var serviceUuids = new List<Guid>(scanningOptions.ServiceUuids ?? []);
+        if (scanningOptions is AppleScanningOptions { ServiceUuid: { } serviceUuid } && !serviceUuids.Contains(serviceUuid))
+        {
+            serviceUuids.Add(serviceUuid);
+        }
+
+        return serviceUuids.Count == 0 ? null : serviceUuids.Select(uuid => uuid.ToCBUuid()).ToArray();
     }
 }

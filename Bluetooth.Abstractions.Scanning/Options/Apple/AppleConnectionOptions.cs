@@ -17,7 +17,9 @@ public record AppleScanningOptions : ScanningOptions
     ///     Gets the service UUID to filter peripherals.
     /// </summary>
     /// <remarks>
-    ///     When set, only peripherals advertising this service UUID will be discovered.
+    ///     When set, it is added to <see cref="ScanningOptions.ServiceUuids" />, and only peripherals advertising at least one of the
+    ///     UUIDs of that combined list are discovered. It cannot be set together with <see cref="PeripheralUuids" />: starting a scan
+    ///     with both throws an <see cref="ArgumentException" />.
     /// </remarks>
     public Guid? ServiceUuid { get; init; }
 
