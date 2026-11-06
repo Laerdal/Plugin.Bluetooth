@@ -132,8 +132,26 @@ public abstract partial class BaseBluetoothScanner
         scanningOptions ??= Options.Create(new ScanningOptions()).Value;
         permissionOptions ??= Options.Create(new PermissionOptions()).Value;
 
+        // A stop that is still draining has already cleared IsRunning; starting now would run beside it, so wait for it, and look again
+        // afterwards.
+        bool isRunning;
+        while (true)
+        {
+            var (stopping, running) = GetStopState();
+            isRunning = running;
+            if (stopping is null)
+            {
+                break;
+            }
+
+            // A stop that failed is its own callers' business, so it is turned into a task that always completes: the only
+            // exceptions this wait can throw are this call's own timeout and cancellation.
+            var stopped = stopping.ContinueWith(static _ => { }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            await WaitForStopAsync(stopped, timeout, cancellationToken).ConfigureAwait(false);
+        }
+
         // Ensure we are not already started
-        if (IsRunning)
+        if (isRunning)
         {
             LogScannerAlreadyStarted();
             throw new ScannerIsAlreadyStartedException(this);
@@ -314,35 +332,122 @@ public abstract partial class BaseBluetoothScanner
         BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
     }
 
+    private readonly object _stopGate = new();
+
+    /// <summary>
+    ///     Completes when the whole stop operation is over: the native stop, whatever the platform drains after it, and the
+    ///     bookkeeping that follows. <see cref="StopTcs" /> only says that the platform reported "stopped", which can come
+    ///     before that, so every caller waits on this one instead.
+    /// </summary>
+    private TaskCompletionSource? _stopOperation;
+
+    /// <summary>
+    ///     The stop in flight, if any, and whether the scanner runs, read together under <see cref="_stopGate" />. A stop publishes its
+    ///     operation under the same gate before it clears IsRunning, so it cannot begin between the two reads: a scanner that no longer
+    ///     runs is never seen without the stop that is still going on, and a stop that was in flight is never seen as finished with
+    ///     the scanner still running.
+    /// </summary>
+    private (Task? Stopping, bool IsRunning) GetStopState()
+    {
+        lock (_stopGate)
+        {
+            var stopping = _stopOperation is { Task.IsCompleted: false } operation ? operation.Task : null;
+            var isRunning = IsRunning;
+            return (stopping, isRunning);
+        }
+    }
+
+    /// <summary>
+    ///     Waits for a stop that someone else started, for at most <paramref name="timeout" /> and until <paramref name="cancellationToken" />
+    ///     is cancelled. Unlike <c>WaitBetterAsync</c>, which ignores the token when there is no timeout, a caller can always cancel here.
+    /// </summary>
+    private static Task WaitForStopAsync(Task stop, TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        return timeout is { } limit ? stop.WaitAsync(limit, cancellationToken) : stop.WaitAsync(cancellationToken);
+    }
+
     /// <inheritdoc />
     public virtual ValueTask StopScanningIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        if (!IsRunning)
+        // A stop that is still draining has already cleared IsRunning, but the scanner is not stopped yet.
+        var (inFlight, isRunning) = GetStopState();
+        if (inFlight is not null)
+        {
+            LogMergingStopOperation();
+            return new ValueTask(WaitForStopAsync(inFlight, timeout, cancellationToken));
+        }
+
+        if (!isRunning)
         {
             return ValueTask.CompletedTask;
         }
 
-        return new ValueTask(StopScanningAsync(timeout, cancellationToken));
+        return new ValueTask(StopWhileRunningAsync(timeout, cancellationToken));
+    }
+
+    /// <summary>
+    ///     Stops a scanner that was running when <see cref="StopScanningIfNeededAsync" /> looked. If another caller finished stopping it
+    ///     in the meantime there is nothing left to do, and "if needed" must not throw for that.
+    /// </summary>
+    private async Task StopWhileRunningAsync(TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await StopScanningAsync(timeout, cancellationToken).ConfigureAwait(false);
+        }
+        catch (ScannerIsAlreadyStoppedException)
+        {
+        }
     }
 
     /// <inheritdoc />
     public async virtual Task StopScanningAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        // Ensure we are not already stopped
-        if (!IsRunning)
+        TaskCompletionSource operation;
+        bool owner;
+        lock (_stopGate)
         {
-            LogScannerAlreadyStopped();
-            throw new ScannerIsAlreadyStoppedException(this);
+            if (_stopOperation is { Task.IsCompleted: false } running)
+            {
+                // Prevents multiple calls to StopAsync, if already stopping, we merge the calls
+                operation = running;
+                owner = false;
+            }
+            else if (!IsRunning)
+            {
+                // Ensure we are not already stopped
+                LogScannerAlreadyStopped();
+                throw new ScannerIsAlreadyStoppedException(this);
+            }
+            else
+            {
+                operation = _stopOperation = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                owner = true;
+            }
         }
 
-        // Prevents multiple calls to StopAsync, if already stopping, we merge the calls
-        if (StopTcs is { Task.IsCompleted: false })
+        if (!owner)
         {
             LogMergingStopOperation();
-            await StopTcs.Task.ConfigureAwait(false);
+            await WaitForStopAsync(operation.Task, timeout, cancellationToken).ConfigureAwait(false);
             return;
         }
 
+        try
+        {
+            await StopCoreAsync(timeout, cancellationToken).ConfigureAwait(false);
+            operation.TrySetResult();
+        }
+        catch (Exception e)
+        {
+            operation.TrySetException(e);
+            _ = operation.Task.Exception; // observed here: nobody else may be waiting on it
+            throw;
+        }
+    }
+
+    private async Task StopCoreAsync(TimeSpan? timeout, CancellationToken cancellationToken)
+    {
         StopTcs = new TaskCompletionSource(); // Reset the TCS
         IsStopping = true; // Set the stopping state to true
         Stopping?.Invoke(this, EventArgs.Empty);
