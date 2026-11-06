@@ -53,8 +53,11 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
 
         public Timer? Timer { get; set; }
 
-        /// <summary>Whether the advertisement already had a service UUID match when it was received, before merging held it back.</summary>
-        public bool MatchedWhenReceived { get; init; }
+        /// <summary>
+        ///     The service UUID filter of the scan that the advertisement already had a match under when it was received, before merging
+        ///     held it back; <c>null</c> when it had none. It only counts while that filter is still the active one.
+        /// </summary>
+        public ServiceUuidFilterState? MatchedUnder { get; init; }
     }
 
     /// <summary>
@@ -181,7 +184,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     ///     advertisement or scan response of the same address did in the last 10 seconds. Without service UUIDs everything passes.
     /// </summary>
     /// <param name="advertisement">The advertisement to check.</param>
-    /// <param name="matchedWhenReceived">Whether the advertisement already had a match when it was received, before merging held it back.</param>
+    /// <param name="matchedUnder">The filter the advertisement already had a match under when it was received, before merging held it back.</param>
     /// <remarks>
     ///     The second condition is what keeps the filter from cutting a matching device in half: with the UUID in the advertisement,
     ///     its scan response does not repeat it, and the other way round. It also means a device is never created from a PDU that
@@ -190,7 +193,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     ///     into a later advertisement does not extend it, and a scan response of a device that is not known yet still counts. An
     ///     advertisement that merging holds back keeps the eligibility it had when it was received.
     /// </remarks>
-    private bool PassesServiceUuidFilter(WindowsBluetoothAdvertisement advertisement, bool matchedWhenReceived = false)
+    private bool PassesServiceUuidFilter(WindowsBluetoothAdvertisement advertisement, ServiceUuidFilterState? matchedUnder = null)
     {
         var filter = _serviceUuidFilter;
         if (filter == null)
@@ -206,7 +209,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
             }
         }
 
-        return matchedWhenReceived || HasRecentMatch(filter, advertisement.BluetoothAddress);
+        return ReferenceEquals(matchedUnder, filter) || HasRecentMatch(filter, advertisement.BluetoothAddress);
     }
 
     private static bool HasRecentMatch(ServiceUuidFilterState filter, string address)
@@ -215,11 +218,13 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     }
 
     /// <summary>
-    ///     Whether a PDU of this address listed one of the service UUIDs in the last 10 seconds; <c>false</c> without service UUIDs.
+    ///     The active filter when a PDU of this address listed one of its service UUIDs in the last 10 seconds; <c>null</c> otherwise,
+    ///     and without service UUIDs.
     /// </summary>
-    private bool HasRecentServiceUuidMatch(string address)
+    private ServiceUuidFilterState? GetFilterWithRecentMatch(string address)
     {
-        return _serviceUuidFilter is { } filter && HasRecentMatch(filter, address);
+        var filter = _serviceUuidFilter;
+        return filter != null && HasRecentMatch(filter, address) ? filter : null;
     }
 
     /// <summary>
@@ -254,7 +259,8 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
             {
                 if (now - matchedAt > ServiceUuidMatchLifetimeMs)
                 {
-                    filter.Matches.TryRemove(matchedAddress, out _);
+                    // Only this exact entry: another callback may have refreshed the address since it was read.
+                    filter.Matches.TryRemove(new KeyValuePair<string, long>(matchedAddress, matchedAt));
                 }
             }
         }
@@ -341,7 +347,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
         }
 
         // Primary ADV PDU: buffer it until its scan response arrives or the merge window ends.
-        var entry = new PendingAdvertisement(argsAdvertisement) { MatchedWhenReceived = HasRecentServiceUuidMatch(hexAddress) };
+        var entry = new PendingAdvertisement(argsAdvertisement) { MatchedUnder = GetFilterWithRecentMatch(hexAddress) };
 #pragma warning disable CA2000 // Disposed when the entry is delivered, dropped or abandoned, or below when there is no scan - not leaked.
         entry.Timer = new Timer(_ => ResolvePendingAdvertisement(hexAddress, entry), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
 #pragma warning restore CA2000
@@ -425,7 +431,7 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
                 switch (delivery)
                 {
                     case AdvertisementDelivery advertisement:
-                        DispatchAdvertisement(new WindowsBluetoothAdvertisement(advertisement.Pending.Args, advertisement.ScanResponse), advertisement.Pending.MatchedWhenReceived);
+                        DispatchAdvertisement(new WindowsBluetoothAdvertisement(advertisement.Pending.Args, advertisement.ScanResponse), advertisement.Pending.MatchedUnder);
                         break;
                     case ScanResponseDelivery scanResponse:
                         DispatchScanResponseToExistingDevice(scanResponse.ScanResponse);
@@ -476,9 +482,9 @@ public class WindowsBluetoothScanner : BaseBluetoothScanner, NativeObjects.Bluet
     }
 
     /// <returns><c>false</c> when the advertisement does not pass the service UUID filter and was dropped.</returns>
-    private bool DispatchAdvertisement(WindowsBluetoothAdvertisement advertisement, bool matchedWhenReceived = false)
+    private bool DispatchAdvertisement(WindowsBluetoothAdvertisement advertisement, ServiceUuidFilterState? matchedUnder = null)
     {
-        if (!PassesServiceUuidFilter(advertisement, matchedWhenReceived))
+        if (!PassesServiceUuidFilter(advertisement, matchedUnder))
         {
             return false;
         }
