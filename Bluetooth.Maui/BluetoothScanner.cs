@@ -203,7 +203,8 @@ public class BluetoothScanner : IBluetoothScanner, IAsyncDisposable
     /// </summary>
     /// <param name="scanningOptions">The options passed to the start call, or <see langword="null" /> when it passed none.</param>
     /// <returns>
-    ///     The options the scanner starts with, which are also the ones <see cref="OnScanStartingAsync" /> receives.
+    ///     The options the scanner starts with. <see cref="StartScanningAsync" /> also passes them to
+    ///     <see cref="OnScanStartingAsync" />; <see cref="StartScanningIfNeededAsync" /> does not call that method.
     ///     Returning <see langword="null" /> leaves the choice to the platform scanner, which uses its own defaults.
     /// </returns>
     /// <remarks>
