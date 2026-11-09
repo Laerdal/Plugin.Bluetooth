@@ -218,8 +218,9 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             throw new TimeoutException($"No scan result or failure came within the {timeout!.Value.TotalMilliseconds:0} ms given to start the scan.");
         }
 
-        // Nothing came within ScannerStartedTimeout: the scan started and found nothing.
-        if (waited == WaitHandle.WaitTimeout && ClaimStart())
+        // Nothing came within ScannerStartedTimeout: the scan started and found nothing. Only when this wins the start: a result or a failure
+        // that claimed it meanwhile has set IsRunning itself, and a failure must not be overwritten with a success.
+        if (waited == WaitHandle.WaitTimeout && Interlocked.CompareExchange(ref _startState, StartClaimed, StartPending) == StartPending)
         {
             IsRunning = true;
         }
