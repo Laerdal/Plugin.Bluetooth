@@ -64,6 +64,11 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// </summary>
     private AutoResetEvent InternalAndroidStartScanResultReceived { get; } = new AutoResetEvent(false);
 
+    private const int StartPending = 1; // a start is waiting for its first result or failure
+    private const int StartClaimed = 2; // a result or a failure came first, or the wait ran out: the start is over
+    private const int StartAbandoned = 3; // the caller gave up first and the scan is being stopped
+    private int _startState;
+
     /// <summary>
     ///     How long a start waits for a scan result or a failure before it reports the scan as started. Defaults to 2 seconds.
     /// </summary>
@@ -179,8 +184,9 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// </summary>
     private async Task StartScanInternal(ScanningOptions scanningOptions, List<ScanFilter>? filters, TimeSpan? timeout, CancellationToken cancellationToken)
     {
-        // Reset the event before starting scan
+        // Reset the event and open the start before starting scan
         InternalAndroidStartScanResultReceived.Reset();
+        Volatile.Write(ref _startState, StartPending);
 
         // Build scan settings
         var settings = BuildScanSettings(scanningOptions);
@@ -197,30 +203,35 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         var waited = await Task.Run(() => WaitHandle.WaitAny([InternalAndroidStartScanResultReceived, cancellationToken.WaitHandle], wait))
                                .ConfigureAwait(false);
 
-        // A result or a failure that came first (index 0, which is also what WaitAny reports when both are signalled) means the start is over:
-        // the result already completed it, so a cancellation that comes after is too late, as for any call that has completed. Throwing here
-        // would reach the base class after the start succeeded, where it cannot be stored as the failure of the start.
-        if (waited != 0 && cancellationToken.IsCancellationRequested)
+        // The start is decided once, by whoever claims it first: a result or a failure (OnScanResult, OnScanFailed), or the caller giving up
+        // here. A start that a result already completed stands, and a cancellation or a timeout that comes after is too late, as for any call
+        // that has completed: throwing then would reach the base class after the start succeeded, where it cannot be stored as its failure.
+        // A start the caller gave up is not revived by a result that was already on its way (OnScanResult drops it).
+        var cancelled = cancellationToken.IsCancellationRequested;
+        var timedOut = waited == WaitHandle.WaitTimeout && callerDecides;
+        if ((cancelled || timedOut) && Interlocked.CompareExchange(ref _startState, StartAbandoned, StartPending) == StartPending)
         {
             // The caller gave up first: no start is reported and the native scan does not keep running behind it.
             BluetoothLeScanner?.StopScan(ScanCallbackProxy);
             IsRunning = false;
             cancellationToken.ThrowIfCancellationRequested();
-        }
-
-        if (waited != WaitHandle.WaitTimeout)
-        {
-            return;
-        }
-
-        if (callerDecides)
-        {
-            BluetoothLeScanner?.StopScan(ScanCallbackProxy);
-            IsRunning = false;
             throw new TimeoutException($"No scan result or failure came within the {timeout!.Value.TotalMilliseconds:0} ms given to start the scan.");
         }
 
-        IsRunning = true;
+        // Nothing came within ScannerStartedTimeout: the scan started and found nothing.
+        if (waited == WaitHandle.WaitTimeout && ClaimStart())
+        {
+            IsRunning = true;
+        }
+    }
+
+    /// <summary>
+    ///     Claims the start for a scan result or a scan failure.
+    /// </summary>
+    /// <returns><see langword="false" /> when the caller already gave up on the start, so the scan is being stopped and nothing is to be reported.</returns>
+    private bool ClaimStart()
+    {
+        return Interlocked.CompareExchange(ref _startState, StartClaimed, StartPending) != StartAbandoned;
     }
 
     /// <inheritdoc />
@@ -368,11 +379,15 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
 
         if (errorCode == ScanFailure.AlreadyStarted)
         {
-            IsRunning = true;
-            InternalAndroidStartScanResultReceived.Set();
+            if (ClaimStart())
+            {
+                IsRunning = true;
+                InternalAndroidStartScanResultReceived.Set();
+            }
         }
         else
         {
+            ClaimStart();
             IsRunning = false;
             InternalAndroidStartScanResultReceived.Set();
             throw new AndroidNativeScanFailureException(errorCode);
@@ -396,7 +411,12 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// </summary>
     public void OnScanResult(ScanCallbackType callbackType, ScanResult result)
     {
-        // Signal that scan has started successfully
+        // Signal that scan has started successfully, unless the caller already gave up on the start
+        if (!ClaimStart())
+        {
+            return;
+        }
+
         IsRunning = true;
         InternalAndroidStartScanResultReceived.Set();
 
