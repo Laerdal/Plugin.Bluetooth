@@ -29,7 +29,8 @@ public record AppleScanningOptions : ScanningOptions
     /// <remarks>
     ///     <para>
     ///         When set and not empty, only the peripherals with these identifiers (<c>CBPeripheral.identifier</c>) are discovered.
-    ///         An empty list does not limit the scan. Useful for reconnecting to known devices.
+    ///         An empty list does not limit the scan, but it still counts as set: <see cref="ScanningOptions.ServiceUuids" /> is ignored.
+    ///         Useful for reconnecting to known devices.
     ///     </para>
     ///     <para>
     ///         CoreBluetooth cannot scan by peripheral identifier, so the scan is not filtered natively: the radio still receives every

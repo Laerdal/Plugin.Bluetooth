@@ -31,10 +31,10 @@ public static class CbCentralManagerExtensions
             }
             else
             {
-                // CoreBluetooth cannot scan by peripheral identifier, only by service UUID. With PeripheralUuids the scan is therefore not
-                // filtered natively, and the scanner keeps the listed peripherals when they are discovered. Otherwise filter by the
-                // service UUIDs; without any, scan for all peripherals.
-                var nativeServiceUuids = appleScanningOptions.PeripheralUuids is { Count: > 0 } ? null : serviceUuids;
+                // CoreBluetooth cannot scan by peripheral identifier, only by service UUID. With PeripheralUuids set (even empty, as for
+                // the ServiceUuid check above) the scan is therefore not filtered natively, and the scanner keeps the listed peripherals
+                // when they are discovered. Otherwise filter by the service UUIDs; without any, scan for all peripherals.
+                var nativeServiceUuids = appleScanningOptions.PeripheralUuids != null ? null : serviceUuids;
                 cbCentralManager.ScanForPeripherals(nativeServiceUuids,
                                                     new PeripheralScanningOptions
                                                     {
