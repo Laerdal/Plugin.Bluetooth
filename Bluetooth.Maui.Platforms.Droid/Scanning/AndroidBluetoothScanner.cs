@@ -104,6 +104,9 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         Logger?.LogScanStarting();
         // TODO: Add LogScanStarting overload that accepts ScanMode and CallbackType parameters
 
+        // Built once, before any attempt: an invalid option is the caller's mistake and a retry cannot fix it.
+        var filters = BuildScanFilters(scanningOptions);
+
         var retryOptions = scanningOptions.ScanStartRetry ?? RetryOptions.None;
 
         if (retryOptions.MaxRetries > 0)
@@ -116,7 +119,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
                                                          attempt++;
                                                          try
                                                          {
-                                                             await StartScanInternal(scanningOptions, cancellationToken).ConfigureAwait(false);
+                                                             await StartScanInternal(scanningOptions, filters, cancellationToken).ConfigureAwait(false);
                                                          }
                                                          catch (Exception ex)
                                                          {
@@ -144,7 +147,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             // No retries, single attempt
             try
             {
-                await StartScanInternal(scanningOptions, cancellationToken).ConfigureAwait(false);
+                await StartScanInternal(scanningOptions, filters, cancellationToken).ConfigureAwait(false);
                 Logger?.LogScanStarted();
             }
             catch (Exception ex)
@@ -158,14 +161,13 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// <summary>
     ///     Internal method for starting the BLE scan. Extracted for retry logic.
     /// </summary>
-    private async Task StartScanInternal(ScanningOptions scanningOptions, CancellationToken cancellationToken)
+    private async Task StartScanInternal(ScanningOptions scanningOptions, List<ScanFilter>? filters, CancellationToken cancellationToken)
     {
         // Reset the event before starting scan
         InternalAndroidStartScanResultReceived.Reset();
 
-        // Build scan settings and filters
+        // Build scan settings
         var settings = BuildScanSettings(scanningOptions);
-        var filters = BuildScanFilters(scanningOptions);
 
         // Start the scan
         BluetoothLeScanner?.StartScan(filters, settings, ScanCallbackProxy);
