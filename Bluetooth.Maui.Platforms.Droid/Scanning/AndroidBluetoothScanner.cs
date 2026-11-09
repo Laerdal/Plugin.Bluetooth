@@ -170,16 +170,12 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         // Start the scan
         BluetoothLeScanner?.StartScan(filters, settings, ScanCallbackProxy);
 
-        try
+        // Wait for either a scan result or a scan failure. On Android those are the only feedback a start gives: when no advertisement
+        // passes the filters (no device around, or none that matches) neither comes, so running out of time means the scan started and
+        // found nothing. WaitOne reports a timeout with false, it does not throw.
+        var signaled = await Task.Run(() => InternalAndroidStartScanResultReceived.WaitOne(ScannerStartedTimeout), cancellationToken).ConfigureAwait(false);
+        if (!signaled)
         {
-            // Wait for either scan to start or timeout
-            await Task.Run(() => InternalAndroidStartScanResultReceived.WaitOne(ScannerStartedTimeout), cancellationToken).ConfigureAwait(false);
-        }
-        catch (TimeoutException)
-        {
-            // On Android, we only get feedback on "StartScanFailed" and on "AdvertisementReceived"
-            // If no devices are around and scan started successfully, we don't receive anything
-            // In timeout case, assume scan started successfully
             IsRunning = true;
         }
     }
