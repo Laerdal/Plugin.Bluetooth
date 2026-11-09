@@ -90,9 +90,10 @@ is dropped silently, exactly as it is today.
   `LastScanResponse`, once the device exists (it does by then unless an advertisement filter
   dropped the PDU), so the raw scan response is available without merging.
 - **Clarified (#100): the advertisement filters do not apply to this channel.** It belongs to a
-  device that exists, and a filter judges each PDU alone, so a bare scan response fails any filter
-  on manufacturer data or name; applying the filters here would cut the raw scan responses off from
-  the devices the filter accepted, which is what the channel is for. The filters decide whether a
+  device that exists, and a filter judges each PDU alone, so a scan response that omits a field the
+  filter requires (the manufacturer data or the name that the primary advertisement carried) is
+  rejected even though its device was accepted; applying the filters here would cut the raw scan
+  responses off from such devices, which is what the channel is for. The filters decide whether a
   PDU enters the normal pipeline and whether a device is created from it. Only the service UUID
   filter applies to the channel, in both modes (with merging, the filters judge the merged
   advertisement, and the scan response itself is still delivered to the device).

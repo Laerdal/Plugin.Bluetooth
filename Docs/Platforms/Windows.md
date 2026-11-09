@@ -398,10 +398,10 @@ SCAN_RSP PDU for an address with no previously-seen ADV is silently dropped. Wit
 PDU is dispatched as before, so a device can be created from whichever PDU is seen first.
 
 **The advertisement filters do not apply to `ScanResponseReceived` and `LastScanResponse`.** That
-channel belongs to a device that already exists, and a filter judges each PDU on its own: a bare scan
-response carries neither the manufacturer data nor, often, the name that a filter looks for, so
-applying the filters there would cut the raw scan responses off from the very devices the filter
-accepted. The scanner's `AdvertisementFilter`, `ScanningOptions.IgnoreNamelessAdvertisements` and
+channel belongs to a device that already exists, and a filter judges each PDU on its own: a scan
+response may omit a field that the filter requires and that the primary advertisement carried (the
+manufacturer data, the name), even when that advertisement passed. Applying the filters there would
+then cut the raw scan responses off from the devices the filter accepted. The scanner's `AdvertisementFilter`, `ScanningOptions.IgnoreNamelessAdvertisements` and
 `ScanningOptions.AdvertisementFilter` decide whether a PDU goes through the normal
 `AdvertisementReceived` path and whether a device is created from it; a scan response for a device that
 exists is still delivered. Only the service UUID filter (`ScanningOptions.ServiceUuids`) applies to it.

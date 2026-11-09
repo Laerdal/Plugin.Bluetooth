@@ -16,7 +16,8 @@ public partial class WindowsBluetoothRemoteDevice
     ///     <para>
     ///         The advertisement filters (the scanner's <c>AdvertisementFilter</c>, and the scan's <c>IgnoreNamelessAdvertisements</c>
     ///         and <c>AdvertisementFilter</c>) do not apply: this belongs to a device that exists, and a filter judges each PDU alone, so
-    ///         a bare scan response would fail most of them. Only the service UUID filter applies.
+    ///         a scan response that omits a field a filter requires from the primary advertisement would be rejected. Only the service UUID
+    ///         filter applies.
     ///     </para>
     /// </remarks>
     public WindowsBluetoothAdvertisement? LastScanResponse
