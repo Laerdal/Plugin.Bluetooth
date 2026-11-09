@@ -59,10 +59,19 @@ public abstract partial class BaseBluetoothScanner
     ///     Creates a native device from the advertisement and adds it to the device list.
     /// </summary>
     /// <param name="advertisement">The advertisement from which to create and add the device.</param>
+    /// <param name="options">The options of the scan the advertisement belongs to, or <see langword="null" /> when none was running.</param>
     /// <returns>The newly created and added <see cref="IBluetoothRemoteDevice" /> instance.</returns>
-    private IBluetoothRemoteDevice AddDeviceFromAdvertisement(IBluetoothAdvertisement advertisement)
+    private IBluetoothRemoteDevice AddDeviceFromAdvertisement(IBluetoothAdvertisement advertisement, ScanningOptions? options)
     {
         var device = NativeCreateDeviceFromAdvertisement(advertisement);
+
+        // The device starts with the signal strength smoothing of the scan it was discovered by. The options come from the callback that
+        // received the advertisement, not from the scanner's current state, which a handler may already have changed by stopping the scan.
+        if (options?.SignalStrengthJitterSmoothing is { } smoothing && device is BaseBluetoothRemoteDevice baseDevice)
+        {
+            baseDevice.SignalStrengthSmoothingOptions = smoothing;
+        }
+
         if (DeviceWrapper != null)
             device = DeviceWrapper(device, advertisement) ?? device;
         lock (Devices)
@@ -85,14 +94,49 @@ public abstract partial class BaseBluetoothScanner
     #region Advertisement Processing
 
     /// <summary>
+    ///     Tells whether an advertisement is processed. It must pass <see cref="AdvertisementFilter">the scanner's filter</see> and, while a
+    ///     scan runs, the filters of that scan:
+    ///     <see cref="Bluetooth.Abstractions.Scanning.Options.ScanningOptions.IgnoreNamelessAdvertisements" /> and
+    ///     <see cref="Bluetooth.Abstractions.Scanning.Options.ScanningOptions.AdvertisementFilter" />.
+    /// </summary>
+    /// <param name="advertisement">The advertisement to judge.</param>
+    /// <param name="options">The options of the scan the advertisement belongs to, or <see langword="null" /> when none was running.</param>
+    /// <remarks>
+    ///     Generic so that no advertisement is boxed unless a filter delegate has to be called.
+    /// </remarks>
+    private bool PassesAdvertisementFilters<TAdvertisement>(TAdvertisement advertisement, ScanningOptions? options)
+        where TAdvertisement : IBluetoothAdvertisement
+    {
+        // A null filter accepts everything
+        if (AdvertisementFilter?.Invoke(advertisement) == false)
+        {
+            return false;
+        }
+
+        if (options is null)
+        {
+            return true;
+        }
+
+        if (options.IgnoreNamelessAdvertisements && string.IsNullOrWhiteSpace(advertisement.DeviceName))
+        {
+            return false;
+        }
+
+        return options.AdvertisementFilter?.Invoke(advertisement) != false;
+    }
+
+    /// <summary>
     ///     Handles the reception of a Bluetooth advertisement, applying filtering and raising events as necessary.
     /// </summary>
     /// <param name="advertisement">The received Bluetooth advertisement.</param>
     protected void OnAdvertisementReceived<TAdvertisement>(TAdvertisement advertisement)
         where TAdvertisement : struct, IBluetoothAdvertisement
     {
-        // Filter (null means accept all)
-        if (AdvertisementFilter?.Invoke(advertisement) == false)
+        // The scan this advertisement belongs to, read before any consumer code runs: a handler may stop the scan, which clears it.
+        var options = ActiveScanningOptions;
+
+        if (!PassesAdvertisementFilters(advertisement, options))
         {
             return;
         }
@@ -101,7 +145,7 @@ public abstract partial class BaseBluetoothScanner
         AdvertisementReceived?.Invoke(this, new AdvertisementReceivedEventArgs(advertisement));
 
         // Get or create device. A device that was just created has already taken this advertisement.
-        var device = GetOrAddDevice(advertisement, out var created);
+        var device = GetOrAddDevice(advertisement, options, out var created);
         if (!created)
         {
             device.OnAdvertisementReceived(advertisement);
@@ -127,7 +171,7 @@ public abstract partial class BaseBluetoothScanner
     ///     instead, and the miss path checks again under that lock. The lock is per address so that a consumer's
     ///     <c>DeviceWrapper</c>, which runs under it, never holds up another address.
     /// </summary>
-    private IBluetoothRemoteDevice GetOrAddDevice<TAdvertisement>(TAdvertisement advertisement, out bool created)
+    private IBluetoothRemoteDevice GetOrAddDevice<TAdvertisement>(TAdvertisement advertisement, ScanningOptions? options, out bool created)
         where TAdvertisement : IBluetoothAdvertisement
     {
         var address = advertisement.BluetoothAddress;
@@ -161,7 +205,7 @@ public abstract partial class BaseBluetoothScanner
                 }
 
                 created = true;
-                return AddDeviceFromAdvertisement(advertisement);
+                return AddDeviceFromAdvertisement(advertisement, options);
             }
         }
         finally
@@ -186,8 +230,9 @@ public abstract partial class BaseBluetoothScanner
     /// </remarks>
     protected void OnAdvertisementsReceived(IEnumerable<IBluetoothAdvertisement> advertisements)
     {
-        // Filter (null means accept all)
-        var filteredAdvertisements = advertisements.Where(adv => AdvertisementFilter?.Invoke(adv) ?? true).ToList();
+        // The scan these advertisements belong to, read before any consumer code runs: a handler may stop the scan, which clears it.
+        var options = ActiveScanningOptions;
+        var filteredAdvertisements = advertisements.Where(adv => PassesAdvertisementFilters(adv, options)).ToList();
 
         // Throw event
         foreach (var advertisement in filteredAdvertisements)
@@ -200,7 +245,7 @@ public abstract partial class BaseBluetoothScanner
         foreach (var advertisementGroup in groupedAdvertisements)
         {
             // Get or create device; a device that was just created has already taken the first advertisement
-            var device = GetOrAddDevice(advertisementGroup.First(), out var created);
+            var device = GetOrAddDevice(advertisementGroup.First(), options, out var created);
             foreach (var advertisement in created ? advertisementGroup.Skip(1) : advertisementGroup)
             {
                 device.OnAdvertisementReceived(advertisement);

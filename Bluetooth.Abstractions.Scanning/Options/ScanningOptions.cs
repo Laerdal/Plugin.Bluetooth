@@ -23,11 +23,18 @@ public record ScanningOptions
     #region Advertisement Filtering
 
     /// <summary>
-    ///     Advertisement filter. If set, only advertisements that pass the filter will be processed.
+    ///     Advertisement filter of this scan. If set, only advertisements that pass the filter will be processed.
     /// </summary>
     /// <remarks>
-    ///     When <c>null</c> (default), all advertisements are accepted.
-    ///     When set, only advertisements where the filter returns <c>true</c> are processed.
+    ///     <para>
+    ///         When <c>null</c> (default), the scan adds no filter. When set, only advertisements where the filter returns <c>true</c> are
+    ///         processed, for as long as the scan runs.
+    ///     </para>
+    ///     <para>
+    ///         It is combined with <see cref="IBluetoothScanner.AdvertisementFilter" />, which stays on the scanner between scans: an
+    ///         advertisement has to pass both. On Windows without <c>WindowsScanningOptions.MergeScanResponses</c> an advertisement and its
+    ///         scan response are separate advertisements, and the filter judges each of them on its own.
+    ///     </para>
     /// </remarks>
     public Func<IBluetoothAdvertisement, bool>? AdvertisementFilter { get; init; }
 
@@ -59,6 +66,18 @@ public record ScanningOptions
     /// <summary>
     ///     Gets a value indicating whether advertisements without a local name should be ignored.
     /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         When <see langword="true" />, an advertisement whose <see cref="IBluetoothAdvertisement.DeviceName" /> is empty is dropped
+    ///         before it raises <see cref="IBluetoothScanner.AdvertisementReceived" /> or reaches a device, so a device that never
+    ///         advertises its name is never discovered. Only the name the advertisement carries counts, not one the platform has cached.
+    ///     </para>
+    ///     <para>
+    ///         Windows delivers an advertisement and its scan response as separate advertisements unless
+    ///         <c>WindowsScanningOptions.MergeScanResponses</c> is on, and a name is often only in the scan response: without merging, the
+    ///         advertisement is dropped and only the scan response gets through. Turn merging on when you use this option on Windows.
+    ///     </para>
+    /// </remarks>
     public bool IgnoreNamelessAdvertisements { get; init; }
 
     #endregion
@@ -114,6 +133,10 @@ public record ScanningOptions
     /// <summary>
     ///     Gets the options for smoothing signal strength jitter.
     /// </summary>
+    /// <remarks>
+    ///     Applies to the devices this scan discovers. A device keeps the smoothing it was created with, so another scan with other
+    ///     options does not change the devices that are already in the list. A window below 1 is treated as 1, which is no smoothing.
+    /// </remarks>
     public SignalStrengthSmoothingOptions SignalStrengthJitterSmoothing { get; init; } = new SignalStrengthSmoothingOptions();
 
     #endregion
