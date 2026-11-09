@@ -913,7 +913,7 @@ public record BatteryImpactReport
 - [ ] **Stop scanning immediately** after finding device
 - [ ] **Limit scan duration** (use timeouts)
 - [ ] **Specify service UUIDs** when possible (especially for iOS background)
-- [ ] **Reduce callbacks**: on iOS/macOS leave `AppleScanningOptions.AllowDuplicates` unset (each peripheral is reported once), and on Android pick the `CallbackType` the use case needs
+- [ ] **Reduce callbacks**: on iOS/macOS leave `AppleScanningOptions.AllowDuplicates` unset (CoreBluetooth then coalesces repeats), and on Android pick the `CallbackType` the use case needs
 - [ ] Set **connection priority** to LowPower for infrequent data updates
 - [ ] **Negotiate larger MTU** for bulk data transfers
 - [ ] **Cache service discovery** results (use `UseCache = true`)

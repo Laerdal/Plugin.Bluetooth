@@ -302,8 +302,8 @@ async Task MonitorProximityAsync(IBluetoothScanner scanner, string deviceName)
         }
     };
 
-    // Android and Windows report every advertisement. iOS/macOS reports each peripheral once unless the scan passes
-    // new AppleScanningOptions { AllowDuplicates = true }.
+    // Android (with the default CallbackType) and Windows report every advertisement. iOS/macOS coalesces repeats unless the
+    // scan passes new AppleScanningOptions { AllowDuplicates = true }.
     await scanner.StartScanningAsync();
 }
 ```

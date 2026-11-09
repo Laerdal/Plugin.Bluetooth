@@ -372,7 +372,7 @@ scanner.AdvertisementReceived += (s, args) =>
 
 ### Too Many Duplicate Advertisements
 
-Keep the last advertisement per device in your handler instead of processing each one. On iOS/macOS leave `AppleScanningOptions.AllowDuplicates` unset, so each peripheral is reported once. `ScanningOptions.IgnoreDuplicateAdvertisements` is declared but no platform reads it yet.
+Keep the last advertisement per device in your handler instead of processing each one. On iOS/macOS leave `AppleScanningOptions.AllowDuplicates` unset, so CoreBluetooth coalesces repeated advertisements; for strict deduplication key your handler on the device id. `ScanningOptions.IgnoreDuplicateAdvertisements` is declared but no platform reads it yet.
 
 ### Battery Drain
 
