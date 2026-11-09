@@ -102,7 +102,8 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
         Scanner = parentScanner;
         ServiceFactory = serviceFactory;
         RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
-        SignalStrengthSmoothingOptions = new SignalStrengthSmoothingOptions();
+        // The device keeps the smoothing of the scan that discovered it; a scanner that is not scanning, or another kind of scanner, gives the default.
+        SignalStrengthSmoothingOptions = (parentScanner as BaseBluetoothScanner)?.ActiveSignalStrengthSmoothing ?? new SignalStrengthSmoothingOptions();
         Id = spec.DeviceId;
         Manufacturer = spec.Manufacturer;
     }

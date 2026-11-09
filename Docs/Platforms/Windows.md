@@ -163,6 +163,9 @@ scanner.DeviceListChanged += (sender, args) =>
   not cut in half, and a device is never created from a PDU with no UUID and no match behind it. With
   `MergeScanResponses` the filter sees the merged advertisement, whose service UUIDs are those of both
   PDUs. `IBluetoothScanner.AdvertisementFilter` still runs afterwards, for anything the UUIDs cannot say.
+- `ScanningOptions.IgnoreNamelessAdvertisements` and `ScanningOptions.AdvertisementFilter` run at the same place, and judge one PDU at a
+  time unless `MergeScanResponses` is on. A name is often only in the scan response, so without merging
+  `IgnoreNamelessAdvertisements` drops the advertisement and keeps only the scan response.
 
 #### 2. Connection
 ```csharp

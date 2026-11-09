@@ -85,14 +85,44 @@ public abstract partial class BaseBluetoothScanner
     #region Advertisement Processing
 
     /// <summary>
+    ///     Tells whether an advertisement is processed. It must pass <see cref="AdvertisementFilter">the scanner's filter</see> and, while a
+    ///     scan runs, the filters of that scan:
+    ///     <see cref="Bluetooth.Abstractions.Scanning.Options.ScanningOptions.IgnoreNamelessAdvertisements" /> and
+    ///     <see cref="Bluetooth.Abstractions.Scanning.Options.ScanningOptions.AdvertisementFilter" />.
+    /// </summary>
+    /// <remarks>
+    ///     Generic so that no advertisement is boxed unless a filter delegate has to be called.
+    /// </remarks>
+    private bool PassesAdvertisementFilters<TAdvertisement>(TAdvertisement advertisement)
+        where TAdvertisement : IBluetoothAdvertisement
+    {
+        // A null filter accepts everything
+        if (AdvertisementFilter?.Invoke(advertisement) == false)
+        {
+            return false;
+        }
+
+        if (ActiveScanningOptions is not { } options)
+        {
+            return true;
+        }
+
+        if (options.IgnoreNamelessAdvertisements && string.IsNullOrWhiteSpace(advertisement.DeviceName))
+        {
+            return false;
+        }
+
+        return options.AdvertisementFilter?.Invoke(advertisement) != false;
+    }
+
+    /// <summary>
     ///     Handles the reception of a Bluetooth advertisement, applying filtering and raising events as necessary.
     /// </summary>
     /// <param name="advertisement">The received Bluetooth advertisement.</param>
     protected void OnAdvertisementReceived<TAdvertisement>(TAdvertisement advertisement)
         where TAdvertisement : struct, IBluetoothAdvertisement
     {
-        // Filter (null means accept all)
-        if (AdvertisementFilter?.Invoke(advertisement) == false)
+        if (!PassesAdvertisementFilters(advertisement))
         {
             return;
         }
@@ -186,8 +216,7 @@ public abstract partial class BaseBluetoothScanner
     /// </remarks>
     protected void OnAdvertisementsReceived(IEnumerable<IBluetoothAdvertisement> advertisements)
     {
-        // Filter (null means accept all)
-        var filteredAdvertisements = advertisements.Where(adv => AdvertisementFilter?.Invoke(adv) ?? true).ToList();
+        var filteredAdvertisements = advertisements.Where(adv => PassesAdvertisementFilters(adv)).ToList();
 
         // Throw event
         foreach (var advertisement in filteredAdvertisements)

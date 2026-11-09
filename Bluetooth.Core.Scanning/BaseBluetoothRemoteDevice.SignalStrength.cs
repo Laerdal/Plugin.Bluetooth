@@ -71,7 +71,9 @@ public abstract partial class BaseBluetoothRemoteDevice
         private set
         {
             SetValue(value);
-            _rssiHistory.Enqueue(value, IsConnected ? SignalStrengthSmoothingOptions.SmoothingWhenConnected : SignalStrengthSmoothingOptions.SmoothingOnAdvertisement);
+            // The window is at least one reading (no smoothing): an empty history has no average.
+            var window = Math.Max(1, IsConnected ? SignalStrengthSmoothingOptions.SmoothingWhenConnected : SignalStrengthSmoothingOptions.SmoothingOnAdvertisement);
+            _rssiHistory.Enqueue(value, window);
             SignalStrengthInPercent = RssiToSignalStrengthConverter.Convert(_rssiHistory.Average());
         }
     }

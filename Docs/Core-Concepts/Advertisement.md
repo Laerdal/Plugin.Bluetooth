@@ -451,7 +451,7 @@ scanner.AdvertisementReceived += (s, args) =>
 ### Empty Device Name
 
 - Some devices don't advertise names
-- Name might be in the scan response (enable `ScanningOptions.IgnoreNamelessAdvertisements = false`)
+- Name might be in the scan response; on Windows it only reaches the advertisement with `WindowsScanningOptions.MergeScanResponses`, and `ScanningOptions.IgnoreNamelessAdvertisements` must stay `false` for such devices to be discovered at all
 - Connect to device and read from GAP service to get name
 
 ### No Services Listed
@@ -464,7 +464,7 @@ scanner.AdvertisementReceived += (s, args) =>
 
 - RSSI naturally varies due to radio interference
 - Average multiple readings for more stable values
-- Use signal strength smoothing in `ScanningOptions`
+- Set `ScanningOptions.SignalStrengthJitterSmoothing` to average more or fewer readings
 
 ### Manufacturer Data Empty
 
