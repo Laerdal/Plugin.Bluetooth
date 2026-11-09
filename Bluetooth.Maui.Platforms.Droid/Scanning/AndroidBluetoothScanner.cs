@@ -197,11 +197,12 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         var waited = await Task.Run(() => WaitHandle.WaitAny([InternalAndroidStartScanResultReceived, cancellationToken.WaitHandle], wait))
                                .ConfigureAwait(false);
 
-        // Asked independently of the index: WaitAny reports the lowest signalled handle, so a result that arrived together with the cancellation
-        // would hide it.
-        if (cancellationToken.IsCancellationRequested)
+        // A result or a failure that came first (index 0, which is also what WaitAny reports when both are signalled) means the start is over:
+        // the result already completed it, so a cancellation that comes after is too late, as for any call that has completed. Throwing here
+        // would reach the base class after the start succeeded, where it cannot be stored as the failure of the start.
+        if (waited != 0 && cancellationToken.IsCancellationRequested)
         {
-            // The caller gave up: no start is reported and the native scan does not keep running behind it.
+            // The caller gave up first: no start is reported and the native scan does not keep running behind it.
             BluetoothLeScanner?.StopScan(ScanCallbackProxy);
             IsRunning = false;
             cancellationToken.ThrowIfCancellationRequested();
