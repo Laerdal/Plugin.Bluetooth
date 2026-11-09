@@ -25,7 +25,7 @@ Repeated advertisements are handled per platform. On Android, `CallbackType` (<x
 
 ## Android-Specific Options
 
-<xref:Bluetooth.Abstractions.Scanning.Options.Android.AndroidScanningOptions> — `MatchMode`/`ScanMatchNumber` (API 23+), `ReportDelay` (batches results instead of delivering them immediately), `Phy` and `Legacy` (API 26+).
+<xref:Bluetooth.Abstractions.Scanning.Options.Android.AndroidScanningOptions> — `MatchMode`/`ScanMatchNumber` (API 23+), `ReportDelay` (batches results instead of delivering them immediately), `Phy` and `Legacy` (API 26+). `ManufacturerIds` filters natively on Bluetooth SIG company identifiers: the Bluetooth stack reports only devices whose manufacturer data carries one of them, so the advertisements of every other device never cost the app a callback. It is a pre-filter, ignored on other platforms.
 
 ## Best Practices
 

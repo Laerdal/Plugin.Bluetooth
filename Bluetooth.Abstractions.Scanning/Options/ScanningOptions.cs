@@ -72,7 +72,10 @@ public record ScanningOptions
     /// <remarks>
     ///     <b>Platform Support:</b>
     ///     <list type="bullet">
-    ///         <item><b>Android</b>: Applied natively, one ScanFilter per UUID.</item>
+    ///         <item>
+    ///             <b>Android</b>: Applied natively, one ScanFilter per UUID. With <c>AndroidScanningOptions.ManufacturerIds</c> set as well,
+    ///             a device has to match one UUID and one company identifier.
+    ///         </item>
     ///         <item>
     ///             <b>iOS/macOS</b>: Applied natively, as the serviceUUIDs argument of CBCentralManager scanForPeripherals.
     ///             <c>AppleScanningOptions.ServiceUuid</c> is added to this list; it cannot be set together with
@@ -234,6 +237,7 @@ public record ScanningOptions
     ///         <item><b>MatchMode</b>: Control aggressive vs sticky matching (API 23+)</item>
     ///         <item><b>NumOfMatches</b>: Set advertisement match count before reporting (API 23+)</item>
     ///         <item><b>ReportDelay</b>: Batch scan results for power savings (API 23+)</item>
+    ///         <item><b>ManufacturerIds</b>: Native filter on Bluetooth SIG company identifiers, so other devices cost no callback</item>
     ///         <item><b>Phy</b>: Select Bluetooth 5.0 PHY layers (API 26+)</item>
     ///         <item><b>Legacy</b>: Filter for legacy-only advertisements (API 26+)</item>
     ///     </list>

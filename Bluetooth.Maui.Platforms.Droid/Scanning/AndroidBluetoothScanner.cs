@@ -268,30 +268,43 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// </summary>
     private static List<ScanFilter>? BuildScanFilters(ScanningOptions options)
     {
-        // Return null if no service UUIDs specified (no filters needed)
-        if (options.ServiceUuids == null || options.ServiceUuids.Count == 0)
+        var manufacturerIds = (options.Android as Abstractions.Scanning.Options.Android.AndroidScanningOptions)?.ManufacturerIds;
+        var plan = AndroidScanFilterPlanner.Plan(options.ServiceUuids, manufacturerIds);
+
+        // Return null if there is nothing to filter on (no filters needed)
+        if (plan.Count == 0)
         {
             return null;
         }
 
-        // Build a scan filter for each service UUID
-        var filters = new List<ScanFilter>(options.ServiceUuids.Count);
-        foreach (var serviceUuid in options.ServiceUuids)
+        var filters = new List<ScanFilter>(plan.Count);
+        foreach (var spec in plan)
         {
             using var builder = new ScanFilter.Builder();
 
-            // Convert Guid to ParcelUuid (Android UUID wrapper)
-            var javaUuid = Java.Util.UUID.FromString(serviceUuid.ToString());
-            if (javaUuid != null)
+            if (spec.ServiceUuid is { } serviceUuid)
             {
+                // Convert Guid to ParcelUuid (Android UUID wrapper)
+                var javaUuid = Java.Util.UUID.FromString(serviceUuid.ToString());
+                if (javaUuid == null)
+                {
+                    continue;
+                }
+
                 using var parcelUuid = new ParcelUuid(javaUuid);
                 builder.SetServiceUuid(parcelUuid);
+            }
 
-                var filter = builder.Build();
-                if (filter != null)
-                {
-                    filters.Add(filter);
-                }
+            if (spec.ManufacturerId is { } manufacturerId)
+            {
+                // The company identifier alone: with no data to compare, any manufacturer data of that company matches.
+                builder.SetManufacturerData(manufacturerId, []);
+            }
+
+            var filter = builder.Build();
+            if (filter != null)
+            {
+                filters.Add(filter);
             }
         }
 
