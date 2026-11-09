@@ -392,7 +392,7 @@ var options = new ScanningOptions
 };
 ```
 
-`AppleScanningOptions.ServiceUuid` is added to the same list. When `AppleScanningOptions.PeripheralUuids` is set, `ServiceUuids` is ignored, and setting `ServiceUuid` together with `PeripheralUuids` throws an `ArgumentException`.
+`AppleScanningOptions.ServiceUuid` is added to the same list. When `AppleScanningOptions.PeripheralUuids` is set, `ServiceUuids` is ignored, and setting `ServiceUuid` together with `PeripheralUuids` throws an `ArgumentException`. CoreBluetooth cannot scan by peripheral identifier, so a `PeripheralUuids` scan is not filtered natively: the scanner drops the peripherals that are not in the list when they are discovered (an empty list limits nothing, but it still counts as set), and, with no service UUID in the scan, iOS delivers nothing while the app is in the background.
 
 ### 3. Background Operation
 ✅ **Minimal operations in background**
