@@ -237,6 +237,15 @@ await scanner.StartScanningAsync(options);
 - `LowPower`: Lowest power, slowest discovery (~20-second batches)
 - `Opportunistic`: Passively scan (minimal power, may miss devices)
 
+**Filtering by manufacturer**: `ManufacturerIds` asks the Bluetooth stack to report only devices whose advertisement carries manufacturer-specific data for one of the given Bluetooth SIG company identifiers, so other devices cost no callback. Only the identifier is compared. With `ServiceUuids` set as well, a device has to match one UUID and one identifier. The stack judges each received packet, so a device that sends its data in a scan response can be treated differently by different device makers: check it on the hardware you target. Other platforms ignore the option.
+
+```csharp
+var options = new ScanningOptions
+{
+    Android = new AndroidScanningOptions { ManufacturerIds = [(int) Manufacturer.Laerdal_Medical_AS] }
+};
+```
+
 #### 2. GATT Operations with Retry
 ```csharp
 var connectionOptions = new ConnectionOptions

@@ -64,9 +64,18 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// </summary>
     private AutoResetEvent InternalAndroidStartScanResultReceived { get; } = new AutoResetEvent(false);
 
+    private const int StartPending = 1; // a start is waiting for its first result or failure
+    private const int StartClaimed = 2; // a result or a failure came first, or the wait ran out: the start is over
+    private const int StartAbandoned = 3; // the caller gave up first and the scan is being stopped
+    private int _startState;
+
     /// <summary>
-    ///     Timeout for waiting for scan to start. Defaults to 2 seconds.
+    ///     How long a start waits for a scan result or a failure before it reports the scan as started. Defaults to 2 seconds.
     /// </summary>
+    /// <remarks>
+    ///     Android gives no other feedback on a start, so when no advertisement passes the filters the wait runs out and the scan counts as started. A shorter
+    ///     timeout passed to the start ends the wait earlier, and then running out of time is a failure.
+    /// </remarks>
     public static TimeSpan ScannerStartedTimeout { get; set; } = TimeSpan.FromSeconds(2);
 
     /// <inheritdoc />
@@ -104,19 +113,28 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         Logger?.LogScanStarting();
         // TODO: Add LogScanStarting overload that accepts ScanMode and CallbackType parameters
 
+        // Built once, before any attempt: an invalid option is the caller's mistake and a retry cannot fix it.
+        var filters = BuildScanFilters(scanningOptions);
+
         var retryOptions = scanningOptions.ScanStartRetry ?? RetryOptions.None;
 
         if (retryOptions.MaxRetries > 0)
         {
             // Use retry logic for scan start
             var attempt = 0;
+            TimeoutException? timedOut = null;
             try
             {
                 await RetryTools.RunWithRetriesAsync(async () => {
                                                          attempt++;
                                                          try
                                                          {
-                                                             await StartScanInternal(scanningOptions, cancellationToken).ConfigureAwait(false);
+                                                             await StartScanInternal(scanningOptions, filters, timeout, cancellationToken).ConfigureAwait(false);
+                                                         }
+                                                         catch (TimeoutException e)
+                                                         {
+                                                             // The caller's time is spent: another attempt would start the scan again and wait for as long.
+                                                             timedOut = e;
                                                          }
                                                          catch (Exception ex)
                                                          {
@@ -131,6 +149,12 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
                                                      cancellationToken)
                                 .ConfigureAwait(false);
 
+                if (timedOut is not null)
+                {
+                    Logger?.LogScanStartFailed(attempt, timedOut);
+                    throw timedOut;
+                }
+
                 Logger?.LogScanStarted();
             }
             catch (AggregateException ex)
@@ -144,7 +168,7 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             // No retries, single attempt
             try
             {
-                await StartScanInternal(scanningOptions, cancellationToken).ConfigureAwait(false);
+                await StartScanInternal(scanningOptions, filters, timeout, cancellationToken).ConfigureAwait(false);
                 Logger?.LogScanStarted();
             }
             catch (Exception ex)
@@ -158,30 +182,57 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// <summary>
     ///     Internal method for starting the BLE scan. Extracted for retry logic.
     /// </summary>
-    private async Task StartScanInternal(ScanningOptions scanningOptions, CancellationToken cancellationToken)
+    private async Task StartScanInternal(ScanningOptions scanningOptions, List<ScanFilter>? filters, TimeSpan? timeout, CancellationToken cancellationToken)
     {
-        // Reset the event before starting scan
+        // Reset the event and open the start before starting scan
         InternalAndroidStartScanResultReceived.Reset();
+        Volatile.Write(ref _startState, StartPending);
 
-        // Build scan settings and filters
+        // Build scan settings
         var settings = BuildScanSettings(scanningOptions);
-        var filters = BuildScanFilters(scanningOptions);
 
         // Start the scan
         BluetoothLeScanner?.StartScan(filters, settings, ScanCallbackProxy);
 
-        try
+        // Wait for a scan result, a scan failure or the caller giving up. On Android a result and a failure are the only feedback a start
+        // gives: when no advertisement passes the filters (no device around, or none that matches) neither comes, so running out of
+        // ScannerStartedTimeout means the scan started and found nothing. A caller who allows less time than that decides sooner, and
+        // then running out of time is a failure. The cancellation is part of the wait, so it ends the wait at once.
+        var callerDecides = timeout is { } allowed && allowed >= TimeSpan.Zero && allowed < ScannerStartedTimeout;
+        var wait = callerDecides ? timeout!.Value : ScannerStartedTimeout;
+        var waited = await Task.Run(() => WaitHandle.WaitAny([InternalAndroidStartScanResultReceived, cancellationToken.WaitHandle], wait))
+                               .ConfigureAwait(false);
+
+        // The start is decided once, by whoever claims it first: a result or a failure (OnScanResult, OnScanFailed), or the caller giving up
+        // here. A start that a result already completed stands, and a cancellation or a timeout that comes after is too late, as for any call
+        // that has completed: throwing then would reach the base class after the start succeeded, where it cannot be stored as its failure.
+        // A start the caller gave up is not revived by a result that was already on its way (OnScanResult drops it).
+        var cancelled = cancellationToken.IsCancellationRequested;
+        var timedOut = waited == WaitHandle.WaitTimeout && callerDecides;
+        if ((cancelled || timedOut) && Interlocked.CompareExchange(ref _startState, StartAbandoned, StartPending) == StartPending)
         {
-            // Wait for either scan to start or timeout
-            await Task.Run(() => InternalAndroidStartScanResultReceived.WaitOne(ScannerStartedTimeout), cancellationToken).ConfigureAwait(false);
+            // The caller gave up first: no start is reported and the native scan does not keep running behind it.
+            BluetoothLeScanner?.StopScan(ScanCallbackProxy);
+            IsRunning = false;
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new TimeoutException($"No scan result or failure came within the {timeout!.Value.TotalMilliseconds:0} ms given to start the scan.");
         }
-        catch (TimeoutException)
+
+        // Nothing came within ScannerStartedTimeout: the scan started and found nothing. Only when this wins the start: a result or a failure
+        // that claimed it meanwhile has set IsRunning itself, and a failure must not be overwritten with a success.
+        if (waited == WaitHandle.WaitTimeout && Interlocked.CompareExchange(ref _startState, StartClaimed, StartPending) == StartPending)
         {
-            // On Android, we only get feedback on "StartScanFailed" and on "AdvertisementReceived"
-            // If no devices are around and scan started successfully, we don't receive anything
-            // In timeout case, assume scan started successfully
             IsRunning = true;
         }
+    }
+
+    /// <summary>
+    ///     Claims the start for a scan result or a scan failure.
+    /// </summary>
+    /// <returns><see langword="false" /> when the caller already gave up on the start, so the scan is being stopped and nothing is to be reported.</returns>
+    private bool ClaimStart()
+    {
+        return Interlocked.CompareExchange(ref _startState, StartClaimed, StartPending) != StartAbandoned;
     }
 
     /// <inheritdoc />
@@ -268,30 +319,43 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// </summary>
     private static List<ScanFilter>? BuildScanFilters(ScanningOptions options)
     {
-        // Return null if no service UUIDs specified (no filters needed)
-        if (options.ServiceUuids == null || options.ServiceUuids.Count == 0)
+        var manufacturerIds = (options.Android as Abstractions.Scanning.Options.Android.AndroidScanningOptions)?.ManufacturerIds;
+        var plan = AndroidScanFilterPlanner.Plan(options.ServiceUuids, manufacturerIds);
+
+        // Return null if there is nothing to filter on (no filters needed)
+        if (plan.Count == 0)
         {
             return null;
         }
 
-        // Build a scan filter for each service UUID
-        var filters = new List<ScanFilter>(options.ServiceUuids.Count);
-        foreach (var serviceUuid in options.ServiceUuids)
+        var filters = new List<ScanFilter>(plan.Count);
+        foreach (var spec in plan)
         {
             using var builder = new ScanFilter.Builder();
 
-            // Convert Guid to ParcelUuid (Android UUID wrapper)
-            var javaUuid = Java.Util.UUID.FromString(serviceUuid.ToString());
-            if (javaUuid != null)
+            if (spec.ServiceUuid is { } serviceUuid)
             {
+                // Convert Guid to ParcelUuid (Android UUID wrapper)
+                var javaUuid = Java.Util.UUID.FromString(serviceUuid.ToString());
+                if (javaUuid == null)
+                {
+                    continue;
+                }
+
                 using var parcelUuid = new ParcelUuid(javaUuid);
                 builder.SetServiceUuid(parcelUuid);
+            }
 
-                var filter = builder.Build();
-                if (filter != null)
-                {
-                    filters.Add(filter);
-                }
+            if (spec.ManufacturerId is { } manufacturerId)
+            {
+                // The company identifier alone: with no data to compare, any manufacturer data of that company matches.
+                builder.SetManufacturerData(manufacturerId, []);
+            }
+
+            var filter = builder.Build();
+            if (filter != null)
+            {
+                filters.Add(filter);
             }
         }
 
@@ -316,11 +380,15 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
 
         if (errorCode == ScanFailure.AlreadyStarted)
         {
-            IsRunning = true;
-            InternalAndroidStartScanResultReceived.Set();
+            if (ClaimStart())
+            {
+                IsRunning = true;
+                InternalAndroidStartScanResultReceived.Set();
+            }
         }
         else
         {
+            ClaimStart();
             IsRunning = false;
             InternalAndroidStartScanResultReceived.Set();
             throw new AndroidNativeScanFailureException(errorCode);
@@ -344,7 +412,12 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     /// </summary>
     public void OnScanResult(ScanCallbackType callbackType, ScanResult result)
     {
-        // Signal that scan has started successfully
+        // Signal that scan has started successfully, unless the caller already gave up on the start
+        if (!ClaimStart())
+        {
+            return;
+        }
+
         IsRunning = true;
         InternalAndroidStartScanResultReceived.Set();
 

@@ -114,6 +114,31 @@ public record AndroidScanningOptions
     ///     </para>
     /// </remarks>
     public bool? Legacy { get; init; }
+
+    /// <summary>
+    ///     Gets the Bluetooth SIG company identifiers to filter on natively: only devices whose advertisement carries manufacturer-specific
+    ///     data for one of them are reported.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         The Bluetooth stack applies it, as one <c>android.bluetooth.le.ScanFilter</c> per identifier, so the advertisements of every
+    ///         other device never reach the app and cost it no callback. Only the identifier is compared, not the data that follows it. The
+    ///         identifiers are the 16-bit numbers of the Bluetooth SIG company list, for example
+    ///         <c>(int) Manufacturer.Laerdal_Medical_AS</c>; a value outside 0 to 65535 makes the scan fail to start with an
+    ///         <see cref="ArgumentOutOfRangeException" />. <see langword="null" /> or an empty list filters nothing.
+    ///     </para>
+    ///     <para>
+    ///         When <see cref="ScanningOptions.ServiceUuids" /> is set as well, a device has to match both lists: one of the UUIDs and one of
+    ///         the identifiers.
+    ///     </para>
+    ///     <para>
+    ///         This is a pre-filter for Android only, other platforms ignore it. Put the same condition in an advertisement filter when the
+    ///         code has to behave the same everywhere. The stack judges each received packet, so how it treats a scan response that carries no
+    ///         manufacturer data of its own can differ between device makers: check devices that send data in their scan response on the
+    ///         hardware you target.
+    ///     </para>
+    /// </remarks>
+    public IReadOnlyList<int>? ManufacturerIds { get; init; }
 }
 
 #pragma warning restore CA1008 // Enums should have zero value
