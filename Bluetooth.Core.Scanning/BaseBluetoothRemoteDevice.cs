@@ -9,7 +9,7 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
     /// <summary>
     ///    Gets the options for smoothing signal strength jitter. This allows for configuring how the signal strength readings are averaged over time to provide a more stable and accurate representation of the device's signal strength, especially in environments with fluctuating signal conditions.
     /// </summary>
-    public SignalStrengthSmoothingOptions SignalStrengthSmoothingOptions { get; }
+    public SignalStrengthSmoothingOptions SignalStrengthSmoothingOptions { get; internal set; }
 
     /// <summary>
     ///     Gets the converter used to convert RSSI values to signal strength levels. This allows for consistent interpretation of signal strength across different platforms and devices, as RSSI values can vary in scale and meaning depending on the underlying Bluetooth implementation.
@@ -102,8 +102,7 @@ public abstract partial class BaseBluetoothRemoteDevice : BaseBindableObject, IB
         Scanner = parentScanner;
         ServiceFactory = serviceFactory;
         RssiToSignalStrengthConverter = rssiToSignalStrengthConverter;
-        // The device keeps the smoothing of the scan that discovered it; a scanner that is not scanning, or another kind of scanner, gives the default.
-        SignalStrengthSmoothingOptions = (parentScanner as BaseBluetoothScanner)?.ActiveSignalStrengthSmoothing ?? new SignalStrengthSmoothingOptions();
+        SignalStrengthSmoothingOptions = new SignalStrengthSmoothingOptions();
         Id = spec.DeviceId;
         Manufacturer = spec.Manufacturer;
     }

@@ -104,12 +104,6 @@ public abstract partial class BaseBluetoothScanner : BaseBindableObject, IBlueto
     }
 
     /// <summary>
-    ///     Gets the signal strength smoothing of the scan that is running, or <see langword="null" /> when no scan runs. The devices that
-    ///     scan discovers are created with it.
-    /// </summary>
-    internal SignalStrengthSmoothingOptions? ActiveSignalStrengthSmoothing => ActiveScanningOptions?.SignalStrengthJitterSmoothing;
-
-    /// <summary>
     ///     Platform-specific implementation to check if scanner permissions are granted.
     /// </summary>
     /// <returns>True if permissions are granted, otherwise false.</returns>
