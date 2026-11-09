@@ -451,7 +451,8 @@ scanner.AdvertisementReceived += (s, args) =>
 ### Empty Device Name
 
 - Some devices don't advertise names
-- Name might be in the scan response; on Windows it only reaches the advertisement with `WindowsScanningOptions.MergeScanResponses`, and `ScanningOptions.IgnoreNamelessAdvertisements` must stay `false` for such devices to be discovered at all
+- Name might be in the scan response: Android and iOS/macOS hand it to you merged into the advertisement, and on Windows it only joins the advertisement with `WindowsScanningOptions.MergeScanResponses`
+- `ScanningOptions.IgnoreNamelessAdvertisements = true` also hides devices that advertise no name at all
 - Connect to device and read from GAP service to get name
 
 ### No Services Listed
