@@ -156,45 +156,7 @@ public readonly record struct AndroidBluetoothAdvertisement : IBluetoothAdvertis
             return ReadOnlyMemory<byte>.Empty;
         }
 
-        var scanRecordParts = ScanRecordPart.FromRawBytes(bytes).ToArray();
-        var manufacturerDataParts = scanRecordParts
-            .Where(part => part.Type == ScanRecordPart.AdvertisementRecordType.ManufacturerSpecificData)
-            .ToArray();
-
-        if (manufacturerDataParts.Length == 0)
-        {
-            return ReadOnlyMemory<byte>.Empty;
-        }
-
-        // Pre-calculate total size
-        var totalSize = manufacturerDataParts.Sum(p => p.ManufacturerData.Length + 2); // +2 for manufacturer ID
-
-        var resultArray = new byte[totalSize];
-        var currentOffset = 0;
-
-        // Group by manufacturer ID once
-        foreach (var group in manufacturerDataParts.GroupBy(p => p.ManufacturerId))
-        {
-            if (group.Key == null)
-            {
-                continue; // Skip if no manufacturer ID
-            }
-
-            // Write manufacturer ID (2 bytes)
-            var idBytes = (short) group.Key;
-            resultArray[currentOffset++] = (byte) (idBytes & 0xFF);
-            resultArray[currentOffset++] = (byte) ((idBytes >> 8) & 0xFF);
-
-            // Write all manufacturer data for this ID
-            foreach (var part in group)
-            {
-                var data = part.ManufacturerData;
-                data.CopyTo(resultArray.AsSpan(currentOffset));
-                currentOffset += data.Length;
-            }
-        }
-
-        return resultArray;
+        return AndroidManufacturerDataBuilder.Build(ScanRecordPart.FromRawBytes(bytes));
     }
 
     #endregion
