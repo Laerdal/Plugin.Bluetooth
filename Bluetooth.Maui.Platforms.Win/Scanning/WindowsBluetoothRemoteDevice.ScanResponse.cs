@@ -13,6 +13,11 @@ public partial class WindowsBluetoothRemoteDevice
     ///     response alone; with the default, every PDU goes through the normal pipeline first, so a device
     ///     can be created from whichever PDU is seen first. Set in both modes; see ADR 0003
     ///     (<c>Docs/Architecture/ADR/0003-windows-scan-response-handling.md</c>).
+    ///     <para>
+    ///         The advertisement filters (the scanner's <c>AdvertisementFilter</c>, and the scan's <c>IgnoreNamelessAdvertisements</c>
+    ///         and <c>AdvertisementFilter</c>) do not apply: this belongs to a device that exists, and a filter judges each PDU alone, so
+    ///         a bare scan response would fail most of them. Only the service UUID filter applies.
+    ///     </para>
     /// </remarks>
     public WindowsBluetoothAdvertisement? LastScanResponse
     {
@@ -21,7 +26,8 @@ public partial class WindowsBluetoothRemoteDevice
     }
 
     /// <summary>
-    ///     Occurs when a scan-response (SCAN_RSP) PDU is received for this device.
+    ///     Occurs when a scan-response (SCAN_RSP) PDU is received for this device. The advertisement filters do not apply to it; see
+    ///     <see cref="LastScanResponse" />.
     /// </summary>
     public event EventHandler<AdvertisementReceivedEventArgs>? ScanResponseReceived;
 

@@ -507,7 +507,8 @@ await scanner.StartScanningAsync(new ScanningOptions
   is younger than `ScanResponseMaxAge` (default 10 s; `TimeSpan.Zero` turns this off), because a
   peripheral does not answer every scan request. With nothing recent enough it fires **as-is**
   (ADV-only) rather than being dropped or delayed indefinitely. `ScanResponseReceived`/`LastScanResponse` still fire afterward whenever a scan
-  response actually arrived, in both modes.
+  response actually arrived, in both modes. They are not subject to the advertisement filters (only to the service UUID filter); see
+  [Windows](../Platforms/Windows.md).
 
 Either mode requires active scanning to ever observe scan responses at all — a passive scanner never
 solicits one. See the [Windows Platform Guide](../Platforms/Windows.md#scan-response-handling) for
