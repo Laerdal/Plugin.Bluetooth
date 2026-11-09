@@ -29,22 +29,13 @@ public static class CbCentralManagerExtensions
                 throw new
                     ArgumentException("AppleScanningOptions cannot have both ServiceUuid and PeripheralUuids set. Please provide only one of these options to avoid conflicting filters.");
             }
-            else if (appleScanningOptions.PeripheralUuids != null)
-            {
-                // If only PeripheralUuids are provided, filter by peripheral UUIDs
-                foreach (var peripheralUuid in appleScanningOptions.PeripheralUuids)
-                {
-                    cbCentralManager.ScanForPeripherals(peripheralUuid.ToCBUuid(),
-                                                        new PeripheralScanningOptions
-                                                        {
-                                                            AllowDuplicatesKey = appleScanningOptions.AllowDuplicates ?? false
-                                                        }.Dictionary);
-                }
-            }
             else
             {
-                // Filter by the service UUIDs; without any, scan for all peripherals
-                cbCentralManager.ScanForPeripherals(serviceUuids,
+                // CoreBluetooth cannot scan by peripheral identifier, only by service UUID. With PeripheralUuids the scan is therefore not
+                // filtered natively, and the scanner keeps the listed peripherals when they are discovered. Otherwise filter by the
+                // service UUIDs; without any, scan for all peripherals.
+                var nativeServiceUuids = appleScanningOptions.PeripheralUuids is { Count: > 0 } ? null : serviceUuids;
+                cbCentralManager.ScanForPeripherals(nativeServiceUuids,
                                                     new PeripheralScanningOptions
                                                     {
                                                         AllowDuplicatesKey = appleScanningOptions.AllowDuplicates ?? false

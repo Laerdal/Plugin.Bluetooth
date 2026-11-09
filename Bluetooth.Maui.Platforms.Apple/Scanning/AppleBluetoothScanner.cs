@@ -1,3 +1,4 @@
+using Bluetooth.Abstractions.Scanning.Options.Apple;
 using Bluetooth.Maui.Platforms.Apple.Logging;
 using Bluetooth.Maui.Platforms.Apple.Permissions;
 using Bluetooth.Maui.Platforms.Apple.Scanning.Factories;
@@ -38,6 +39,11 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
 
     private readonly IBluetoothRemoteDeviceFactory _deviceFactory;
 
+    // The peripheral identifiers of the scan in progress, or null when it is not limited to some peripherals. CoreBluetooth cannot scan
+    // by identifier, so AppleScanningOptions.PeripheralUuids is applied here, when a peripheral is discovered. Written when a scan starts
+    // and read on the CoreBluetooth delegate queue.
+    private volatile HashSet<string>? _peripheralIdentifiers;
+
     /// <inheritdoc />
     public void Dispose()
     {
@@ -77,7 +83,23 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
         {
             throw new ScannerFailedToStartException(this, $"Failed to start scanning because Bluetooth is not powered on. Current state: {state}");
         }
+        _peripheralIdentifiers = GetPeripheralIdentifiers(scanningOptions);
         manager.ScanForPeripherals(scanningOptions);
+    }
+
+    /// <summary>
+    ///     Gets the identifiers of the peripherals a scan is limited to: <see cref="AppleScanningOptions.PeripheralUuids" />.
+    /// </summary>
+    /// <returns>The identifiers, or <see langword="null" /> when the list is not set or empty, which does not limit the scan.</returns>
+    private static HashSet<string>? GetPeripheralIdentifiers(ScanningOptions scanningOptions)
+    {
+        if (scanningOptions is not AppleScanningOptions { PeripheralUuids: { Count: > 0 } peripheralUuids })
+        {
+            return null;
+        }
+
+        // An identifier is an uppercase string on Apple and a lowercase one in a Guid.
+        return new HashSet<string>(peripheralUuids.Select(uuid => uuid.ToString()), StringComparer.OrdinalIgnoreCase);
     }
 
     /// <inheritdoc />
@@ -178,10 +200,17 @@ public class AppleBluetoothScanner : BaseBluetoothScanner, CbCentralManagerWrapp
     /// <inheritdoc />
     public virtual void DiscoveredPeripheral(CBPeripheral peripheral, NSDictionary advertisementData, NSNumber rssi)
     {
+        ArgumentNullException.ThrowIfNull(peripheral);
+
+        var deviceIdStr = peripheral.Identifier.ToString();
+        if (_peripheralIdentifiers is { } peripheralIdentifiers && !peripheralIdentifiers.Contains(deviceIdStr))
+        {
+            return; // The scan is limited to some peripherals (AppleScanningOptions.PeripheralUuids), and this is not one of them
+        }
+
         // Capture values before dispatching to avoid referencing native objects across threads
         var advertisement = new AppleBluetoothAdvertisement(peripheral, advertisementData, rssi);
         var isScanning = CbCentralManagerWrapper.CbCentralManagerIsScanning;
-        var deviceIdStr = peripheral.Identifier.ToString();
         var deviceName = string.IsNullOrEmpty(advertisement.DeviceName) ? "(no name)" : advertisement.DeviceName;
         var manufacturer = advertisement.Manufacturer;
         var rssiValue = rssi.Int32Value;

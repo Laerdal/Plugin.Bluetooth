@@ -27,8 +27,16 @@ public record AppleScanningOptions : ScanningOptions
     ///     Gets the list of peripheral UUIDs to scan for.
     /// </summary>
     /// <remarks>
-    ///     When set, only peripherals with these UUIDs will be discovered.
-    ///     Useful for reconnecting to known devices.
+    ///     <para>
+    ///         When set and not empty, only the peripherals with these identifiers (<c>CBPeripheral.identifier</c>) are discovered.
+    ///         An empty list does not limit the scan. Useful for reconnecting to known devices.
+    ///     </para>
+    ///     <para>
+    ///         CoreBluetooth cannot scan by peripheral identifier, so the scan is not filtered natively: the radio still receives every
+    ///         advertisement, <see cref="ScanningOptions.ServiceUuids" /> is ignored, and the peripherals that are not in the list are
+    ///         dropped when they are discovered. iOS delivers no advertisement to an app in the background unless the scan names service
+    ///         UUIDs, so this filter does not work in the background.
+    ///     </para>
     /// </remarks>
     public IList<Guid>? PeripheralUuids { get; init; }
 }
