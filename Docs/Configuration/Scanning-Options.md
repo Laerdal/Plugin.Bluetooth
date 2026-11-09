@@ -8,8 +8,7 @@
 var options = new ScanningOptions
 {
     ServiceUuids = [myServiceUuid],
-    ScanMode = BluetoothScanMode.Balanced,
-    IgnoreDuplicateAdvertisements = true
+    ScanMode = BluetoothScanMode.Balanced
 };
 
 await scanner.StartScanningAsync(options);
@@ -22,7 +21,7 @@ Three filtering mechanisms compose together:
 - `RssiThreshold` — reject weak-signal advertisements before they reach your code
 - `AdvertisementFilter` — a `Func<IBluetoothAdvertisement, bool>` predicate for anything hardware/RSSI filtering can't express
 
-`IgnoreDuplicateAdvertisements` + `CallbackType` (<xref:Bluetooth.Abstractions.Scanning.Options.BluetoothScanCallbackType>) together decide whether you get one callback per device (discovery) or one per advertisement packet (RSSI/presence tracking).
+Repeated advertisements are handled per platform. On Android, `CallbackType` (<xref:Bluetooth.Abstractions.Scanning.Options.BluetoothScanCallbackType>) defaults to `AllMatches`, which reports every advertisement packet; `FirstMatch` reports only the first packet of each device, and the `MatchLost` types report that a device went away. On iOS/macOS, CoreBluetooth coalesces repeated advertisements of a peripheral into one discovery event unless `AppleScanningOptions.AllowDuplicates` is `true`; that is not a guarantee of one callback per device, because changed advertisement data can produce another. Windows reports every advertisement it receives. `IgnoreDuplicateAdvertisements` is declared on `ScanningOptions` but no platform reads it yet, so it has no effect.
 
 ## Android-Specific Options
 
@@ -32,7 +31,7 @@ Three filtering mechanisms compose together:
 
 - **Always specify `ServiceUuids`** when you know what you're looking for — scanning for everything costs battery and CPU for no benefit. iOS only scans in the background with service UUIDs.
 - **Match `ScanMode` to the use case** — `LowLatency` while a user is actively waiting on a device picker, `LowPower` for background monitoring (see [Enumerations](../API-Reference/Enums.md#scan-mode-trade-offs)).
-- **Enable duplicate filtering for pure discovery** (`IgnoreDuplicateAdvertisements = true`, `CallbackType = FirstMatch`); disable it when tracking RSSI/presence over time.
+- **Choose how repeated advertisements are reported for the use case**: as few repeats as the platform allows for pure discovery, every advertisement when tracking RSSI/presence over time (`CallbackType` on Android, `AppleScanningOptions.AllowDuplicates` on iOS/macOS).
 - **Set `ScanStartRetry = RetryOptions.Aggressive`** in production to absorb transient scan-start failures.
 - **Use `AndroidScanningOptions.ReportDelay`** to batch results and reduce wakeups when you don't need immediate delivery.
 - **Layer filters**: native `ServiceUuids` first, then `RssiThreshold`, then `AdvertisementFilter` for anything more complex.

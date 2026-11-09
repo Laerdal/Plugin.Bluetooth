@@ -50,8 +50,7 @@ public class BatteryOptimizedScanner
             },
 
             // Filter out noise
-            IgnoreNamelessAdvertisements = true,
-            IgnoreDuplicateAdvertisements = priority == DeviceSearchPriority.Background
+            IgnoreNamelessAdvertisements = true
         };
 
         await _scanner.StartScanningAsync(options);
@@ -296,8 +295,7 @@ public class PeriodicScanner
                 await _scanner.StartScanningAsync(
                     new ScanningOptions
                     {
-                        ScanMode = BluetoothScanMode.LowPower, // Battery friendly
-                        IgnoreDuplicateAdvertisements = true
+                        ScanMode = BluetoothScanMode.LowPower // Battery friendly
                     },
                     cancellationToken: _scanCts.Token);
 
@@ -357,9 +355,6 @@ public class AndroidBackgroundScanner
             // Request background location if needed (Android 10-11)
             RequireBackgroundLocation = true,
 
-            // Reduce callback frequency
-            IgnoreDuplicateAdvertisements = true,
-
             // Only scan for specific devices
             ServiceUuids = new[] { MyServiceUuid },
 
@@ -399,10 +394,7 @@ public class IosBackgroundScanner
             ServiceUuids = new[] { MyServiceUuid },
 
             // iOS manages scan mode automatically in background
-            ScanMode = BluetoothScanMode.LowPower,
-
-            // Reduce duplicate callbacks
-            IgnoreDuplicateAdvertisements = true
+            ScanMode = BluetoothScanMode.LowPower
         };
 
         await _scanner.StartScanningAsync(options);
@@ -775,8 +767,6 @@ public class AndroidBatteryOptimizations
                 ? BluetoothScanMode.Opportunistic // Minimal battery impact
                 : BluetoothScanMode.LowPower,
 
-            IgnoreDuplicateAdvertisements = true,
-
             Android = new AndroidScanningOptions
             {
                 // Batch results for battery savings
@@ -835,10 +825,7 @@ public class AppleBatteryOptimizations
             ScanMode = BluetoothScanMode.LowPower,
 
             // CRITICAL: Always specify service UUIDs for background scanning
-            ServiceUuids = new[] { MyServiceUuid },
-
-            // Reduce duplicate callbacks
-            IgnoreDuplicateAdvertisements = true
+            ServiceUuids = new[] { MyServiceUuid }
         };
     }
 
@@ -926,7 +913,7 @@ public record BatteryImpactReport
 - [ ] **Stop scanning immediately** after finding device
 - [ ] **Limit scan duration** (use timeouts)
 - [ ] **Specify service UUIDs** when possible (especially for iOS background)
-- [ ] Use **IgnoreDuplicateAdvertisements** to reduce callbacks
+- [ ] **Reduce callbacks**: on iOS/macOS leave `AppleScanningOptions.AllowDuplicates` unset (CoreBluetooth then coalesces repeats), and on Android pick the `CallbackType` the use case needs
 - [ ] Set **connection priority** to LowPower for infrequent data updates
 - [ ] **Negotiate larger MTU** for bulk data transfers
 - [ ] **Cache service discovery** results (use `UseCache = true`)

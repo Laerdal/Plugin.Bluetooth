@@ -66,7 +66,6 @@ await scanner.StartScanningAsync();
 var options = new ScanningOptions
 {
     ScanMode = BluetoothScanMode.LowLatency, // Fast discovery
-    IgnoreDuplicateAdvertisements = false,    // Get all updates
     ServiceUuids = new[] { myServiceGuid }    // Filter by service
 };
 
@@ -103,9 +102,6 @@ var options = new ScanningOptions
 {
     // Ignore devices without a name
     IgnoreNamelessAdvertisements = true,
-
-    // Only report each device once (not every advertisement)
-    IgnoreDuplicateAdvertisements = true,
 
     // Custom filter function
     AdvertisementFilter = ad =>
@@ -284,10 +280,7 @@ scanner.AdvertisementReceived += (s, args) =>
     Console.WriteLine($"Discovered: {args.Advertisement.DeviceName}");
 };
 
-await scanner.StartScanningAsync(new ScanningOptions
-{
-    IgnoreDuplicateAdvertisements = true
-});
+await scanner.StartScanningAsync();
 
 // Scan for 10 seconds
 await Task.Delay(TimeSpan.FromSeconds(10));
@@ -379,7 +372,7 @@ scanner.AdvertisementReceived += (s, args) =>
 
 ### Too Many Duplicate Advertisements
 
-Set `IgnoreDuplicateAdvertisements = true` in `ScanningOptions`
+Keep the last advertisement per device in your handler instead of processing each one. On iOS/macOS leave `AppleScanningOptions.AllowDuplicates` unset, so CoreBluetooth coalesces repeated advertisements; for strict deduplication key your handler on the device id. `ScanningOptions.IgnoreDuplicateAdvertisements` is declared but no platform reads it yet.
 
 ### Battery Drain
 

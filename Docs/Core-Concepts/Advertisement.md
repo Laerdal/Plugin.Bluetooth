@@ -302,10 +302,9 @@ async Task MonitorProximityAsync(IBluetoothScanner scanner, string deviceName)
         }
     };
 
-    await scanner.StartScanningAsync(new ScanningOptions
-    {
-        IgnoreDuplicateAdvertisements = false  // Get all updates
-    });
+    // Android (with the default CallbackType) and Windows report every advertisement. iOS/macOS coalesces repeats unless the
+    // scan passes new AppleScanningOptions { AllowDuplicates = true }.
+    await scanner.StartScanningAsync();
 }
 ```
 
@@ -381,9 +380,6 @@ await scanner.StartScanningAsync(new ScanningOptions
 
     // Ignore devices without names
     IgnoreNamelessAdvertisements = true,
-
-    // Only report each device once
-    IgnoreDuplicateAdvertisements = true,
 
     // Signal strength threshold
     RssiThreshold = -70,  // Only nearby devices

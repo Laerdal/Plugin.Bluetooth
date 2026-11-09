@@ -34,6 +34,26 @@ public record ScanningOptions
     /// <summary>
     ///     Gets a value indicating whether duplicate advertisements should be ignored.
     /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         <b>Not applied yet:</b> no platform reads this value, so <see langword="true" /> and <see langword="false" /> scan the same
+    ///         way. What each platform does with repeated advertisements today:
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>
+    ///             <b>Android</b>: with the default <see cref="CallbackType" />, <see cref="BluetoothScanCallbackType.AllMatches" />, every
+    ///             advertisement is reported. <see cref="BluetoothScanCallbackType.FirstMatch" /> reports only the first advertisement of each
+    ///             device; the callback types with <c>MatchLost</c> report that a device went away, not its advertisements.
+    ///         </item>
+    ///         <item>
+    ///             <b>iOS/macOS</b>: unless <c>AppleScanningOptions.AllowDuplicates</c> is <see langword="true" />, CoreBluetooth coalesces repeated
+    ///             advertisements of a peripheral into one discovery event. That is not a guarantee of one callback per device (changed
+    ///             advertisement data can produce another), so key your handler on the device when you need strict deduplication. A plain
+    ///             <see cref="ScanningOptions" /> passes no scan options, which is the same as not allowing duplicates.
+    ///         </item>
+    ///         <item><b>Windows</b>: every advertisement is reported.</item>
+    ///     </list>
+    /// </remarks>
     public bool IgnoreDuplicateAdvertisements { get; init; }
 
     /// <summary>
