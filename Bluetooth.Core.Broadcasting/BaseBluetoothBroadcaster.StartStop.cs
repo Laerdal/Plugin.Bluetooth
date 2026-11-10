@@ -146,8 +146,31 @@ public abstract partial class BaseBluetoothBroadcaster
         broadcastingOptions ??= DefaultBroadcastingOptions;
         permissionOptions ??= DefaultPermissionOptions;
 
+        // A stop that is still draining has already cleared IsRunning; starting now would run beside it, so wait for it, and look again
+        // afterwards. The caller's timeout is one budget for all of these waits, not one per stop.
+        var waitingSince = Stopwatch.GetTimestamp();
+        bool isRunning;
+        while (true)
+        {
+            var (stopping, running) = GetStopState();
+            isRunning = running;
+            if (stopping is null)
+            {
+                break;
+            }
+
+            // A stop that failed is its own callers' business, so it is turned into a task that always completes: the only
+            // exceptions this wait can throw are this call's own timeout and cancellation.
+            var stopped = stopping.ContinueWith(static _ => { }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            await WaitForStopAsync(stopped, RemainingTimeout(timeout, waitingSince), cancellationToken).ConfigureAwait(false);
+        }
+
         // Ensure we are not already started
-        BroadcasterIsAlreadyStartedException.ThrowIfIsStarted(this);
+        if (isRunning)
+        {
+            LogBroadcasterAlreadyStarted();
+            throw new BroadcasterIsAlreadyStartedException(this);
+        }
 
         // Prevents multiple calls to StartAsync, if already starting, we merge the calls
         if (StartTcs is { Task.IsCompleted: false })
@@ -319,20 +342,103 @@ public abstract partial class BaseBluetoothBroadcaster
         BluetoothUnhandledExceptionListener.OnBluetoothUnhandledException(this, e);
     }
 
+    private readonly object _stopGate = new();
+
+    /// <summary>
+    ///     Completes when the whole stop operation is over: the native stop, the wait for the platform to report it, and the
+    ///     bookkeeping that follows. <see cref="StopTcs" /> only says that the platform reported "stopped", which can come
+    ///     before that, so every caller waits on this one instead.
+    /// </summary>
+    private TaskCompletionSource? _stopOperation;
+
+    /// <summary>
+    ///     The stop in flight, if any, and whether the broadcaster runs, read together under <see cref="_stopGate" />. A stop publishes its
+    ///     operation under the same gate before it clears IsRunning, so it cannot begin between the two reads: a broadcaster that no longer
+    ///     runs is never seen without the stop that is still going on, and a stop that was in flight is never seen as finished with
+    ///     the broadcaster still running.
+    /// </summary>
+    private (Task? Stopping, bool IsRunning) GetStopState()
+    {
+        lock (_stopGate)
+        {
+            var stopping = _stopOperation is { Task.IsCompleted: false } operation ? operation.Task : null;
+            var isRunning = IsRunning;
+            return (stopping, isRunning);
+        }
+    }
+
+    /// <summary>
+    ///     Waits for a stop that someone else started, for at most <paramref name="timeout" /> and until <paramref name="cancellationToken" />
+    ///     is cancelled. Unlike <c>WaitBetterAsync</c>, which ignores the token when there is no timeout, a caller can always cancel here.
+    /// </summary>
+    private static Task WaitForStopAsync(Task stop, TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        return timeout is { } limit ? stop.WaitAsync(limit, cancellationToken) : stop.WaitAsync(cancellationToken);
+    }
+
+    /// <summary>
+    ///     What is left of <paramref name="timeout" /> since <paramref name="since" /> (a <see cref="Stopwatch.GetTimestamp" /> value), never
+    ///     negative: a budget that ran out is zero, which makes the next wait throw <see cref="TimeoutException" /> unless it is already over.
+    /// </summary>
+    private static TimeSpan? RemainingTimeout(TimeSpan? timeout, long since)
+    {
+        if (timeout is not { } limit || limit == Timeout.InfiniteTimeSpan)
+        {
+            return timeout;
+        }
+
+        var left = limit - Stopwatch.GetElapsedTime(since);
+        return left > TimeSpan.Zero ? left : TimeSpan.Zero;
+    }
+
     /// <inheritdoc />
     public async ValueTask StopBroadcastingAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        // Ensure we are not already stopped
-        BroadcasterIsAlreadyStoppedException.ThrowIfIsStopped(this);
+        TaskCompletionSource operation;
+        bool owner;
+        lock (_stopGate)
+        {
+            if (_stopOperation is { Task.IsCompleted: false } running)
+            {
+                // Prevents multiple calls to StopAsync, if already stopping, we merge the calls
+                operation = running;
+                owner = false;
+            }
+            else if (!IsRunning)
+            {
+                // Ensure we are not already stopped
+                LogBroadcasterAlreadyStopped();
+                throw new BroadcasterIsAlreadyStoppedException(this);
+            }
+            else
+            {
+                operation = _stopOperation = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                owner = true;
+            }
+        }
 
-        // Prevents multiple calls to StopAsync, if already stopping, we merge the calls
-        if (StopTcs is { Task.IsCompleted: false })
+        if (!owner)
         {
             LogMergingStopAttempts();
-            await StopTcs.Task.ConfigureAwait(false);
+            await WaitForStopAsync(operation.Task, timeout, cancellationToken).ConfigureAwait(false);
             return;
         }
 
+        try
+        {
+            await StopCoreAsync(timeout, cancellationToken).ConfigureAwait(false);
+            operation.TrySetResult();
+        }
+        catch (Exception e)
+        {
+            operation.TrySetException(e);
+            _ = operation.Task.Exception; // observed here: nobody else may be waiting on it
+            throw;
+        }
+    }
+
+    private async ValueTask StopCoreAsync(TimeSpan? timeout, CancellationToken cancellationToken)
+    {
         StopTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); // Reset the TCS
         IsStopping = true; // Set the stopping state to true
         Stopping?.Invoke(this, EventArgs.Empty);
@@ -372,7 +478,30 @@ public abstract partial class BaseBluetoothBroadcaster
     /// <inheritdoc />
     public ValueTask StopBroadcastingIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return !IsRunning ? ValueTask.CompletedTask : StopBroadcastingAsync(timeout, cancellationToken);
+        // A stop that is still draining has already cleared IsRunning, but the broadcaster is not stopped yet.
+        var (inFlight, isRunning) = GetStopState();
+        if (inFlight is not null)
+        {
+            LogMergingStopAttempts();
+            return new ValueTask(WaitForStopAsync(inFlight, timeout, cancellationToken));
+        }
+
+        return !isRunning ? ValueTask.CompletedTask : StopWhileRunningAsync(timeout, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Stops a broadcaster that was running when <see cref="StopBroadcastingIfNeededAsync" /> looked. If another caller finished stopping it
+    ///     in the meantime there is nothing left to do, and "if needed" must not throw for that.
+    /// </summary>
+    private async ValueTask StopWhileRunningAsync(TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await StopBroadcastingAsync(timeout, cancellationToken).ConfigureAwait(false);
+        }
+        catch (BroadcasterIsAlreadyStoppedException)
+        {
+        }
     }
 
     /// <summary>
