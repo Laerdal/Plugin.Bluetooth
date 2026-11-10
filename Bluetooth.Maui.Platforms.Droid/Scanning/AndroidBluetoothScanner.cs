@@ -415,6 +415,13 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
             int previous;
             lock (_startGate)
             {
+                if (Volatile.Read(ref _startState) == StartFailed)
+                {
+                    // A failure already decided this start and the start has not consumed it yet: this one is a repeat of it. Keep the
+                    // first (the start throws that one) and do not send the repeat to the unhandled exception listener.
+                    return;
+                }
+
                 _startFailure = failure; // before the claim: the start reads it once it sees the state
                 previous = Interlocked.CompareExchange(ref _startState, StartFailed, StartPending);
                 if (previous == StartPending)
