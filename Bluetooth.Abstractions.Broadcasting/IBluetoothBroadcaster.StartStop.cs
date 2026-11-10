@@ -50,7 +50,10 @@ public partial interface IBluetoothBroadcaster
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous start operation.</returns>
-    /// <remarks>Ensures that the Bluetooth activity is initialized and ready for use.</remarks>
+    /// <remarks>
+    ///     Ensures that the Bluetooth activity is initialized and ready for use. A call made while a stop is in progress waits for
+    ///     that stop to finish before it starts, so a restart never overlaps the previous broadcast.
+    /// </remarks>
     /// <exception cref="InvalidOperationException">Thrown when broadcasting is already active.</exception>
     /// <exception cref="PlatformNotSupportedException">Thrown when the platform doesn't support peripheral mode.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
@@ -95,7 +98,12 @@ public partial interface IBluetoothBroadcaster
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous stop operation.</returns>
-    /// <remarks>Ensures that the Broadcaster and its resources are safely released.</remarks>
+    /// <remarks>
+    ///     Ensures that the Broadcaster and its resources are safely released. Callers share one stop operation: a call made while
+    ///     a stop is in progress waits for that stop to finish instead of starting another or throwing
+    ///     <see cref="BroadcasterIsAlreadyStoppedException" />. "Finished" includes whatever the platform still does after it reports
+    ///     that broadcasting stopped. A caller's own timeout and cancellation token bound its wait.
+    /// </remarks>
     /// <exception cref="InvalidOperationException">Thrown when broadcasting is not active.</exception>
     /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
@@ -107,7 +115,10 @@ public partial interface IBluetoothBroadcaster
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous stop operation.</returns>
-    /// <remarks>Checks if the Broadcaster is running before attempting to stop it.</remarks>
+    /// <remarks>
+    ///     Checks if the Broadcaster is running before attempting to stop it. When a stop is already in progress it waits for that
+    ///     stop to finish, so the Broadcaster is stopped when this returns.
+    /// </remarks>
     ValueTask StopBroadcastingIfNeededAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
     #endregion
