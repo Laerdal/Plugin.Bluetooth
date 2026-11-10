@@ -397,6 +397,17 @@ await scanner.StartScanningAsync(new ScanningOptions
 SCAN_RSP PDU for an address with no previously-seen ADV is silently dropped. With the default, every
 PDU is dispatched as before, so a device can be created from whichever PDU is seen first.
 
+**The advertisement filters do not apply to `ScanResponseReceived` and `LastScanResponse`.** That
+channel belongs to a device that already exists, and a filter judges each PDU on its own: a scan
+response may omit a field that the filter requires and that the primary advertisement carried (the
+manufacturer data, the name), even when that advertisement passed. Applying the filters there would
+then cut the raw scan responses off from the devices the filter accepted. The scanner's `AdvertisementFilter`, `ScanningOptions.IgnoreNamelessAdvertisements` and
+`ScanningOptions.AdvertisementFilter` decide whether a PDU goes through the normal
+`AdvertisementReceived` path and whether a device is created from it; a scan response for a device that
+exists is still delivered. Only the service UUID filter (`ScanningOptions.ServiceUuids`) applies to it.
+This holds in both modes: with `MergeScanResponses = true` the filters judge the merged advertisement,
+and the scan response itself is still delivered to the device.
+
 **Requires active scanning.** Passive scanning never solicits a scan response from the peripheral
 at all, so then neither merging nor `ScanResponseReceived` will ever have anything to report,
 regardless of `MergeScanResponses`. The scanning mode is `WindowsScanningOptions.ScanningMode` when
