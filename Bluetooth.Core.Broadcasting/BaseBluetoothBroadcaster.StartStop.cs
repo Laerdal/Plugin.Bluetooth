@@ -147,7 +147,8 @@ public abstract partial class BaseBluetoothBroadcaster
         permissionOptions ??= DefaultPermissionOptions;
 
         // A stop that is still draining has already cleared IsRunning; starting now would run beside it, so wait for it, and look again
-        // afterwards.
+        // afterwards. The caller's timeout is one budget for all of these waits, not one per stop.
+        var waitingSince = Stopwatch.GetTimestamp();
         bool isRunning;
         while (true)
         {
@@ -161,7 +162,7 @@ public abstract partial class BaseBluetoothBroadcaster
             // A stop that failed is its own callers' business, so it is turned into a task that always completes: the only
             // exceptions this wait can throw are this call's own timeout and cancellation.
             var stopped = stopping.ContinueWith(static _ => { }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-            await WaitForStopAsync(stopped, timeout, cancellationToken).ConfigureAwait(false);
+            await WaitForStopAsync(stopped, RemainingTimeout(timeout, waitingSince), cancellationToken).ConfigureAwait(false);
         }
 
         // Ensure we are not already started
@@ -373,6 +374,21 @@ public abstract partial class BaseBluetoothBroadcaster
     private static Task WaitForStopAsync(Task stop, TimeSpan? timeout, CancellationToken cancellationToken)
     {
         return timeout is { } limit ? stop.WaitAsync(limit, cancellationToken) : stop.WaitAsync(cancellationToken);
+    }
+
+    /// <summary>
+    ///     What is left of <paramref name="timeout" /> since <paramref name="since" /> (a <see cref="Stopwatch.GetTimestamp" /> value), never
+    ///     negative: a budget that ran out is zero, which makes the next wait throw <see cref="TimeoutException" /> unless it is already over.
+    /// </summary>
+    private static TimeSpan? RemainingTimeout(TimeSpan? timeout, long since)
+    {
+        if (timeout is not { } limit || limit == Timeout.InfiniteTimeSpan)
+        {
+            return timeout;
+        }
+
+        var left = limit - Stopwatch.GetElapsedTime(since);
+        return left > TimeSpan.Zero ? left : TimeSpan.Zero;
     }
 
     /// <inheritdoc />
