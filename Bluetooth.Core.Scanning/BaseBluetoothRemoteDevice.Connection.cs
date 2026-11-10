@@ -155,16 +155,31 @@ public abstract partial class BaseBluetoothRemoteDevice
         DeviceIsAlreadyConnectedException.ThrowIfAlreadyConnected(this);
         connectionOptions ??= new ConnectionOptions();
 
-        // Prevents multiple calls to ConnectAsync, if already starting, we merge the calls
-        if (ConnectionTcs is { Task.IsCompleted: false })
+        // Asynchronous continuations: a merged caller released by this attempt must not run its own code inside this one's cleanup.
+        var ownConnection = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource? pendingConnection = null;
+        lock (_attemptGate)
+        {
+            // Prevents multiple calls to ConnectAsync, if already starting, we merge the calls
+            var current = ConnectionTcs;
+            if (current is { Task.IsCompleted: false })
+            {
+                pendingConnection = current;
+            }
+            else
+            {
+                ConnectionTcs = ownConnection; // Reset the TCS
+            }
+        }
+
+        if (pendingConnection is not null)
         {
             LogMergingConnectionAttempts(Id);
-            await ConnectionTcs.Task.ConfigureAwait(false);
+            await WaitForMergedConnectionAsync(pendingConnection.Task, timeout, cancellationToken).ConfigureAwait(false);
             return;
         }
 
-        ConnectionTcs = new TaskCompletionSource(); // Reset the TCS
-        IsConnecting = true; // Set the connecting state to true
+        RefreshIsConnecting(); // Set the connecting state to true
         Connecting?.Invoke(this, EventArgs.Empty);
 
         try // try-catch to dispatch exceptions rising from start
@@ -190,7 +205,7 @@ public abstract partial class BaseBluetoothRemoteDevice
             // TimeoutException/OperationCanceledException directly on timeout/cancellation - it does
             // NOT return normally past the deadline - so this line itself is where a timed-out
             // connect attempt is detected, not the IsConnected check below.
-            await ConnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+            await ownConnection.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
 
             await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
             if (!IsConnected)
@@ -215,6 +230,12 @@ public abstract partial class BaseBluetoothRemoteDevice
             try { await NativeDisconnectAsync(timeout: null, cancellationToken: CancellationToken.None).ConfigureAwait(false); }
             catch { /* best-effort - we are already about to report the connection as failed */ }
 
+            // Callers merged into this attempt wait on its task, which no native callback completes
+            // once this attempt is over: end it here, after the cleanup above so that the
+            // disconnection callback it may raise is still absorbed by the pending attempt instead of
+            // being reported as an unexpected disconnection.
+            AbandonAttempt(ownConnection, new DeviceFailedToConnectException(this, innerException: e));
+
             // Timeout/cancellation are documented, BCL-recognized outcomes of this method (see
             // IBluetoothRemoteDevice.Connection.cs) - callers following the standard .NET cancellation
             // idiom (catch (OperationCanceledException)) depend on the exact type surviving unwrapped.
@@ -229,8 +250,72 @@ public abstract partial class BaseBluetoothRemoteDevice
         }
         finally
         {
-            IsConnecting = false; // Set the connecting state to false
-            ConnectionTcs = null;
+            lock (_attemptGate)
+            {
+                // A caller released by AbandonAttempt, or one that arrived once this attempt had completed, may
+                // already have started the next attempt: only release what still belongs to this one.
+                if (ReferenceEquals(ConnectionTcs, ownConnection))
+                {
+                    ConnectionTcs = null;
+                }
+            }
+
+            RefreshIsConnecting(); // Set the connecting state to false, unless the next attempt is already registered
+        }
+    }
+
+    // IsConnecting follows whether an attempt is registered. A claim or a release can land between reading that and writing
+    // the flag, so look again until the two agree.
+    private void RefreshIsConnecting()
+    {
+        bool connecting;
+        do
+        {
+            connecting = ConnectionTcs is not null;
+            IsConnecting = connecting;
+        }
+        while (connecting != (ConnectionTcs is not null));
+    }
+
+    /// <summary>
+    ///     Waits for the connection attempt another caller owns. The merged caller's own
+    ///     <paramref name="timeout" /> and <paramref name="cancellationToken" /> bound the wait, including the refresh of
+    ///     the connection state that follows it; giving up does not cancel the owner's attempt.
+    /// </summary>
+    private async ValueTask WaitForMergedConnectionAsync(Task attempt, TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        var started = Stopwatch.GetTimestamp();
+        try
+        {
+            await WaitForAttemptAsync(attempt, timeout, cancellationToken).ConfigureAwait(false);
+
+            // A disconnection callback also completes the pending attempt, so completion alone does not
+            // mean the device is connected. The refresh gets what is left of the caller's timeout.
+            using var remaining = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            if (timeout is { } limit && limit != Timeout.InfiniteTimeSpan)
+            {
+                var left = limit - Stopwatch.GetElapsedTime(started);
+                remaining.CancelAfter(left > TimeSpan.Zero ? left : TimeSpan.Zero);
+            }
+
+            try
+            {
+                await NativeRefreshIsConnectedAsync(remaining.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && remaining.IsCancellationRequested)
+            {
+                throw new TimeoutException("The connection state could not be refreshed within the timeout.");
+            }
+
+            if (!IsConnected)
+            {
+                throw new DeviceFailedToConnectException(this);
+            }
+        }
+        catch (Exception e) when (e is not (DeviceFailedToConnectException or TimeoutException or OperationCanceledException))
+        {
+            // Same outcome as the owner: only genuinely opaque failures are normalized.
+            throw new DeviceFailedToConnectException(this, innerException: e);
         }
     }
 
@@ -344,16 +429,32 @@ public abstract partial class BaseBluetoothRemoteDevice
 
         DeviceIsAlreadyDisconnectedException.ThrowIfAlreadyDisconnected(this);
 
-        // Prevents multiple calls to ConnectAsync, if already starting, we merge the calls
-        if (DisconnectionTcs is { Task.IsCompleted: false })
+        var ownDisconnection = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource? pendingDisconnection = null;
+        lock (_attemptGate)
         {
+            // Prevents multiple calls to DisconnectAsync, if already disconnecting, we merge the calls
+            var current = DisconnectionTcs;
+            if (current is { Task.IsCompleted: false })
+            {
+                pendingDisconnection = current;
+            }
+            else
+            {
+                DisconnectionTcs = ownDisconnection; // Reset the TCS
+            }
+        }
+
+        if (pendingDisconnection is not null)
+        {
+            // The merged caller's own timeout and cancellation token bound the wait; giving up does not
+            // cancel the owner's attempt.
             LogMergingDisconnectionAttempts(Id);
-            await DisconnectionTcs.Task.ConfigureAwait(false);
+            await WaitForAttemptAsync(pendingDisconnection.Task, timeout, cancellationToken).ConfigureAwait(false);
             return;
         }
 
-        DisconnectionTcs = new TaskCompletionSource(); // Reset the TCS
-        IsDisconnecting = true; // Set the disconnecting state to true
+        RefreshIsDisconnecting(); // Set the disconnecting state to true
         Disconnecting?.Invoke(this, EventArgs.Empty);
 
         try // try-catch to dispatch exceptions rising from start
@@ -370,7 +471,7 @@ public abstract partial class BaseBluetoothRemoteDevice
         try
         {
             // Wait for OnDisconnection to be called
-            await DisconnectionTcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+            await ownDisconnection.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
             await ClearServicesAsync().ConfigureAwait(false);
             await NativeRefreshIsConnectedAsync(cancellationToken).ConfigureAwait(false);
             if (IsConnected)
@@ -378,11 +479,38 @@ public abstract partial class BaseBluetoothRemoteDevice
                 throw new DeviceFailedToDisconnectException(this);
             }
         }
+        catch (Exception e)
+        {
+            // Callers merged into this attempt wait on its task, which no native callback completes
+            // once this attempt is over (timeout or cancellation here): end it so they stop waiting.
+            AbandonAttempt(ownDisconnection, new DeviceFailedToDisconnectException(this, innerException: e));
+            throw;
+        }
         finally
         {
-            IsDisconnecting = false; // Set the disconnecting state to false
-            DisconnectionTcs = null;
+            lock (_attemptGate)
+            {
+                // See ConnectAsync: only release what still belongs to this attempt.
+                if (ReferenceEquals(DisconnectionTcs, ownDisconnection))
+                {
+                    DisconnectionTcs = null;
+                }
+            }
+
+            RefreshIsDisconnecting(); // Set the disconnecting state to false, unless the next attempt is already registered
         }
+    }
+
+    // See RefreshIsConnecting.
+    private void RefreshIsDisconnecting()
+    {
+        bool disconnecting;
+        do
+        {
+            disconnecting = DisconnectionTcs is not null;
+            IsDisconnecting = disconnecting;
+        }
+        while (disconnecting != (DisconnectionTcs is not null));
     }
 
     /// <summary>
@@ -391,6 +519,33 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <param name="timeout">Optional timeout for the operation.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     protected abstract ValueTask NativeDisconnectAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default);
+
+    #endregion
+
+    #region Connection - Merged attempts
+
+    // Guards the decision to join or own an attempt and the release of ConnectionTcs/DisconnectionTcs, each one step. Only the
+    // attempt fields are touched under it: events are raised and flags are written outside.
+    private readonly object _attemptGate = new();
+
+    // Task.WaitAsync rather than WaitBetterAsync: the latter ignores the cancellation token when no timeout is given.
+    private static Task WaitForAttemptAsync(Task attempt, TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        return timeout is { } t ? attempt.WaitAsync(t, cancellationToken) : attempt.WaitAsync(cancellationToken);
+    }
+
+    /// <summary>
+    ///     Ends a connect or disconnect attempt its owner is giving up on, so every caller merged into it
+    ///     stops waiting. Does nothing when the attempt already completed.
+    /// </summary>
+    private static void AbandonAttempt(TaskCompletionSource attempt, Exception reason)
+    {
+        if (attempt.TrySetException(reason))
+        {
+            // Nobody may be merged into the attempt: read the fault so it is not reported as an unobserved task exception.
+            _ = attempt.Task.Exception;
+        }
+    }
 
     #endregion
 
