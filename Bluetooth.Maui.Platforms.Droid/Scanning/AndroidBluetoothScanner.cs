@@ -65,9 +65,15 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     private AutoResetEvent InternalAndroidStartScanResultReceived { get; } = new AutoResetEvent(false);
 
     private const int StartPending = 1; // a start is waiting for its first result or failure
-    private const int StartClaimed = 2; // a result or a failure came first, or the wait ran out: the start is over
+    private const int StartClaimed = 2; // a result came first, or the wait ran out: the start is over
     private const int StartAbandoned = 3; // the caller gave up first and the scan is being stopped
+    private const int StartFailed = 4; // a scan failure came first: the start throws it
     private int _startState;
+    private AndroidNativeScanFailureException? _startFailure;
+
+    // Held while a start is opened, and while a scan failure claims the start and signals it: a failure that claimed an attempt always has its
+    // signal sent before the next attempt resets the event, so a signal can never wake an attempt that it does not belong to.
+    private readonly object _startGate = new();
 
     /// <summary>
     ///     How long a start waits for a scan result or a failure before it reports the scan as started. Defaults to 2 seconds.
@@ -185,8 +191,12 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
     private async Task StartScanInternal(ScanningOptions scanningOptions, List<ScanFilter>? filters, TimeSpan? timeout, CancellationToken cancellationToken)
     {
         // Reset the event and open the start before starting scan
-        InternalAndroidStartScanResultReceived.Reset();
-        Volatile.Write(ref _startState, StartPending);
+        lock (_startGate)
+        {
+            InternalAndroidStartScanResultReceived.Reset();
+            _startFailure = null;
+            Volatile.Write(ref _startState, StartPending);
+        }
 
         // Build scan settings
         var settings = BuildScanSettings(scanningOptions);
@@ -224,15 +234,27 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         {
             IsRunning = true;
         }
+
+        // A scan failure that claimed the start fails it here, where the base class stores it as the failure of the start (and the start
+        // retries can run), instead of the failure being thrown inside the native callback. The scan that failed is stopped so that a retry
+        // starts clean.
+        if (Volatile.Read(ref _startState) == StartFailed)
+        {
+            BluetoothLeScanner?.StopScan(ScanCallbackProxy);
+            throw _startFailure!;
+        }
     }
 
     /// <summary>
-    ///     Claims the start for a scan result or a scan failure.
+    ///     Claims the start for a scan result, or for the scan failure that says the scan is already started.
     /// </summary>
-    /// <returns><see langword="false" /> when the caller already gave up on the start, so the scan is being stopped and nothing is to be reported.</returns>
+    /// <returns>
+    ///     <see langword="false" /> when the start is no longer to be reported to: the caller gave up on it (the scan is being stopped), or a
+    ///     scan failure already failed it.
+    /// </returns>
     private bool ClaimStart()
     {
-        return Interlocked.CompareExchange(ref _startState, StartClaimed, StartPending) != StartAbandoned;
+        return Interlocked.CompareExchange(ref _startState, StartClaimed, StartPending) is not (StartAbandoned or StartFailed);
     }
 
     /// <inheritdoc />
@@ -388,10 +410,38 @@ public class AndroidBluetoothScanner : BaseBluetoothScanner, ScanCallbackProxy.I
         }
         else
         {
-            ClaimStart();
+            var failure = new AndroidNativeScanFailureException(errorCode);
+
+            int previous;
+            lock (_startGate)
+            {
+                if (Volatile.Read(ref _startState) == StartFailed)
+                {
+                    // A failure already decided this start and the start has not consumed it yet: this one is a repeat of it. Keep the
+                    // first (the start throws that one) and do not send the repeat to the unhandled exception listener.
+                    return;
+                }
+
+                _startFailure = failure; // before the claim: the start reads it once it sees the state
+                previous = Interlocked.CompareExchange(ref _startState, StartFailed, StartPending);
+                if (previous == StartPending)
+                {
+                    // The failure decides the start: it wakes the start, which throws it. IsRunning is already false while a start is
+                    // pending, and is left alone here: a write after this point could land on the next attempt.
+                    InternalAndroidStartScanResultReceived.Set();
+                    return;
+                }
+            }
+
+            if (previous == StartAbandoned)
+            {
+                // The caller gave up on the start: nobody is waiting for the failure.
+                return;
+            }
+
+            // The start was already reported, or none was pending: only the unhandled exception listener can take the failure.
             IsRunning = false;
-            InternalAndroidStartScanResultReceived.Set();
-            throw new AndroidNativeScanFailureException(errorCode);
+            throw failure;
         }
     }
 
