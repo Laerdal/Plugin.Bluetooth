@@ -53,7 +53,7 @@
     <!-- ==================== BUILD & ANALYSIS DEPENDENCIES ==================== -->
     <ItemGroup>
         <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.403" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.403" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="11.0.100" />
     </ItemGroup>
     <!-- ==================== LOGGING DEPENDENCIES ==================== -->
     <ItemGroup>
