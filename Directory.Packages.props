@@ -34,7 +34,7 @@
     <!-- ==================== COMMUNITY DEPENDENCIES ==================== -->
     <ItemGroup>
         <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-        <PackageVersion Include="CommunityToolkit.Maui" Version="15.0.1" />
+        <PackageVersion Include="CommunityToolkit.Maui" Version="16.0.0" />
     </ItemGroup>
     <!-- ==================== TEST DEPENDENCIES ==================== -->
     <ItemGroup>
