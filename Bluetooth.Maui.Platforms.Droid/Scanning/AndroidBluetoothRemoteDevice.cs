@@ -661,9 +661,12 @@ public class AndroidBluetoothRemoteDevice : BaseBluetoothRemoteDevice,
         }
     }
 
+    // A peripheral can list the same service UUID more than once: the instance id is what tells those services apart.
     private static bool AreRepresentingTheSameObject(BluetoothGattService native, IBluetoothRemoteService service)
     {
-        return native.Uuid?.ToGuid().Equals(service.Id) ?? false;
+        return service is AndroidBluetoothRemoteService androidService
+               && native.InstanceId == androidService.NativeService.InstanceId
+               && (native.Uuid?.ToGuid().Equals(service.Id) ?? false);
     }
 
     /// <inheritdoc />
