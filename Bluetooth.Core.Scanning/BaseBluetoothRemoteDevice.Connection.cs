@@ -80,10 +80,14 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public event EventHandler? Connecting;
 
+    // A plain field, not a bindable property: it is written under _attemptGate, and assigning a bindable property raises
+    // PropertyChanged synchronously, which would run subscribers inside the gate. IsConnecting is the observable state.
+    private TaskCompletionSource? _connectionTcs;
+
     private TaskCompletionSource? ConnectionTcs
     {
-        get => GetValue<TaskCompletionSource?>(null);
-        set => SetValue(value);
+        get => Volatile.Read(ref _connectionTcs);
+        set => Volatile.Write(ref _connectionTcs, value);
     }
 
     /// <summary>
@@ -344,10 +348,13 @@ public abstract partial class BaseBluetoothRemoteDevice
     /// <inheritdoc />
     public event EventHandler? Disconnecting;
 
+    // A plain field for the same reason as _connectionTcs. IsDisconnecting is the observable state.
+    private TaskCompletionSource? _disconnectionTcs;
+
     private TaskCompletionSource? DisconnectionTcs
     {
-        get => GetValue<TaskCompletionSource?>(null);
-        set => SetValue(value);
+        get => Volatile.Read(ref _disconnectionTcs);
+        set => Volatile.Write(ref _disconnectionTcs, value);
     }
 
     /// <summary>
