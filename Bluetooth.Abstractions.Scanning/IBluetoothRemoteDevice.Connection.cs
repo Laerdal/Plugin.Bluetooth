@@ -98,7 +98,14 @@ public partial interface IBluetoothRemoteDevice
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <remarks>
+    ///     A call made while another connection attempt is in progress joins that attempt instead of starting a new one. It
+    ///     returns when the attempt connects the device, and throws <see cref="DeviceFailedToConnectException" /> if the attempt
+    ///     fails or is given up by its caller. Its own <paramref name="timeout" /> and <paramref name="cancellationToken" /> bound
+    ///     only its wait: giving up does not cancel the attempt it joined.
+    /// </remarks>
     /// <exception cref="InvalidOperationException">Thrown when the device is already connected.</exception>
+    /// <exception cref="DeviceFailedToConnectException">Thrown if the connection attempt fails.</exception>
     /// <exception cref="TimeoutException">Thrown if the connection attempt times out.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
     ValueTask ConnectAsync(ConnectionOptions? connectionOptions = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
@@ -132,6 +139,12 @@ public partial interface IBluetoothRemoteDevice
     /// <param name="timeout">The timeout for this operation</param>
     /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <remarks>
+    ///     A call made while another disconnection attempt is in progress joins that attempt instead of starting a new one. It
+    ///     returns when the attempt completes, and throws <see cref="DeviceFailedToDisconnectException" /> if the attempt is given
+    ///     up by its caller. Its own <paramref name="timeout" /> and <paramref name="cancellationToken" /> bound only its wait:
+    ///     giving up does not cancel the attempt it joined.
+    /// </remarks>
     /// <exception cref="InvalidOperationException">Thrown when the device is not connected.</exception>
     /// <exception cref="TimeoutException">Thrown if the disconnection attempt times out.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled.</exception>
