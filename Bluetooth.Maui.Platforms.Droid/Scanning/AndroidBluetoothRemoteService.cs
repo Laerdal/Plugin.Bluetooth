@@ -68,9 +68,12 @@ public class AndroidBluetoothRemoteService : BaseBluetoothRemoteService, Bluetoo
         }
     }
 
+    // A service can list the same characteristic UUID more than once: the instance id is what tells those characteristics apart.
     private static bool AreRepresentingTheSameObject(BluetoothGattCharacteristic native, IBluetoothRemoteCharacteristic shared)
     {
-        return shared is AndroidBluetoothRemoteCharacteristic androidCharacteristic && native.Uuid?.Equals(androidCharacteristic.NativeCharacteristic.Uuid) == true;
+        return shared is AndroidBluetoothRemoteCharacteristic androidCharacteristic
+               && native.InstanceId == androidCharacteristic.NativeCharacteristic.InstanceId
+               && native.Uuid?.Equals(androidCharacteristic.NativeCharacteristic.Uuid) == true;
     }
 
     #endregion
