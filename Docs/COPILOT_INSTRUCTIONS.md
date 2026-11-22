@@ -987,7 +987,7 @@ All versions are centrally managed in `Directory.Packages.props` — read that f
 ### Core Dependencies (as of this writing)
 
 - `Plugin.ByteArrays` (1.0.30) - Byte array utilities
-- `Plugin.BaseTypeExtensions` (1.0.26) - Extension methods
+- `Plugin.BaseTypeExtensions` (1.0.35) - Extension methods
 - `Plugin.ExceptionListeners` (1.0.5) / `Plugin.ExceptionListeners.Maui` (1.0.5) - Exception handling
 - `Microsoft.Extensions.Logging.Abstractions`, `.Logging`, `.DependencyInjection.Abstractions`, `.Options`, `.Diagnostics.Abstractions` (10.0.3)
 

@@ -535,7 +535,8 @@ public abstract partial class BaseBluetoothRemoteDevice
     // attempt fields are touched under it: events are raised and flags are written outside.
     private readonly object _attemptGate = new();
 
-    // Task.WaitAsync rather than WaitBetterAsync: the latter ignores the cancellation token when no timeout is given.
+    // Task.WaitAsync rather than WaitBetterAsync: a zero timeout throws TimeoutException here unless the attempt is already over,
+    // whereas WaitBetterAsync reads it as "no timeout".
     private static Task WaitForAttemptAsync(Task attempt, TimeSpan? timeout, CancellationToken cancellationToken)
     {
         return timeout is { } t ? attempt.WaitAsync(t, cancellationToken) : attempt.WaitAsync(cancellationToken);
