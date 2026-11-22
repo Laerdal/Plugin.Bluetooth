@@ -24,7 +24,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }} # a newer push to main must not cancel the scan of the previous commit
 
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: '1'
@@ -73,6 +73,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
+          queries: security-extended # the default suite plus lower-severity and lower-precision security queries
 
       # CodeQL traces the compiler, so the build must really compile everything:
       # --no-incremental (no skipped projects) and no shared compilation server.
