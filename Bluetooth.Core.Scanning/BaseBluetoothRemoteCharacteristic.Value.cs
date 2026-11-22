@@ -30,7 +30,14 @@ public abstract partial class BaseBluetoothRemoteCharacteristic
 
         ValueUpdated += EventCallback;
 
-        return await tcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await tcs.Task.WaitBetterAsync(timeout, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            ValueUpdated -= EventCallback; // the callback removes itself only when a value matches: not after a timeout or a cancellation
+        }
 
         void EventCallback(object? sender, ValueUpdatedEventArgs valueUpdatedEventArgs)
         {
