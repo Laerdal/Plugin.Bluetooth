@@ -41,7 +41,7 @@ env:
 
 jobs:
   version:
-    uses: laerdal/github_actions/.github/workflows/reusable-version.yml@main
+    uses: laerdal/github_actions/.github/workflows/reusable-version.yml@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
     with:
       config-file: "./.config/version.json"
       output-txt: 'output/version/version.txt'
@@ -58,21 +58,21 @@ jobs:
       has-docs: ${{ steps.check-docs.outputs.exists }}
     steps:
       - name: '🔄 Checkout'
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: '⬇️ Download Version artifact'
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: version
           path: '${{ github.workspace }}/Output/Version'
 
       - name: '🔧 Setup .NET'
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           config-file: '${{ github.workspace }}/global.json'
 
       - name: '📲 Install .NET MAUI workloads if needed'
-        uses: laerdal/github_actions/dotnet@main
+        uses: laerdal/github_actions/dotnet@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
         with:
           command: workload
           arguments: restore '${{ github.workspace }}/${{ env.SOLUTION_PATH }}'
@@ -80,14 +80,14 @@ jobs:
 
       # ============================ BUILD ============================
       - name: '🔄 Restore'
-        uses: laerdal/github_actions/dotnet@main
+        uses: laerdal/github_actions/dotnet@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
         with:
           command: restore
           path: '${{ github.workspace }}/${{ env.SOLUTION_PATH }}'
           show-summary: true
 
       - name: '🔨 Build'
-        uses: laerdal/github_actions/dotnet@main
+        uses: laerdal/github_actions/dotnet@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
         with:
           command: build
           path: '${{ github.workspace }}/${{ env.SOLUTION_PATH }}'
@@ -100,7 +100,7 @@ jobs:
           show-summary: true
 
       - name: '📦 Upload NuGet packages'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: packages
           path: '${{ github.workspace }}/Output/Packages'
@@ -118,7 +118,7 @@ jobs:
           fi
 
       - name: "📚 Build documentation metadata"
-        uses: laerdal/github_actions/dotnet-docfx-metadata@main
+        uses: laerdal/github_actions/dotnet-docfx-metadata@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
         if: ${{ success() && !cancelled() && steps.check-docs.outputs.exists == 'true' }}
         with:
           config: '${{ github.workspace }}/${{ env.DOCS_PATH }}/docfx.json'
@@ -126,7 +126,7 @@ jobs:
           show-summary: true
 
       - name: "📚 Build documentation site"
-        uses: laerdal/github_actions/dotnet-docfx-build@main
+        uses: laerdal/github_actions/dotnet-docfx-build@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
         if: ${{ success() && !cancelled() && steps.check-docs.outputs.exists == 'true' }}
         with:
           config: '${{ github.workspace }}/${{ env.DOCS_PATH }}/docfx.json'
@@ -135,7 +135,7 @@ jobs:
 
       - name: "📦 Upload GitHub Pages artifact"
         if: ${{ success() && !cancelled() && github.ref == 'refs/heads/main' && steps.check-docs.outputs.exists == 'true' }}
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: '${{ github.workspace }}/${{ env.DOCS_PATH }}/site'
           name: github-pages
@@ -149,19 +149,19 @@ jobs:
     needs: build
     steps:
       - name: '📦 Download NuGet packages'
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: packages
           path: '${{ github.workspace }}/packages'
 
       - name: '🔑 NuGet login (OIDC → temp API key)'
         id: nuget-login
-        uses: NuGet/login@v1
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         with:
           user: ${{ secrets.NUGET_ORG_USER }}
 
       - name: '📦 Push to NuGet.org'
-        uses: laerdal/github_actions/dotnet-nuget-upload@main
+        uses: laerdal/github_actions/dotnet-nuget-upload@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
         with:
           package-path: '${{ github.workspace }}/packages/*.nupkg'
           api-key: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
@@ -179,7 +179,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
   tag-and-release:
     name: '🏷️ Tag & Release'
@@ -188,13 +188,13 @@ jobs:
     needs: [version, publish-nuget]
     steps:
       - name: '🔄 Checkout'
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           fetch-tags: true
 
       - name: '🚀 Create GitHub Release'
-        uses: laerdal/github_actions/github-release@main
+        uses: laerdal/github_actions/github-release@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
         with:
           tag: ${{ needs.version.outputs.version-fortag }}
           title: 'Release ${{ needs.version.outputs.version-full }}'
