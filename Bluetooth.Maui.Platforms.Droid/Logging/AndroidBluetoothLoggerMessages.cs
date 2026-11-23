@@ -416,4 +416,19 @@ internal static partial class AndroidBluetoothLoggerMessages
         Exception exception);
 
     #endregion
+
+    #region Pairing Logging
+
+    [LoggerMessage(
+        EventId = 7012,
+        Level = LogLevel.Information,
+        Message = "Bond state of {Address}: {PreviousState} -> {State} (reason {Reason})")]
+    public static partial void LogBondStateChanged(
+        this ILogger logger,
+        string? address,
+        Bond previousState,
+        Bond state,
+        int reason);
+
+    #endregion
 }

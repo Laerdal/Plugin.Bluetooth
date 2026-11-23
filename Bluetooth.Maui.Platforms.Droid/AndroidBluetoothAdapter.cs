@@ -1,4 +1,5 @@
 using Bluetooth.Maui.Platforms.Droid.NativeObjects;
+using Bluetooth.Maui.Platforms.Droid.Scanning;
 
 namespace Bluetooth.Maui.Platforms.Droid;
 
@@ -48,4 +49,9 @@ public class AndroidBluetoothAdapter : BaseBluetoothAdapter
     ///     Gets the native Android Bluetooth manager.
     /// </summary>
     public BluetoothManager NativeBluetoothManager => BluetoothManagerWrapper.BluetoothManager;
+
+    /// <summary>
+    ///     Gets the pairing manager used to bond with and unbond from remote devices.
+    /// </summary>
+    public AndroidBluetoothPairingManager PairingManager => field ??= new AndroidBluetoothPairingManager(this, Logger);
 }
