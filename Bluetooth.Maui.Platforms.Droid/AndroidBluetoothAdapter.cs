@@ -8,9 +8,14 @@ namespace Bluetooth.Maui.Platforms.Droid;
 /// </summary>
 public class AndroidBluetoothAdapter : BaseBluetoothAdapter
 {
+    // Lazy is thread safe by default: every caller gets the one manager, so there is one pending-operation gate and one receiver.
+    private readonly Lazy<AndroidBluetoothPairingManager> _pairingManager;
+
     /// <inheritdoc />
     public AndroidBluetoothAdapter(IBluetoothManagerWrapper bluetoothManagerWrapper, IBluetoothAdapterWrapper bluetoothAdapterWrapper, ILogger<IBluetoothAdapter>? logger = null) : base(logger)
     {
+        _pairingManager = new Lazy<AndroidBluetoothPairingManager>(() => new AndroidBluetoothPairingManager(this, Logger));
+
         BluetoothManagerWrapper = bluetoothManagerWrapper;
         BluetoothAdapterWrapper = bluetoothAdapterWrapper;
 
@@ -53,5 +58,5 @@ public class AndroidBluetoothAdapter : BaseBluetoothAdapter
     /// <summary>
     ///     Gets the pairing manager used to bond with and unbond from remote devices.
     /// </summary>
-    public AndroidBluetoothPairingManager PairingManager => field ??= new AndroidBluetoothPairingManager(this, Logger);
+    public AndroidBluetoothPairingManager PairingManager => _pairingManager.Value;
 }

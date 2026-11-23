@@ -58,12 +58,26 @@ public class AndroidBluetoothPairingManager : BaseBluetoothPairingManager, IDisp
     /// <inheritdoc />
     public override ValueTask<bool> PairAsync(IBluetoothRemoteDevice device, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        // The base class starts the native operation before it observes the token, so a token that is already cancelled
+        // has to be refused here, before bonding starts and the system dialog opens.
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return ValueTask.FromCanceled<bool>(cancellationToken);
+        }
+
         return base.PairAsync(device, timeout ?? DefaultPairTimeout, cancellationToken);
     }
 
     /// <inheritdoc />
     public override ValueTask UnpairAsync(IBluetoothRemoteDevice device, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        // Same as PairAsync, and more important here: removing a bond cannot be undone, and the bond is shared with every
+        // other app on the phone.
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return ValueTask.FromCanceled(cancellationToken);
+        }
+
         return base.UnpairAsync(device, timeout ?? DefaultUnpairTimeout, cancellationToken);
     }
 
@@ -84,6 +98,9 @@ public class AndroidBluetoothPairingManager : BaseBluetoothPairingManager, IDisp
     protected override ValueTask NativePairAsync(IBluetoothRemoteDevice device, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(device);
+
+        // PairAsync checked the token before the base class ran; this covers a cancellation raised since (by a Pairing handler).
+        cancellationToken.ThrowIfCancellationRequested();
 
         var nativeDevice = GetNativeDevice(device);
         EnsureReceiverRegistered();
@@ -118,6 +135,10 @@ public class AndroidBluetoothPairingManager : BaseBluetoothPairingManager, IDisp
     protected override ValueTask NativeUnpairAsync(IBluetoothRemoteDevice device, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(device);
+
+        // UnpairAsync checked the token before the base class ran; this covers a cancellation raised since (by an Unpairing
+        // handler), the last chance to stop before the bond is removed.
+        cancellationToken.ThrowIfCancellationRequested();
 
         var nativeDevice = GetNativeDevice(device);
         if (nativeDevice.BondState == Bond.None)
@@ -180,7 +201,8 @@ public class AndroidBluetoothPairingManager : BaseBluetoothPairingManager, IDisp
 
                 var state = nativeDevice.BondState;
                 seenBonding |= state == Bond.Bonding;
-                if (state == Bond.Bonded || (state == Bond.None && (seenBonding || unpairing)))
+                // While unpairing, Bonded is the state before the removal, not an outcome: keep polling for None.
+                if ((state == Bond.Bonded && !unpairing) || (state == Bond.None && (seenBonding || unpairing)))
                 {
                     OnBondStateChanged(address, state, seenBonding ? Bond.Bonding : Bond.None, -1);
                     return;
