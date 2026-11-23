@@ -359,7 +359,8 @@ public abstract partial class BaseBluetoothScanner
 
     /// <summary>
     ///     Waits for a stop that someone else started, for at most <paramref name="timeout" /> and until <paramref name="cancellationToken" />
-    ///     is cancelled. Unlike <c>WaitBetterAsync</c>, which ignores the token when there is no timeout, a caller can always cancel here.
+    ///     is cancelled. Unlike <c>WaitBetterAsync</c>, which reads a zero timeout as "no timeout", a zero timeout here throws
+    ///     <see cref="TimeoutException" /> unless the stop is already over.
     /// </summary>
     private static Task WaitForStopAsync(Task stop, TimeSpan? timeout, CancellationToken cancellationToken)
     {
