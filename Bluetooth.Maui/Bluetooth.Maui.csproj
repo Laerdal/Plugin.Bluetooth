@@ -56,7 +56,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Maui.Controls" VersionOverride="10.0.130" />
+        <PackageReference Include="Microsoft.Maui.Controls" VersionOverride="10.0.130" PrivateAssets="all" />
         <PackageReference Include="Plugin.ByteArrays"/>
         <PackageReference Include="Plugin.BaseTypeExtensions"/>
         <PackageReference Include="Plugin.ExceptionListeners"/>
