@@ -41,7 +41,7 @@ env:
 
 jobs:
   version:
-    uses: laerdal/github_actions/.github/workflows/reusable-version.yml@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
+    uses: laerdal/github_actions/.github/workflows/reusable-version.yml@c76c057057c787d2ef4c7583be89e046b1dd6881 # v1.0.94
     with:
       config-file: "./.config/version.json"
       output-txt: 'output/version/version.txt'
@@ -72,7 +72,7 @@ jobs:
           config-file: '${{ github.workspace }}/global.json'
 
       - name: '📲 Install .NET MAUI workloads if needed'
-        uses: laerdal/github_actions/dotnet@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
+        uses: laerdal/github_actions/dotnet@c76c057057c787d2ef4c7583be89e046b1dd6881 # v1.0.94
         with:
           command: workload
           arguments: restore '${{ github.workspace }}/${{ env.SOLUTION_PATH }}'
@@ -80,14 +80,14 @@ jobs:
 
       # ============================ BUILD ============================
       - name: '🔄 Restore'
-        uses: laerdal/github_actions/dotnet@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
+        uses: laerdal/github_actions/dotnet@c76c057057c787d2ef4c7583be89e046b1dd6881 # v1.0.94
         with:
           command: restore
           path: '${{ github.workspace }}/${{ env.SOLUTION_PATH }}'
           show-summary: true
 
       - name: '🔨 Build'
-        uses: laerdal/github_actions/dotnet@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
+        uses: laerdal/github_actions/dotnet@c76c057057c787d2ef4c7583be89e046b1dd6881 # v1.0.94
         with:
           command: build
           path: '${{ github.workspace }}/${{ env.SOLUTION_PATH }}'
@@ -118,7 +118,7 @@ jobs:
           fi
 
       - name: "📚 Build documentation metadata"
-        uses: laerdal/github_actions/dotnet-docfx-metadata@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
+        uses: laerdal/github_actions/dotnet-docfx-metadata@c76c057057c787d2ef4c7583be89e046b1dd6881 # v1.0.94
         if: ${{ success() && !cancelled() && steps.check-docs.outputs.exists == 'true' }}
         with:
           config: '${{ github.workspace }}/${{ env.DOCS_PATH }}/docfx.json'
@@ -126,7 +126,7 @@ jobs:
           show-summary: true
 
       - name: "📚 Build documentation site"
-        uses: laerdal/github_actions/dotnet-docfx-build@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
+        uses: laerdal/github_actions/dotnet-docfx-build@c76c057057c787d2ef4c7583be89e046b1dd6881 # v1.0.94
         if: ${{ success() && !cancelled() && steps.check-docs.outputs.exists == 'true' }}
         with:
           config: '${{ github.workspace }}/${{ env.DOCS_PATH }}/docfx.json'
@@ -161,7 +161,7 @@ jobs:
           user: ${{ secrets.NUGET_ORG_USER }}
 
       - name: '📦 Push to NuGet.org'
-        uses: laerdal/github_actions/dotnet-nuget-upload@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
+        uses: laerdal/github_actions/dotnet-nuget-upload@c76c057057c787d2ef4c7583be89e046b1dd6881 # v1.0.94
         with:
           package-path: '${{ github.workspace }}/packages/*.nupkg'
           api-key: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
@@ -194,7 +194,7 @@ jobs:
           fetch-tags: true
 
       - name: '🚀 Create GitHub Release'
-        uses: laerdal/github_actions/github-release@8f534aa9d64b01cd26b73cb2ae4b08a39d836cfe # v1.0.83
+        uses: laerdal/github_actions/github-release@c76c057057c787d2ef4c7583be89e046b1dd6881 # v1.0.94
         with:
           tag: ${{ needs.version.outputs.version-fortag }}
           title: 'Release ${{ needs.version.outputs.version-full }}'
