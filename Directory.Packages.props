@@ -7,10 +7,10 @@
     </PropertyGroup>
     <!-- ==================== INTERNAL DEPENDENCIES ==================== -->
     <ItemGroup>
-        <PackageVersion Include="Plugin.ByteArrays" Version="1.0.37" />
-        <PackageVersion Include="Plugin.ExceptionListeners" Version="1.0.11" />
-        <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.35" />
-        <PackageVersion Include="Plugin.ExceptionListeners.Maui" Version="1.0.11" />
+        <PackageVersion Include="Plugin.ByteArrays" Version="1.0.41" />
+        <PackageVersion Include="Plugin.ExceptionListeners" Version="1.0.14" />
+        <PackageVersion Include="Plugin.BaseTypeExtensions" Version="1.0.36" />
+        <PackageVersion Include="Plugin.ExceptionListeners.Maui" Version="1.0.14" />
     </ItemGroup>
     <!-- ==================== CORE DEPENDENCIES ==================== -->
     <ItemGroup>
